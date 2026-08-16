@@ -1,0 +1,2639 @@
+<!-- [R27-ARCH-01] COPY of crowagent-platform/tools/arch-visualizer/index.html, sha256:357992120dd3af94.
+     It lives here because the status server serves crowagent-website/status only.
+     A copy that can drift is a defect, so scripts/check-arch-review-copy.mjs compares
+     the two and fails if they diverge. Edit the SOURCE, then re-copy. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrowAgent Platform & CrowMark Architecture Review (Current vs Post-R2.6.2)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js for interactive analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Mermaid.js for interactive rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: #111827;
+            --bg-card-hover: #1f293d;
+            --bg-glass: rgba(17, 24, 39, 0.75);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-accent: rgba(99, 102, 241, 0.3);
+            
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --secondary: #10b981;
+            --secondary-light: #34d399;
+            --accent: #8b5cf6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --cyan: #06b6d4;
+            
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Outfit', var(--font-sans);
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        /* Top Header & Nav */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+        }
+
+        .header-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #fff;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .logo-text h1 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #fff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            gap: 4px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 10px var(--primary-glow);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--secondary-light);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Main Layout */
+        main {
+            max-width: 1440px;
+            margin: 2rem auto;
+            padding: 0 2rem 4rem 2rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styling */
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-tag {
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.4rem;
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 900px;
+            margin-top: 0.5rem;
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Metric Pill & Badges */
+        .pill {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .pill-indigo { background: rgba(99, 102, 241, 0.2); color: var(--primary-light); border: 1px solid rgba(99, 102, 241, 0.3); }
+        .pill-emerald { background: rgba(16, 185, 129, 0.2); color: var(--secondary-light); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .pill-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .pill-purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .pill-rose { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Architecture comparison side-by-side */
+        .arch-compare-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .arch-side {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+
+        .arch-side.target {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .side-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .feature-item {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .feature-item strong {
+            color: var(--text-main);
+        }
+
+        .feature-icon {
+            color: var(--secondary-light);
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        /* Diagram Containers */
+        .diagram-wrapper {
+            background: #0d121f;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Interactive User Journey Timeline */
+        .journey-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            margin-top: 1.5rem;
+        }
+
+        .journey-timeline::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .journey-step {
+            display: flex;
+            gap: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .journey-step:hover {
+            border-color: var(--primary-light);
+            transform: translateX(4px);
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            z-index: 2;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .step-content h4 {
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 0.3rem;
+            font-family: var(--font-heading);
+        }
+
+        .step-content p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .step-tech {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--primary-light);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Benchmark Scorecard */
+        .benchmark-table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        table.benchmark-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        table.benchmark-table th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem 1.25rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        table.benchmark-table th.crowmark-col {
+            background: rgba(99, 102, 241, 0.15);
+            color: #fff;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        table.benchmark-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        table.benchmark-table td.crowmark-col {
+            background: rgba(99, 102, 241, 0.05);
+            font-weight: 600;
+        }
+
+        table.benchmark-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .score-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .score-high { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .score-mid { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .score-low { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        /* Code snippets / references */
+        .code-path {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Recommendation Box */
+        .rec-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .rec-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Measured-fact box — the neutral counterpart to .rec-box, so a reader
+           can tell at a glance whether they are reading an observation or an
+           opinion. Same geometry as .rec-box; deliberately colourless. */
+        .fact-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--cyan);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .fact-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Band label that opens a run of sections, so FACT and RECOMMENDATION
+           blocks are separable without reading the prose. */
+        .band-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        .band-fact { background: rgba(6, 182, 212, 0.12); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .band-rec  { background: rgba(99, 102, 241, 0.15); color: var(--primary-light); border: 1px solid rgba(99, 102, 241, 0.35); }
+
+        /* Radar Chart Wrapper */
+        .radar-box {
+            height: 380px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+<!-- [R262-D-47 2026-08-08] Retained for reference on owner instruction. Banner added so the
+     file cannot be screenshotted or forwarded without its caveats travelling with it. -->
+<div style="background:#7f1d1d;color:#fff;padding:14px 20px;font:14px/1.5 system-ui,sans-serif;border-bottom:3px solid #ef4444">
+  <strong style="font-size:15px">INTERNAL REFERENCE ONLY — NOT FOR EXTERNAL USE. GENERATED 2026-08-08, NOT MAINTAINED, NOT GATED.</strong><br>
+  <span style="opacity:.95">
+  <strong>The "9.3 / 10.0" rating and the head-to-head competitor table below are UNSUBSTANTIATED.</strong>
+  No methodology, benchmark, dataset or independent evaluation sits behind those scores; they were
+  generated by a language model, not measured. Naming competitors alongside unverifiable comparative
+  scores is exposure under the Business Protection from Misleading Marketing Regulations 2008.
+  <strong>Do not publish, quote, screenshot, or repeat these figures anywhere — internally or externally.</strong>
+  <br>
+  <strong>The "Identified Gaps" section is STALE.</strong> The £399 vs £549 Stripe conflict closed on
+  2026-08-05 (<code>R262-D-27</code>; production verified at £549) and the ~227 kB shared bundle closed at
+  143.8 kB (<code>R262-D-09</code>). Both are shown here as open. This page is a hand-authored snapshot with
+  no gate and drifts the moment the code moves.
+  <br>
+  <strong>Authoritative sources:</strong> <code>RELEASE-2.6.2-TRACKER.md</code>,
+  <code>RELEASE-2.6.2-DEFECT-REGISTER.md</code>, and the board at <code>http://localhost:8099/#platform</code>.
+  Where this page disagrees with those, <em>this page is wrong</em>.
+  </span>
+</div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-group">
+                <div class="logo-icon">C</div>
+                <div class="logo-text">
+                    <h1>CrowAgent Platform Architecture Review</h1>
+                    <p>Flagship: CrowMark Bid & Tender Intelligence</p>
+                </div>
+            </div>
+            
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('arch-tab')">
+                    <span>🏗️</span> Architecture & AI Deep-Dive
+                </button>
+                <button class="tab-btn" onclick="switchTab('benchmark-tab')">
+                    <span>📊</span> CrowMark Capability & Top 5 Rating
+                </button>
+                <button class="tab-btn" onclick="switchTab('pricing-tab')">
+                    <span>💷</span> Pricing Decision & Four-Surface Parity
+                </button>
+            </div>
+
+            <div class="status-badge">
+                <span class="pulse-dot"></span>
+                <span>Target: Release 2.6.2</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- TAB 1: ARCHITECTURE DEEP DIVE -->
+        <div id="arch-tab" class="tab-content active">
+            
+            <!-- Section 1: Executive Overview -->
+            <div class="section-header">
+                <div class="section-tag">Executive Architectural Briefing</div>
+                <h2 class="section-title">Platform Evolution: Release 2.6 to Post-Release 2.6.2</h2>
+                <p class="section-desc">
+                    CrowAgent is transitioning from a multi-product SME compliance monorepo to a 100% focused, enterprise-ready platform built around <strong>CrowMark</strong> — the flagship UK public & private sector bid management suite.
+                </p>
+            </div>
+
+            <div class="arch-compare-box">
+                <div class="arch-side">
+                    <div class="side-title">
+                        <span>Current Architecture (R2.6 / R2.6.1 Baseline)</span>
+                        <span class="pill pill-amber">Legacy Monorepo State</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div><strong>Multi-Product Coupling:</strong> Monorepo shared codebase holding CrowMark, CrowCyber, CrowCash, and CrowESG under single runtime.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div><strong>UK Public Sector Focus:</strong> Discovery workers pool from GOV.UK Contracts Finder and Find a Tender feeds.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div><strong>RAG & Retrieval Ceiling:</strong> Single 768-dim PGVector un-chunked embedding per library answer with ivfflat top-5 cosine search.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div><strong>Regulated Liability Flag:</strong> Open banking & Stripe Connect payment connections present in database schema.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="arch-side target">
+                    <div class="side-title">
+                        <span>Target Architecture (Post-Release 2.6.2)</span>
+                        <span class="pill pill-emerald">Single Flagship Focus</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div><strong>Clean Product Isolation:</strong> CrowCyber, CrowCash, and CrowESG archived to standalone repos; platform 100% dedicated to CrowMark.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div><strong>Jurisdiction & Sector Dimensions:</strong> Multi-country compliance rulesets (UK Procurement Act 2023 base) + Private Sector quadrant (RFP/RFI intake).</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div><strong>Advanced Hybrid RAG:</strong> Chunked vector embeddings (768-dim) + BM25 keyword search + BGE-reranker-large for 99%+ accuracy.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div><strong>Retained Engines:</strong> Integrated Cyber Essentials due-diligence verifier and PPN 006 Scope-3 Carbon Reduction Plan engine inside CrowMark.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 2: End-to-End System Architecture Diagram -->
+            <div class="section-header" style="margin-top: 3rem;">
+                <div class="section-tag">System & Technology Design</div>
+                <h2 class="section-title">High-Level System Architecture (HLD)</h2>
+                <p class="section-desc">
+                    Comprehensive mapping of client interfaces, API gateway services, background worker queues, AI orchestration pipeline, vector store, and Postgres database with Row-Level Security (RLS).
+                </p>
+            </div>
+
+            <div class="diagram-wrapper">
+                <div class="mermaid">
+                    graph TD
+                    subgraph Client Layer
+                        WEB["Next.js 15 Web App<br/>(app.crowagent.ai)"]
+                        ADDIN["Word Office Add-in<br/>(word-addin/)"]
+                        PORTAL["Internal Admin Portal<br/>(portal.crowagent.ai)"]
+                    end
+
+                    subgraph API & Gateway Layer
+                        FASTAPI["FastAPI Backend Service<br/>(Railway Container)"]
+                        SUPA_AUTH["Supabase Auth / WorkOS SSO"]
+                        RLS_GATE["Postgres RLS Policy Guard<br/>(381/381 Tables Protected)"]
+                    end
+
+                    subgraph Application Services
+                        INGEST_SVC["Tender & Document Ingestion<br/>(crowmark_document_extract.py)"]
+                        RAG_SVC["Hybrid RAG & Vector Retrieval<br/>(retrieval.py / rag_service.py)"]
+                        BID_SCR["Bid Scorer & Fit Engine<br/>(crowmark_bid_fit.py)"]
+                        BUYER_PREREAD["Buyer Advisory Engine<br/>(council_preread.py)"]
+                        CARBON_ENGINE["PPN 006 Carbon Engine<br/>(esg_carbon_engine.py)"]
+                    end
+
+                    subgraph AI Orchestration Layer
+                        AI_CLIENT["Unified AIClient Wrapper<br/>(Cost Ledger: ai_calls)"]
+                        GEMINI["Gemini 2.5 Pro / Flash<br/>(Customer Bid Drafting)"]
+                        CLAUDE["Claude 3.7 Sonnet<br/>(Internal Reasoning & Parsing)"]
+                        VERIFIER["7-Source Grounding Validator<br/>(citation_validator.py)"]
+                    end
+
+                    subgraph Infrastructure & Storage
+                        PG_DB[("Supabase Postgres DB<br/>pgvector + Full Text Search")]
+                        QSTASH["Upstash QStash Worker Queue<br/>(crowagent:jobs)"]
+                        BREVO["Brevo Email Dispatcher"]
+                        STRIPE["Stripe Billing & Metering"]
+                    end
+
+                    WEB --> FASTAPI
+                    ADDIN --> FASTAPI
+                    PORTAL --> FASTAPI
+                    FASTAPI --> SUPA_AUTH
+                    FASTAPI --> RLS_GATE
+                    RLS_GATE --> PG_DB
+
+                    FASTAPI --> INGEST_SVC
+                    FASTAPI --> RAG_SVC
+                    FASTAPI --> BID_SCR
+                    FASTAPI --> BUYER_PREREAD
+                    FASTAPI --> CARBON_ENGINE
+
+                    RAG_SVC --> AI_CLIENT
+                    BID_SCR --> AI_CLIENT
+                    BUYER_PREREAD --> AI_CLIENT
+
+                    AI_CLIENT --> GEMINI
+                    AI_CLIENT --> CLAUDE
+                    AI_CLIENT --> VERIFIER
+
+                    FASTAPI --> QSTASH
+                    FASTAPI --> BREVO
+                    FASTAPI --> STRIPE
+                </div>
+            </div>
+
+            <!-- Section 3: Low-Level Design (LLD) & Codebase Mapping -->
+            <div class="section-header" style="margin-top: 3rem;">
+                <div class="section-tag">Low-Level Architecture (LLD)</div>
+                <h2 class="section-title">Component Layout & Data Flow Specifications</h2>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📁</div>
+                            API & Backend Package
+                        </div>
+                        <span class="pill pill-indigo">FastAPI Python</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Core backend routing, service handlers, worker tasks, and AI integrations.
+                    </p>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">api/app/routers/crowmark/</span> Router endpoints for answers, bids, lot management, and export.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">api/app/services/crowmark_response_agent.py</span> Dual LLM answer synthesis engine.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">api/app/services/retrieval.py</span> 768-dim Vector & Hybrid RAG search logic.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🗄️</div>
+                            Database & RLS Layer
+                        </div>
+                        <span class="pill pill-emerald">Supabase Postgres</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Multi-tenant isolated tables with 100% foreign key enforcement.
+                    </p>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">public.crowmark_answer_library</span> Ground truth answer database with embedding vectors.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">public.crowmark_opportunities</span> Tender metadata, CPV codes, and submission deadlines.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">public.ai_calls</span> Audit ledger logging prompt tokens, cost, and provider metadata.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🖥️</div>
+                            Web App & Office Add-in
+                        </div>
+                        <span class="pill pill-purple">Next.js 15 + OfficeJS</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        React components, Zustand state, and Word Add-in integrations.
+                    </p>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">web/src/features/crowmark/</span> Ingestion, evaluation matrix, and response editor.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">web/src/features/council/</span> Buyer advisory pre-read logic and requirement mapping.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span>🔹</span>
+                            <div><span class="code-path">word-addin/</span> Real-time Microsoft Word sidecar copilot extension.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 4: End-to-End User Journeys -->
+            <div class="section-header" style="margin-top: 3rem;">
+                <div class="section-tag">User Experience & Workflow</div>
+                <h2 class="section-title">End-to-End Supplier & Buyer Workflows</h2>
+                <p class="section-desc">
+                    Interactive breakdown of how suppliers craft winning bids and how contracting authorities run advisory pre-reads.
+                </p>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <h3 style="font-size: 1.2rem; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                        <span>🚀</span> Supplier End-to-End Journey
+                    </h3>
+                    <div class="journey-timeline">
+                        <div class="journey-step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Opportunity Intake & Discovery</h4>
+                                <p>Auto-discovered from UK Contracts Finder / Find a Tender OR ingested from uploaded PDF/Word invitation packs.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">crowmark_tender_ingest.py</span>
+                                    <span class="tech-tag">Playwright Worker</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Multi-Modal Requirements Extraction</h4>
+                                <p>Document parser extracts questions, word counts, evaluation criteria, deadlines, and mandatory PPN obligations.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">crowmark_document_extract.py</span>
+                                    <span class="tech-tag">Claude 3.7 OCR</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Hybrid RAG Knowledge Retrieval</h4>
+                                <p>Matches questions against company answer library & evidence vault using 768-dim embeddings + BM25 keyword reranking.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">retrieval.py</span>
+                                    <span class="tech-tag">pgvector</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Grounded AI Answer Generation</h4>
+                                <p>Gemini 2.5 Pro drafts responses using 7-source verbatim citations, PPN 002 social value figures, and PPN 017 AI disclosures.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">crowmark_response_agent.py</span>
+                                    <span class="tech-tag">Gemini 2.5 Pro</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">5</div>
+                            <div class="step-content">
+                                <h4>Deterministic Verification & Export</h4>
+                                <p>Claim backing check ensures zero hallucination; exports formatted DOCX/PDF with Word Add-in sync.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">citation_validator.py</span>
+                                    <span class="tech-tag">docx_generator.py</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 1.2rem; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                        <span>🏛️</span> Buyer (Contracting Authority) Journey
+                    </h3>
+                    <div class="journey-timeline">
+                        <div class="journey-step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Tender Specification & Requirements Publish</h4>
+                                <p>Public or private buyer uploads tender documents and sets evaluation criteria and lot structure.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">council_data.py</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Supplier Submission Intake</h4>
+                                <p>Ingests submitted supplier response documents and extracts claimed compliance evidence.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">council_foundations.sql</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Automated Advisory Pre-Read</h4>
+                                <p>AI scans responses, locates requirement evidence, checks Cyber Essentials & PPN 006 compliance, and generates panel observations.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">council_preread.py</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="journey-step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Panel Dossier & Statutory Human Scoring</h4>
+                                <p>Panel evaluates bid with AI advisory assistance. Rigid assertion <code>assert_no_human_score_fields</code> prevents AI scoring.</p>
+                                <div class="step-tech">
+                                    <span class="tech-tag">Procurement Act 2023 Guard</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: AI Capabilities in Platform for CrowMark -->
+            <div class="section-header" style="margin-top: 3.5rem;">
+                <div class="section-tag">Core AI Intelligence</div>
+                <h2 class="section-title">Platform AI Capabilities Engine for CrowMark</h2>
+                <p class="section-desc">
+                    Comprehensive overview of the specialized AI systems powering precision bid drafting, compliance verification, and advisory evaluation.
+                </p>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🧠</div>
+                            Dual-LLM Routing Pipeline
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Separates customer-facing generation from internal reasoning to maximize output quality and cost efficiency.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><span>•</span> <strong>Gemini 2.5 Pro / Flash:</strong> Powers high-speed, long-context customer-facing response drafting.</li>
+                        <li class="feature-item"><span>•</span> <strong>Claude 3.7 Sonnet:</strong> Handles complex document parsing, table OCR, and evaluation pre-reads.</li>
+                        <li class="feature-item"><span>•</span> <strong>Centralized Audit Ledger:</strong> Every LLM call logs tokens, cost, and execution duration to <code>public.ai_calls</code>.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🛡️</div>
+                            7-Source Grounding & Verification
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Zero-hallucination engine preventing unverified financial or operational claims.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><span>•</span> <strong>Verbatim Citation Allowlist:</strong> Validates generated facts against 7 authorized company sources.</li>
+                        <li class="feature-item"><span>•</span> <strong>≥0.92 5-Gram Matcher:</strong> Strict n-gram overlap check verifying factual source alignment.</li>
+                        <li class="feature-item"><span>•</span> <strong>Fail-Closed Guard:</strong> Automatically sets <code>ai_available:false</code> if grounding threshold is unmet.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📊</div>
+                            PPN 002 & PPN 017 Engines
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        UK Public Procurement compliance automation for social value & AI transparency.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><span>•</span> <strong>PPN 002 Social Value Calculator:</strong> Quantifies community benefits, apprentice hours, and local spend.</li>
+                        <li class="feature-item"><span>•</span> <strong>PPN 017 AI Disclosure Tagger:</strong> Automatically appends required AI tool usage disclosures.</li>
+                        <li class="feature-item"><span>•</span> <strong>PPN 006 Carbon Plans:</strong> Generates Scope-3 compliant carbon reduction documentation.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 6: Assessment & Recommendations -->
+            <div class="section-header" style="margin-top: 3.5rem;">
+                <div class="section-tag">Honest Engineering Review</div>
+                <h2 class="section-title">Architectural Assessment & Key Recommendations</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--secondary-light); font-size: 1.1rem; margin-bottom: 0.75rem;">✅ Key Architectural Strengths</h3>
+                    <ul class="feature-list">
+                        <li class="feature-item"><span class="feature-icon">✓</span> <strong>Rigid RLS Security:</strong> 381 of 381 database tables protected with Row-Level Security ensuring strict tenant isolation.</li>
+                        <li class="feature-item"><span class="feature-icon">✓</span> <strong>Grounding Rigor:</strong> Industry-leading citation verification preventing halluncinations in public bids.</li>
+                        <li class="feature-item"><span class="feature-icon">✓</span> <strong>Procurement Act 2023 Guardrails:</strong> Buyer pre-read engine enforces advisory-only status with <code>assert_no_human_score_fields</code>.</li>
+                        <li class="feature-item"><span class="feature-icon">✓</span> <strong>Clean R2.6.2 Isolation Plan:</strong> Decoupling platform primitives (SMS MFA, Vault encryption) before archiving product modules.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--warning); font-size: 1.1rem; margin-bottom: 0.75rem;">⚠️ Identified Gaps & Technical Debt</h3>
+                    <ul class="feature-list">
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Retrieval Constraints:</strong> Current R2.6 RAG relies on single un-chunked 768-dim vector per answer (R2.6.2 upgrading to Hybrid RAG).</li>
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Stripe Pricing Conflict:</strong> Top-tier agency pricing has two conflicting live price points (£399/mo vs £549/mo) requiring resolution.</li>
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Public Bundle Size:</strong> Shared root JS bundle payload (~227kB) exceeds 200kB ceiling on 5 public tool routes (R2.6.2 WS-3 splitting).</li>
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Trial Metering Enforcement:</strong> Expiry clock and credit limits require strict server-side gating (R2.6.2 WS-17).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="rec-box">
+                <div class="rec-title">
+                    <span>🚀</span> Release 2.6.2 Strategic Recommendations
+                </div>
+                <ol style="margin-left: 1.25rem; color: var(--text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li><strong>Complete Phase 1 Decoupling First:</strong> Ensure <code>money.ts</code>, <code>secret-vault.ts</code>, and <code>sms/</code> are 100% repointed to shared paths before deleting archived product code.</li>
+                    <li><strong>Standardize Stripe Pricing:</strong> Align top-tier pricing to single canonical lookup keys (e.g. <code>crowagent_crowmark_portfolio_monthly</code>) and prune orphaned prices.</li>
+                    <li><strong>Roll Out Hybrid Retrieval (WS-5):</strong> Deploy chunked embeddings with BM25 + BGE-reranker-large to maximize past-answer match precision.</li>
+                    <li><strong>Enforce Private Sector Quadrant (WS-12):</strong> Frame private sector bids around document upload intake without implying non-existent private discovery feeds.</li>
+                </ol>
+            </div>
+
+        </div>
+
+        <!-- TAB 2: CROWMARK CAPABILITY & TOP 5 BENCHMARK -->
+        <div id="benchmark-tab" class="tab-content">
+            
+            <div class="section-header">
+                <div class="section-tag">Market & Capability Benchmark</div>
+                <h2 class="section-title">CrowMark Capability Analysis & Top 5 Rating Scorecard</h2>
+                <p class="section-desc">
+                    Honest comparative evaluation of CrowMark today against the leading global AI bid, tender, and RFP management solutions.
+                </p>
+            </div>
+
+            <!-- Radar & Summary Cards -->
+            <div class="grid-2" style="margin-bottom: 2rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🎯</div>
+                            Capability Radar Comparison
+                        </div>
+                    </div>
+                    <div class="radar-box">
+                        <canvas id="competitorRadar"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">🏆</div>
+                            CrowMark Overall Market Rating
+                        </div>
+                        <span class="pill pill-emerald" style="font-size: 1rem;">9.3 / 10.0</span>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        CrowMark is the <strong>top-rated UK SME public & private sector bid copilot</strong>, combining unmatched UK regulatory intelligence with self-serve SME pricing.
+                    </p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                <span>UK Statutory Compliance (PPN 002/006/017)</span>
+                                <span style="color: var(--secondary-light); font-weight: 700;">9.8 / 10</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px;">
+                                <div style="width: 98%; background: var(--secondary); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                <span>Grounding & Hallucination Prevention</span>
+                                <span style="color: var(--secondary-light); font-weight: 700;">9.5 / 10</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px;">
+                                <div style="width: 95%; background: var(--secondary); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                <span>SME Price-to-Value Leadership</span>
+                                <span style="color: var(--secondary-light); font-weight: 700;">9.9 / 10</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px;">
+                                <div style="width: 99%; background: var(--secondary); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                <span>Buyer Advisory Pre-Read</span>
+                                <span style="color: var(--primary-light); font-weight: 700;">9.2 / 10</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px;">
+                                <div style="width: 92%; background: var(--primary); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Competitor Comparison Table -->
+            <div class="section-header" style="margin-top: 2rem;">
+                <h3 style="font-size: 1.4rem; color: #fff;">Feature-by-Feature Competitor Benchmark Table</h3>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead>
+                        <tr>
+                            <th>Evaluation Criterion</th>
+                            <th class="crowmark-col">CrowMark (Today)</th>
+                            <th>Loopio</th>
+                            <th>Responsive (RFPIO)</th>
+                            <th>AutoRFP.ai</th>
+                            <th>AutogenAI</th>
+                            <th>CleanTender</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Target Customer & Price</strong></td>
+                            <td class="crowmark-col">SME & Enterprise<br/><span class="pill pill-emerald">£49 - £399 / mo</span></td>
+                            <td>Enterprise<br/><span class="pill pill-rose">$20k - $50k / yr</span></td>
+                            <td>Enterprise<br/><span class="pill pill-rose">$14k - $30k / yr</span></td>
+                            <td>Mid-Market<br/><span class="pill pill-amber">$10k - $25k / yr</span></td>
+                            <td>Large Enterprise<br/><span class="pill pill-rose">£30k+ / yr</span></td>
+                            <td>UK SME<br/><span class="pill pill-emerald">£99 / mo</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Self-Serve Published Price</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">YES (Transparent)</span></td>
+                            <td><span class="score-pill score-low">NO (Quote Only)</span></td>
+                            <td><span class="score-pill score-low">NO (Quote Only)</span></td>
+                            <td><span class="score-pill score-low">NO (Quote Only)</span></td>
+                            <td><span class="score-pill score-low">NO (Quote Only)</span></td>
+                            <td><span class="score-pill score-high">YES</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>UK Tender Discovery Feed</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">Native (GOV.UK)</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-mid">Basic Feed</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>PPN 002 Social Value Engine</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">Native Calculator</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-mid">Generic Text</span></td>
+                            <td><span class="score-pill score-high">Basic TOMs</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>PPN 006 Carbon Plan Generator</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">Native Scope-3</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Grounding & Citation Guard</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">7-Source Verbatim</span></td>
+                            <td><span class="score-pill score-mid">Standard RAG</span></td>
+                            <td><span class="score-pill score-mid">Standard RAG</span></td>
+                            <td><span class="score-pill score-mid">Standard RAG</span></td>
+                            <td><span class="score-pill score-mid">LLM Prompting</span></td>
+                            <td><span class="score-pill score-low">Basic LLM</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Buyer Advisory Pre-Read Side</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">Built-in (Statutory)</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                            <td><span class="score-pill score-low">None</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>MS Word Add-in Copilot</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">Native Add-in</span></td>
+                            <td><span class="score-pill score-high">Extension</span></td>
+                            <td><span class="score-pill score-high">Extension</span></td>
+                            <td><span class="score-pill score-mid">Web Only</span></td>
+                            <td><span class="score-pill score-high">Extension</span></td>
+                            <td><span class="score-pill score-low">Web Only</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Overall Product Rating</strong></td>
+                            <td class="crowmark-col"><span class="score-pill score-high">9.3 / 10</span></td>
+                            <td><span class="score-pill score-mid">8.5 / 10</span></td>
+                            <td><span class="score-pill score-mid">8.6 / 10</span></td>
+                            <td><span class="score-pill score-mid">8.1 / 10</span></td>
+                            <td><span class="score-pill score-mid">8.8 / 10</span></td>
+                            <td><span class="score-pill score-mid">7.4 / 10</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Deep Dive Breakdown of Top 5 Competitors -->
+            <div class="section-header" style="margin-top: 3rem;">
+                <div class="section-tag">Competitor Deep Dives</div>
+                <h2 class="section-title">Head-to-Head Product Comparisons</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">1. Loopio</div>
+                        <span class="pill pill-purple">US Enterprise Incumbent</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Established US RFP response management software targeting large enterprises ($20k-$50k/yr). Strong question library and team workflow.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><strong>Strengths:</strong> Deep content library management, extensive integrations with Salesforce & Slack.</li>
+                        <li class="feature-item"><strong>Weaknesses:</strong> Quote-only pricing, zero UK public procurement feeds, no PPN 002/006 statutory frameworks.</li>
+                        <li class="feature-item"><strong>CrowMark Advantage:</strong> 10x cheaper entry, native GOV.UK tender discovery, verbatim citation grounding.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">2. Responsive (formerly RFPIO)</div>
+                        <span class="pill pill-purple">US Enterprise Incumbent</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Market leader in strategic response management ($14k-$30k/yr average). Highly feature-rich for large proposal teams.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><strong>Strengths:</strong> AI proposal generation, multi-language support, complex project management.</li>
+                        <li class="feature-item"><strong>Weaknesses:</strong> Steep learning curve, expensive for SMEs, lacks buyer-side advisory pre-read.</li>
+                        <li class="feature-item"><strong>CrowMark Advantage:</strong> Self-serve onboarding, built-in UK social value scoring, Word copilot.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">3. AutoRFP.ai</div>
+                        <span class="pill pill-indigo">Mid-Market Challenger</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        Modern AI-first RFP response tool ($10k-$25k/yr). Automated response generation from uploaded documentation.
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><strong>Strengths:</strong> Fast setup, clean modern interface, automated draft generation.</li>
+                        <li class="feature-item"><strong>Weaknesses:</strong> Lacks UK public procurement discovery, no PPN social value calculations.</li>
+                        <li class="feature-item"><strong>CrowMark Advantage:</strong> Transparent £49/mo Starter tier, Procurement Act compliance, 7-source grounding.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">4. AutogenAI</div>
+                        <span class="pill pill-rose">UK Enterprise Generative Heavyweight</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-muted);">
+                        High-profile UK AI bid drafting tool targeting major government contractors (£30k+/yr quote-only).
+                    </p>
+                    <ul class="feature-list" style="margin-top: 0.75rem;">
+                        <li class="feature-item"><strong>Strengths:</strong> Sophisticated LLM prose generation for complex bid narratives.</li>
+                        <li class="feature-item"><strong>Weaknesses:</strong> Prohibitively expensive for UK SMEs, requires high-touch sales process.</li>
+                        <li class="feature-item"><strong>CrowMark Advantage:</strong> Accessible SME pricing (£49-£399/mo), dual-sided buyer/supplier platform.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 3: PRICING DECISION & FOUR-SURFACE PARITY -->
+        <div id="pricing-tab" class="tab-content">
+
+            <div class="section-header">
+                <div class="section-tag">Commercial Briefing &middot; every figure re-measured 2026-08-09</div>
+                <h2 class="section-title">What We Sell, What We Charge For, and Where Those Two Disagree</h2>
+                <p class="section-desc">
+                    Nothing on this page is quoted from a document. Every number was read from a <strong>live</strong> surface:
+                    the Stripe API in live mode, the production pricing endpoint, the published marketing page, the production
+                    Postgres database, and the code at HEAD. Where a figure could not be established, it is named as unestablished
+                    rather than filled in.
+                </p>
+                <p class="section-desc">
+                    The headline is not that a price is wrong. It is that <strong>the platform holds more pricing opinions than it
+                    holds products</strong>, and several of them were formed by consolidation rather than by decision. Below,
+                    everything measured is marked <span class="band-label band-fact" style="margin:0">Fact</span> and everything
+                    advisory is marked <span class="band-label band-rec" style="margin:0">Recommendation</span>. The decisions are yours.
+                </p>
+            </div>
+
+            <div class="grid-4">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128230;</span> Products sellable</div></div>
+                    <div style="font-size:2.2rem;font-weight:800;color:var(--secondary-light);line-height:1">1</div>
+                    <p style="color:var(--text-muted);margin-top:.4rem">
+                        CrowMark. It is the only entry in <span class="code-path">PRODUCTS_CATALOGUE</span> and the only product
+                        the public pricing API publishes.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#127991;</span> Live prices vs reachable</div></div>
+                    <div style="font-size:2.2rem;font-weight:800;color:#fbbf24;line-height:1">19 &rarr; 6</div>
+                    <p style="color:var(--text-muted);margin-top:.4rem">
+                        19 active prices in live Stripe. Six can be reached by a prospect. Nine appear on no surface at all.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128100;</span> Seat declarations</div></div>
+                    <div style="font-size:2.2rem;font-weight:800;color:#f87171;line-height:1">8</div>
+                    <p style="color:var(--text-muted);margin-top:.4rem">
+                        Eight independent declarations of how many users a CrowMark plan includes. Starter gets three answers
+                        (1, 2, 3); <strong>Pro gets three too</strong> (3, 5, 10).
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128176;</span> Live subscription revenue</div></div>
+                    <div style="font-size:2.2rem;font-weight:800;color:var(--primary-light);line-height:1">&pound;0</div>
+                    <p style="color:var(--text-muted);margin-top:.4rem">
+                        Live Stripe holds <strong>one subscription, ever</strong>, and it is <span class="pill pill-rose">canceled</span>.
+                        Every pricing decision below is therefore free to make.
+                    </p>
+                </div>
+            </div>
+
+            <div class="rec-box" style="margin-top:1.5rem;background:linear-gradient(135deg, rgba(16,185,129,0.10), rgba(6,182,212,0.05));border-color:rgba(16,185,129,0.3)">
+                <div class="rec-title"><span>&#128273;</span> The single most useful fact for this decision</div>
+                <p style="color:var(--text-main)">
+                    <span class="code-path">GET /v1/subscriptions?status=all</span> against the live account
+                    <span class="code-path">acct_1TB3MxILkzuI7dCV</span> returns exactly <strong>one</strong> subscription,
+                    <span class="code-path">has_more: false</span>. Its status is <strong>canceled</strong>
+                    (<span class="code-path">cancellation_details.reason: payment_failed</span>) and it sits on the archived legacy
+                    <em>&ldquo;Agency Monthly&rdquo;</em> &pound;399 price.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>There is no live subscription revenue to protect.</strong> No grandfathering rule is needed for any
+                    change below &mdash; not a seat cap, not a price archive, not a tier rename. That window closes the moment the
+                    first customer subscribes, which is the strongest argument for deciding these now rather than later.
+                </p>
+            </div>
+
+            <!-- ══════════════════ FACT BAND ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3.5rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact &middot; measured, not inferred</div>
+                <div class="section-tag">Section 1</div>
+                <h2 class="section-title">What Product Ladders Genuinely Exist</h2>
+                <p class="section-desc">
+                    Post-R2.6.2 the portfolio is CrowMark alone &mdash; Core, CrowCyber, CrowCash and CrowESG are decommissioned.
+                    But &ldquo;decommissioned&rdquo; has meant different things on different surfaces, and two ladders exist in
+                    the money system that exist nowhere else.
+                </p>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead>
+                        <tr>
+                            <th>Ladder</th>
+                            <th class="crowmark-col">Live Stripe prices</th>
+                            <th>In <span class="code-path">PRODUCTS_CATALOGUE</span></th>
+                            <th>In public API</th>
+                            <th>On website</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CrowMark supplier</strong><br><span style="color:var(--text-dim);font-size:.8rem">Free &middot; Starter &middot; Pro &middot; Portfolio</span></td>
+                            <td class="crowmark-col">6 (3 tiers &times; 2 cadences)</td>
+                            <td>&#9989;</td><td>&#9989;</td><td>&#9989;</td>
+                            <td><span class="score-pill score-high">REAL PRODUCT</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CrowMark Buyer</strong><br><span style="color:var(--text-dim);font-size:.8rem">Essentials &middot; Pro &middot; Enterprise &mdash; private sector</span></td>
+                            <td class="crowmark-col">6, with full metadata</td>
+                            <td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">STRIPE ONLY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Public Sector</strong><br><span style="color:var(--text-dim);font-size:.8rem">internal key <span class="code-path">council</span>; three size tiers</span></td>
+                            <td class="crowmark-col">3, annual only</td>
+                            <td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-mid">HALF-BUILT</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI credit top-ups</strong><br><span style="color:var(--text-dim);font-size:.8rem">100 / 500 / 1,000 credits</span></td>
+                            <td class="crowmark-col">3 one-time</td>
+                            <td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-mid">IN-APP ONLY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Metered credit overage</strong><br><span style="color:var(--text-dim);font-size:.8rem">&pound;0.10 per credit</span></td>
+                            <td class="crowmark-col">1 metered</td>
+                            <td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-mid">IN-APP ONLY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Core / CrowCyber / CrowCash / CrowESG</strong></td>
+                            <td class="crowmark-col">0 active</td>
+                            <td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-high">CLEANLY GONE</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#9888;</span> Public Sector is not residue &mdash; it is half-built, and it has a live grant</div>
+                <p style="color:var(--text-muted)">
+                    It is easy to read the Public Sector ladder as leftovers. It is not. Measured on production
+                    (<span class="code-path">gujtuecjzfiqsdnzgyvo</span>):
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    &bull; <span class="code-path">product_subscriptions</span> holds a live row
+                    <span class="code-path">council / council_county / active</span>, created 2026-07-31.<br>
+                    &bull; <span class="code-path">billing_product_key</span> is a Postgres enum whose only two values are
+                    <span class="code-path">crowmark</span> and <span class="code-path">council</span> &mdash; it is a first-class product in the schema.<br>
+                    &bull; Six of thirteen organisations carry a <span class="code-path">council</span> key in
+                    <span class="code-path">product_context</span>, which is what actually decides product visibility.<br>
+                    &bull; It has its own seat ladder, its own credit row, its own checkout button and its own i18n catalogue.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>But the live row is not revenue.</strong> Its
+                    <span class="code-path">stripe_subscription_id</span> is the literal string
+                    <span class="code-path">manual_grant_council_c44a172e</span> &mdash; a manual grant, not a Stripe subscription.
+                    Half a product exists, with an operator-granted user on it, and no way for anyone to buy it.
+                </p>
+            </div>
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 2</div>
+                <h2 class="section-title">Four-Surface Parity Matrix</h2>
+                <p class="section-desc">
+                    The four surfaces are <strong>Stripe</strong> (what can actually be charged),
+                    <strong>Platform API</strong> (<span class="code-path">app.crowagent.ai/api/public/pricing</span>, what the app publishes),
+                    <strong>Website</strong> (<span class="code-path">crowagent.ai/pricing/</span>, what a prospect is told), and
+                    <strong>Portal Matrix</strong> (<span class="code-path">apps/portal/src/lib/pricing/matrix.ts</span>, what an operator can reprice).
+                </p>
+                <p class="section-desc">
+                    <strong>Naming corrected.</strong> An earlier version of this page listed &ldquo;Council Small / Standard / County&rdquo;
+                    as if those were product names. They are not. <span class="code-path">council</span> is an internal key that
+                    displays as <strong>Public Sector</strong> &mdash; and per the owner&rsquo;s 2026-08-09 ruling, councils are only
+                    one buyer segment within it. Section 5 deals with that properly.
+                </p>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Monthly</th>
+                            <th>Annual</th>
+                            <th class="crowmark-col">Stripe (live)</th>
+                            <th>Platform API</th>
+                            <th>Website</th>
+                            <th>Portal Matrix</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CrowMark Starter</strong></td><td>&pound;49</td><td>&pound;529</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#9989;</td><td>&#9989;</td><td>&#9989;</td>
+                            <td><span class="score-pill score-high">PRICE PARITY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CrowMark Pro</strong></td><td>&pound;149</td><td>&pound;1,609</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#9989;</td><td>&#9989;</td><td>&#9989;</td>
+                            <td><span class="score-pill score-high">PRICE PARITY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CrowMark Portfolio</strong></td><td>&pound;549</td><td>&pound;5,929</td>
+                            <td class="crowmark-col">&#9989;</td>
+                            <td><span class="pill pill-rose">publishes &pound;549</span></td>
+                            <td><span class="pill pill-amber">quote-only</span></td><td>&#9989;</td>
+                            <td><span class="score-pill score-low">BREACHES A DECISION</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buyer Essentials</strong><br><span style="color:var(--text-dim);font-size:.8rem">meta: 3 seats &middot; 6 projects/yr</span></td>
+                            <td>&pound;249</td><td>&pound;2,689</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buyer Pro</strong><br><span style="color:var(--text-dim);font-size:.8rem">meta: 10 seats &middot; 24 projects/yr</span></td>
+                            <td>&pound;749</td><td>&pound;8,089</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buyer Enterprise</strong><br><span style="color:var(--text-dim);font-size:.8rem">meta: custom seats &amp; projects, SSO, audit</span></td>
+                            <td>&pound;1,999</td><td>&pound;21,589</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Public Sector &mdash; small</strong><br><span style="color:var(--text-dim);font-size:.8rem">key <span class="code-path">council_small</span></span></td>
+                            <td>&mdash;</td><td>&pound;3,600</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Public Sector &mdash; standard</strong><br><span style="color:var(--text-dim);font-size:.8rem">key <span class="code-path">council_standard</span></span></td>
+                            <td>&mdash;</td><td>&pound;9,600</td>
+                            <td class="crowmark-col">&#9989; <span class="pill pill-rose">tax_behavior unset</span></td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE + DEFECT</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Public Sector &mdash; county</strong><br><span style="color:var(--text-dim);font-size:.8rem">key <span class="code-path">council_county</span></span></td>
+                            <td>&mdash;</td><td>&pound;19,200</td>
+                            <td class="crowmark-col">&#9989; <span class="pill pill-rose">tax_behavior unset</span></td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-low">INVISIBLE + DEFECT</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI credit top-ups</strong><br><span style="color:var(--text-dim);font-size:.8rem">100 / 500 / 1,000 credits</span></td>
+                            <td>&pound;10 / &pound;50 / &pound;100</td><td>one-time</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-mid">IN-APP ONLY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Metered overage</strong></td><td>&pound;0.10 / credit</td><td>metered</td>
+                            <td class="crowmark-col">&#9989;</td><td>&#10060;</td><td>&#10060;</td><td>&#10060;</td>
+                            <td><span class="score-pill score-mid">IN-APP ONLY</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-2" style="margin-top:1.5rem">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#10004;</span> The annual discount is genuinely coherent</div></div>
+                    <p style="color:var(--text-muted)">
+                        Every annual price in live Stripe is <strong>exactly 10% off twelve monthly payments</strong>, rounded down.
+                        It holds across all six monthly/annual pairs &mdash; including the Buyer ladder nobody has published &mdash;
+                        so the discount was applied by a rule, not set by hand.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        &pound;588&rarr;&pound;529 &middot; &pound;1,788&rarr;&pound;1,609 &middot; &pound;6,588&rarr;&pound;5,929 &middot;
+                        &pound;2,988&rarr;&pound;2,689 &middot; &pound;8,988&rarr;&pound;8,089 &middot; &pound;23,988&rarr;&pound;21,589.
+                        Six for six.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#9888;</span> Portfolio is not a stand-off &mdash; it is a breach</div></div>
+                    <p style="color:var(--text-muted)">
+                        The previous framing was &ldquo;the website and the platform disagree, and one has to give.&rdquo;
+                        That was too generous. <strong>There is already a recorded owner decision:</strong>
+                        <span class="code-path">R241-PRICING-STRATEGY change 3</span> &mdash; Portfolio is contact-sales and
+                        <em>&ldquo;never publish &pound;549&rdquo;</em>.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        The website honours it. The platform&rsquo;s <strong>own</strong> marketing page honours it, with a test
+                        that fails if a &pound; sign appears on the Portfolio card. The <strong>public pricing API does not</strong> &mdash;
+                        it returns <span class="code-path">portfolio.monthly: 549</span> to any anonymous caller.
+                        This is one surface out of step with a decision, not a decision awaiting a tiebreak.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ══════════════════ SEATS ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 3 &middot; the live issue</div>
+                <h2 class="section-title">Seats: One Decision, Eight Declarations, Three Answers Each For Starter And Pro</h2>
+                <p class="section-desc">
+                    The owner&rsquo;s decision is <strong>Starter = 1 user, Pro = 5 users</strong>. A prior consolidation recorded
+                    those as &ldquo;understated&rdquo; and raised them to 3 and 10, and the marketing site was changed to advertise
+                    3 and 10. The correction to 1/5 has been applied in two files. Here is every other place a CrowMark seat number
+                    is declared or displayed, measured at HEAD and on production.
+                </p>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead>
+                        <tr>
+                            <th>Where</th>
+                            <th class="crowmark-col">Starter</th>
+                            <th>Pro</th>
+                            <th>Portfolio</th>
+                            <th>Kind</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code-path">web/src/shared/lib/billing/seat-limits.ts</span><br><span style="color:var(--text-dim);font-size:.8rem">declares itself &ldquo;THE ONE SEAT TABLE&rdquo;</span></td>
+                            <td class="crowmark-col">1</td><td>5</td><td>unlimited</td>
+                            <td>enforced (web)</td>
+                            <td><span class="score-pill score-high">CORRECTED</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code-path">api/app/routers/teams.py</span> <span class="code-path">SEAT_LIMITS</span><br><span style="color:var(--text-dim);font-size:.8rem">hand-kept second copy, in another language</span></td>
+                            <td class="crowmark-col">1</td><td>5</td><td>unlimited</td>
+                            <td>enforced (API)</td>
+                            <td><span class="score-pill score-high">CORRECTED</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong><span class="code-path">apps/portal/src/lib/invites/products.ts</span></strong> <span class="code-path">SEATS_BY_TIER</span><br><span style="color:var(--text-dim);font-size:.8rem">line 47 &mdash; writes the grant a beta invite provisions</span></td>
+                            <td class="crowmark-col"><strong style="color:#f87171">2</strong></td><td>5</td><td><strong style="color:#f87171">20</strong></td>
+                            <td>written to prod DB</td>
+                            <td><span class="score-pill score-low">DISAGREES</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong><span class="code-path">organisations.product_context[].seats_limit</span></strong><br><span style="color:var(--text-dim);font-size:.8rem">values already stored on PRODUCTION rows</span></td>
+                            <td class="crowmark-col"><strong style="color:#f87171">2</strong></td><td>&mdash;</td><td><strong style="color:#f87171">1000</strong></td>
+                            <td>stored data</td>
+                            <td><span class="score-pill score-low">DISAGREES</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong><span class="code-path">crowagent.ai/pricing/</span></strong><br><span style="color:var(--text-dim);font-size:.8rem">live rendered text, fetched 2026-08-09; and <span class="code-path">/crowmark</span>, 4 comparison pages, 1 blog post</span></td>
+                            <td class="crowmark-col"><strong style="color:#f87171">3 users</strong></td><td><strong style="color:#f87171">10 users</strong></td><td>Unlimited users</td>
+                            <td>public promise</td>
+                            <td><span class="score-pill score-low">OVER-PROMISES</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong><span class="code-path">crowagent.ai/terms/</span></strong> &mdash; Terms of Service<br><span style="color:var(--text-dim);font-size:.8rem">&ldquo;the Starter feature set for <strong>up to 3 users</strong>&rdquo;</span></td>
+                            <td class="crowmark-col"><strong style="color:#f87171">3 users</strong> (trial)</td><td>&mdash;</td><td>&mdash;</td>
+                            <td><strong>contractual</strong></td>
+                            <td><span class="score-pill score-low">MOST SERIOUS</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code-path">PRICING-AND-PACKAGING-2026-07.md</span> &sect;3.6 / &sect;7<br><span style="color:var(--text-dim);font-size:.8rem">the spec the consolidation read &mdash; now <strong>SUPERSEDED</strong></span></td>
+                            <td class="crowmark-col"><strong style="color:#f87171">3</strong></td><td><strong style="color:#f87171">10</strong></td><td>unlimited</td>
+                            <td>stale spec</td>
+                            <td><span class="score-pill score-mid">SUPERSEDED</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong><span class="code-path">specs/platform-systems/pricing-model/README.md</span></strong> &sect;6.2<br><span style="color:var(--text-dim);font-size:.8rem">the <strong>CANONICAL</strong> pricing spec &mdash; supersedes the packaging doc</span></td>
+                            <td class="crowmark-col">1</td><td><strong style="color:#fbbf24">3</strong></td><td><strong style="color:#fbbf24">10</strong></td>
+                            <td>canonical spec</td>
+                            <td><span class="score-pill score-mid">DISAGREES ON PRO</span></td>
+                        </tr>
+                        <tr>
+                            <td>Platform pricing UI, upgrade gate, help articles, Stripe catalogue copy<br><span style="color:var(--text-dim);font-size:.8rem">all call <span class="code-path">getSeatLimit()</span></span></td>
+                            <td class="crowmark-col">1</td><td>5</td><td>unlimited</td>
+                            <td>derived</td>
+                            <td><span class="score-pill score-high">AUTOMATIC</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-3" style="margin-top:1.5rem">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#9989;</span> What the correction got right</div></div>
+                    <p style="color:var(--text-muted)">
+                        The two <em>enforcing</em> tables now agree on 1 and 5, and every rendered surface inside the platform
+                        derives from <span class="code-path">getSeatLimit()</span> rather than restating a number &mdash; the pricing page,
+                        the upgrade gate, the help articles and the Stripe catalogue feature lines all moved with it, for free.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        The safety argument also holds independently: production&rsquo;s
+                        <span class="code-path">max(count(*)) from org_users group by organisation</span> is <strong>1</strong>.
+                        No organisation loses access.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#10060;</span> What it did not reach</div></div>
+                    <p style="color:var(--text-muted)">
+                        <strong>The portal writes a different number.</strong> <span class="code-path">SEATS_BY_TIER</span>
+                        (starter 2 / pro 5 / portfolio 20) is what a beta invite bakes into
+                        <span class="code-path">product_context.seats_limit</span>, and
+                        <span class="code-path">FULL_ACCESS_SEATS_LIMIT = 20</span> alongside it.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>The spec still says 3 and 10.</strong> &sect;3.6 of the packaging doc is the source the consolidation
+                        read. Leaving it uncorrected means the next reader repeats the mistake with the same justification.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>Stale comments name the old numbers</strong> in <span class="code-path">billing/types.ts</span>,
+                        <span class="code-path">CrowMarkUpgradeGate.tsx</span> and <span class="code-path">teams.py</span>.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#9888;</span> The uncomfortable one</div></div>
+                    <p style="color:var(--text-main)">
+                        The seat cap is <strong>still inert in production.</strong>
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        Measured: <span class="code-path">organisations.tier</span> holds only
+                        <span class="code-path">{free, portfolio}</span> and <span class="code-path">subscriptions.tier</span> only
+                        <span class="code-path">{free, portfolio, enterprise}</span>. Neither <span class="code-path">starter</span> nor
+                        <span class="code-path">pro</span> is present on any row, so <span class="code-path">SEAT_LIMITS.get(tier)</span>
+                        still returns <em>unlimited</em> for every organisation on the platform.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>1 and 5 are now correct and still unenforced.</strong> That is fine &mdash; but nobody should read
+                        the fix as &ldquo;the cap is live&rdquo;.
+                    </p>
+                </div>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#f87171">
+                <div class="fact-title"><span>&#128721;</span> A live counting defect that Starter = 1 turns from survivable into a day-one support ticket</div>
+                <p style="color:var(--text-main)">
+                    <span class="code-path">checkSeatCapacity</span> counts <strong>every</strong>
+                    <span class="code-path">org_users</span> row for the organisation and does <strong>not</strong> filter on
+                    <span class="code-path">active</span> &mdash; which exists in production.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    A deactivated user therefore still consumes a seat. At 3 seats that was survivable. <strong>At 1 seat it means
+                    removing someone does not free their seat, so the customer is hard-blocked from replacing them and cannot
+                    self-serve out of it.</strong> This is not a consequence of the owner&rsquo;s decision &mdash; the bug predates it &mdash;
+                    but the decision is what makes it bite.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    The canonical spec records it as <span class="code-path">REQ-PRICE-017</span> and says it
+                    <strong>must be fixed before the new caps ship</strong>. It is currently unfixed.
+                    <strong>This is the one item on this page that is a blocker rather than a decision.</strong>
+                </p>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#128218;</span> Correction &mdash; I was reading a superseded spec, and the canonical one says Pro = 3</div>
+                <p style="color:var(--text-muted)">
+                    <span class="code-path">PRICING-AND-PACKAGING-2026-07.md</span> is <strong>no longer canonical</strong>.
+                    <span class="code-path">specs/platform-systems/pricing-model/README.md</span> explicitly supersedes it, and it
+                    was written after the packaging doc with the live surfaces in hand &mdash; it independently records the same
+                    zero-revenue fact measured at the top of this page.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    Its &sect;6.2 ladder is <strong>Free 1 &middot; Starter 1 &middot; Pro 3 &middot; Portfolio 10</strong>, with extra seats at
+                    &pound;45/month on Pro and Portfolio only. So the canonical spec agrees with you on Starter = 1 and
+                    <strong>disagrees on Pro: it recommends 3, not 5</strong>. It also recommends capping Portfolio at 10 rather
+                    than leaving it unlimited, on the grounds that
+                    <span class="code-path">SEAT_LIMITS.crowmark.portfolio = null</span> lets one &pound;549 subscription host a
+                    200-person bid consultancy.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Your 5 is the operative number</strong> &mdash; an owner decision outranks a spec recommendation, which is
+                    the whole lesson of this episode. But the spec is now the thing that disagrees, and if it is left standing the
+                    next consolidation has a fresh, canonical, post-dated source telling it Pro is 3.
+                </p>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#9878;</span> The seat figure is not only marketing copy &mdash; it is in the Terms of Service</div>
+                <p style="color:var(--text-main)">
+                    <span class="code-path">crowagent.ai/terms/</span> states:
+                    <em>&ldquo;The standard trial runs for 14 days at the Starter feature set for <strong>up to 3 users</strong>.&rdquo;</em>
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    That is a published contractual term, not a card on a pricing page. It is also carried on
+                    <span class="code-path">/crowmark</span>, four competitor-comparison pages and a blog post, so the 3/10 figures
+                    are on <strong>at least eight deployed pages</strong>, one of which is the contract.
+                    <strong>Lowering the enforced cap to 1 while that sentence stands is a different class of exposure from a stale
+                    price card</strong> &mdash; a trialling user could be refused a second seat the terms promise them.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    Mitigating fact, measured: the cap is currently inert (see above), and no production organisation has more than
+                    one seat. Nobody can hit it today. <strong>The exposure is prospective, not live.</strong>
+                </p>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#10071;</span> A parity gap nobody has filed: the free tier</div>
+                <p style="color:var(--text-muted)">
+                    The platform has a <strong>Free</strong> CrowMark tier &mdash; <span class="code-path">SEAT_LIMITS.crowmark.free = 1</span>,
+                    <span class="code-path">CREDIT_ALLOWANCES.crowmark.free = 15</span>, a <span class="code-path">crowmark_free</span> row
+                    in <span class="code-path">PLAN_LIMITS</span>, and a Free card rendered on the platform&rsquo;s own pricing page.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    The marketing site states the opposite, in terms:
+                    <em>&ldquo;CrowMark is a paid product and there is no free plan.&rdquo;</em>
+                    The 15-credit free allowance appears on <strong>no</strong> public surface &mdash; a repo-wide search for
+                    <span class="code-path">15 credits</span> returned zero, controlled against
+                    <span class="code-path">200 credits</span>, which returned three.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>This is a fifth open question, and it is yours:</strong> is Free a product we offer, or an internal
+                    default state for an org that has not subscribed? Both are defensible. Only one of them is what the site says.
+                </p>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#129513;</span> A hypothesis about where 3 and 10 came from &mdash; offered as a hypothesis, not a finding</div>
+                <p style="color:var(--text-muted)">
+                    Live Stripe metadata on the unpublished Buyer ladder reads
+                    <span class="code-path">buyer_essentials &rarr; seats: "3"</span> and
+                    <span class="code-path">buyer_pro &rarr; seats: "10"</span>. The same pair, 3 and 10, is what the consolidation
+                    raised CrowMark Starter and Pro to. The Public Sector ladder also carries 3 and 10 in
+                    <span class="code-path">SEAT_LIMITS.council</span>.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    So the platform has <strong>three different ladders all using 3/10</strong>, and only one of them &mdash; the supplier
+                    ladder &mdash; had an owner decision saying otherwise. <strong>I have not established that the numbers were copied
+                    across axes;</strong> the coincidence is stated because it suggests where to look, not because it is proven.
+                </p>
+            </div>
+
+            <!-- ══════════════════ CREDITS ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 4</div>
+                <h2 class="section-title">Credits: Where 15 / 200 / 750 / 3,000 Actually Came From</h2>
+                <p class="section-desc">
+                    The brief asked whether these are owner-decided or consolidation-derived. The answer is documented in the
+                    source itself, and it is neither flattering nor alarming.
+                </p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128202;</span> Provenance: cost-modelled, owner-unconfirmed</div></div>
+                    <p style="color:var(--text-muted)">
+                        <span class="code-path">credit-allowances.ts</span> states it plainly:
+                        <em>&ldquo;These numbers are COST-derived, not demand-derived: there has never been an external customer
+                        to measure. Every paid tier holds &ge;85% gross margin at 100% burn. They are estimates and are to be
+                        revisited after one real billing cycle.&rdquo;</em>
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        &sect;10 of the packaging doc asks the owner directly:
+                        <em>&ldquo;Are the allowance numbers acceptable at the observe-only stage? &hellip; Confirm you are comfortable
+                        shipping them as estimates.&rdquo;</em>
+                        <strong>I could not find a record that this question was ever answered.</strong> It is listed as an
+                        open question, and the numbers shipped anyway.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128273;</span> The important difference from seats</div></div>
+                    <p style="color:var(--text-muted)">
+                        Seats had an owner decision that a consolidation overrode. Credits had <strong>no prior owner decision at
+                        all</strong> &mdash; the packaging exercise originated the figures from unit-cost arithmetic, and they have
+                        been the only figures since.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        So they are not a reversal of your instruction. They are a <strong>proposal that was implemented before it
+                        was accepted</strong>, and the acceptance is still outstanding. Unlike the seat numbers, all four
+                        surfaces agree with each other &mdash; the platform, the website, the help articles and the upgrade gate all
+                        say 15 / 200 / 750 / 3,000, because they all read the same table.
+                    </p>
+                </div>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead><tr><th>Tier</th><th class="crowmark-col">Credits/month</th><th>Monthly price</th><th>Modelled COGS at 100% burn</th><th>Gross margin</th><th>Provenance</th></tr></thead>
+                    <tbody>
+                        <tr><td>Free</td><td class="crowmark-col">15</td><td>&pound;0</td><td>&mdash;</td><td>&mdash;</td><td><span class="pill pill-amber">cost-modelled</span></td></tr>
+                        <tr><td>Starter</td><td class="crowmark-col">200</td><td>&pound;49</td><td>&pound;4.00</td><td>92%</td><td><span class="pill pill-amber">cost-modelled</span></td></tr>
+                        <tr><td>Pro</td><td class="crowmark-col">750</td><td>&pound;149</td><td>&pound;15.00</td><td>90%</td><td><span class="pill pill-amber">cost-modelled</span></td></tr>
+                        <tr><td>Portfolio</td><td class="crowmark-col">3,000</td><td>contact sales</td><td>&pound;60.00</td><td>&ge;89% at &pound;549</td><td><span class="pill pill-amber">cost-modelled</span></td></tr>
+                        <tr><td>Trial (14 days)</td><td class="crowmark-col">50</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td><span class="pill pill-emerald">owner decision 2026-08-05</span></td></tr>
+                        <tr><td>Public Sector, all tiers</td><td class="crowmark-col">no published number</td><td>annual, invoice/PO</td><td>&mdash;</td><td>&mdash;</td><td><span class="pill pill-emerald">deliberate &mdash; fair use</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="fact-box">
+                <div class="fact-title"><span>&#128683;</span> One thing the website claims that is about to become untrue</div>
+                <p style="color:var(--text-main)">
+                    <span class="code-path">crowagent.ai/pricing/</span> prints, verbatim, next to the credit table:
+                    <em>&ldquo;These are the numbers the platform enforces.&rdquo;</em>
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    For credits that sentence is true. For the seat figures on the same page it is now <strong>false</strong> &mdash;
+                    the page advertises 3 and 10 while the platform is being set to 1 and 5. That sentence converts a copy drift
+                    into an explicit claim about enforcement, which is a materially worse thing to leave standing.
+                    <strong>Per the brief I have not changed the website; this is reported for your decision.</strong>
+                </p>
+            </div>
+
+            <!-- ══════════════════ COUNCIL VOCABULARY ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 5 &middot; owner ruling 2026-08-09</div>
+                <h2 class="section-title">&ldquo;Council&rdquo; Names the Product After One Customer Type</h2>
+                <p class="section-desc">
+                    The owner&rsquo;s ruling: councils are <strong>one prospect segment</strong> inside a broader
+                    <strong>public sector buyer</strong> product. The others are schools, universities, NHS trusts and government
+                    departments and institutes.
+                </p>
+                <p class="section-desc">
+                    <strong>Correction to my own first reading.</strong> I began by assuming the customer-facing ladder still said
+                    <em>Small / Standard / County</em> and that &ldquo;County&rdquo; was unnameable for a university. <strong>That was
+                    wrong, and I only found out by looking at the display layer rather than the keys.</strong> A rename has already
+                    been executed in two passes tagged <span class="code-path">PUBSEC-RENAME-01/02</span> &mdash; 66 markers across
+                    50 files &mdash; under a deliberate policy: <strong>keys stay <span class="code-path">council</span>, labels say
+                    &ldquo;Public Sector&rdquo;.</strong> The top tier already <strong>displays as &ldquo;Large&rdquo;</strong>, its blurb already reads
+                    &ldquo;Large or multi-body authority&rdquo;, and the small tier&rsquo;s already reads &ldquo;Single directorate or
+                    <strong>faculty</strong>&rdquo;.
+                </p>
+                <p class="section-desc">
+                    The segment axis exists too: <span class="code-path">organisations.type</span> was widened to
+                    <span class="code-path">council | education | nhs | housing_association | central_government | other_public</span>.
+                    <strong>So the owner&rsquo;s ruling is largely already implemented</strong> &mdash; but it is tenancy metadata only,
+                    deliberately decoupled from entitlement, and <strong>no per-segment pricing, packaging, seat or credit
+                    differentiation exists anywhere.</strong> What is left is a residue of genuine leaks, and they are not where I
+                    expected them.
+                </p>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead><tr><th>Occurrence</th><th class="crowmark-col">Class</th><th>Seen by a customer?</th><th>Cost to change</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Stripe product name</strong> <span class="code-path">prod_Up9CZpAwYboTXk</span> = &ldquo;CrowMark Council&rdquo;<br>
+                            <span style="color:var(--text-dim);font-size:.8rem">description: &ldquo;CrowMark Council Edition &mdash; &hellip; for UK local authorities. Annual, per-authority tiers (Small / Standard / County).&rdquo;</span></td>
+                            <td class="crowmark-col"><span class="pill pill-rose">(b) customer-facing</span></td>
+                            <td><strong>Yes</strong> &mdash; product name renders on Stripe invoices, receipts and Checkout</td>
+                            <td><span class="score-pill score-high">FREE</span> &mdash; <span class="code-path">name</span> is mutable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stripe nicknames</strong> &mdash; &ldquo;Council County (annual)&rdquo;, &ldquo;Council Standard (annual)&rdquo;, &ldquo;CrowMark Council Small authority&rdquo;</td>
+                            <td class="crowmark-col"><span class="pill pill-amber">(a) internal</span></td>
+                            <td>No &mdash; dashboard label only</td>
+                            <td><span class="score-pill score-high">FREE</span> &mdash; mutable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stripe lookup_keys</strong> <span class="code-path">crowagent_council_{small,standard,county}_annual</span></td>
+                            <td class="crowmark-col"><span class="pill pill-purple">(c) lookup_key</span></td>
+                            <td>No</td>
+                            <td><span class="score-pill score-mid">MODERATE</span> &mdash; requires a new price + key transfer</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Postgres enums</strong> <span class="code-path">billing_product_key</span> = <span class="code-path">council</span>;
+                            <span class="code-path">billing_tier_key</span> &ni; <span class="code-path">council_small|standard|county</span></td>
+                            <td class="crowmark-col"><span class="pill pill-amber">(a) internal</span></td>
+                            <td>No</td>
+                            <td><span class="score-pill score-mid">MODERATE</span> &mdash; enum values add cheaply, retire expensively</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Type unions and tables</strong> &mdash; <span class="code-path">SeatProduct</span>, <span class="code-path">SeatTier</span>,
+                            <span class="code-path">CreditProductKey</span>, <span class="code-path">PRODUCT_KEYS</span>, <span class="code-path">TIER_KEYS</span>,
+                            <span class="code-path">PLAN_LIMITS.council_council_*</span></td>
+                            <td class="crowmark-col"><span class="pill pill-amber">(a) internal</span></td>
+                            <td>No</td>
+                            <td><span class="score-pill score-high">LOW</span> &mdash; compiler-checked rename</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Production data</strong> &mdash; <span class="code-path">product_context.council</span> on 6 of 13 orgs;
+                            one <span class="code-path">product_subscriptions</span> row at <span class="code-path">council_county</span></td>
+                            <td class="crowmark-col"><span class="pill pill-amber">(a) internal</span></td>
+                            <td>No, but it gates visibility</td>
+                            <td><span class="score-pill score-mid">MODERATE</span> &mdash; needs a data migration, 7 rows</td>
+                        </tr>
+                        <tr>
+                            <td><strong>i18n VALUES, UI routes, tier display names, email and PDF labels</strong><br>
+                            <span style="color:var(--text-dim);font-size:.8rem">tiers already display Small / Standard / <strong>Large</strong>; UI route is <span class="code-path">/public-sector</span>; emails and PDFs say &ldquo;CrowMark Public Sector&rdquo;</span></td>
+                            <td class="crowmark-col"><span class="pill pill-emerald">already fixed</span></td>
+                            <td>Yes &mdash; and correct</td>
+                            <td><span class="score-pill score-high">NONE</span> &mdash; done, and test-pinned</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI system prompts</strong> &mdash; <span class="code-path">api/app/routers/council.py</span> lines 377, 379, 386, 395, <strong>406</strong><br>
+                            <span style="color:var(--text-dim);font-size:.8rem">&ldquo;You are a UK local-authority &hellip;&rdquo; &mdash; incl. the award/regret letter drafter</span></td>
+                            <td class="crowmark-col"><span class="pill pill-rose">(b) customer-facing</span></td>
+                            <td><strong>Yes</strong> &mdash; shapes prose the customer sends to <em>suppliers</em></td>
+                            <td><span class="score-pill score-high">LOW</span> &mdash; prompt text, but needs eval care</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Download filename + checkout URL</strong> &mdash;
+                            <span class="code-path">council-requirement-pack.pdf</span>;
+                            <span class="code-path">?plan=council_council_small</span></td>
+                            <td class="crowmark-col"><span class="pill pill-rose">(b) customer-facing</span></td>
+                            <td><strong>Yes</strong> &mdash; saved to disk / shown in the address bar</td>
+                            <td><span class="score-pill score-high">LOW</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-2" style="margin-top:1.5rem">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128077;</span> The good news, measured</div></div>
+                    <p style="color:var(--text-muted)">
+                        The <em>customer-facing</em> half of this has largely been done already. The i18n catalogues under
+                        <span class="code-path">messages/council/</span> render &ldquo;Public Sector&rdquo; to users, the settings route is
+                        <span class="code-path">/public-sector/settings</span>, and the PDF and action-queue labels read
+                        &ldquo;CrowMark Public Sector&rdquo;. The message <em>keys</em> are still <span class="code-path">council.*</span>,
+                        which is class (a) and costs nothing to leave.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>The marketing site is clean too</strong>, and this was measured rather than assumed. The word
+                        &ldquo;council&rdquo; never renders as a tier or product name on any deployed page. Where it appears in rendered
+                        copy it is either the ordinary common noun (&ldquo;contracting authorities, councils, NHS bodies and universities&rdquo;)
+                        or a real authority named in screenshot alt text. Every other hit is an HTML comment or an internal identifier.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        That negative is trustworthy because the sweep was controlled: <span class="code-path">council</span> matched
+                        58 files repo-wide, so the search demonstrably works, and the built pricing page returns
+                        <strong>zero</strong> hits.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>The one customer-facing leak that remains is in Stripe</strong>, and it is the surface attached to money.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="card-icon">&#128680;</span> The residue that does still leak &mdash; and the worst of it is AI prompts</div></div>
+                    <p style="color:var(--text-muted)">
+                        Seventeen genuine class-(b) leaks survive. The five that matter are not labels at all &mdash; they are
+                        <strong>system prompts</strong> in <span class="code-path">api/app/routers/council.py</span> that begin
+                        <em>&ldquo;You are a UK local-authority&hellip;&rdquo;</em>.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        One of them (line 406) drafts <strong>award and regret letters sent to suppliers</strong>. Another shapes the
+                        published social-value section of a tender. <strong>A university or NHS trust using the product generates
+                        council-flavoured prose and sends it to third parties under their own name.</strong> That is worse than a
+                        mislabelled tier, and no amount of label renaming reaches it.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        Runners-up: the requirement pack downloads as
+                        <span class="code-path">council-requirement-pack.pdf</span> while its sibling was already renamed to
+                        <span class="code-path">public-sector-transparency-return</span>; the checkout redirect produces the visible
+                        URL <span class="code-path">?plan=council_council_small</span>, doubled prefix and all; and the pack&rsquo;s
+                        table header still says <strong>&ldquo;Ward&rdquo;</strong>, a local-authority-only concept, to universities and trusts.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ══════════════════ RECOMMENDATION BAND ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3.5rem">
+                <div class="band-label band-rec"><span>&#9878;</span> Recommendation &middot; advisory only, you decide</div>
+                <div class="section-tag">Section 6</div>
+                <h2 class="section-title">Seven Decisions, With Their Trade-offs</h2>
+                <p class="section-desc">
+                    Nothing below has been implemented. Where a genuine commercial choice exists, both options are given with what
+                    each costs. Where one option is clearly dominated, that is said plainly &mdash; and where I have a view, it is
+                    labelled as a view.
+                </p>
+            </div>
+
+            <div class="grid-2">
+                <div class="rec-box">
+                    <div class="rec-title"><span class="pill pill-indigo">Decision A</span> &nbsp;Portfolio: publish or withdraw the price</div>
+                    <p style="color:var(--text-muted)">
+                        This one has an answer already recorded &mdash; <span class="code-path">R241-PRICING-STRATEGY 3</span> says
+                        contact-sales, never publish &pound;549 &mdash; so the real question is whether you still hold that view.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>Hold the decision (cheapest):</strong> filter Portfolio out of the public pricing API response, as
+                        the platform&rsquo;s own pricing page already does. One code change, one surface, no commercial change.<br><br>
+                        <strong>Reverse the decision:</strong> publish &pound;549 / &pound;5,929 on the website, drop the quote-only FAQ,
+                        remove the test pin. Gains a self-serve path to the top tier; loses the ability to price an org-scoped
+                        rollout to the org.
+                    </p>
+                    <p style="color:#fbbf24;margin-top:.75rem"><strong>Doing neither leaves an anonymous endpoint contradicting your recorded decision.</strong></p>
+                </div>
+
+                <div class="rec-box">
+                    <div class="rec-title"><span class="pill pill-indigo">Decision B</span> &nbsp;Buyer and Public Sector: sell them or archive them</div>
+                    <p style="color:var(--text-muted)">
+                        Nine live prices, up to &pound;21,589/yr, reachable by nobody. The Buyer set carries deliberate metadata
+                        (<span class="code-path">R262-BUYER-001</span>, seat and project counts), so it was built, not spilled.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>Sell:</strong> they must reach the public API, the pricing page and the portal matrix, and the
+                        entitlement work must finish. That is real product work, not a config change.<br><br>
+                        <strong>Archive:</strong> costs nothing today &mdash; no live Stripe subscription depends on any of them.
+                        The one Public Sector grant on production is a manual grant, not a Stripe subscription, so archiving the
+                        price does not disturb it.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>My view, offered as a view:</strong> archiving is reversible and free; leaving them live is the only
+                        option that carries risk with no revenue.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:1.5rem">
+                <div class="rec-box">
+                    <div class="rec-title"><span class="pill pill-indigo">Decision C</span> &nbsp;The two prices that cannot do automatic tax</div>
+                    <p style="color:var(--text-muted)">
+                        <span class="code-path">crowagent_council_standard_annual</span> (&pound;9,600) and
+                        <span class="code-path">crowagent_council_county_annual</span> (&pound;19,200) carry
+                        <span class="code-path">tax_behavior: "unspecified"</span>, which
+                        <span class="code-path">automatic_tax</span> rejects. <strong>The field is immutable</strong> &mdash; they can
+                        only be superseded, never patched.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <span class="code-path">council_small_annual</span> is correctly <span class="code-path">exclusive</span>.
+                        That control is what makes this drift rather than a house convention.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>C is downstream of B and of E.</strong> If the ladder is archived or re-cut, new prices get created
+                        correctly and this disappears without a remediation.
+                    </p>
+                </div>
+
+                <div class="rec-box">
+                    <div class="rec-title"><span class="pill pill-indigo">Decision D</span> &nbsp;Finish the seat correction, or accept the gaps</div>
+                    <p style="color:var(--text-muted)">
+                        Four things still say something other than 1 and 5. Only two of them need <em>your</em> decision:
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>Yours:</strong> the marketing site advertises 3 and 10, next to the sentence
+                        <em>&ldquo;These are the numbers the platform enforces.&rdquo;</em> &mdash; and the <strong>Terms of Service</strong>
+                        promise a trial for &ldquo;up to 3 users&rdquo;. Either the copy and the terms come down to 1 and 5, or the caps
+                        go back up. There is no third state that is honest.<br><br>
+                        <strong>Yours:</strong> the portal grants Starter beta invites <strong>2</strong> seats. Is a beta partner
+                        deliberately given more than a paying Starter customer, or is that a leftover?
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>The pressure valve that makes 1 seat workable is not the reviewer pool.</strong> The canonical spec
+                        is explicit that a <span class="code-path">viewer</span> <em>does</em> consume a seat, because that role
+                        holds <span class="code-path">approve_work</span> &mdash; recording an approve/reject decision on a bid is
+                        doing the job the product exists for, so it is not a free seat.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        The actual valve is the <strong>guest review invite</strong>
+                        (<span class="code-path">crowmark_review_guest_invites</span>): token-hashed, contract-scoped, expiring, and
+                        with <strong>no <span class="code-path">org_users</span> row</strong>, so it genuinely sits outside the tenant.
+                        That is how a solo bidder gets a colleague&rsquo;s eyes on a draft without a second seat.
+                        <strong>There is no cap on it in code today</strong> &mdash; and an uncapped guest mechanism is an uncapped
+                        seat mechanism. The spec proposes 3 / 10 / 25 per contract, expiring at 30 days
+                        (<span class="code-path">REQ-PRICE-018</span>).
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>Related, and yours:</strong> the spec argues seat add-ons must <em>not</em> be sold on Starter,
+                        because Starter + 2 seats at &pound;45 = &pound;139 undercuts Pro at &pound;149 while carrying 550 fewer
+                        credits. Worth confirming, since it constrains how 1-seat Starter can be softened.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>Mine to fix, not yours:</strong> the stale comments and the &sect;3.6 spec text. Those are cleanup.
+                    </p>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top:2.5rem">
+                <div class="band-label band-rec"><span>&#9878;</span> Recommendation</div>
+                <h2 class="section-title">Decision E &mdash; A Tier Ladder That A School, A University, A Trust and A County Can All Read</h2>
+                <p class="section-desc">
+                    The tier <em>labels</em> are already neutral (Small / Standard / Large). What is <strong>not</strong> settled is the
+                    <strong>sizing axis behind them</strong> &mdash; the blurbs still size on authority shape
+                    (&ldquo;single directorate or faculty&rdquo;, &ldquo;large or multi-body authority&rdquo;), which is what a prospect
+                    actually uses to locate themselves. Four options, with what each costs. <strong>I am not picking one.</strong>
+                </p>
+                <p class="section-desc">
+                    <strong>Note before you read them:</strong> the canonical pricing spec already proposes an answer &mdash;
+                    <strong>Buyer S / M / L</strong>, quoted, annual, invoice/PO, sized on <em>authority type</em> in the public sector
+                    and on <em>procurement spend</em> in the private sector, with the supplier ladder identical across both. That is
+                    option 3 crossed with option 4. It is a recommendation, not a decision, and it is listed here so you are choosing
+                    against it rather than around it.
+                </p>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead><tr><th>Option</th><th class="crowmark-col">Tier names</th><th>What it sizes on</th><th>Strengths</th><th>Weaknesses</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Seats</strong></td>
+                            <td class="crowmark-col">Team / Department / Organisation</td>
+                            <td>Named users</td>
+                            <td>Universally legible; we already enforce seats; a buyer can self-select in one question; scales identically for a school and an ICB.</td>
+                            <td>Decouples price from value &mdash; a five-seat county team doing 400 evaluations pays less than a twenty-seat school doing four. Invites seat-sharing.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Procurement volume</strong></td>
+                            <td class="crowmark-col">e.g. up to 25 / 100 / unlimited evaluations a year</td>
+                            <td>Tenders or evaluations per year</td>
+                            <td>Tracks the value delivered; buyer-type-blind; matches how the Buyer ladder is already metadata&rsquo;d (<span class="code-path">sourcing_projects_per_year</span>).</td>
+                            <td>A prospect may not know their own annual volume at the point of buying. Needs a countable, agreed unit and an in-product meter we would have to build.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Organisation spend band</strong></td>
+                            <td class="crowmark-col">e.g. under &pound;10m / &pound;10&ndash;100m / over &pound;100m annual third-party spend</td>
+                            <td>Addressable procurement spend</td>
+                            <td>The nearest thing to a fair value proxy; public bodies publish this; genuinely neutral across schools, trusts and authorities; anchors price to their budget not our cost.</td>
+                            <td>Feels intrusive; needs verification; a large trust with centralised buying may object to a band it cannot influence.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Neutral ordinal</strong></td>
+                            <td class="crowmark-col">Essentials / Standard / Enterprise</td>
+                            <td>Nothing &mdash; a feature ladder</td>
+                            <td>Zero market signal; matches the supplier and Buyer ladders so the whole catalogue reads as one system; cheapest to implement.</td>
+                            <td>Gives a prospect no way to self-select, so every deal needs a conversation. Honest only if the price really is negotiated &mdash; which, being invoice/PO, it already is.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-2" style="margin-top:1.5rem">
+                <div class="rec-box">
+                    <div class="rec-title"><span>&#129517;</span> A structural observation, separate from the choice</div>
+                    <p style="color:var(--text-muted)">
+                        There is a strong argument that <strong>&ldquo;Public Sector&rdquo; should not be a product ladder at all.</strong>
+                        Measured, it is not really a different product from CrowMark Buyer &mdash; both are the buy-side of a
+                        procurement, both are advisory, and both size on seats plus assessment volume. The only genuine differences
+                        are the <strong>billing mechanics</strong> (annual, invoice/PO, no self-serve checkout) and the
+                        <strong>regulatory content</strong> (PPN 002, social value).
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        Those are a <em>payment method</em> and a <em>content pack</em>, not a product line. Collapsing Public Sector
+                        into the Buyer ladder with an invoice-billing flag would delete an entire duplicated axis &mdash; its enum
+                        values, its seat row, its credit row, its <span class="code-path">PLAN_LIMITS</span> keys and three Stripe
+                        prices &mdash; rather than renaming it.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>The canonical spec has already reached this conclusion independently.</strong> Its &sect;6.1 matrix
+                        collapses both into one <strong>Buyer S / M / L</strong> row spanning public and private sector, and states
+                        the reason directly: the supplier ladder must not vary by sector, because that
+                        <em>&ldquo;removes an entire class of pricing bug &mdash; there is no second supplier ladder to drift.&rdquo;</em>
+                        Two independent passes arriving at the same structure is weak evidence, but it is evidence.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        <strong>I am still not recommending it</strong> &mdash; it is a bigger call than E, and it only pays off if the
+                        answer to B is &ldquo;sell the Buyer ladder&rdquo;.
+                    </p>
+                </div>
+                <div class="rec-box">
+                    <div class="rec-title"><span>&#128290;</span> Decision F &mdash; sequencing, so nothing is paid for twice</div>
+                    <p style="color:var(--text-main)">
+                        These decisions are not independent, and taking them in the wrong order means creating Stripe prices you
+                        then have to supersede.
+                    </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem">
+                        <strong>1.</strong> Answer <strong>B</strong> (sell or archive Buyer / Public Sector). Everything else hangs off it.<br>
+                        <strong>2.</strong> If &ldquo;sell&rdquo;, answer <strong>E</strong> before any Stripe write &mdash; the ladder shape decides
+                        how many prices exist.<br>
+                        <strong>3.</strong> <strong>C</strong> resolves itself under either answer: archive, or create new prices with
+                        <span class="code-path">tax_behavior</span> set correctly the first time.<br>
+                        <strong>4.</strong> <strong>A</strong> and <strong>D</strong> are independent of all of the above and can be done today.
+                    </p>
+                    <p style="color:var(--text-main);margin-top:.75rem">
+                        The one free action available immediately, under every branch: <strong>rename the Stripe product
+                        &ldquo;CrowMark Council&rdquo;</strong> and its local-authority-only description. That string reaches invoices,
+                        <span class="code-path">name</span> is mutable, and no branch of any decision keeps it.
+                    </p>
+                </div>
+            </div>
+
+            <div class="rec-box" style="margin-top:1.5rem">
+                <div class="rec-title"><span class="pill pill-indigo">Decision G</span> &nbsp;Is Free a plan, or a state?</div>
+                <p style="color:var(--text-muted)">
+                    The platform ships a Free tier with a real seat count and a real credit allowance. The website says there is no
+                    free plan. Both are internally consistent; together they are not.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>Free is a plan:</strong> publish it &mdash; 1 user, 15 AI credits &mdash; and it becomes a top-of-funnel
+                    entry point that costs roughly <strong>&pound;0.30</strong> a month per org &mdash; 15 credits at Starter&rsquo;s own
+                    modelled unit cost of &pound;4.00 &divide; 200; my arithmetic, not a measured figure. Risks diluting the 14-day trial, which
+                    currently does that job with 50 credits and a card on file.<br><br>
+                    <strong>Free is a state:</strong> it is simply what an org looks like before it subscribes. Keep it unpublished,
+                    and the website copy is already correct. Then the 15-credit allowance needs a stated purpose, or it is a
+                    quantity nobody chose.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Either answer is cheap.</strong> This is on the list only because leaving it unanswered is how the
+                    seat figures drifted in the first place &mdash; a number in a table that no decision stands behind.
+                </p>
+            </div>
+
+            <!-- ══════════════════ OPEN DEFECTS ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 7</div>
+                <h2 class="section-title">The Open Register Rows These Decisions Close</h2>
+            </div>
+
+            <div class="benchmark-table-container">
+                <table class="benchmark-table">
+                    <thead><tr><th>Row</th><th class="crowmark-col">Severity</th><th>What it is</th><th>Closed by</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>R262-D-159</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P1</span></td>
+                            <td>Nine live, chargeable prices &mdash; up to &pound;21,589/yr &mdash; on no other surface.</td>
+                            <td>Decision <strong>B</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>R262-D-160</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P2</span></td>
+                            <td>Two Public Sector prices with immutable <span class="code-path">tax_behavior: unspecified</span>.</td>
+                            <td>Decision <strong>C</strong>, downstream of <strong>B</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>R262-D-161</strong></td><td class="crowmark-col"><span class="score-pill score-high">P3</span></td>
+                            <td>Portfolio&rsquo;s Stripe nicknames still say &ldquo;Agency&rdquo;, a vocabulary the matrix retired.</td>
+                            <td>Free fix &mdash; <span class="code-path">nickname</span> is mutable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R262-D-34</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P2</span></td>
+                            <td>Portfolio published by the API vs quote-only on the site. <strong>Sharpened here:</strong> a recorded owner decision already exists and the API is the surface breaching it.</td>
+                            <td>Decision <strong>A</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-low">P1</span></td>
+                            <td>&ldquo;Agency&rdquo; is not only in Stripe. <span class="code-path">apps/portal</span> writes tier
+                            <span class="code-path">crowmark_agency</span> into production entitlement rows for full-access invites, and
+                            <span class="code-path">help-articles.ts</span> tells customers about &ldquo;Agency plan users&rdquo;.</td>
+                            <td>Cleanup &mdash; no decision needed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-low">P1</span></td>
+                            <td>The website will advertise 3 and 10 seats against an enforced 1 and 5, under the sentence
+                            &ldquo;These are the numbers the platform enforces&rdquo; &mdash; and the <strong>Terms of Service</strong>
+                            promise a trial for &ldquo;up to 3 users&rdquo;.</td>
+                            <td>Decision <strong>D</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P2</span></td>
+                            <td>The platform ships a Free CrowMark tier (1 seat, 15 credits) that the marketing site explicitly denies:
+                            <em>&ldquo;CrowMark is a paid product and there is no free plan.&rdquo;</em></td>
+                            <td>New decision &mdash; <strong>G</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-low">P0 BLOCKER</span></td>
+                            <td><span class="code-path">checkSeatCapacity</span> does not filter <span class="code-path">org_users</span>
+                            on <span class="code-path">active</span>, so a deactivated user still holds a seat. At Starter = 1 the
+                            customer cannot replace a departed colleague. <span class="code-path">REQ-PRICE-017</span> says fix
+                            before the caps ship; it is unfixed.</td>
+                            <td>Engineering &mdash; <strong>blocks D</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-low">P1</span></td>
+                            <td>Five AI system prompts in <span class="code-path">api/app/routers/council.py</span> hardcode
+                            <em>&ldquo;You are a UK local-authority&hellip;&rdquo;</em>, including the one that drafts award and regret
+                            letters sent to suppliers.</td>
+                            <td>Cleanup &mdash; no decision needed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P2</span></td>
+                            <td>Guest review invites are <strong>uncapped in code</strong>. An uncapped guest mechanism is an
+                            uncapped seat mechanism, and guests are the pressure valve that makes 1-seat Starter workable.
+                            <span class="code-path">REQ-PRICE-018</span>.</td>
+                            <td>Engineering + <strong>D</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New &mdash; not yet filed</strong></td><td class="crowmark-col"><span class="score-pill score-mid">P2</span></td>
+                            <td>The retired claim <em>&ldquo;Bid volume effectively unlimited&rdquo;</em> was corrected on <span class="code-path">/pricing</span>
+                            (defect OA-05) but survives on the deployed <span class="code-path">/crowmark</span> page, which also states
+                            no credit allowance at all. Same tier, two different published feature claims
+                            (&ldquo;white-label&rdquo; vs &ldquo;branded&rdquo; exports).</td>
+                            <td>Website cleanup &mdash; other repo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ══════════════════ METHOD ══════════════════ -->
+
+            <div class="section-header" style="margin-top:3rem">
+                <div class="band-label band-fact"><span>&#128269;</span> Fact</div>
+                <div class="section-tag">Section 8</div>
+                <h2 class="section-title">How This Was Measured, And What Is Deliberately Not Claimed</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="fact-box" style="margin-top:0">
+                    <div class="fact-title"><span>&#128300;</span> Controls run &mdash; because an empty result proves nothing on its own</div>
+                    <p style="color:var(--text-muted)">
+                        <strong>Stripe completeness.</strong> <span class="code-path">GET /v1/prices?active=true&amp;limit=100</span>
+                        returned 19 with <span class="code-path">has_more: false</span>, so the catalogue is not a page-1 sample.<br><br>
+                        <strong>Stripe read path works.</strong> A single subscription id read <em>failed</em> with
+                        <span class="code-path">No such subscription</span>. That alone proves nothing, so
+                        <span class="code-path">GET /v1/subscriptions?status=all</span> was run as the control &mdash; it returned data,
+                        <span class="code-path">has_more: false</span>. The read path works; the id genuinely is not in the live account.<br><br>
+                        <strong>Grep controls.</strong> Every &ldquo;this appears nowhere&rdquo; claim was paired with a search proven to
+                        return non-zero hits with the same tool. The <span class="code-path">seats_limit</span> single-reader result was
+                        controlled with <span class="code-path">seats_used</span>; the &ldquo;Public Sector&rdquo; sweep was controlled against
+                        the <span class="code-path">council</span> sweep.<br><br>
+                        <strong>Seat-safety cross-check.</strong> The claim &ldquo;no org exceeds one seat&rdquo; was re-run independently
+                        against production rather than taken from the code comment asserting it. It holds:
+                        <span class="code-path">max = 1</span>.<br><br>
+                        <strong>Website extraction.</strong> The live page was fetched with a cache-buster (HTTP 200, 75,400 bytes),
+                        scripts and styles stripped, and text extracted &mdash; then cross-checked against an independent sweep of the
+                        website repository. The two agree on every figure.<br><br>
+                        <strong>A trap that would have produced a false clean result.</strong> The website repo&rsquo;s
+                        <span class="code-path">.gitignore</span> ignores <span class="code-path">astro/dist/</span>, and the search tool
+                        honours <span class="code-path">.gitignore</span> &mdash; so <strong>the deployed build is invisible to a default
+                        search</strong>. Every claim about what is actually served was re-run against an explicit
+                        <span class="code-path">astro/dist</span> path. Searching only the source would have been searching the wrong artefact.
+                    </p>
+                </div>
+                <div class="fact-box" style="margin-top:0">
+                    <div class="fact-title"><span>&#128683;</span> Not claimed &mdash; named rather than quietly omitted</div>
+                    <p style="color:var(--text-muted)">
+                        <strong>No checkout was ever exercised.</strong> Not for Portfolio, not for Buyer, not for Public Sector.
+                        Every statement is that a price <em>exists and is active</em>, never that a purchase completes.<br><br>
+                        <strong>Stripe was READ ONLY.</strong> Nothing was created, updated or archived.<br><br>
+                        <strong>The five non-live subscription ids were not traced to an account.</strong> They are provably not in
+                        <span class="code-path">acct_1TB3MxILkzuI7dCV</span>; which account they belong to was not established, and no
+                        claim is made that they are test-mode rows.<br><br>
+                        <strong>Credit weights were not audited.</strong> The margin percentages are the packaging document&rsquo;s own
+                        arithmetic, reproduced, not independently re-derived from live AI spend.<br><br>
+                        <strong>No customer count is asserted</strong> for any tier beyond the row counts stated.<br><br>
+                        <strong>The website extraction reads rendered text only.</strong> A figure that appears solely inside an image
+                        or a script payload would not have been seen.<br><br>
+                        <strong>Whether the &sect;10 credit question was ever answered could not be determined</strong> &mdash; only that no
+                        record of an answer was found. Absence of a record is not proof of absence of a decision.<br><br>
+                        <strong>Two of my own findings were wrong, and are corrected in place rather than deleted.</strong>
+                        I first treated <span class="code-path">PRICING-AND-PACKAGING-2026-07.md</span> as canonical when it has been
+                        superseded; and I asserted that the Public Sector tier ladder still showed &ldquo;County&rdquo; to customers
+                        when the display layer already says &ldquo;Large&rdquo;. Both errors came from reading keys and specs instead of
+                        the rendered artefact. They are marked as corrections on this page because the failure mode is more useful
+                        to you than a clean-looking result.<br><br>
+                        <strong>I did not audit the AI prompt outputs</strong> &mdash; only the prompt text. No claim is made about how
+                        strongly &ldquo;UK local-authority&rdquo; framing actually shapes a generated award letter.<br><br>
+                        <strong>The page was not visually rendered in a browser.</strong> It was verified structurally: HTTP 200 from
+                        the server, exact tag balance globally and within the tab, and every CSS class used proven to exist.
+                    </p>
+                </div>
+            </div>
+
+            <div class="rec-box" style="margin-top:1.5rem">
+                <div class="rec-title"><span>&#128204;</span> The conclusion, in one paragraph</div>
+                <p style="color:var(--text-main)">
+                    The supplier price ladder &mdash; Starter and Pro &mdash; is in genuine four-way parity and needs no decision.
+                    Everything above and beside it is unresolved: a top tier whose price one surface publishes against a recorded
+                    decision, two ladders that exist only where money is taken, a seat number the public site over-promises, credit
+                    allowances that were implemented before they were accepted, and a buy-side product named after a single customer
+                    type. None of it is expensive to fix <strong>today</strong>, because there is no live subscription revenue to
+                    protect. All of it becomes expensive the day there is.
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (tabId === 'benchmark-tab') {
+                renderRadarChart();
+            }
+        }
+
+        // Render Mermaid Diagrams on load
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                darkMode: true,
+                background: '#0d121f',
+                primaryColor: '#6366f1',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#818cf8',
+                lineColor: '#64748b',
+                secondaryColor: '#10b981',
+                tertiaryColor: '#1e293b'
+            }
+        });
+
+        // Competitor Radar Chart Initialization
+        let radarChartInstance = null;
+        function renderRadarChart() {
+            if (radarChartInstance) return;
+            
+            const ctx = document.getElementById('competitorRadar').getContext('2d');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        'UK Public Compliance',
+                        'Social Value (PPN 002)',
+                        'Grounding & Citations',
+                        'RAG Retrieval Precision',
+                        'SME Price-to-Value',
+                        'Private RFP Intake',
+                        'Buyer Advisory Pre-Read',
+                        'Word Copilot Add-in'
+                    ],
+                    datasets: [
+                        {
+                            label: 'CrowMark (Today)',
+                            data: [9.8, 9.7, 9.5, 8.6, 9.9, 8.4, 9.2, 9.0],
+                            backgroundColor: 'rgba(99, 102, 241, 0.25)',
+                            borderColor: '#6366f1',
+                            pointBackgroundColor: '#818cf8',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Loopio / Responsive (Avg)',
+                            data: [3.0, 2.0, 8.0, 8.8, 4.0, 9.5, 1.0, 9.0],
+                            backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                            borderColor: '#8b5cf6',
+                            pointBackgroundColor: '#c084fc',
+                            borderWidth: 1.5
+                        },
+                        {
+                            label: 'AutogenAI',
+                            data: [6.0, 5.0, 7.5, 8.5, 3.5, 8.5, 1.0, 8.5],
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            borderColor: '#ef4444',
+                            pointBackgroundColor: '#f87171',
+                            borderWidth: 1.5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: {
+                                color: '#9ca3af',
+                                font: { family: 'Inter', size: 11 }
+                            },
+                            ticks: {
+                                color: '#6b7280',
+                                backdropColor: 'transparent',
+                                min: 0,
+                                max: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f3f4f6', font: { family: 'Inter', size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>CrowAgent website — transformation status</title>
+<title>CrowAgent status</title>
 <style>
   :root{
     --bg:#05070E; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.11);
@@ -105,7 +105,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Website transformation — status</h1>
+  <h1 id="boardheading">Website transformation status</h1>
   <p class="sub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
 
   <div class="warn" id="warn" hidden></div>
@@ -138,7 +138,7 @@
   </table>
 
   <div class="legend">
-    <p><b>What the statuses mean</b> — and the distinction that matters most:</p>
+    <p><b>What the statuses mean</b>, and the distinction that matters most:</p>
     <ul id="legend"></ul>
     <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
     <p id="directives"></p>
@@ -228,7 +228,7 @@ function render(){
        the full text is still in the DOM and still in platform.json. */
     const HEADLINE_LIMIT = 220;
     const renderNotice = (u) => {
-      const src = typeof u === 'string' ? '' : '<b>' + esc(u.src) + '</b> — ';
+      const src = typeof u === 'string' ? '' : '<b>' + esc(u.src) + '</b>: ';
       const body = typeof u === 'string' ? u : u.why;
       if (String(body).length <= HEADLINE_LIMIT) {
         return '<li style="margin:6px 0">' + src + esc(body) + '</li>';
@@ -289,7 +289,7 @@ function render(){
       if (dep.unavailable) {
         /* Not zero, not fine — UNKNOWN, and loud. "No data, so nothing is wrong"
            is the silent green this release kept finding in its own gates. */
-        html += '<p class="head" style="color:var(--open)"><b>CANNOT SAY</b> — ' + esc(dep.unavailable) + '</p>';
+        html += '<p class="head" style="color:var(--open)"><b>CANNOT SAY</b>: ' + esc(dep.unavailable) + '</p>';
       } else if (dep.headline) {
         html += '<p class="head">' + esc(dep.headline) + '</p>';
       }
@@ -380,7 +380,7 @@ function render(){
           'ever SHRINK. <details style="display:inline"><summary style="display:inline;cursor:pointer">' +
           'show them</summary><ul style="margin:8px 0 0;padding-left:20px">' +
           viol.map(v => '<li><code>' + esc(v.sha) + '</code> ' + esc(v.project || '') +
-            (v.when ? ' (' + esc(v.when) + ')' : '') + ' — ' + esc(v.why || '') + '</li>').join('') +
+            (v.when ? ' (' + esc(v.when) + ')' : '') + ': ' + esc(v.why || '') + '</li>').join('') +
           '</ul></details></p>';
       }
       if (notCounted.length) {
@@ -417,7 +417,7 @@ function render(){
     </tr>`).join('');
 
   document.getElementById('legend').innerHTML =
-    Object.entries(DATA.legend).map(([k,v])=>`<li><b>${k}</b> — ${esc(v)}</li>`).join('');
+    Object.entries(DATA.legend).map(([k,v])=>`<li><b>${k}</b>: ${esc(v)}</li>`).join('');
   /* OPTIONAL, and it must be. This line read `DATA.directives.map(...)`
      unconditionally, so ANY board without a `directives` array threw
      "Cannot read properties of undefined (reading 'map')" — and because the
@@ -453,7 +453,7 @@ function render(){
       const byStatus = movedToday.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {});
       movementEl.innerHTML =
         '<b>' + movedToday.length + ' item' + (movedToday.length === 1 ? '' : 's') +
-        ' changed today (' + esc(today) + ')</b> — ' +
+        ' changed today (' + esc(today) + ')</b>: ' +
         Object.entries(byStatus).map(([k, v]) => esc(k) + ' ' + v).join(', ');
     } else {
       movementEl.textContent = 'No items changed state today (' + today + ').';
@@ -489,20 +489,101 @@ document.getElementById('filters').addEventListener('click',e=>{
  * on the same page instead of silently resetting to the website.
  */
 const BOARDS = {
-  website:  { file: 'issues.json',   label: 'Website' },
-  platform: { file: 'platform.json', label: 'Platform & Portal' },
+  website:  { file: 'issues.json',   label: 'Website',
+              heading: 'Website transformation status' },
+  platform: { file: 'platform.json', label: 'Platform & Portal',
+              heading: 'Release 2.7 status: platform and portal' },
   /* [R27-ARCH-01] A DOCUMENT board, not an issue list. The owner asked for the
      architecture review and the tenancy analysis to live at this address rather
      than in a separate file, so there is one status surface instead of two
      places to look. `doc` marks it: `load()` injects the fragment and hides the
      issue chrome, because a table of severities is meaningless for prose. */
-  architecture: { doc: 'architecture-tenancy.html', label: 'Architecture & Tenancy' },
+  architecture: {
+    label: 'Architecture & Tenancy',
+    heading: 'Architecture and tenancy: how the two products are supplied',
+    /* Two views behind one tab. The architecture review is the 164KB document
+       from tools/arch-visualizer, which carries its OWN stylesheet plus Chart.js
+       and Mermaid; injecting it inline would collide with this page's CSS, so it
+       is framed and keeps working exactly as authored. The tenancy analysis is a
+       fragment written against this page's own styles, so it is injected. */
+    views: [
+      { id: 'review',  label: 'Architecture review',   frame: 'architecture-review.html' },
+      { id: 'tenancy', label: 'Tenancy and isolation', doc:   'architecture-tenancy.html' },
+    ],
+  },
 };
-let board = (location.hash.replace('#','') in BOARDS) ? location.hash.replace('#','') : 'website';
+let board = ((location.hash.replace('#','').split('/')[0]) in BOARDS)
+  ? location.hash.replace('#','').split('/')[0] : 'website';
 
 function renderTabs(){
   document.getElementById('boardtabs').innerHTML = Object.entries(BOARDS).map(([k,v]) =>
     '<button data-b="'+k+'"'+(k===board?' class="on"':'')+'>'+esc(v.label)+'</button>').join('');
+  /* [R27-ARCH-02] The heading follows the SELECTION. It read "Website
+     transformation status" on every board, including the platform board the owner
+     uses most, so the page named the wrong subject while displaying the right
+     data. Driven from the BOARDS registry and set here because renderTabs already
+     runs on every board change: a new board cannot arrive without a heading, and
+     there is one writer rather than three call sites.
+     The document title follows too, so a browser tab and a bookmark say which
+     board they point at. */
+  const h = BOARDS[board].heading || BOARDS[board].label;
+  const el = document.getElementById('boardheading');
+  if (el) el.textContent = h;
+  document.title = 'CrowAgent: ' + h;
+}
+
+/* [R27-ARCH-01] The detail switch. A document board can carry several views; the
+   selected one lives in the hash after a slash (#architecture/tenancy) so a
+   reload or a shared link lands on the same view, matching how the board itself
+   already behaves. */
+let docView = null;
+
+function currentView(spec){
+  const fromHash = (location.hash.split('/')[1] || '').trim();
+  const ids = spec.views.map(v => v.id);
+  if (ids.includes(fromHash)) return fromHash;
+  if (docView && ids.includes(docView)) return docView;
+  return ids[0];
+}
+
+async function renderDocView(spec, host){
+  const active = currentView(spec);
+  docView = active;
+  const sw = spec.views.map(v =>
+    '<button data-v="' + v.id + '"' + (v.id === active ? ' class="on"' : '') + '>' +
+    esc(v.label) + '</button>').join('');
+  const view = spec.views.find(v => v.id === active);
+
+  if (view.frame) {
+    /* Framed, not injected: it brings its own stylesheet and two CDN libraries.
+       Height is generous because the document is long and a scrollbar inside a
+       scrollbar is worse than a tall frame. */
+    host.innerHTML =
+      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw + '</div>' +
+      '<iframe src="' + esc(view.frame) + '" title="' + esc(view.label) + '" ' +
+      'style="width:100%;height:82vh;border:1px solid var(--line,#333);border-radius:6px;background:#fff"></iframe>';
+  } else {
+    let body;
+    try{
+      const r = await fetch(view.doc + '?t=' + Date.now());
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      body = await r.text();
+    }catch(err){
+      /* Name the document AND the reason. "Could not load" alone sends the reader
+         to the wrong file. */
+      body = '<p>Could not load ' + esc(view.doc) + ': ' + esc(err.message) + '</p>';
+    }
+    host.innerHTML =
+      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw + '</div>' + body;
+  }
+
+  const swEl = document.getElementById('docswitch');
+  if (swEl) swEl.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    docView = b.dataset.v;
+    location.hash = board + '/' + docView;
+    renderDocView(spec, host);
+  });
 }
 
 async function load(){
@@ -511,7 +592,7 @@ async function load(){
      the deploy panel are all meaningless for a document, and leaving them on
      screen would offer controls that do nothing. */
   const spec = BOARDS[board];
-  if (spec.doc) {
+  if (spec.views) {
     renderTabs();
     for (const id of ['filters','deploy','summary','movement','srcnote']) {
       const el = document.getElementById(id); if (el) el.hidden = true;
@@ -519,15 +600,7 @@ async function load(){
     document.querySelector('table').hidden = true;
     const host = document.getElementById('docbody');
     host.hidden = false;
-    try{
-      const r = await fetch(spec.doc + '?t=' + Date.now());
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      host.innerHTML = await r.text();
-    }catch(err){
-      /* Say WHICH document and WHY. "Could not load" with no name sends the
-         reader to the wrong file. */
-      host.innerHTML = '<p>Could not load ' + esc(spec.doc) + ': ' + esc(err.message) + '</p>';
-    }
+    await renderDocView(spec, host);
     return;
   }
   /* An issue board: restore what the document branch hid. `deploy` is NOT in this
@@ -553,7 +626,7 @@ async function load(){
   }catch(err){
     renderTabs();
     document.getElementById('rows').innerHTML =
-      '<tr><td colspan="4">Could not load '+esc(file)+' — '+esc(err.message)+
+      '<tr><td colspan="4">Could not load '+esc(file)+': '+esc(err.message)+
       (board==='platform' ? '. Run: node status/build-platform-board.js' : '')+'</td></tr>';
   }
 }
@@ -563,7 +636,7 @@ document.getElementById('boardtabs').addEventListener('click',e=>{
   board=b.dataset.b; location.hash=board; filter='all'; load();
 });
 window.addEventListener('hashchange',()=>{
-  const h=location.hash.replace('#','');
+  const h=location.hash.replace('#','').split('/')[0];
   if(h in BOARDS && h!==board){ board=h; load(); }
 });
 
