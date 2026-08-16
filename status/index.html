@@ -128,6 +128,10 @@
   <section class="deploy" id="deploy" hidden></section>
   <div class="controls" id="filters"></div>
 
+  <!-- [R27-ARCH-01] Where a document board renders. Empty and hidden for the two
+       issue boards, so nothing shifts for them. -->
+  <section id="docbody" hidden></section>
+
   <table>
     <thead><tr><th>ID</th><th>Sev</th><th>Status</th><th>Issue</th></tr></thead>
     <tbody id="rows"></tbody>
@@ -487,6 +491,12 @@ document.getElementById('filters').addEventListener('click',e=>{
 const BOARDS = {
   website:  { file: 'issues.json',   label: 'Website' },
   platform: { file: 'platform.json', label: 'Platform & Portal' },
+  /* [R27-ARCH-01] A DOCUMENT board, not an issue list. The owner asked for the
+     architecture review and the tenancy analysis to live at this address rather
+     than in a separate file, so there is one status surface instead of two
+     places to look. `doc` marks it: `load()` injects the fragment and hides the
+     issue chrome, because a table of severities is meaningless for prose. */
+  architecture: { doc: 'architecture-tenancy.html', label: 'Architecture & Tenancy' },
 };
 let board = (location.hash.replace('#','') in BOARDS) ? location.hash.replace('#','') : 'website';
 
@@ -496,7 +506,41 @@ function renderTabs(){
 }
 
 async function load(){
-  const file = BOARDS[board].file;
+  /* [R27-ARCH-01] A DOCUMENT board renders prose, not rows. Branch first, because
+     everything below assumes an issue list: the filters, the severity table and
+     the deploy panel are all meaningless for a document, and leaving them on
+     screen would offer controls that do nothing. */
+  const spec = BOARDS[board];
+  if (spec.doc) {
+    renderTabs();
+    for (const id of ['filters','deploy','summary','movement','srcnote']) {
+      const el = document.getElementById(id); if (el) el.hidden = true;
+    }
+    document.querySelector('table').hidden = true;
+    const host = document.getElementById('docbody');
+    host.hidden = false;
+    try{
+      const r = await fetch(spec.doc + '?t=' + Date.now());
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      host.innerHTML = await r.text();
+    }catch(err){
+      /* Say WHICH document and WHY. "Could not load" with no name sends the
+         reader to the wrong file. */
+      host.innerHTML = '<p>Could not load ' + esc(spec.doc) + ': ' + esc(err.message) + '</p>';
+    }
+    return;
+  }
+  /* An issue board: restore what the document branch hid. `deploy` is NOT in this
+     list on purpose. render() owns its visibility and re-decides every load, so
+     unhiding it here would show an empty panel for a frame before render() hid it
+     again. */
+  for (const id of ['filters','summary','movement','srcnote']) {
+    const el = document.getElementById(id); if (el) el.hidden = false;
+  }
+  document.querySelector('table').hidden = false;
+  document.getElementById('docbody').hidden = true;
+
+  const file = spec.file;
   try{
     const r=await fetch(file+'?t='+Date.now());
     if(!r.ok) throw new Error('HTTP '+r.status);
