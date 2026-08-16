@@ -670,7 +670,13 @@ window.addEventListener('hashchange',()=>{
   if(h in BOARDS && h!==board){ board=h; load(); }
 });
 
-load(); setInterval(load,20000);
+load();
+/* [R27-ARCH-06] The poll refreshes platform.json for ISSUE boards. On a DOCUMENT
+   board there is nothing to refresh, and re-injecting the fragment every 20
+   seconds WIPED the reader's chosen diagram state and closed every evidence
+   block they had opened. Measured, not theorised: a selection reverted between
+   two reads 20 seconds apart. So the poll now skips document boards. */
+setInterval(() => { if (!BOARDS[board].views) load(); }, 20000);
 </script>
 </body>
 </html>
