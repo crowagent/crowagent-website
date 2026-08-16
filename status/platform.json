@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T15:14:33.292Z",
+  "updated": "2026-08-16T15:25:30.772Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,7 +8,7 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T15:14:32.889Z",
+    "generatedAt": "2026-08-16T15:25:29.937Z",
     "sourceFingerprint": "189:-1581153121",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 189,
@@ -879,7 +879,7 @@
       "sevExplicit": true,
       "status": "OPEN",
       "title": "[SEV:P0] Rubric marking does not persist",
-      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §7.1. Measured on the LIVE PRODUCTION app with network interception. POST /api/crowmark/response/mark 200 in 3,495ms. Gone after reload."
+      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §7.1. Measured on the LIVE PRODUCTION app with network interception. POST /api/crowmark/response/mark 200 in 3,495ms. Gone after reload. Root cause confirmed by reading the handler: crowmark_response.py:1111 calls mark_answer(...) and RETURNS it - no insert, no upsert anywhere. Storage now exists: crowmark_answer_marks + crowmark_answer_mark_criteria applied to prod AND staging (RLS on, 1 org_isolation policy each, 22 + 13 columns), shape mirroring the engine's return value and _row() verbatim so persistence re-derives nothing. Two decisions carried into the schema: answer_sha256 is NOT NULL so a consumer can always tell a current mark from one taken against an answer since rewritten (otherwise the UI shows a stale mark as if current), and the table is APPEND-ONLY because the amend->re-mark loop IS the history. Honest framing is enforced by a self-assertion that FAILS on any column named like %win%/%probability%/%likelihood% - checked by the database, not trusted to a comment. DELIBERATELY NOT CLOSED: FU-P0-5a the endpoint must INSERT; FU-P0-5b a GET must return the newest mark plus whether the hash still matches; FU-P0-5c the UI must render it on load. Assign to CrowMark workstream B."
     },
     {
       "id": "R27-CM-P0-06",
