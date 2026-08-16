@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T14:52:18.952Z",
+  "updated": "2026-08-16T14:55:29.371Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T14:52:18.679Z",
-    "sourceFingerprint": "186:2084605259",
+    "generatedAt": "2026-08-16T14:55:29.152Z",
+    "sourceFingerprint": "187:-825948222",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 186,
+    "totalRaised": 187,
     "done": 54,
-    "remaining": 132,
+    "remaining": 133,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 132,
-        "open": 117,
+        "items": 133,
+        "open": 118,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 132,
+        "items": 133,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -655,6 +655,15 @@
       "status": "OPEN",
       "title": "[SEV:P1] the RLS parity gate reads a FILE, not the database",
       "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. Closing it properly needs a read-only prod role queried at gate time, which is a credential-provisioning decision only the owner can make. Second, narrower gap: the snapshot stores only (tablename, policyname), so a policy REWRITTEN under the same name with a weaker USING/WITH CHECK is invisible in both directions - storing qual/with_check is the prerequisite."
+    },
+    {
+      "id": "R27-GUARD-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] 19 guard scripts are declared @ci-wired none - and one of them would have caught today's R262-D-223",
+      "note": "R27-HANDBACK-05 was closed at \"6 guards wired\" while the repo's OWN machine-readable inventory still declares 19 unwired. Tally from the @ci-wired marker across scripts/: 15 wired, 1 suite, 19 none**. The list is not obscure tooling - it includes verify-vercel-rule0.mjs (the RULE 0 money guard), verify-deploy-budget.mjs, verify-supabase-parity.mjs, migration-rls-lint.sh, db/check-forward-only.sh, arch-lint-web.mjs, arch-lint-bff.mjs, arch-lint.sh, verify-stripe-lookup-keys-resolve.mjs, verify-client-chunk-budget.mjs, verify-api-shard-coverage.mjs, verify-archive-selfcontained.mjs, verify-carryover-closure.mjs, verify-deletion-list.mjs and both verify-register-* guards. The headline: verify-migrations-have-files.mjs asserts that every migration applied to a database exists as a FILE - it was written after four migrations were applied with no file, and its header calls the pattern \"a class, not an accident\". It is unwired, and the same class struck again on 2026-08-11 (R262-D-223), found only by accident five days later during R27-RLS-PARITY-01. So R27-MIG-03's \"needs new credentials\" framing is only half right: the guard already exists and is already written to avoid the obvious filename trap (it compares NORMALISED SQL, because MCP stamps its own apply-time version). Being triaged one by one - run locally, verdict WIRE NOW / WIRE AFTER FIXING / NEEDS-CREDENTIAL / NOT-A-GATE - under a hard rule that a red guard gets its defect fixed, never its threshold softened, and that every newly wired guard must state its denominator and FAIL when that denominator is zero. A meta-guard is being added so a @ci-wired marker cannot drift into fiction."
     },
     {
       "id": "R27-AI-01",
