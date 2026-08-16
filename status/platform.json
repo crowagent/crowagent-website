@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T21:37:23.558Z",
+  "updated": "2026-08-16T21:38:16.781Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T21:37:23.250Z",
-    "sourceFingerprint": "243:-913150511",
+    "generatedAt": "2026-08-16T21:38:16.436Z",
+    "sourceFingerprint": "245:1973120286",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 243,
+    "totalRaised": 245,
     "done": 126,
-    "remaining": 117,
+    "remaining": 119,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 117,
-        "open": 105,
+        "items": 119,
+        "open": 107,
         "built": 10,
         "wip": 2,
         "decision": 0
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 117,
+        "items": 119,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -1945,6 +1945,24 @@
       "status": "FIXED",
       "title": "[SEV:P1] the pricing engine accepts a measure whose UNIT disagrees with its library row",
       "note": "R27-CM-P0-09 fixed the wrong code; this is why the wrong code could price at all. The calculator sends a measure code and a quantity, and the engine multiplies by whatever proxy_value that code carries - it rejects an UNKNOWN code (\"Reference data corrupted\") but happily prices a KNOWN code against a quantity captured in a different unit. That is how \"per MWh\" became \"per training place\" at 15x. The client-side guard I added cannot catch this class and says so in its own header: it cannot reach the library. The fix is server-side - carry the unit with the selection and REFUSE on mismatch rather than pricing silently. The engine ALREADY returned the library's unit in its response, so the disagreement was on the wire the whole time and nobody compared it. assumed_unit is OPTIONAL by design - required would 422 every existing client on deploy, turning a silent wrong number into a loud outage. Absent prices as before (asserted, not assumed); present-and-disagreeing is refused with both units named. ⚠️ The existing test_ppn002_calculator.py regression run TIMED OUT at 7 min with free RAM at 1,092 MB and 46 node processes - six agents concurrent, and this machine FABRICATES failures below ~1GB. A timeout is not a red and not a green; re-run pending. Committed on the structural argument that no existing caller sends the field, so every existing path is byte-identical - which one of the five tests proves directly."
+    },
+    {
+      "id": "R27-SEGMENT-13",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the jurisdiction registry cannot express one statute governing two jurisdictions",
+      "note": "The registry advertises that adding or correcting a jurisdiction is \"a ruleset plus a source and no engine change\". That promise does not hold for R27-SEGMENT-04. build_jurisdiction_registry enforces ONE JURISDICTION PER REGIME - an invariant ruleset_for_regime depends on and a test positively asserts - so setting NI's governing_regime to procurement_act_2023 makes the generator RAISE, because England & Wales already claims it. The real law breaks that bijection: one statute governs two jurisdictions that genuinely differ (their suitability rules differ), so they cannot share a ruleset either. NI's key therefore stays ppr_2016 while every user-facing string correctly names the Act - an internal inconsistency recorded rather than worked around. Fixing it needs jurisdiction-keyed lookups across both tiers plus the crowmark_contracts_governing_regime_check constraint. Safe to defer on measured grounds: prod has ZERO NI contracts and governing_regime is NULL on 24 of 24 rows."
+    },
+    {
+      "id": "R27-DEPLOY-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] Railway cannot receive R2.7 API work before the release merges - BOTH services track main",
+      "note": "Measured from the live Railway config 2026-08-16: crowagent-platform AND crowagent-platform-staging BOTH declare source.branch = main on crowagent/crowagent-platform (rootDirectory /api). R2.7 work lives on r27/held-work-2026-08-13 because local main tracks origin/main and a bare push would ship 100+ commits to PRODUCTION main. So no amount of pushing the held branch deploys the API anywhere - the API changes (R27-SEGMENT-04's NI regime, R27-SEGMENT-10's unit refusal, the workstream-I P0 fixes) reach Railway ONLY at the R2.7 merge, which is the same moment certification completes. This is recorded so \"Railway is deployed\" is never claimed on the strength of a push that could not have reached it. Supabase is different and IS deployed - migrations go through MCP apply_migration directly, staging and prod, and 20262200000000 is applied and verified on both."
     },
     {
       "id": "R27-SEGMENT-11",
