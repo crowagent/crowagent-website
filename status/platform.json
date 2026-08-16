@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T14:48:27.960Z",
+  "updated": "2026-08-16T14:52:18.952Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T14:48:27.735Z",
-    "sourceFingerprint": "185:-169810725",
+    "generatedAt": "2026-08-16T14:52:18.679Z",
+    "sourceFingerprint": "186:2084605259",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 185,
+    "totalRaised": 186,
     "done": 54,
-    "remaining": 131,
+    "remaining": 132,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 131,
-        "open": 116,
+        "items": 132,
+        "open": 117,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 131,
+        "items": 132,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -655,6 +655,15 @@
       "status": "OPEN",
       "title": "[SEV:P1] the RLS parity gate reads a FILE, not the database",
       "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. Closing it properly needs a read-only prod role queried at gate time, which is a credential-provisioning decision only the owner can make. Second, narrower gap: the snapshot stores only (tablename, policyname), so a policy REWRITTEN under the same name with a weaker USING/WITH CHECK is invisible in both directions - storing qual/with_check is the prerequisite."
+    },
+    {
+      "id": "R27-AI-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the AI citation-hallucination guardrail queries a table that has NEVER existed",
+      "note": "Found by measuring code-named tables against migration-created tables (the credential-free half of R27-MIG-03). api/app/services/gemini_rag.py:390 validates every [doc:<uuid>] the model emits against public.rag_documents. That table does not exist in production - live to_regclass is NULL, no migration creates it, and there is no rag-named table at all (information_schema returns only company_coverage, credit_overage_events, credit_overage_settings). It is also the ONLY table gemini_rag.py touches, so there is no alternative corpus it could have meant. GEMINI-003 is wired fail_closed=True (line 515) into gemini_rag.query(), which api/app/routers/social_value.py:47 serves from the MOUNTED router /api/v1/social-value tagged \"CrowMark / PPN 002\" - a live, legally-mandatory surface. So the guardrail can never validate anything: either the answer contains no [doc: marker and it is a permanent no-op, or it contains one and EVERY citation is replaced with [citation removed] while a Sentry breadcrumb and WARNING log falsely name it citation_hallucination. Third member of the \"control that reaches nothing\" family found today and the first in an AI-safety path. NOT yet established: whether the model emits [doc: markers at all. Sentry has ZERO citation log events in 90 days, but that is NOT evidence of safety - it is unconfirmed whether Python logger.warning is forwarded to Sentry logs, and the repo already records that some classes open no Sentry issue. Severity held at P1 rather than P0 pending that determination."
     },
     {
       "id": "R27-MIG-03",
