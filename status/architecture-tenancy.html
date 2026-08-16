@@ -1,0 +1,909 @@
+<style>
+  /* Scoped to this document board only. Uses the board's own tokens; declares no
+     new colour. The board stylesheet styles tables, pills and stat tiles already,
+     so this adds only the prose rhythm a document needs and an issue list does not. */
+  #docbody{max-width:900px}
+  #docbody h2{font-size:23px;line-height:1.25;letter-spacing:-.01em;margin:38px 0 6px;
+               padding-top:20px;border-top:1px solid var(--line)}
+  #docbody h2:first-of-type{border-top:0;padding-top:0;margin-top:16px}
+  #docbody h3{font-size:16px;margin:24px 0 4px;color:var(--text)}
+  #docbody h2 .n{color:var(--sub);font-weight:400;font-size:15px;letter-spacing:.09em;
+                 display:block;text-transform:uppercase;margin-bottom:3px}
+  #docbody p{margin:9px 0}
+  #docbody li{margin:6px 0}
+  #docbody code{font-family:ui-monospace,monospace;font-size:.87em;background:var(--card);
+                border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+                overflow-wrap:anywhere}
+  #docbody a{color:var(--built)}
+  #docbody .lede{font-size:17.5px;line-height:1.5;color:var(--text)}
+  #docbody .src{color:var(--sub);font-size:12.5px;margin-top:5px}
+  #docbody .src a{color:var(--sub)}
+  #docbody .tblwrap{overflow-x:auto;margin:10px 0 4px}
+  #docbody table{min-width:560px}
+  #docbody .verdict{border:1px solid var(--line);border-left:4px solid var(--teal);
+                    background:var(--card);border-radius:12px;padding:16px 18px;margin:16px 0}
+  #docbody .verdict.risk{border-left-color:var(--open)}
+  #docbody .verdict.note{border-left-color:var(--wip)}
+  #docbody .verdict h3{margin-top:0}
+  #docbody .kv{border-left:2px solid var(--line);padding-left:14px;margin:12px 0;color:var(--sub);font-size:14px}
+</style>
+
+<h1 style="font-size:31px;margin:6px 0 4px;letter-spacing:-.02em">Enterprise tenancy and data isolation</h1>
+<p class="sub" style="margin-bottom:22px">
+  Can the two products be sold to two separate customer bases, and can a public body or a large
+  enterprise be given its own database? Written against the code on 16 August 2026.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">The answer</span>Short version</h2>
+
+<p class="lede">
+  The two products are already separated cleanly enough to sell to two different customer bases.
+  The isolation seam that would allow a single customer to be moved onto its own database exists
+  on the buyer side only, it has never been switched on, and nothing in the codebase can switch
+  it on today. More useful than any of that: a dedicated database is not the thing that will
+  block these sales, and building one first would spend the most money on the least binding
+  constraint.
+</p>
+
+<div class="bar" style="margin:18px 0 6px">
+  <div class="stat"><b>2</b><span>live products</span></div>
+  <div class="stat"><b>1</b><span>database</span></div>
+  <div class="stat"><b style="color:var(--fixed)">515</b><span>RLS policies</span></div>
+  <div class="stat"><b style="color:var(--wip)">12</b><span>seam consumers</span></div>
+  <div class="stat"><b style="color:var(--open)">0</b><span>on the supplier side</span></div>
+  <div class="stat"><b style="color:var(--open)">411</b><span>RLS-bypass call sites</span></div>
+</div>
+
+<div class="verdict risk">
+  <h3>The four things that will actually stop a public sector or enterprise sale</h3>
+  <p>None of them is solved by giving a customer its own database.</p>
+  <ol style="margin:8px 0 4px">
+    <li><b>Data is in Ireland, not the UK.</b> Every row sits in AWS <code>eu-west-1</code>. The
+      published residency page states in bold that no customer data is stored in a UK region and
+      that region pinning is not offered on any plan.</li>
+    <li><b>Bid content leaves the UK and the EEA for AI processing.</b> The same page discloses
+      Anthropic in the United States and the Gemini API as "not region-pinned by the API used".
+      A tenant database in London would not change this.</li>
+    <li><b>Cyber Essentials is the mandated gate, and we have not verified that we hold it.</b>
+      PPN 014 requires it before contract award for central government and NHS bodies. It costs
+      £320 plus VAT at our headcount.</li>
+    <li><b>The supplier product has no database-level tenant separation at all.</b> It runs
+      entirely on a key that bypasses row-level security, so isolation rests on hand-written
+      filters in application code. This is the finding with the widest blast radius.</li>
+  </ol>
+</div>
+
+<div class="verdict">
+  <h3>What to do instead of a silo</h3>
+  <p>
+    Sell three tiers, not N databases. Pooled with contractual assurances covers the whole SME
+    and mid-market supplier base today. A single second database pinned to London
+    (<code>eu-west-2</code>) serves every UK residency requirement, public sector and enterprise
+    alike, with one extra database rather than one per customer. A true per-customer silo is
+    priced as a bespoke engagement and sold only against a signed contract that pays for it.
+    The detail, with costs and lead times, is in section 7.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 1</span>How the two products are separated today</h2>
+
+<p>
+  There are exactly two live products. The registry that defines them is the single source of
+  product identity, and it lists no others.
+</p>
+
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Product</th><th>Internal key</th><th>Route</th><th>Sold to</th><th>Price</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>CrowMark</b></td>
+      <td><code>crowmark</code></td>
+      <td><code>/crowmark</code></td>
+      <td>Suppliers writing bids, public and private</td>
+      <td>£49 / £149 / £549 per month</td>
+    </tr>
+    <tr>
+      <td><b>CrowMark Buyer</b></td>
+      <td><code>council</code> (legacy, never user-visible)</td>
+      <td><code>/public-sector</code></td>
+      <td>Buyers evaluating incoming bids</td>
+      <td>£3,600 / £9,600 / £19,200 per year</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="src">
+  <code>web/src/shared/product/registry.ts:112-154</code> ·
+  <code>web/src/shared/lib/plan-limits.ts:110-114</code> ·
+  <code>web/src/features/public-sector/PublicSectorCheckoutButton.tsx:31-33</code>
+</p>
+
+<p class="note">
+  Two caveats on those prices. The £549 CrowMark tier is configured for post-demo checkout and is
+  not published on the marketing site. All three buyer prices are <code>active:false</code> in
+  live Stripe, so the buyer ladder is archived and that product is currently sold by quote rather
+  than self-serve checkout.
+</p>
+
+<h3>What a customer of one product can see of the other</h3>
+<p>
+  Separation is by entitlement and routing inside one codebase, one database and one deployment.
+  Every route is gated by <code>requireProductAccess(product)</code>, which resolves the caller,
+  resolves the organisation from server-trusted membership, reads the entitlement from the
+  <code>product_context</code> JSONB on the organisation, and applies a registry kill switch that
+  fails closed on an unknown key. Product visibility is driven by
+  <code>product_context</code>; the CrowMark <i>tier</i> within that product is resolved from
+  <code>product_subscriptions</code>, with <code>product_context.crowmark.tier</code> as a read
+  cache.
+</p>
+<p class="src">
+  <code>web/src/shared/lib/auth/requireEntitlement.ts</code> ·
+  <code>api/app/services/crowmark_tier.py:5-7</code> ·
+  <code>web/src/shared/product/registry.ts:242-244</code>
+</p>
+
+<p>
+  The two products do not share tables. I checked in both directions and in both tiers: no
+  buyer-side route reads a <code>crowmark_</code> table, and no supplier-side route reads a
+  <code>council_</code> table. The buyer's own supplier directory is
+  <code>council_suppliers</code>, a record the buying organisation keeps about its market. It is
+  not a window into a supplier tenant's account.
+</p>
+<p class="src">Verified across <code>web/app/api/council/**</code>, <code>web/app/api/crowmark/**</code> and <code>api/app/routers/**</code>. One deliberate exception is documented in section 6.</p>
+
+<div class="verdict note">
+  <h3>The commercial reading</h3>
+  <p>
+    Selling the two products to two unrelated customer bases needs no engineering. A buyer never
+    sees supplier data and a supplier never sees buyer data. What is shared is the database, the
+    codebase and the release train, which is what a customer's security reviewer will ask about.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 2</span>What isolation exists today, with denominators</h2>
+
+<p>
+  One Supabase project in production (<code>gujtuecjzfiqsdnzgyvo</code>), shared tables, and
+  row-level security keyed on <code>organisation_id</code>.
+</p>
+
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Measure</th><th>Value</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td>RLS policies in the production <code>public</code> schema</td><td><b>515</b></td>
+        <td>Snapshot captured from prod 2026-08-16, md5-verified in Postgres and re-derived locally</td></tr>
+    <tr><td>Distinct tables carrying at least one policy</td><td><b>309</b></td>
+        <td>Same snapshot</td></tr>
+    <tr><td>Public-schema tables in prod, RLS enabled</td><td>approx. <b>280</b>, RLS on <b>100%</b></td>
+        <td>Security audit, same day. The approximate count and the 309 above are not reconciled; see the caveat below</td></tr>
+    <tr><td>Committed migrations</td><td><b>653</b></td><td><code>supabase/migrations/*.sql</code></td></tr>
+    <tr><td>Primary storage region</td><td><code>eu-west-1</code> (AWS Ireland)</td>
+        <td>Published residency page and the tenant-model migration default</td></tr>
+    <tr><td>Organisations sharing the production project</td><td><b>Not established</b></td>
+        <td>Read-only database access was denied to this session throughout</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="src">
+  <code>docs/rls/prod-policies-snapshot.json</code> (<code>_meta.policy_count</code>) ·
+  <code>docs/release-2.7/AUDIT-SECURITY-2026-08-16.md:334</code> ·
+  <code>supabase/migrations/20260719000000_council06_ws1_tenant_model.sql</code> ·
+  <code>web/app/(legal)/residency/page.tsx:47</code>
+</p>
+
+<div class="verdict note">
+  <h3>Two honest caveats on the numbers above</h3>
+  <p>
+    The 309 figure counts tables with a policy row in a production snapshot. The approximate 280
+    figure comes from a separate audit the same day. I have not reconciled them and I am not
+    picking one silently. Separately, a cross-check I ran joined the production policy snapshot
+    against a <i>staging</i> column snapshot and reported 13 relations with no policy; four of
+    those are views or materialised views, which cannot carry table RLS, and two are backup and
+    archive tables. That join spans two environments, so treat it as a prompt to re-measure
+    rather than a finding.
+  </p>
+  <p>
+    <b>The organisation count is the number I most wanted and could not get.</b> The Supabase MCP
+    returned <code>permission_error: Unable to verify organization membership</code> on every
+    attempt. One read-only query settles it.
+  </p>
+</div>
+
+<h3>Region: the gap between what a buyer will ask and what we have</h3>
+<p>
+  The tenant-model migration is candid about this in its own header, and the published residency
+  page is more so. It states that all customer data today is stored in AWS <code>eu-west-1</code>,
+  that no customer data is stored in a UK region, that region pinning is not offered, and that a
+  UK storage region would be a future change requiring engineering work and a separate written
+  agreement. That page is correct and should not be softened. It also means the honest answer to
+  the G-Cloud field "Data storage and processing locations" is today <b>European Economic Area</b>,
+  not <b>United Kingdom</b>.
+</p>
+<p class="src">
+  <code>web/app/(legal)/residency/page.tsx:188-206</code> ·
+  G-Cloud residency option values:
+  <a href="https://raw.githubusercontent.com/alphagov/digitalmarketplace-frameworks/main/frameworks/g-cloud-13/questions/services/dataStorageAndProcessingLocations.yml">alphagov/digitalmarketplace-frameworks</a>
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 3</span>How far the dedicated branch gets</h2>
+
+<p>
+  The seam is real and it was designed for this question. <code>resolveTenantDatasource(orgId,
+  sessionClient)</code> is described in its own header as the one seam through which every buyer
+  database access flows. It reads a control-plane table,
+  <code>public.tenant_datasource_catalog</code>, carrying <code>organisation_id</code>,
+  <code>isolation_tier</code>, <code>datasource_ref</code>, <code>connection_secret_ref</code> and
+  <code>region</code>. It runs under the caller's RLS session client and never a service-role
+  bypass, the catalog's own policy exposes only the caller's organisation row, and the catalog
+  schema refuses to hold a raw connection string: a future dedicated tenant may hold only a
+  secrets-manager key. A control-plane read failure falls back to pooled rather than failing the
+  request. This is careful work.
+</p>
+<p class="src">
+  <code>web/src/shared/lib/tenant/datasource.ts:1-123</code> ·
+  <code>supabase/migrations/20260719000010_council06_ws6_datasource_catalog.sql:1-53</code>
+</p>
+
+<h3>It is not a control that reaches nothing</h3>
+<p>
+  Twelve non-test files consume the seam, plus the module itself. That is more than double the
+  five I was briefed to expect, so the seam is better wired than the handover claimed. A static
+  guard test globs the buyer API route tree and fails CI if a route touches the database without
+  importing the resolver, or mints its own client.
+</p>
+<p class="src">
+  10 route files under <code>web/app/api/council/</code>, 2 pages under
+  <code>web/app/(dashboard)/public-sector/</code> ·
+  guard at <code>web/tests/public-sector/ws2-resolver-seam.test.ts</code>
+</p>
+
+<div class="verdict risk">
+  <h3>But the promotion path does not exist, and the seam is not total</h3>
+  <p><b>Nothing in the codebase can set a tenant to dedicated.</b> The string
+    <code>"dedicated"</code> appears exactly twice in all shipping code across web, portal and
+    api: once in the type union, once in the guard that throws. The only writer of
+    <code>isolation_tier</code> anywhere is the owner-gated provisioning route, and it hard-codes
+    <code>'pooled'</code> with <code>datasource_ref: 'supabase:primary'</code>. Promotion today
+    would require a manual SQL write, after which every affected request would throw. The comment
+    saying a tenant can "later be promoted via a catalog and config change" describes an
+    intention, not a switch that exists.</p>
+  <p class="src"><code>web/src/shared/lib/tenant/datasource.ts:24,108</code> ·
+    <code>apps/portal/src/app/api/customers/[id]/provision-council/route.ts:133,147-148</code></p>
+
+  <p style="margin-top:14px"><b>Half the buyer routes do not go through the seam, by design.</b>
+    Of 20 route files under the buyer API tree, 10 import the resolver; 9 are thin proxies
+    forwarding to the FastAPI backend, which has no seam and no RLS (section 4); and 1 reads the
+    database without it.</p>
+
+  <p style="margin-top:14px"><b>A gap in the guard, found in this review.</b>
+    <code>app/api/council/buyer-profile/route.ts</code> performs a real database read by calling
+    <code>loadBuyerProfile(guard.supabase, orgId)</code>, passing the raw session client rather
+    than the resolved <code>ds.client</code>. The guard does not catch it: it detects database
+    access by matching a quoted <code>council_</code> table name or the token
+    <code>unmigratedClient</code> <i>in the route file</i>, and this route scores zero on that
+    regex because the query lives in a helper module the guard does not glob. The same helper is
+    called with <code>guard.supabase</code> from two further routes that do import the seam.
+    Security impact today is nil: the read is org-scoped and under RLS. The impact is on the
+    claim. If a tenant were ever promoted, these reads would keep hitting the pooled primary in
+    silence.</p>
+  <p class="src"><code>web/app/api/council/buyer-profile/route.ts:31</code> ·
+    <code>web/src/features/public-sector/buyer-profile.server.ts:42-50</code> ·
+    guard regex at <code>web/tests/public-sector/ws2-resolver-seam.test.ts:48</code></p>
+</div>
+
+<h3>What a shippable silo would still need</h3>
+<ul>
+  <li>A datasource runtime: a client factory per <code>datasource_ref</code>, connection pooling
+    per tenant, and secret resolution from a manager we do not currently run.</li>
+  <li>A provisioning path that creates the project, replays all 653 migrations, seeds reference
+    data, writes the catalog row, and can roll back a half-provisioned tenant.</li>
+  <li>Migration fan-out: every future migration applied to staging, to the pooled primary, and to
+    each silo, with per-tenant schema-version tracking.</li>
+  <li>The same seam on the FastAPI tier, which has none at all.</li>
+  <li>Per-tenant backups, restore drills, alerting, log routing and cost attribution.</li>
+  <li>Cross-tenant reporting, which stops being one query.</li>
+</ul>
+<p class="note">
+  Reasoning rather than citation: that list is derived from the code as it stands, not from a
+  vendor document. The vendor evidence for why each item is expensive is in section 5.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 4</span>The supplier side does not share the seam</h2>
+
+<div class="verdict risk">
+  <p class="lede" style="margin-top:0">
+    Zero of the 57 supplier-product API routes import the resolver. The supplier side has no
+    isolation seam, and it also has no row-level security backstop.
+  </p>
+</div>
+
+<p>
+  The reason is architectural rather than an oversight. The supplier product's Next.js routes are
+  thin proxies that forward to the FastAPI backend on Railway. That backend reaches Postgres
+  through PostgREST using the <b>service role key</b>, which bypasses row-level security
+  entirely. I measured it: <b>411</b> <code>get_supabase()</code> call sites across 130 files in
+  315 Python modules, and <code>supabase_anon_key</code> referenced exactly once, by its own
+  declaration. There is no RLS-respecting path in that tier.
+</p>
+<p class="src">
+  Measured 2026-08-16 · <code>api/app/services/supabase_client.py:55-67</code> ·
+  <code>api/app/config.py:43</code>. A same-day audit reports 414 by a slightly different count.
+</p>
+
+<p>
+  This is known, deliberate and defended by a test rather than a comment. The test's own words:
+  authorisation in this tier is single-layer, "a missed <code>.eq("organisation_id", ...)</code>
+  is a cross-tenant read, not a policy denial". It fails if a second anon-key reference appears,
+  so introducing an RLS path becomes a conscious act.
+</p>
+<p class="src"><code>api/tests/test_r27_handback_03_api_has_no_rls_path.py</code></p>
+
+<p>
+  The denominator that matters, from the same-day security audit: tenant isolation in the API
+  tier rests on <b>299 of 422</b> hand-written <code>.eq("organisation_id", ...)</code> filters.
+  The audit inspected the other 123 and found them to be legitimately global reference or system
+  tables, with two named weaknesses, one of which is the benchmark read in section 6.
+</p>
+<p class="src"><code>docs/release-2.7/AUDIT-SECURITY-2026-08-16.md:108-115</code></p>
+
+<div class="verdict note">
+  <h3>Why this matters commercially, not just technically</h3>
+  <p>
+    There is a real RLS parity gate in CI that replays every policy statement in the migrations
+    and diffs the result against the production snapshot. It is a good control and it is worth
+    showing a buyer. It also verifies policies that the supplier product's request path never
+    evaluates. If we tell a supplier's security reviewer "row-level security isolates tenants",
+    that sentence is true of the buyer product's direct reads and false of the supplier product.
+    The reviewer will ask, and NCSC Cloud Security Principle 3 requires us to be able to explain
+    exactly how separation is implemented.
+  </p>
+  <p class="src">
+    <code>.github/workflows/rls-parity.yml</code> ·
+    <a href="https://www.ncsc.gov.uk/collection/cloud/the-cloud-security-principles/principle-3-separation-between-customers">NCSC Principle 3</a>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 5</span>How the market actually serves this requirement</h2>
+
+<h3>Silo, pool and bridge</h3>
+<p>
+  AWS names three models. <b>Silo</b> gives each tenant dedicated resources, for example a
+  separate database. <b>Pool</b> shares resources, which AWS calls "the more classic notion of
+  multi-tenancy". <b>Bridge</b> acknowledges that most real systems are mixed, some components
+  siloed and some pooled. AWS adds a qualifier that matters for us: even a silo still runs a
+  shared identity, onboarding and operational experience, and that is what separates SaaS from a
+  managed service where each customer runs their own version.
+</p>
+<p class="src">
+  <a href="https://docs.aws.amazon.com/wellarchitected/latest/saas-lens/silo-pool-and-bridge-models.html">AWS Well-Architected SaaS Lens</a> ·
+  <a href="https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/silo-isolation.html">AWS silo isolation</a>
+  (the whitepaper carries a "historical reference only" banner) ·
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">Azure tenancy models</a>
+</p>
+
+<h3>What silo costs, in the vendors' own words</h3>
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Cost</th><th>What the vendor says</th></tr></thead>
+  <tbody>
+    <tr><td>Cost floor</td>
+      <td>"If a single tenant requires a specific infrastructure cost, 100 tenants probably
+        require 100 times that cost." (Azure)</td></tr>
+    <tr><td>Where it breaks</td>
+      <td>20 siloed accounts "may be manageable"; a thousand "would likely begin to impact
+        operational efficiency and agility". (AWS)</td></tr>
+    <tr><td>Deployment fan-out</td>
+      <td>Treating the tenant list as pipeline config "works well for small numbers of tenants",
+        but becomes cumbersome "often around 10 or more". (Azure)</td></tr>
+    <tr><td>Migrations</td>
+      <td>"Track the schema version that you use for each tenant in a dedicated database or
+        lookup table"; above a small estate "it might be better for your application tier to
+        detect the schema version". In other words, you must build a migration control plane.
+        (Azure)</td></tr>
+    <tr><td>Observability</td>
+      <td>The single pane of glass "is more complex in a siloed model"; reporting "becomes
+        cumbersome to run queries on each database individually and aggregate the results".
+        (AWS, Azure)</td></tr>
+    <tr><td>Support and on-call</td>
+      <td>You must know "which version of infrastructure, software, or feature each tenant
+        uses"; a hotfix "might need to be applied to all versions currently in use". (Azure)</td></tr>
+    <tr><td>The trap</td>
+      <td>"Avoid forking or providing customized infrastructure for individual tenants."
+        (Azure)</td></tr>
+    <tr><td>The upside, fairly stated</td>
+      <td>Compliance in regulated sales, no noisy neighbour, exact per-tenant cost attribution,
+        limited blast radius, and progressive rollout across tenants. (AWS, Azure)</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="src">
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">Azure tenancy models</a> ·
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/storage-data">Azure storage and data</a> ·
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/deployment-configuration">Azure deployment and configuration</a> ·
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/updates">Azure updates</a> ·
+  <a href="https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/silo-isolation.html">AWS silo isolation</a>
+</p>
+<p class="note">
+  A claim I was asked to test and could not substantiate: that schema-per-tenant is "the worst of
+  both worlds". Neither AWS nor Azure says this. Azure is mildly positive, calling schema-based
+  sharding "well-suited for workloads that have between 1 and 10,000 tenants". Do not attribute
+  the criticism to either vendor.
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/service/postgresql">Azure, PostgreSQL multitenancy</a>
+</p>
+
+<h3>What Supabase specifically offers</h3>
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Capability</th><th>What the docs say</th><th>Bearing on us</th></tr></thead>
+  <tbody>
+    <tr><td><b>Multi-tenancy guidance</b></td>
+      <td>Does not exist. <code>/docs/guides/platform/multi-tenancy</code> returns 404. The RLS
+        guide frames RLS as user-level via <code>auth.uid()</code>, not tenant-level.</td>
+      <td>Supabase cannot be cited for or against project-per-tenant. Cite Azure and AWS for
+        doctrine and Supabase only for capabilities.</td></tr>
+    <tr><td><b>Project per tenant</b></td>
+      <td>"Each project on the Supabase platform includes a dedicated Postgres instance running
+        on its own server." Billing is per organisation; each project adds compute cost.</td>
+      <td>Technically straightforward. The cost is operational, not licensing.</td></tr>
+    <tr><td><b>Dedicated compute</b></td>
+      <td>Micro approx. $10/mo, Small approx. $15, Medium approx. $60, Large approx. $110, and up
+        to approx. $3,730 at 16XL. CPU is <i>shared</i> on Nano through Medium; dedicated cores
+        start at Large. Paid plans include $10/mo compute credits.</td>
+      <td>A silo's floor is roughly $10 to $15 per month per tenant, before backups. That is
+        cheap. The expensive part is everything in section 3.</td></tr>
+    <tr><td><b>London region</b></td>
+      <td><code>eu-west-2</code> (London) is a supported region. Region is chosen at project
+        creation.</td>
+      <td><b>UK residency is available today by creating a project in London.</b> This is the
+        single highest-value option on this page.</td></tr>
+    <tr><td><b>Changing a region</b></td>
+      <td>No region-change endpoint exists in the Management API; the migration guide routes
+        region changes through creating a new project and restoring into it. Immutability is not
+        stated explicitly and is inferred.</td>
+      <td>Region is effectively set once. Choose deliberately.</td></tr>
+    <tr><td><b>Read replicas</b></td>
+      <td>Read-only, asynchronous with replication lag, and "requests to other Supabase products,
+        such as Auth, Storage, and Realtime, aren't able to use a Read Replica". Each replica is
+        billed as a dedicated database and is not covered by the spend cap.</td>
+      <td>Not an isolation or residency mechanism. A London replica would not give a London Auth
+        or Storage plane.</td></tr>
+    <tr><td><b>BYOC</b></td>
+      <td>Listed as Enterprise-only on the pricing table. No documentation page exists (404), it
+        is not named on the Enterprise page, and there is no published scope, cloud list or
+        price. Engagement is "request a demo".</td>
+      <td>Cannot be planned against. Treat as a sales conversation, not a capability.</td></tr>
+    <tr><td><b>Self-hosting</b></td>
+      <td>"Self-hosted Supabase runs as a single project which means that Studio doesn't support
+        multiple organizations or projects." Branching, managed backups and PITR, advanced
+        metrics and the platform management API are unavailable.</td>
+      <td>Rules self-hosting out as a route to a cheap fleet. It removes the two things a fleet
+        needs: managed backups and the Management API.</td></tr>
+    <tr><td><b>Branching</b></td>
+      <td>Ephemeral, data-less, deleted when a PR closes, billed per branch-hour.</td>
+      <td>A preview-environment feature. Not a tenancy primitive.</td></tr>
+    <tr><td><b>Compliance</b></td>
+      <td>SOC 2 Type 2 and ISO 27001 are held by Supabase, and the reports are available on the
+        <b>Team plan ($599/mo per organisation)</b> and Enterprise. SLA is Enterprise-only.</td>
+      <td>Their certification is not ours, but a buyer will ask for the sub-processor's evidence.
+        £599-equivalent per month is the price of being able to hand it over.</td></tr>
+    <tr><td><b>Connection pooling</b></td>
+      <td>Supavisor is documented as "a cloud-native, <b>multi-tenant</b> Postgres connection
+        pooler". Transaction mode does not support prepared statements. Direct connections
+        plateau at 500 from 12XL upward while pooler clients scale to 12,000.</td>
+      <td>Worth knowing before anyone claims end-to-end dedication: the pooler in front of a
+        dedicated database is itself a shared component unless the dedicated pooler is used.</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="src">
+  <a href="https://supabase.com/docs/guides/platform/manage-your-usage/compute">Compute usage</a> ·
+  <a href="https://supabase.com/docs/guides/platform/compute-and-disk">Compute and disk</a> ·
+  <a href="https://supabase.com/docs/guides/platform/regions">Regions</a> ·
+  <a href="https://supabase.com/docs/guides/platform/read-replicas">Read replicas</a> ·
+  <a href="https://supabase.com/docs/guides/self-hosting">Self-hosting</a> ·
+  <a href="https://supabase.com/docs/guides/deployment/branching">Branching</a> ·
+  <a href="https://supabase.com/docs/guides/platform/billing-on-supabase">Billing</a> ·
+  <a href="https://supabase.com/docs/guides/database/connecting-to-postgres">Connecting to Postgres</a> ·
+  <a href="https://supabase.com/docs/guides/getting-started/architecture">Architecture</a> ·
+  <a href="https://supabase.com/pricing">Pricing</a> ·
+  <a href="https://supabase.com/security">Security</a> ·
+  <a href="https://supabase.com/docs/guides/platform/migrating-within-supabase">Migrating within Supabase</a>
+</p>
+
+<h3>What a dedicated instance costs elsewhere in the market</h3>
+<p>
+  The "dedicated means enterprise, contact sales" convention is not universal. MongoDB Atlas sells
+  dedicated clusters self-serve from $0.08 per hour, around $57 per month, with a published price
+  list. Auth0 lists private deployment as an Enterprise-only add-on with no price. Confluent
+  prices Basic through Enterprise publicly but routes dedicated clusters to sales. Azure states
+  the commercial case plainly: "You can even charge customers a higher rate to use a
+  single-tenant deployment, which helps you recover some of your costs."
+</p>
+<p class="src">
+  <a href="https://www.mongodb.com/pricing">MongoDB Atlas pricing</a> ·
+  <a href="https://auth0.com/pricing">Auth0 pricing</a> ·
+  <a href="https://www.confluent.io/confluent-cloud/pricing/">Confluent Cloud pricing</a> ·
+  <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">Azure tenancy models</a>
+</p>
+
+<h3>What a UK public body actually asks</h3>
+<p>
+  There is no single national security questionnaire. For cloud procurement, the G-Cloud service
+  question set <i>is</i> the questionnaire, it is answered once, and it is published for anyone
+  including competitors to read. The current framework is G-Cloud 14 (RM1557.14), live to
+  28 October 2026; G-Cloud 15 is in procurement with award scheduled for 6 August 2026.
+</p>
+<p>The fields that bear on this analysis, verbatim from a live listing:</p>
+<ul>
+  <li><b>"Describe how different organisations sharing the same infrastructure are kept apart"</b>,
+    100 words. This is the multi-tenancy question, and it is the one this document exists to let
+    us answer truthfully.</li>
+  <li><b>Data storage and processing locations</b>: United Kingdom / European Economic Area /
+    other. Plus "User control over data storage and processing locations", yes or no.</li>
+  <li><b>Protecting data at rest</b>, <b>Datacentre security standards</b>, <b>Data sanitisation</b>.</li>
+  <li><b>Penetration testing frequency</b> and <b>approach</b>. A live listing openly answers
+    "At least once a year" and "In-house", which a buyer can see and score.</li>
+  <li><b>Standards and certifications</b>: ISO/IEC 27001, CSA STAR, PCI, Cyber Essentials,
+    Cyber Essentials Plus, each a yes or no.</li>
+  <li><b>End-of-contract data extraction</b> and <b>end-of-contract process</b>, 200 words each.</li>
+</ul>
+<p class="src">
+  <a href="https://www.gca.gov.uk/agreements/RM1557.14">RM1557.14</a> ·
+  <a href="https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-14/services/104572861110682">a live G-Cloud 14 listing</a> ·
+  question definitions in
+  <a href="https://raw.githubusercontent.com/alphagov/digitalmarketplace-frameworks/main/frameworks/g-cloud-13/questions/services/virtualisationSeparation.yml">alphagov/digitalmarketplace-frameworks</a>
+  (the repo's latest published set is G-Cloud 13; labels were cross-checked against the live
+  G-Cloud 14 listing)
+</p>
+
+<div class="verdict note">
+  <h3>The residency mandate people assume does not exist</h3>
+  <p>
+    Government policy is explicit: "There is no government policy which directly prevents
+    departments or services from storing or processing cloud-based data in any specific country",
+    and it is "the responsibility of each government department to take risk-based decisions".
+    Cloud First tells teams to use overseas providers where due diligence supports it.
+  </p>
+  <p>
+    <b>Individual departments impose UK-only by contract instead.</b> DWP's contractor policy
+    states that authority assets "must not be accessed, processed, transmitted and/or stored
+    outside of the United Kingdom without the prior written consent of the Authority", and its
+    definition of offshoring catches non-UK staff <i>accessing</i> data and diagnostic data sent
+    abroad, not only where the database sits. A residency clause we sign would therefore bind our
+    support rota, our logs, our backups and our sub-processors, which is where our AI
+    sub-processors become the binding problem rather than the database.
+  </p>
+  <p class="src">
+    <a href="https://www.gov.uk/government/publications/cloud-guide-for-the-public-sector/cloud-guide-for-the-public-sector">Cloud guide for the public sector</a> ·
+    <a href="https://www.gov.uk/guidance/government-cloud-first-policy">Cloud First</a> ·
+    <a href="https://www.gov.uk/government/publications/guide-for-dwp-contractors-dwp-offshoring-policy/a-guide-for-dwp-contractors">DWP offshoring policy</a>
+  </p>
+</div>
+
+<h3>The certification gates, ranked by whether they bind</h3>
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Gate</th><th>Binding?</th><th>Cost</th><th>Lead time</th></tr></thead>
+  <tbody>
+    <tr><td><b>Cyber Essentials</b></td>
+      <td><span class="pill" style="background:var(--open);color:var(--bg)">MANDATED</span>
+        PPN 014, from 24 Feb 2025, for central government, agencies, NDPBs and NHS bodies, before
+        contract award, where the contract handles personal data or data at OFFICIAL</td>
+      <td><b>£320 + VAT</b> at 0 to 9 employees</td>
+      <td>Assessor review within 3 working days; up to 6 months to complete after purchase</td></tr>
+    <tr><td><b>Cyber Essentials Plus</b></td>
+      <td>Same PPN, where the buyer specifies it. Requires a valid CE certificate first</td>
+      <td>Quoted on network size and complexity; from £320 + VAT upward</td>
+      <td>Audit typically one to two days (vendor estimate)</td></tr>
+    <tr><td><b>ISO 27001</b></td>
+      <td><span class="pill" style="background:var(--hold);color:var(--bg)">NOT A GATE</span>
+        No PPN mandates it. It is a declared yes/no field in G-Cloud. A live listing answers "No"
+        and still holds a place</td>
+      <td>Could not confirm a published GBP figure from any primary source</td>
+      <td>Six months for an SME with support (vendor estimate); certificate lasts three years</td></tr>
+    <tr><td><b>SOC 2 Type II</b></td>
+      <td><span class="pill" style="background:var(--hold);color:var(--bg)">NOT A GATE</span>
+        for UK public sector. It is the standard ask from large private enterprises</td>
+      <td>Vendor estimates range from $10k to $150k, and the same page elsewhere says $80k to
+        $350k all-in. Quote as an attributed range, never as fact</td>
+      <td>Observation window typically 3 to 12 months, then roughly 4 to 10 weeks to issue</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="src">
+  <a href="https://www.gov.uk/government/publications/ppn-014-cyber-essentials-scheme/ppn-014-cyber-essentials-scheme-html">PPN 014</a> ·
+  <a href="https://iasme.co.uk/cyber-essentials/">IASME price list</a> ·
+  <a href="https://www.ncsc.gov.uk/cyberessentials/overview">NCSC Cyber Essentials</a> ·
+  <a href="https://www.iso.org/standard/27001">ISO/IEC 27001</a> ·
+  <a href="https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services">AICPA SOC suite</a> ·
+  cost estimates from <a href="https://secureframe.com/blog/how-much-does-soc-2-cost">Secureframe</a> (vendor)
+</p>
+<p class="note">
+  <b>CrowAgent holds none of these that I have verified.</b> Nothing in this document should be
+  read as a claim that we hold SOC 2, ISO 27001, Cyber Essentials or Cyber Essentials Plus. Where
+  a segment requires one, it is a prerequisite to be bought, not an asset we have.
+</p>
+
+<h3>What large private enterprises ask for instead</h3>
+<ul>
+  <li><b>SOC 2 Type II</b> report, and often a recent third-party penetration test. CREST
+    accreditation is the usual name; NCSC's CHECK scheme is the public sector equivalent. Note
+    NCSC's own caveat: a pen test "can only validate that your organisation's IT systems are not
+    vulnerable to known issues on the day of the test".</li>
+  <li><b>SSO via SAML, and SCIM for provisioning.</b> SAML gets authentication; SCIM is what
+    closes the leaver-deprovisioning gap, which is what reviewers test.</li>
+  <li><b>Customer-managed keys</b> (BYOK, CMEK). Worth being precise about what this buys: it is
+    server-side encryption at rest under a key the customer can rotate, disable or destroy, which
+    gives crypto-shredding and auditable key use. It does not protect against exposure through
+    the application, which legitimately holds decrypt rights while serving a request. That last
+    point is my inference from the scope of the vendor documentation, not a quoted vendor
+    statement.</li>
+  <li><b>Contractual controls</b>: a DPA meeting UK GDPR Article 28(3), a sub-processor list with
+    a notice-and-object right under Article 28(2), and a breach notification clause. The ICO
+    deadline to the regulator is 72 hours; as a processor our contractual clock to the customer
+    is normally shorter, commonly 24 to 48 hours, to leave the controller time to file.</li>
+  <li><b>Residency as a contract term.</b> The market-standard formulation is a commitment with
+    carve-outs, as in AWS's "We will not move or replicate your content outside of your chosen
+    AWS Region(s) without your agreement".</li>
+</ul>
+<p class="src">
+  <a href="https://www.ncsc.gov.uk/guidance/penetration-testing">NCSC penetration testing</a> ·
+  <a href="https://www.crest-approved.org/approved-services/why-use-a-crest-supplier/">CREST</a> ·
+  <a href="https://www.rfc-editor.org/rfc/rfc7644">RFC 7644 (SCIM)</a> ·
+  <a href="https://docs.cloud.google.com/kms/docs/cmek">Google CMEK</a> ·
+  <a href="https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html">AWS KMS</a> ·
+  <a href="https://www.legislation.gov.uk/eur/2016/679/article/28">UK GDPR Article 28</a> ·
+  <a href="https://ico.org.uk/for-organisations/report-a-breach/personal-data-breach/personal-data-breaches-a-guide/">ICO breach guidance</a> ·
+  <a href="https://aws.amazon.com/compliance/data-privacy-faq/">AWS data privacy FAQ</a>
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 6</span>The supplier confidentiality question</h2>
+
+<p>
+  The owner's framing is right and it is the sharpest question on this page. A supplier's bid,
+  tender and contract content is commercially sensitive, and that supplier's competitors may be
+  other tenants on the same platform. "Trust our filters" is not an answer a procurement lead
+  will accept.
+</p>
+
+<h3>What is true today</h3>
+<ul>
+  <li><b>No supplier tenant can read another's data through any shipped route.</b> Every supplier
+    route resolves the organisation from server-trusted membership, never from the request body,
+    and a body-supplied organisation that mismatches the verified one is rejected.
+    <span class="src">(<code>api/app/dependencies/service_auth.py:85-141</code>)</span></li>
+  <li><b>Buyer and supplier data are in different tables</b> and neither product's code reads the
+    other's, verified in both tiers.</li>
+  <li><b>There is one deliberate cross-tenant read, and it should be disclosed rather than
+    discovered.</b> The PPN 002 benchmark endpoint selects across all organisations' completed
+    contracts to produce sector aggregates. It reads
+    <code>id, contract_value, sector, social_value_score</code> from
+    <code>crowmark_contracts</code> and full rows from <code>crowmark_measures</code> for a
+    sample, aggregates them, and returns only aggregates. It is feature-gated on
+    <code>crowmark.benchmarks</code>, capped, and the code comments are candid that RLS could not
+    have bounded it. No bid narrative text is read.
+    <span class="src">(<code>api/app/routers/crowmark/analytics.py:135,181</code>)</span></li>
+</ul>
+
+<div class="verdict risk">
+  <h3>The exposure to fix before selling on confidentiality</h3>
+  <p>
+    A supplier asking "can my competitors see my data?" deserves the whole answer. Today the whole
+    answer includes: your completed contract values and social-value scores contribute to a
+    benchmark other tenants can see in aggregate, and your bid content is sent to AI
+    sub-processors in the United States and to an endpoint that is not region-pinned. Both are
+    defensible. Neither is currently something the customer is asked to consent to at the point
+    it matters.
+  </p>
+</div>
+
+<h3>The controls that answer the concern, and where we stand</h3>
+<div class="tblwrap">
+<table>
+  <thead><tr><th>Control</th><th>Status</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Server-trusted tenant resolution</td>
+      <td><span class="pill" style="background:var(--fixed);color:var(--bg)">HAVE</span></td>
+      <td>Body-supplied organisation ids rejected on mismatch</td></tr>
+    <tr><td>RLS on the shared database</td>
+      <td><span class="pill" style="background:var(--wip);color:var(--bg)">PARTIAL</span></td>
+      <td>515 policies, but the supplier product's request path never evaluates them</td></tr>
+    <tr><td>SSO and SCIM</td>
+      <td><span class="pill" style="background:var(--fixed);color:var(--bg)">HAVE</span></td>
+      <td>SCIM v2 Users and Groups endpoints exist</td></tr>
+    <tr><td>MFA, session and access locks</td>
+      <td><span class="pill" style="background:var(--fixed);color:var(--bg)">HAVE</span></td>
+      <td>Owner and admin MFA is enforced</td></tr>
+    <tr><td>Audit log and audit export</td>
+      <td><span class="pill" style="background:var(--fixed);color:var(--bg)">HAVE</span></td>
+      <td>Dedicated audit router; G-Cloud asks for log retention explicitly</td></tr>
+    <tr><td>DPA, sub-processor list, residency statement</td>
+      <td><span class="pill" style="background:var(--fixed);color:var(--bg)">HAVE</span></td>
+      <td>Published and, on residency, unusually candid</td></tr>
+    <tr><td>Benchmark opt-out</td>
+      <td><span class="pill" style="background:var(--open);color:var(--bg)">MISSING</span></td>
+      <td>The cheapest, highest-trust fix on this page</td></tr>
+    <tr><td>Written no-training commitment for AI sub-processors</td>
+      <td><span class="pill" style="background:var(--decision);color:var(--bg)">DECISION</span></td>
+      <td>Needs verification against each vendor's terms, then a contract clause</td></tr>
+    <tr><td>UK-only processing, including AI</td>
+      <td><span class="pill" style="background:var(--open);color:var(--bg)">MISSING</span></td>
+      <td>The database is the easy half; the AI path is the hard half</td></tr>
+    <tr><td>Customer-managed keys</td>
+      <td><span class="pill" style="background:var(--hold);color:var(--bg)">NOT BUILT</span></td>
+      <td>Ask for it only when a named contract requires it</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 7</span>The tiering proposal</h2>
+
+<p>
+  Four tiers, mapped to segment. The costs are infrastructure costs from published price lists.
+  The effort figures are my estimates from reading this codebase and are labelled as estimates,
+  not quotes.
+</p>
+
+<div class="tblwrap">
+<table>
+  <thead><tr>
+    <th>Tier</th><th>Segment</th><th>What it is</th><th>Infrastructure cost</th><th>Effort</th><th>Lead time</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td><b>0 · Pooled</b><br><span class="pill" style="background:var(--fixed);color:var(--bg)">TODAY</span></td>
+      <td>All suppliers, SME through enterprise. Most buyers.</td>
+      <td>What ships now. Shared database, RLS on the buyer path, filters on the supplier path.</td>
+      <td>£0 marginal</td>
+      <td>None</td>
+      <td>Available now</td>
+    </tr>
+    <tr>
+      <td><b>1 · Pooled, assured</b><br><span class="pill" style="background:var(--wip);color:var(--bg)">CONFIG</span></td>
+      <td>Large private enterprises. Confidentiality-sensitive suppliers.</td>
+      <td>Tier 0 plus the contractual and product controls in section 6: benchmark opt-out,
+        no-training clause, SSO and SCIM enabled, audit export, sub-processor notice period,
+        breach clock, and Cyber Essentials.</td>
+      <td>£320 + VAT for CE. Otherwise £0.</td>
+      <td>Small. Mostly configuration, contract drafting and one opt-out flag.</td>
+      <td><b>2 to 4 weeks</b></td>
+    </tr>
+    <tr>
+      <td><b>2 · UK pooled</b><br><span class="pill" style="background:var(--built);color:var(--bg)">BUILD</span></td>
+      <td>UK public sector. Enterprises with a UK residency clause.</td>
+      <td>A <i>second</i> Supabase project in <code>eu-west-2</code> (London). All UK-residency
+        customers pooled together on it. This is the bridge model, and it is the recommendation.</td>
+      <td>Approx. $10 to $60 per month for the project, plus PITR if required.</td>
+      <td>The real build. The datasource runtime the seam reserves, the same seam on the FastAPI
+        tier, migration fan-out across two databases, and a UK-resident or contractually bounded
+        AI path.</td>
+      <td><b>6 to 10 weeks</b>, estimate</td>
+    </tr>
+    <tr>
+      <td><b>3 · Dedicated</b><br><span class="pill" style="background:var(--decision);color:var(--bg)">BESPOKE</span></td>
+      <td>One named customer whose contract pays for it.</td>
+      <td>A silo: its own project, its own compute, its own backups.</td>
+      <td>Approx. $10 to $15 per month per tenant at Micro or Small, rising with size. Cheap.</td>
+      <td>Everything in tier 2, plus a fleet control plane: provisioning, per-tenant schema
+        version tracking, per-tenant observability, restore drills and cost attribution.</td>
+      <td><b>Only after tier 2 ships.</b> Price as a bespoke engagement with a floor that covers
+        the ongoing operational load, not the $15 of compute.</td>
+    </tr>
+    <tr>
+      <td><b>4 · BYOC or self-host</b><br><span class="pill" style="background:var(--hold);color:var(--bg)">DECLINE</span></td>
+      <td>Nobody, for now.</td>
+      <td>Customer's own cloud, or a self-hosted stack.</td>
+      <td>Unknown. BYOC has no published price.</td>
+      <td>Self-hosting removes managed backups, PITR and the Management API, and runs as a single
+        project. BYOC is undocumented and Enterprise-only.</td>
+      <td>Decline politely and offer tier 2 or 3.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="verdict">
+  <h3>Why tier 2 beats tier 3, and it is not close</h3>
+  <p>
+    A London project pooled across all UK-residency customers answers the same procurement
+    question as a per-customer silo, on the same G-Cloud form, for one extra database instead of
+    N. It converts every future migration into a two-target job rather than an N-target job, and
+    Azure puts the pipeline pain threshold at "often around 10 or more" tenants. It also builds
+    the exact runtime a silo would later need, so tier 3 becomes an increment rather than a
+    restart. For a company with no customers yet, committing to N databases before the first
+    contract is the most expensive promise available.
+  </p>
+  <p>
+    The one thing tier 2 does not fix on its own is the AI path. A UK database with bid content
+    still being sent to a United States sub-processor will fail a DWP-style offshoring clause,
+    because that clause catches processing and access, not just storage. Scope the AI residency
+    work into tier 2 or the tier does not deliver what it is sold on.
+  </p>
+</div>
+
+<h3>Where a dedicated instance is the wrong answer</h3>
+<p>
+  When a customer asks for "our own database", they are usually managing one of four risks:
+  another tenant reading their data, us reading their data, data leaving the jurisdiction, or not
+  being able to get their data back. Only the first is addressed by a silo, and it is already
+  addressed for the buyer product by RLS and for both products by server-trusted scoping. The
+  other three are answered by a contract, a region, an encryption control and an export
+  guarantee. Offering a silo in response to a residency question is expensive misdirection: it
+  costs us a fleet and leaves the customer's real objection standing.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<h2><span class="n">Section 8</span>What needs deciding</h2>
+
+<div class="tblwrap">
+<table>
+  <thead><tr><th>#</th><th>Decision</th><th>Why it is blocking</th></tr></thead>
+  <tbody>
+    <tr><td>D1</td>
+      <td><b>Do we buy Cyber Essentials now?</b> £320 + VAT, assessor review in 3 working days.</td>
+      <td>It is the only mandated gate for central government and NHS buyers, and it is the
+        cheapest item on this page by two orders of magnitude. There is no argument for
+        deferring it.</td></tr>
+    <tr><td>D2</td>
+      <td><b>Do we commit to tier 2, a London project?</b></td>
+      <td>Region is chosen at project creation and there is no region-change endpoint. Deciding
+        late means a project migration rather than a project creation.</td></tr>
+    <tr><td>D3</td>
+      <td><b>Do we ship a benchmark opt-out before the next supplier sale?</b></td>
+      <td>One flag. It converts a disclosure we would rather a customer not discover into a
+        control we can point at.</td></tr>
+    <tr><td>D4</td>
+      <td><b>Do we accept the AI residency position, or scope UK or EEA AI processing?</b></td>
+      <td>This, not the database, is what a UK offshoring clause will catch. It also determines
+        whether tier 2 can be sold honestly.</td></tr>
+    <tr><td>D5</td>
+      <td><b>Do we give the FastAPI tier an RLS-respecting path?</b></td>
+      <td>Today the supplier product has single-layer authorisation. The existing test says
+        adding a second model must be deliberate. Deliberate now is cheaper than deliberate after
+        a reviewer finds it.</td></tr>
+    <tr><td>D6</td>
+      <td><b>Do we close the seam gaps found here?</b> The three <code>loadBuyerProfile</code>
+        call sites, and the guard's blind spot for delegated queries.</td>
+      <td>Small work. It keeps the seam honest before anything depends on it.</td></tr>
+    <tr><td>D7</td>
+      <td><b>Do we set a floor price for tier 3?</b></td>
+      <td>The compute is $15 a month. The operational load is not. A silo sold at compute cost is
+        a loss-making promise that lasts as long as the contract.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>What I could not establish</h3>
+<ul>
+  <li><b>How many organisations share the production project.</b> The Supabase MCP returned a
+    permission error on every attempt across the session. One read-only query settles it:
+    <code>select count(*), count(*) filter (where type='council') from public.organisations;</code></li>
+  <li><b>Whether the 309-table and approximate-280-table figures reconcile.</b> Both come from
+    production on the same day by different methods.</li>
+  <li><b>Whether Supabase read replicas require a specific plan.</b> Absent from the docs page,
+    the usage page and the pricing comparison table. The launch blog implies all paid plans with
+    failover on Enterprise.</li>
+  <li><b>Whether a Supabase region is formally immutable.</b> No page states it. Inferred from
+    the absence of a region-change endpoint.</li>
+  <li><b>What Supabase BYOC actually is.</b> Confirmed only as a pricing-table row. The
+    documentation page returns 404.</li>
+  <li><b>A published GBP cost for ISO 27001 certification</b> from any primary source.</li>
+  <li><b>Whether CrowAgent currently holds Cyber Essentials.</b> Nothing in the repository
+    evidences it, and I did not treat absence of evidence as evidence of absence.</li>
+</ul>
+
+<p class="updated" style="margin-top:26px">
+  Prepared by Crow Agent, 16 August 2026. Code claims were verified against the working tree on
+  that date and carry file and line references. External claims carry a source URL. Where the
+  text reasons rather than cites, it says so.
+</p>
