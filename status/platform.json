@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T16:49:34.889Z",
+  "updated": "2026-08-16T16:58:55.493Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T16:49:33.926Z",
-    "sourceFingerprint": "198:1246806958",
+    "generatedAt": "2026-08-16T16:58:55.244Z",
+    "sourceFingerprint": "200:1983191915",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 198,
-    "done": 66,
-    "remaining": 132,
+    "totalRaised": 200,
+    "done": 67,
+    "remaining": 133,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 132,
-        "open": 117,
+        "items": 133,
+        "open": 118,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 132,
+        "items": 133,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -791,11 +791,29 @@
     {
       "id": "R27-GUARD-04",
       "src": "R2.6.2 tracker",
-      "sev": "P1",
+      "sev": "P2",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P1] TWO ratchet baselines recorded numbers that were ALREADY FALSE when written",
+      "title": "[SEV:P2] TWO ratchet baselines recorded numbers that were ALREADY FALSE when written - CORRECTED, this is not a separate class",
       "note": "Measured twice today, independently. (1) lib_tree_file_ceiling was written as 331 on 2026-08-13 with the note \"RE-PINNED against the MEASURED tree\", but the tree held 332 at that commit and at every commit since. (2) 2b70a6a7 (2026-08-16) measured 479/224/332 at its own tip while writing 478/223/331, so arch-lint-web has been red since that commit rather than since the comms fixes. Both went unnoticed for the same reason: arch-lint-web is one of the guards wired to NOTHING (R27-GUARD-01), so no run ever compared the recorded number against the tree. The class: a baseline is a CLAIM about the tree, and nothing verifies it at the moment it is written. A ratchet whose baseline was never true is not a ratchet - it is a number. Candidate fix: have each arch-lint write its baseline only via a --repin flag that re-measures and refuses to record a value it cannot reproduce, so a hand-typed number cannot enter the file at all."
+    },
+    {
+      "id": "R27-MIG-08",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] two public forms had an RLS policy but NO GRANT, so a rebuild could not use them",
+      "note": "Migration Apply Check raised [R262-SEC-01] a public signup form lost its anon INSERT grant. The assertion was RIGHT and the repo was incomplete: an RLS policy PERMITS, a GRANT is what lets the role attempt the statement at all, and only the policy was written down for interested_contractors and partner_enquiries. Prod has the grant (verified live) from Supabase's default privileges; a fresh replay does not, so rebuilding from the repo produced two public forms RLS allowed and the role could not use. Declared in the CREATING migrations, not a new one at the end - a grant placed later can replay in an order where the policy exists without it, which is the state that just failed. INSERT only: prod's anon also holds SELECT but there is no SELECT policy, so copying the wider grant would add surface for no behaviour. Fourth latent replay failure this release, each hidden behind the previous (R27-MIG-05 duplicate versions -> R27-MIG-06 d197 -> d198 -> this)."
+    },
+    {
+      "id": "R27-SEC-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": false,
+      "status": "OPEN",
+      "title": "[SEV:INFO] anon holds SELECT+INSERT on ~250 prod tables - checked, and the model is INTACT",
+      "note": "Found while fixing R27-MIG-08. anon holds SELECT and INSERT on ~250 tables in prod including profiles, api_keys, mfa_recovery_codes, password_reset_otps, scim_tokens, webauthn_credentials. That is Supabase's model - grants wide, RLS the enforcement layer - but it only holds if every granted table has RLS. Measured, not assumed: tables with an anon grant and RLS DISABLED = ZERO. Of the ~21 tables carrying an actual anon POLICY, every one is deny-all (USING false, WITH CHECK false), including both _deleted_orphan_* tables, free_tool_leads, free_tool_submissions, content_chunks, job_runs and retrieval_traces. Exactly two are permissive SELECT and both are intentional: partner_profiles (public partner directory) and platform_access_locks (product-lock config). Recorded as a NEGATIVE RESULT rather than left as an open question - \"I looked and the model is intact\" is the useful output, and an audit that manufactures a finding to justify itself is worse than one that reports nothing."
     },
     {
       "id": "R27-MIG-03",
