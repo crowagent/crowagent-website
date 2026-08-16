@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T16:14:13.709Z",
+  "updated": "2026-08-16T16:49:34.889Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T16:14:13.462Z",
-    "sourceFingerprint": "196:-108695587",
+    "generatedAt": "2026-08-16T16:49:33.926Z",
+    "sourceFingerprint": "198:1246806958",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 196,
-    "done": 64,
+    "totalRaised": 198,
+    "done": 66,
     "remaining": 132,
     "phases": {
       "1": {
@@ -722,10 +722,10 @@
     {
       "id": "R27-STRIPE-01",
       "src": "R2.6.2 tracker",
-      "sev": "P1",
+      "sev": "P2",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P1] three Stripe lookup keys resolve to ARCHIVED prices, and the guard's baseline is stale in the good direction",
+      "title": "[SEV:P2] three Stripe lookup keys resolve to ARCHIVED prices - a stale DECLARATION, NOT a broken checkout",
       "note": "Verified against LIVE Stripe today: crowagent_council_small_annual, crowagent_council_standard_annual and crowagent_council_county_annual all resolve to active:false - archived by PRICING-LOCK-2026-08 while the code still declares them. Separately, all four crowagent_credits_topup_* / overage_metered keys that verify-stripe-lookup-keys-resolve.mjs SUPPRESSES as MISSING now resolve to ACTIVE live prices, and the baseline's own rule 3 makes a resolving suppressed key a failure - so the baseline is wrong in both directions at once. The baseline was deliberately NOT edited: the primary blocker is in web/lib and the gate could not be run end-to-end without the live key."
     },
     {
@@ -733,8 +733,8 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P1] arch-lint-web is red with 4 ratchet regressions - caused by THIS release's own correct fixes",
+      "status": "FIXED",
+      "title": "[SEV:P1] arch-lint-web is red with 4 ratchet regressions - and its baseline was FALSE WHEN WRITTEN",
       "note": "lib_tree_file_ceiling 332 vs 331, app_to_lib.edge_count 479 vs 478, lib_outbound.edge_count 224 vs 223, plus the knock-on. Traced to two commits of mine: eb86ec33 (R27-COMMS-09, the inert-email-CTA P0) added web/lib/notifications/action-url-absolute.test.ts, and the R27-COMMS-01 price fix made web/lib/email/templates/trial-expired.tsx import @shared/lib/plan-limits - a legacy->governed inversion. Both underlying fixes were right (RULE 0-C forbids hardcoding the price; the inert CTAs were a real P0), but both moved the wrong way on the ratchet that exists to RETIRE web/lib. Invisible because arch-lint-web is one of the guards wired to nothing. Not blocking CI today (still unwired). Correct fix is to move web/lib/notifications/** and the email templates into the governed tree - the baseline note ALREADY names \"the next drop is the web/lib/email tree (13 non-test modules, 32 app importers)\". Do NOT raise the baseline to clear it."
     },
     {
@@ -766,6 +766,36 @@
       "status": "FIXED",
       "title": "[SEV:P2] recovered migrations need an exemption the forward-only ratchet did not have",
       "note": "Forward-only correctly flagged both R27-MIG-04 recoveries as back-dated. Appending them past the high-water mark is not a safe compromise but a WRONG answer: both operate on public.leads, which 20261990000000 drops, so after it they would run against a missing table and their own positive controls would raise. Position is the whole point of a recovery. Exemption is therefore BY REGISTRY (scripts/db/recovered-migrations.json), carrying each entry's prod name and apply-time version as proof. Deliberately NOT a -- @recovered marker inside the file: a self-asserted marker would be believed, which is the same hole as the brand-superseded-guard: allow pragma brand-lint does not honour (R27-DS-01). The guard also FAILS on a registry entry whose file is missing, so the list cannot rot into permissions nobody can audit. Red-proved: an UNREGISTERED back-dated file still fails; a stale entry fails."
+    },
+    {
+      "id": "R27-GDPR-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] the rubric-mark tables were OUTSIDE the GDPR erasure cascade",
+      "note": "Caught by test_migration_gdpr_cascade_guard.py, not by review: crowmark_answer_marks and crowmark_answer_mark_criteria - created LESS THAN AN HOUR EARLIER by my own R27-CM-P0-05 migration - carry organisation_id and hold a user's drafted-answer assessments, so a right-to-erasure request would have left them behind. Fixed by adding them to the cascade, not by taking the guard's \"documented exclusion\" exit: an exclusion is for data that must SURVIVE erasure (immutable audit, statutory retention); these are per-answer assessments belonging to the org being erased, and excluding them would have been choosing not to erase personal data because deleting it was inconvenient - and would have passed CI just as green. Child listed BEFORE parent so the criteria rows appear in the function's own per-table counts rather than being silently absorbed by the FK cascade - an erasure receipt that under-reports what it deleted cannot be audited. The 400-line function was GENERATED from its predecessor with exactly two entries inserted, under assertions, because a hand-copy divergence in a function that erases user data would be worse than the gap. Schema snapshot refreshed minimally (318 -> 320 tables) with columns read from LIVE prod, not transcribed from my migration. 16/16 guards pass. NOT yet applied to prod - ordinary pending-deploy state, no RLS policies, and the tables hold zero rows because the UI half is still open."
+    },
+    {
+      "id": "R27-DS-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] the portal radius scale is disconnected from the central one",
+      "note": "--radius-sm/--radius-md are declared ONLY in apps/portal/src/app/crowagent-brand-tokens.css and read at 312 portal call sites; they do not exist in packages/tokens. They are also Tailwind v4 built-ins (6px/4px) silently overridden to 8px/6px - delete the portal file and 312 sites change size with no build error and no guard. Aliasing to var(--ca-radius-*) is byte-identical today. FIXED. Re-measured: 376 call sites, not 312 (--radius-md 312 + --radius-sm 64). Both are now var(--ca-radius-md) / var(--ca-radius-sm) at crowagent-brand-tokens.css:135-136 - byte-identical at the default 16px root (0.5rem=8px, 0.375rem=6px) and, under text-zoom, now scaling WITH the shared @crowagent/ui Card primitive instead of against it (the portal was rendering BOTH families at once). --radius-2/-3 (2px/3px hairlines) stay portal-owned: the canonical scale's smallest step is 6px and minting a 2px step would be inventing a brand value. GUARD apps/portal/src/app/__tests__/portal-radius-is-central.test.ts - asserts the ABSENCE of a radius LENGTH in the override layer, plus TWO red proofs, one of which covers the failure mode with no error message (DELETING the declaration hands 376 sites to Tailwind's own 4px/6px). Red-proved on the real file: re-declaring --radius-md: 8px fails 4 assertions; restored, 55/55 portal tests pass.",
+      "supersededBy": [
+        "FIXED"
+      ]
+    },
+    {
+      "id": "R27-GUARD-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] TWO ratchet baselines recorded numbers that were ALREADY FALSE when written",
+      "note": "Measured twice today, independently. (1) lib_tree_file_ceiling was written as 331 on 2026-08-13 with the note \"RE-PINNED against the MEASURED tree\", but the tree held 332 at that commit and at every commit since. (2) 2b70a6a7 (2026-08-16) measured 479/224/332 at its own tip while writing 478/223/331, so arch-lint-web has been red since that commit rather than since the comms fixes. Both went unnoticed for the same reason: arch-lint-web is one of the guards wired to NOTHING (R27-GUARD-01), so no run ever compared the recorded number against the tree. The class: a baseline is a CLAIM about the tree, and nothing verifies it at the moment it is written. A ratchet whose baseline was never true is not a ratchet - it is a number. Candidate fix: have each arch-lint write its baseline only via a --repin flag that re-measures and refuses to record a value it cannot reproduce, so a hand-typed number cannot enter the file at all."
     },
     {
       "id": "R27-MIG-03",
@@ -1747,15 +1777,6 @@
       "status": "FIXED",
       "title": "[SEV:P0] a claimed CI gate that does not exist",
       "note": "scripts/generate-python-tokens.mjs --check is invoked by NO workflow (0 hits across .github/). Yet ~25 api/ modules and a web test comment assert it gates drift. The Python token mirror consumed by every PDF/DOCX/email generator has no drift gate at all."
-    },
-    {
-      "id": "R27-DS-04",
-      "src": "R2.6.2 tracker",
-      "sev": "P1",
-      "sevExplicit": true,
-      "status": "FIXED",
-      "title": "[SEV:P1] the portal radius scale is disconnected from the central one",
-      "note": "--radius-sm/--radius-md are declared ONLY in apps/portal/src/app/crowagent-brand-tokens.css and read at 312 portal call sites; they do not exist in packages/tokens. They are also Tailwind v4 built-ins (6px/4px) silently overridden to 8px/6px - delete the portal file and 312 sites change size with no build error and no guard. Aliasing to var(--ca-radius-*) is byte-identical today. FIXED. Re-measured: 376 call sites, not 312 (--radius-md 312 + --radius-sm 64). Both are now var(--ca-radius-md) / var(--ca-radius-sm) at crowagent-brand-tokens.css:135-136 - byte-identical at the default 16px root (0.5rem=8px, 0.375rem=6px) and, under text-zoom, now scaling WITH the shared @crowagent/ui Card primitive instead of against it (the portal was rendering BOTH families at once). --radius-2/-3 (2px/3px hairlines) stay portal-owned: the canonical scale's smallest step is 6px and minting a 2px step would be inventing a brand value. GUARD apps/portal/src/app/__tests__/portal-radius-is-central.test.ts - asserts the ABSENCE of a radius LENGTH in the override layer, plus TWO red proofs, one of which covers the failure mode with no error message (DELETING the declaration hands 376 sites to Tailwind's own 4px/6px). Red-proved on the real file: re-declaring --radius-md: 8px fails 4 assertions; restored, 55/55 portal tests pass."
     },
     {
       "id": "R27-DS-05",
