@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T17:00:24.216Z",
+  "updated": "2026-08-16T17:06:44.687Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T17:00:23.983Z",
-    "sourceFingerprint": "200:757436423",
+    "generatedAt": "2026-08-16T17:06:44.373Z",
+    "sourceFingerprint": "201:284435232",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 200,
+    "totalRaised": 201,
     "done": 68,
-    "remaining": 132,
+    "remaining": 133,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 132,
-        "open": 117,
+        "items": 133,
+        "open": 118,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 132,
+        "items": 133,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -814,6 +814,15 @@
       "status": "FIXED",
       "title": "[SEV:INFO] anon holds SELECT+INSERT on ~250 prod tables - checked, and the model is INTACT",
       "note": "Found while fixing R27-MIG-08. anon holds SELECT and INSERT on ~250 tables in prod including profiles, api_keys, mfa_recovery_codes, password_reset_otps, scim_tokens, webauthn_credentials. That is Supabase's model - grants wide, RLS the enforcement layer - but it only holds if every granted table has RLS. Measured, not assumed: tables with an anon grant and RLS DISABLED = ZERO. Of the ~21 tables carrying an actual anon POLICY, every one is deny-all (USING false, WITH CHECK false), including both _deleted_orphan_* tables, free_tool_leads, free_tool_submissions, content_chunks, job_runs and retrieval_traces. Exactly two are permissive SELECT and both are intentional: partner_profiles (public partner directory) and platform_access_locks (product-lock config). Recorded as a NEGATIVE RESULT rather than left as an open question - \"I looked and the model is intact\" is the useful output, and an audit that manufactures a finding to justify itself is worse than one that reports nothing."
+    },
+    {
+      "id": "R27-MIG-09",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the repo relies on HOSTED-SUPABASE DEFAULT PRIVILEGES it never declares - fix the cause, not the fifth symptom",
+      "note": "Migration Apply Check has now surfaced FIVE latent replay failures, each hidden behind the one before: R27-MIG-05 (duplicate versions) -> d197 (control needing rows) -> d198 (control asserting a prod row count) -> R27-MIG-08 (policy without a GRANT) -> now [R262-SEC-04] authenticated LOST default EXECUTE - RPC would break for signed-in users: {postgres=X/postgres}. The common cause is one thing, not five: the hosted Supabase project carries default privileges (GRANT on public to anon/authenticated/service_role, plus ALTER DEFAULT PRIVILEGES) that a supabase start ephemeral DB does NOT reproduce, and the repo never declares them - so every migration that ASSERTS the deployed privilege state raises on a fresh replay while production is perfectly healthy. Patching each assertion individually is whack-a-mole and I should stop doing it: R27-MIG-08 fixed two tables, and the very next migration failed on the same underlying gap for functions. The structural fix is ONE early migration that establishes the Supabase default-privilege baseline before anything asserts it, after which every downstream assertion holds for the right reason. That must be written carefully - it grants to anon/authenticated across the schema, so it is only safe because R27-SEC-05 measured that ZERO granted tables have RLS disabled and every anon policy is deny-all bar two intentional public reads. NOT a merge blocker: Migration Apply Check is not in branch protection (Run Tests + All CI Gates Pass only)."
     },
     {
       "id": "R27-MIG-03",
