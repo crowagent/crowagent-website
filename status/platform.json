@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T15:25:30.772Z",
+  "updated": "2026-08-16T15:52:40.584Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T15:25:29.937Z",
-    "sourceFingerprint": "189:-1581153121",
+    "generatedAt": "2026-08-16T15:52:40.504Z",
+    "sourceFingerprint": "193:-1275632889",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 189,
-    "done": 57,
-    "remaining": 132,
+    "totalRaised": 193,
+    "done": 60,
+    "remaining": 133,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 132,
-        "open": 117,
+        "items": 133,
+        "open": 118,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 132,
+        "items": 133,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -625,7 +625,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] next build fails type-check with 6 errors, reding FOUR CI jobs at once",
       "note": "Reds Crowagent Platform CI/CD (Security Headers Test), Kiro 7b-7d (bundle budget) AND Lighthouse CI - web. Lighthouse is a downstream casualty, not an independent finding: its Build web (production) step dies on these same 6 errors, so Lighthouse never runs at all - which also means its 89-run failure streak still has no first real measurement behind it. Two writers of one policy, twice over: RouteSkeletonChassis lacks the \"settings\" member two loading.tsx files pass; PageHeaderProps lacks the variant prop SettingsPage.tsx passes; 3 i18n keys used by ConnectorsPanel/ZapierConnectPanel are absent from TranslationKey. All 6 sit in the settings-unification lane. Once the build is green, expect Lighthouse to produce its FIRST genuine assertion result against the 4 public routes (/login, /signup, /pricing, /tools) fixed on 2026-08-15 - the pre-recorded open question is whether the TBT 100ms budget double-gates above the 0.85 category floor, which needs REQ-PLATFORM-159 and its guard changed together, not a lone number bump."
     },
@@ -679,7 +679,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] 19 guard scripts are declared @ci-wired none - and one of them would have caught today's R262-D-223",
       "note": "R27-HANDBACK-05 was closed at \"6 guards wired\" while the repo's OWN machine-readable inventory still declares 19 unwired. Tally from the @ci-wired marker across scripts/: 15 wired, 1 suite, 19 none**. The list is not obscure tooling - it includes verify-vercel-rule0.mjs (the RULE 0 money guard), verify-deploy-budget.mjs, verify-supabase-parity.mjs, migration-rls-lint.sh, db/check-forward-only.sh, arch-lint-web.mjs, arch-lint-bff.mjs, arch-lint.sh, verify-stripe-lookup-keys-resolve.mjs, verify-client-chunk-budget.mjs, verify-api-shard-coverage.mjs, verify-archive-selfcontained.mjs, verify-carryover-closure.mjs, verify-deletion-list.mjs and both verify-register-* guards. The headline: verify-migrations-have-files.mjs asserts that every migration applied to a database exists as a FILE - it was written after four migrations were applied with no file, and its header calls the pattern \"a class, not an accident\". It is unwired, and the same class struck again on 2026-08-11 (R262-D-223), found only by accident five days later during R27-RLS-PARITY-01. So R27-MIG-03's \"needs new credentials\" framing is only half right: the guard already exists and is already written to avoid the obvious filename trap (it compares NORMALISED SQL, because MCP stamps its own apply-time version). Being triaged one by one - run locally, verdict WIRE NOW / WIRE AFTER FIXING / NEEDS-CREDENTIAL / NOT-A-GATE - under a hard rule that a red guard gets its defect fixed, never its threshold softened, and that every newly wired guard must state its denominator and FAIL when that denominator is zero. A meta-guard is being added so a @ci-wired marker cannot drift into fiction."
     },
@@ -691,6 +691,42 @@
       "status": "FIXED",
       "title": "[SEV:P1] the AI citation-hallucination guardrail queries a table that has NEVER existed",
       "note": "Found by measuring code-named tables against migration-created tables (the credential-free half of R27-MIG-03). api/app/services/gemini_rag.py:390 validates every [doc:<uuid>] the model emits against public.rag_documents. That table does not exist in production - live to_regclass is NULL, no migration creates it, and there is no rag-named table at all (information_schema returns only company_coverage, credit_overage_events, credit_overage_settings). It is also the ONLY table gemini_rag.py touches, so there is no alternative corpus it could have meant. GEMINI-003 is wired fail_closed=True (line 515) into gemini_rag.query(), which api/app/routers/social_value.py:47 serves from the MOUNTED router /api/v1/social-value tagged \"CrowMark / PPN 002\" - a live, legally-mandatory surface. So the guardrail can never validate anything: either the answer contains no [doc: marker and it is a permanent no-op, or it contains one and EVERY citation is replaced with [citation removed] while a Sentry breadcrumb and WARNING log falsely name it citation_hallucination. Third member of the \"control that reaches nothing\" family found today and the first in an AI-safety path. NOT yet established: whether the model emits [doc: markers at all. Sentry has ZERO citation log events in 90 days, but that is NOT evidence of safety - it is unconfirmed whether Python logger.warning is forwarded to Sentry logs, and the repo already records that some classes open no Sentry issue. Severity held at P1 rather than P0 pending that determination."
+    },
+    {
+      "id": "R27-GUARD-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] two arch-lint-responsive fixtures were RED while the gate was GREEN - both died because the tree IMPROVED",
+      "note": "The R-GRID-2 fixture typed app/(dashboard)/settings/page.tsx in by hand; workstream A fixed that grid, the allowance left the baseline, and it died with \"fixture premise moved\". The file already documents this exact lesson for its js_breakpoints twin (R262-D-319: \"read from the BASELINE, not typed in ... the test broke while proving nothing\") - the lesson was recorded and never applied one function away. The R262-RS-07 fixture asserted the literal app/(dashboard)/admin/(org)/layout.tsx, which R27-SETTINGS-UX-03 retired. Both re-pointed: one derives its subject from the baseline, the other SYNTHESISES the condition (the remedy its own sibling test already uses). A real finding fell out: the first rewrite discovered a subject rather than synthesising one, and its anti-vacuity assertion fired - after the PageShell migration NO dashboard page composes zero chassis yet clears via an ancestor layout, so layout-ancestry resolution has no live subject. Kept, but if it stays subject-less it must be removed DELIBERATELY rather than left as code no tree exercises."
+    },
+    {
+      "id": "R27-MIG-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] TWO MORE production migrations have no file - the class struck THREE times, not once",
+      "note": "Found by running the (unwired) verify-migrations-have-files.mjs against prod schema_migrations: 667 applied vs 647 files. Named and individually verified: r262_d199_revoke_anon_insert_on_leads and r262_d200_drop_orphan_csrd_function_and_leads_columns, both applied to PRODUCTION on 2026-08-10, neither has a file. Plus r262_d223_archive_csrd_crowmark_crosswalk, whose archive DDL still has no file - only today's *declaration* file exists (R27-RLS-PARITY-01). So R262-D-223 was not a one-off: it is the third instance, and two are still open. Note the run also reported 149 name-unmatched rows, but the SQL-hash side was disabled (shipping 667 SQL bodies was impractical), so 149 is an upper bound, not a measured count - do not quote it as a finding. One of the four checked, ...file_replay_verify, hashes identical to a migration that DOES have a file, i.e. a benign re-apply. Fixing needs the two missing files written from the live prod catalogue, same method as R27-RLS-PARITY-01."
+    },
+    {
+      "id": "R27-STRIPE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] three Stripe lookup keys resolve to ARCHIVED prices, and the guard's baseline is stale in the good direction",
+      "note": "Verified against LIVE Stripe today: crowagent_council_small_annual, crowagent_council_standard_annual and crowagent_council_county_annual all resolve to active:false - archived by PRICING-LOCK-2026-08 while the code still declares them. Separately, all four crowagent_credits_topup_* / overage_metered keys that verify-stripe-lookup-keys-resolve.mjs SUPPRESSES as MISSING now resolve to ACTIVE live prices, and the baseline's own rule 3 makes a resolving suppressed key a failure - so the baseline is wrong in both directions at once. The baseline was deliberately NOT edited: the primary blocker is in web/lib and the gate could not be run end-to-end without the live key."
+    },
+    {
+      "id": "R27-ARCH-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] arch-lint-web is red with 4 ratchet regressions - caused by THIS release's own correct fixes",
+      "note": "lib_tree_file_ceiling 332 vs 331, app_to_lib.edge_count 479 vs 478, lib_outbound.edge_count 224 vs 223, plus the knock-on. Traced to two commits of mine: eb86ec33 (R27-COMMS-09, the inert-email-CTA P0) added web/lib/notifications/action-url-absolute.test.ts, and the R27-COMMS-01 price fix made web/lib/email/templates/trial-expired.tsx import @shared/lib/plan-limits - a legacy->governed inversion. Both underlying fixes were right (RULE 0-C forbids hardcoding the price; the inert CTAs were a real P0), but both moved the wrong way on the ratchet that exists to RETIRE web/lib. Invisible because arch-lint-web is one of the guards wired to nothing. Not blocking CI today (still unwired). Correct fix is to move web/lib/notifications/** and the email templates into the governed tree - the baseline note ALREADY names \"the next drop is the web/lib/email tree (13 non-test modules, 32 app importers)\". Do NOT raise the baseline to clear it."
     },
     {
       "id": "R27-MIG-03",
