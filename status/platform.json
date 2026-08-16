@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T14:55:29.371Z",
+  "updated": "2026-08-16T15:12:17.792Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T14:55:29.152Z",
-    "sourceFingerprint": "187:-825948222",
+    "generatedAt": "2026-08-16T15:12:17.631Z",
+    "sourceFingerprint": "189:-1581153121",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 187,
-    "done": 54,
-    "remaining": 133,
+    "totalRaised": 189,
+    "done": 57,
+    "remaining": 132,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 133,
-        "open": 118,
+        "items": 132,
+        "open": 117,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 133,
+        "items": 132,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -634,8 +634,8 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P0] the API auth sweeps were measuring 0-6 routes out of 405",
+      "status": "FIXED",
+      "title": "[SEV:P0] the API auth sweeps were measuring 7 of 407 routes",
       "note": "Gate 1: Tests - API = 9 failed / 6669 passed, ONE root cause: on fastapi >= 0.137 a bare walk of .routes sees only routes registered directly on the object - 7 of 405 on this app. So the protected-route sweep found 1, the JWT-exempt filter 6, and the API-key, cron, Stripe-admin and CrowMark-RBAC corpora found 0. These are security sweeps that were asserting over almost nothing. They fail LOUDLY only because the anti-vacuity denominators added in R27-ROUTE-02 are doing their job - the correct outcome, not a regression. Fix is app.versioning.iter_effective_routes(...). Also surfaced 14 stale RBAC exemptions naming handlers that no longer exist (mostly decommissioned-product leftovers). Expect the now-working sweeps to expose REAL auth defects that were hidden while the denominator was 1."
     },
     {
@@ -657,6 +657,24 @@
       "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. Closing it properly needs a read-only prod role queried at gate time, which is a credential-provisioning decision only the owner can make. Second, narrower gap: the snapshot stores only (tablename, policyname), so a policy REWRITTEN under the same name with a weaker USING/WITH CHECK is invisible in both directions - storing qual/with_check is the prerequisite."
     },
     {
+      "id": "R27-DEP-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] fastapi is a RANGE, not a pin - local resolved 0.136.1 while CI resolves 0.141.1, so 8 of 9 CI failures were INVISIBLE locally",
+      "note": "api/requirements.txt:15 reads fastapi>=0.115.12,<0.142. The behaviour that broke every route sweep - a bare .routes walk seeing only directly-registered routes, and iter_effective_routes yielding a RouteContext rather than a starlette.routing.Route - only exists on >= 0.137. On the venv's 0.136.1 eight of the nine failures do not reproduce at all: the tests PASS locally and FAIL in CI. That is the precise trap the repo's own \"verify locally, never push to see if CI passes\" rule depends on NOT existing. The venv has been moved to 0.141.1 so local now matches CI, but no repo pin changed, so the next fresh install can silently resolve differently again. Decide: pin fastapi== to the version CI resolves, or add a CI step that fails when the resolved version differs from the one the tests were written against. A range that spans a breaking behaviour change is not a range, it is a coin flip."
+    },
+    {
+      "id": "R27-GUARD-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] the detector guarding route enumeration matched 1 of its 3 live offenders",
+      "note": "test_r262_d303_route_enumeration_uses_shared_walk exists to catch bare .routes walks. Its pattern was \\bfor\\s+\\w+\\s+in\\s+[\\w.]*\\.routes\\b, and [\\w.]* cannot cross a ( - so it matched for r in app.routes but NOT for r in create_app().routes or for r in _app().routes. Two of the three live offenders were exactly that call-expression form, so the guard reported them CLEAN while the sweeps they were supposed to protect measured 0 and 1 routes. A guard reporting green over two-thirds of its own subject. Widened to [^:#]*?\\.routes, measured to find exactly those two extra lines and nothing else across api/app + api/tests, and pinned with four red-proof cases plus a negative. Same family as R27-MIG-02 and R27-GUARD-01: the control existed, ran, and reached almost none of what it names."
+    },
+    {
       "id": "R27-GUARD-01",
       "src": "R2.6.2 tracker",
       "sev": "P0",
@@ -670,7 +688,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the AI citation-hallucination guardrail queries a table that has NEVER existed",
       "note": "Found by measuring code-named tables against migration-created tables (the credential-free half of R27-MIG-03). api/app/services/gemini_rag.py:390 validates every [doc:<uuid>] the model emits against public.rag_documents. That table does not exist in production - live to_regclass is NULL, no migration creates it, and there is no rag-named table at all (information_schema returns only company_coverage, credit_overage_events, credit_overage_settings). It is also the ONLY table gemini_rag.py touches, so there is no alternative corpus it could have meant. GEMINI-003 is wired fail_closed=True (line 515) into gemini_rag.query(), which api/app/routers/social_value.py:47 serves from the MOUNTED router /api/v1/social-value tagged \"CrowMark / PPN 002\" - a live, legally-mandatory surface. So the guardrail can never validate anything: either the answer contains no [doc: marker and it is a permanent no-op, or it contains one and EVERY citation is replaced with [citation removed] while a Sentry breadcrumb and WARNING log falsely name it citation_hallucination. Third member of the \"control that reaches nothing\" family found today and the first in an AI-safety path. NOT yet established: whether the model emits [doc: markers at all. Sentry has ZERO citation log events in 90 days, but that is NOT evidence of safety - it is unconfirmed whether Python logger.warning is forwarded to Sentry logs, and the repo already records that some classes open no Sentry issue. Severity held at P1 rather than P0 pending that determination."
     },
