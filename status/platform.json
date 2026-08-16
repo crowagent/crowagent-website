@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T19:42:20.411Z",
+  "updated": "2026-08-16T19:53:01.345Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T19:42:20.208Z",
-    "sourceFingerprint": "224:931817942",
+    "generatedAt": "2026-08-16T19:53:01.211Z",
+    "sourceFingerprint": "227:1249121088",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 224,
-    "done": 97,
+    "totalRaised": 227,
+    "done": 100,
     "remaining": 127,
     "phases": {
       "1": {
@@ -52,10 +52,10 @@
       },
       "6": {
         "items": 127,
-        "open": 114,
+        "open": 112,
         "built": 10,
-        "wip": 2,
-        "decision": 1
+        "wip": 3,
+        "decision": 2
       }
     }
   },
@@ -1066,7 +1066,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] Workstream D - Data integrity and forms - placeholders, the duplicated measure catalogue, validation, formatters",
       "note": "spec §6. P0-6/9/12, P1-18/23, P2-8/9/13/14/15, P3-8. Includes a REQUIRED data audit: count existing rows silently defaulted to construction/england and report the number."
     },
@@ -1102,7 +1102,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] Workstream H - Shell and responsive - breakpoint 1023 -> 900, one workspace nav, plan badge, product icons",
       "note": "spec §9H. P0-11, P1-12/19. Reproduce before fixing: the reported supplier/buyer asymmetry could NOT be reproduced and the CSS is route-agnostic. Physical testing at 1440/1280/1024/890/768/390 has NEVER been done."
     },
@@ -1210,9 +1210,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "WIP",
       "title": "[SEV:P0] The social-value measure catalogue is DUPLICATED INSIDE ITSELF under two taxonomies at identical prices",
-      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §6. Measured on the LIVE PRODUCTION app with network interception. APPRENTICESHIP_12M == T1M2 (GBP 8,460), JOB_LT_UNEMPLOYED == T1M3 (GBP 17,890), CO2_TONNE_AVOIDED == T2M1 (GBP 238). A buyer can select both halves and DOUBLE-COUNT the same commitment into a published estimate. A data-model defect with a numeric consequence."
+      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §6. Measured on the LIVE PRODUCTION app with network interception. APPRENTICESHIP_12M == T1M2 (GBP 8,460), JOB_LT_UNEMPLOYED == T1M3 (GBP 17,890), CO2_TONNE_AVOIDED == T2M1 (GBP 238). A buyer can select both halves and DOUBLE-COUNT the same commitment into a published estimate. A data-model defect with a numeric consequence. MEASURED ON PROD, and the audit undercounted: toms_measures_library holds 19 rows / 17 active, and there are FOUR identical-price duplicate pairs, not three - JOB_LT_UNEMPLOYED/T1M3 GBP17,890 - APPRENTICESHIP_12M/T1M2 GBP8,460 - CO2_TONNE_AVOIDED/T2M1 GBP238 - and VOLUNTEER_HOUR_SKILLED/T3M1 GBP22.40, which the audit missed. The legacy scheme CANNOT simply be deactivated: T1M1 (GBP27,000), T2M2, T3M2, T3M3 have no named twin and need canonical codes minted first. ZERO crowmark_measures commitments reference any T#M# code on prod, so retirement is safe once those four are re-coded. Migration 20262000000000_r262_d238 already retired T1M4/T1M5 and explicitly DEFERRED the rest as a product decision; its own post-check already asserts the invariant (lower(measure_name)) where is_active, so promoting that to a partial unique index is a one-liner. SEPARATE DEFECT: web/app/tools/ppn002-calculator/components/measureConstants.ts offers T6M1, which has NO ROW in toms_measures_library at all - a measure the picker offers that the engine cannot price."
     },
     {
       "id": "R27-CM-P0-10",
@@ -1855,6 +1855,33 @@
       "supersededBy": [
         "OPEN"
       ]
+    },
+    {
+      "id": "R27-AUTH-FIXTURE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the Playwright auth state is EXPIRED, so any sweep using it silently measures /login",
+      "note": "web/.playwright/auth/user.json is expired. H's FIRST 30-row responsive sweep ran against it and every single row measured the login page - not one error, not one failure, just 30 confident measurements of the wrong page. It is the same shape as the Lighthouse audit that scored 6 URLs which all redirected to /login and came back GREEN because of it. Anyone using that file is measuring the login page. H worked around it with a fresh state at .playwright/auth/r27-h-beta.json (gitignored, holds a session token). THE WORKAROUND IS NOT THE FIX: the file needs either a refresh or a fail-fast check that asserts the landed URL is NOT /login before any measurement is trusted. A fixture that expires silently turns every downstream measurement into fiction."
+    },
+    {
+      "id": "R27-BRAND-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "DECISION",
+      "title": "[SEV:P2] the two product tiles are both purple, and there is no second accent token to fix it with",
+      "note": "Workstream H closed the GLYPH half (M / B - the old L was a council-edition leftover standing for a word the user is never shown) but the audit's actual complaint is that both tiles are the same violet. --crowmark resolves to var(--mark) outright in dark theme, so the two products are near-identical. Fixing it needs a SECOND product accent token; accent lives in src/shared/product/registry.ts. RULE 0-C: never invent, guess or estimate a brand value - so this stops here and needs the owner to choose the colour."
+    },
+    {
+      "id": "R27-NAV-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "CLEARED",
+      "title": "[SEV:P3] /settings/* renders no WORKSPACE group, against spec section 1.7",
+      "note": "Spec 1.7 says \"one workspace nav in every shell\". /settings/* deliberately renders its own four groups plus an explicit exit, per R27-SET-RAIL-01, owner-approved 2026-08-15. Recorded rather than silently reversed: a spec sentence does not outrank a decision the owner made afterwards, and section 10.6's invariant measures /home, /crowmark and /public-sector, all three of which pass. Raised by workstream H for a call; this is the call."
     },
     {
       "id": "R27-BOARD-03",
