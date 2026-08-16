@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T16:05:11.764Z",
+  "updated": "2026-08-16T16:14:13.709Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T16:05:11.658Z",
-    "sourceFingerprint": "194:507796576",
+    "generatedAt": "2026-08-16T16:14:13.462Z",
+    "sourceFingerprint": "196:-108695587",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 194,
-    "done": 61,
-    "remaining": 133,
+    "totalRaised": 196,
+    "done": 64,
+    "remaining": 132,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 133,
-        "open": 118,
+        "items": 132,
+        "open": 117,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 133,
+        "items": 132,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -715,7 +715,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] TWO MORE production migrations have no file - the class struck THREE times, not once",
       "note": "Found by running the (unwired) verify-migrations-have-files.mjs against prod schema_migrations: 667 applied vs 647 files. Named and individually verified: r262_d199_revoke_anon_insert_on_leads and r262_d200_drop_orphan_csrd_function_and_leads_columns, both applied to PRODUCTION on 2026-08-10, neither has a file. Plus r262_d223_archive_csrd_crowmark_crosswalk, whose archive DDL still has no file - only today's *declaration* file exists (R27-RLS-PARITY-01). So R262-D-223 was not a one-off: it is the third instance, and two are still open. Note the run also reported 149 name-unmatched rows, but the SQL-hash side was disabled (shipping 667 SQL bodies was impractical), so 149 is an upper bound, not a measured count - do not quote it as a finding. One of the four checked, ...file_replay_verify, hashes identical to a migration that DOES have a file, i.e. a benign re-apply. Fixing needs the two missing files written from the live prod catalogue, same method as R27-RLS-PARITY-01."
     },
@@ -748,6 +748,24 @@
       "supersededBy": [
         "OPEN"
       ]
+    },
+    {
+      "id": "R27-MIG-06",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] a migration's own CONTROL made a from-scratch rebuild impossible",
+      "note": "With R27-MIG-05's duplicate versions cleared, Migration Apply Check got further and died on R262-D-197 CONTROL FAILED: no org carries crowmark/council either. That anti-vacuity control is CORRECT on a populated database and structurally unsatisfiable on an empty one - a fresh replay creates the schema and no rows, so live_orgs is necessarily 0. Production was always healthy; only the REBUILD was impossible. Third distinct instance this release of \"a migration's self-assertion, not its DDL, blocks replay\" (R27-MIG-01, R27-MIG-05, this). Not fixed by softening: on a real database \"no org carries a live product\" genuinely does mean the query is broken. The discriminator is the total row count - 0 orgs means an empty DB and a stated NO-OP (never a pass), >0 orgs with 0 live still RAISES exactly as before, so the control keeps full force everywhere it can run. Three branches verified against prod. Class swept rather than found one CI round-trip at a time: of 70 migrations containing RAISE EXCEPTION, exactly ONE required data rows to pass. The scanner was controlled against the pre-fix file from git and does flag the original shape, so that single result is not a scanner that stopped seeing its subject."
+    },
+    {
+      "id": "R27-MIG-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] recovered migrations need an exemption the forward-only ratchet did not have",
+      "note": "Forward-only correctly flagged both R27-MIG-04 recoveries as back-dated. Appending them past the high-water mark is not a safe compromise but a WRONG answer: both operate on public.leads, which 20261990000000 drops, so after it they would run against a missing table and their own positive controls would raise. Position is the whole point of a recovery. Exemption is therefore BY REGISTRY (scripts/db/recovered-migrations.json), carrying each entry's prod name and apply-time version as proof. Deliberately NOT a -- @recovered marker inside the file: a self-asserted marker would be believed, which is the same hole as the brand-superseded-guard: allow pragma brand-lint does not honour (R27-DS-01). The guard also FAILS on a registry entry whose file is missing, so the list cannot rot into permissions nobody can audit. Red-proved: an UNREGISTERED back-dated file still fails; a stale entry fails."
     },
     {
       "id": "R27-MIG-03",
