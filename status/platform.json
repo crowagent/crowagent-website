@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T17:37:13.556Z",
+  "updated": "2026-08-16T17:57:25.796Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T17:37:13.098Z",
-    "sourceFingerprint": "211:-549702513",
+    "generatedAt": "2026-08-16T17:57:25.709Z",
+    "sourceFingerprint": "215:1317421699",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 211,
-    "done": 76,
-    "remaining": 135,
+    "totalRaised": 215,
+    "done": 82,
+    "remaining": 133,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 135,
-        "open": 120,
+        "items": 133,
+        "open": 118,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 135,
+        "items": 133,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -589,8 +589,8 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P0] two entitlement lanes read DIFFERENT sources inside one request",
+      "status": "FIXED",
+      "title": "[SEV:P0] two entitlement lanes read DIFFERENT sources inside one request - a live 15x AI over-grant",
       "note": "From the architecture audit. crowmark/[...path]/route.ts:226 vs :253. Live production: 11 of 17 pairs disagree, 1 is a tier mismatch. Every org is internal today so nothing is customer-visible yet, but every non-Stripe provisioning path creates the drift BY CONSTRUCTION. Class 3: two writers of one policy."
     },
     {
@@ -847,7 +847,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] a 0x0 <h1> renders on EVERY screen view, from a shared print component",
       "note": "The real cause of the \"/analytics duplicate h1\" audit item. web/src/shared/ui/PrintLayout.tsx:66 renders the print cover <h1> inside .print-only (display:none), so it sits in the DOM at 0x0 on every SCREEN render - a duplicate heading for assistive tech. PrintLayout has no suppression prop, title is required, and FIVE other surfaces render it, so /contracts/*/overview has the same defect. Deleting PrintLayout from the page would remove the R2.6.1 print cover (SC-08), so the fix belongs in the component. Workstream C stopped at the shared-tree boundary and reported rather than reaching across it."
     },
@@ -856,7 +856,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] TWO guard tests are CITED BY NAME in the foundation and DO NOT EXIST",
       "note": "The signature defect in its purest form - not a control that reaches nothing, a control that was never written while three comments assert it enforces something. src/config/platformNav.ts:30 and src/config/route-registry.ts:22 cite platformNav.rail-contract.test.ts as asserting the registry/rail label contract; src/widgets/page-shell/PageShell.tsx:38 cites platformNav.metadata.test.ts as enforcing \"no page may call document.title directly\". Neither file exists - only settingsNav.rail-contract.test.ts does. Both are being written so the citations become true, each with a stated denominator and a positive control; if either claim turns out to be untrue of the tree, that is a finding to fix rather than a test to weaken."
     },
@@ -869,7 +869,7 @@
       "title": "[SEV:P2] the CrowMark Buyer rail is gated by an entitlement AND a second fail-closed flag, and the feature_flags row that says on gates NOTHING",
       "note": "Found 2026-08-15 on the owner's running localhost:3000: the org IS entitled (product_context.council = active/enabled, tier council_standard) yet the whole Buyer section - Dashboard, Requirements, Evaluations, Contracts, Reporting, Suppliers, Buyer settings - was absent from the rail. shouldShowPublicSector = flagOn && hasPublicSectorAccess (nav-config.tsx:636-642). flagOn = isFeatureEnabled(\"council.edition\"), whose precedence is feature_flag_overrides.enabled -> else env default -> COUNCIL_EDITION \\ — \\ — NEXT_PUBLIC_COUNCIL_EDITION. No override row existed for the org and NEITHER env var was in web/.env.local, so it failed closed. Fixed by setting both in .env.local (untracked); re-measured on the live surface, all 7 rows returned. PROD IS NOT AFFECTED - both vars are recorded set on Vercel (R2.6.2 register:6625,16955), so the env default resolves true for all 9 entitled prod orgs. That was CHECKED before raising it, not assumed. THE STRUCTURAL HALF IS STILL OPEN and is the real finding: (a) public.feature_flags holds council.edition = 'on' on BOTH staging and prod, but isFeatureEnabled never reads that table - it reads feature_flag_overrides. A platform-wide kill-switch row that reads on while gating nothing is a status surface that lies, and is one admin action away from someone believing they enabled a product they did not. (b) Prod has 9 orgs entitled to council and only ONE override row, so entitlement and visibility are held in two places that can disagree silently - the same two-writers-one-policy shape this release has closed repeatedly. Converge them or delete the inert row.",
       "supersededBy": [
-        "OPEN"
+        "FIXED"
       ]
     },
     {
@@ -877,8 +877,8 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P2] the redirect guard reads EDGE rules only, so route-level redirects are invisible to it",
+      "status": "FIXED",
+      "title": "[SEV:P2] the redirect guard reads EDGE rules only - and had a SECOND hole nobody knew about",
       "note": "web/__tests__/infra/crowmark-never-sends-you-to-a-redirect.test.ts reads config/redirects.mjs, which holds edge rules. It was GREEN while four CrowMark surfaces linked to /build, a route that 308s from its own page.tsx. Same family as R27-DS-04 (a guard whose corpus misses part of its subject). Workstream C retired the four links in its lane but deliberately did not widen the guard - out of lane. Being widened to see redirect(...) in page.tsx/route.ts, and red-proved: a widened guard that cannot fail has not been widened."
     },
     {
@@ -925,6 +925,42 @@
       "status": "FIXED",
       "title": "[SEV:P1] I tuned a ratchet to another agent's UNCOMMITTED work, and CI was right to reject it",
       "note": "CI failed RATCHET_GREW on bp_grid_cols (79 measured, ledger permitted 78) while the same gate passed locally. Both readings were true, and that is the finding. verify-chassis-ratchet reads arch-lint-responsive.baseline.json; on this SHARED tree that file carried an uncommitted edit from workstream F (still running), which had removed its own public-sector/reports/page.tsx entry. My local run measured a baseline that exists nowhere in the repository, and I lowered the ledger and the fixture pin to match it. Two distinct mistakes, both mine: (1) I measured a shared tree mid-flight and treated it as the repository - for anything reading a COMMITTED artefact (baselines, ledgers, snapshots) a local run while other agents hold edits is measuring a tree CI will never see; verify via git stash or git show <sha>:<path>. (2) I had committed workstream C scoped to its two lanes, which EXCLUDED scripts/ - so the baseline edit that earned the ledger change never shipped with it. Lane-scoped pathspecs are right for avoiding another agent's files and wrong when a change legitimately spans lanes. Restored to committed-baseline values and verified by stashing F's edit."
+    },
+    {
+      "id": "R27-CROWMARK-F",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] Workstream F - buyer routes onto PageShell",
+      "note": "Closed P0-8 (six-routes-one-title - the cause was title.default in the shared layout), P0-10 (the Reports/Reporting/orphan tangle), and the §1.4 migration. §1.6 and the CrowMark Buyer breadcrumb root were ALREADY done - verified live rather than assumed. The page, the baseline and the ledger were committed together on purpose, because splitting them is exactly what caused R27-GUARD-08 earlier the same day. Two gates caught real work mid-flight: arch-lint-responsive flagged two sm:grid-cols-* sites that moved from reports into portfolio (composed <Grid min=...> rather than baselining), and routes-have-inbound-nav rejected the first design (an edge redirect plus a surviving page file buries the route)."
+    },
+    {
+      "id": "R27-BUYER-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] a DAY-ZERO award is reported as BREACHED to the contracting authority",
+      "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent."
+    },
+    {
+      "id": "R27-JOURNEY-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": false,
+      "status": "FIXED",
+      "title": "[SEV:INFO] publish -> evaluate -> award -> contract -> reporting DOES work - the audit's blocker was its own tooling",
+      "note": "CROWMARK_AUDIT.md §12 recorded this journey as NEVER EXERCISED because the publish action was \"blocked by a safety classifier\". Run end to end on staging against a tenant with ZERO rows in every council_* table: publish 201/1,457ms with 6 measures and weight_lock; two bids scored across 6 criteria + quality + price, persisted across reload; deterministic ranking with the published 90/0/10 weights and the lock verified; contract 201/4,942ms appearing with supplier, GBP 580,000 and standstill. The blocker was the auditor's tooling, not the product. Recording it so no future session treats §12 as evidence the journey is broken. Two real defects DID fall out - R27-BUYER-01 and the missing pending affordance on a 15-second award action. Probe data left on staging for workstream I."
+    },
+    {
+      "id": "R27-A11Y-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] evaluation score inputs have no accessible name and no stated scale",
+      "note": "<input type=number min=0 max=100> with no id/for, no aria-label and no visible \"0-100\" hint - while the quality input beside them DOES say \"(0-100)\". Found live during the journey run. Worth recording how it was confirmed: the agent first entered 8-9 believing a 1-10 scale and got \"Headline 0.8/10 - Unacceptable\", then RAN A CONTROL at 72-90 and got \"8.2/10 - Excellent\" - so the maths is correct and it did not report a defect that was its own misreading. The missing label and scale hint are the real finding."
     },
     {
       "id": "R27-MIG-03",
