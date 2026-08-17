@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T00:26:13.987Z",
+  "updated": "2026-08-17T00:40:56.551Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T00:26:13.873Z",
-    "sourceFingerprint": "285:632240100",
+    "generatedAt": "2026-08-17T00:40:56.446Z",
+    "sourceFingerprint": "286:1098097477",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 285,
+    "totalRaised": 286,
     "done": 164,
-    "remaining": 121,
+    "remaining": 122,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 121,
+        "items": 122,
         "open": 106,
         "built": 10,
-        "wip": 5,
+        "wip": 6,
         "decision": 0
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 121,
+        "items": 122,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -754,6 +754,15 @@
       "status": "FIXED",
       "title": "[SEV:P0] the AI transparency record returned HTTP 500 on every call, on every contract, since f987f311",
       "note": "The task was to give the record a screen; the record had never worked. CONTRACT_FIELDS selected title from crowmark_contracts and that column does not exist, it is contract_name, which every other reader already uses. PostgREST answers with 42703, the loader raised, the router mapped it to 500. Fifty-three tests missed it because all 53 hand-build the contract dict and never touch the field list; adding a screen without looking would have rendered an error. Proved at the layer: both spellings issued as the literal PostgREST select against live staging, title returning HTTP 400 42703, contract_name returning HTTP 200 with one row. The guard that should have caught it was itself blind - the schema-conformance test read only .select(\"<literal>\") and skipped .select(CONSTANT), which is the house style here; widened to resolve module constants, exposing 21 previously invisible call sites across 7 modules and 16 tables, records checked rising to 517. The weight lock is now verified through a real staging round trip with three tamper moves each flipping the verdict; production still holds zero locks. One item refused on purpose: a free-text criterion would sit OUTSIDE the weight lock because RequirementBuilder.tsx:310 passes criterion_ids: selectedMeasureIds, so a partial build would silently weaken the flagship control."
+    },
+    {
+      "id": "R27-ARCH-RESP-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] a component committed hours earlier chose its column count at a viewport breakpoint, and a new BFF route hand-rolled a Railway call",
+      "note": "Both found by running every gate the CI job runs, rather than only the one I changed. (1) AiTransparencyRecordPanel.tsx had three <dl> at sm:grid-cols-2. The spec's objection is structural, not aesthetic: a leaf component cannot know how much room it has, and the same panel sits in a 240px drawer and a 1200px column at one viewport. All three now compose <Grid as=\"dl\" min=\"md\">, which derives the count from the CONTAINER by auto-fit. The full-width rows are the interesting part: sm:col-span-2 is meaningless once the count is not fixed, so they become col-span-full (grid-column: 1 / -1), spanning whatever auto-fit produced at ANY width rather than only above 640px. (2) The new transparency BFF route tripped arch-lint-bff. Three things were checked before touching the baseline, because adding to an allowlist is how a ratchet quietly stops ratcheting: the stated minimum is met (buildAiServiceHeaders delegates to buildUpstreamHeaders); it cannot adopt proxyToRailway, which is a catch-all keyed on [...path] while this is a fixed path that TRANSFORMS the response; and **five sibling council/ai/* routes are grandfathered on identical reasoning**. Count 39 to 40, with the reason written into the baseline so the choice is reviewable rather than merely permitted."
     },
     {
       "id": "R27-MAIN-RED-01",
@@ -2791,9 +2800,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "FIXED",
+      "status": "WIP",
       "title": "[SEV:P1] Gate 1 Tests-Web red, and a second failure hidden behind the first",
-      "note": "Four causes fixed: a comment that spelled a placeholder Tailwind utility literally (Tailwind v4 scans comments); two per-character typing races into controlled inputs; and tsc unable to resolve @upstash from packages/server-infra, which only reproduced in CI because resolution walks UP and never into the sibling web/node_modules. The tsc failure was NOT new - it was unreachable until the test failures ahead of it were fixed."
+      "note": "Four causes fixed: a comment that spelled a placeholder Tailwind utility literally (Tailwind v4 scans comments); two per-character typing races into controlled inputs; and tsc unable to resolve @upstash from packages/server-infra, which only reproduced in CI because resolution walks UP and never into the sibling web/node_modules. The tsc failure was NOT new - it was unreachable until the test failures ahead of it were fixed. Measured rather than assumed. Gate 1: Tests - Web failed on the release branch in 36 seconds, long before vitest runs, so it died in a pre-step: verify-chassis-ratchet, subtest \"CONTROL: the real baseline against the real ledger is silent\". The ledger recorded 107 files / 156 sites against an actual 106 / 154, i.e. the ratchet failed on an IMPROVEMENT nobody recorded, which is the LEDGER_SLACK case it is built to catch. Already fixed locally in 63c33635, and the gate now reads 105/152 both sides, exit 0. The two failures seen on main are separate and also already fixed locally: CI's node was bumped 20 to 22 (--experimental-strip-types is a bad option on Node 20) and the shimmer population was re-measured 91 to 90 to 71. Before pushing, every gate the job runs was executed locally, not only the one that changed - all 12 green. That found two further regressions nothing had reported yet, filed as R27-ARCH-RESP-01 and the BFF grandfathering."
     },
     {
       "id": "R27-LHCI-01",
