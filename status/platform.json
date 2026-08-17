@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T02:52:58.454Z",
+  "updated": "2026-08-17T03:02:25.630Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T02:52:58.257Z",
-    "sourceFingerprint": "307:723762912",
+    "generatedAt": "2026-08-17T03:02:25.472Z",
+    "sourceFingerprint": "307:1019472792",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 307,
-    "done": 190,
-    "remaining": 117,
+    "done": 193,
+    "remaining": 114,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 117,
-        "open": 92,
+        "items": 114,
+        "open": 89,
         "built": 15,
         "wip": 10,
         "decision": 0
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 117,
+        "items": 114,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -1021,7 +1021,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] a DAY-ZERO award is reported as BREACHED to the contracting authority",
       "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent."
     },
@@ -1264,7 +1264,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] a PPN 002 theme answer cannot be rubric-marked at all - the marking store has no identity for one",
       "note": "Split out of R27-CM-MARK-02 rather than bundled into it. crowmark_answer_marks.question_id is uuid NOT NULL REFERENCES bid_questions(id), and a PPN theme answer has no bid_questions row - it lives in crowmark_bid_answers under a slug question_key with question_id NULL. So the marking engine, which the product names as its differentiator, covers only ITT-derived tender questions and not the fixed PPN 002 theme set that every bid shares. Two candidate shapes, both a migration: mint a bid_questions row per theme per contract, or relax crowmark_answer_marks to carry question_key when question_id is null (with a CHECK that exactly one is present). The second is probably right - a theme is not a tender question and minting fake ones would pollute every reader of bid_questions. Prod scale for context: 2 crowmark_bid_answers rows total, 1 tender-keyed and 1 PPN-keyed, 1 bid_questions row."
     },
@@ -2290,9 +2290,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] five MORE rules fail light AA in the teal and success families, and the ink lever is exhausted",
-      "note": ".epc-b 2.46, .epc-c 2.66, .du 2.78, .epc-a 3.86 and .st-ok at 4.45, all measured. --ca-teal-text is ALREADY the deepest teal ink the palette holds and still misses on --bg at 18%, so unlike --err there is no ink to bind to; --success has no deepened light ink at all and no decision behind one. Widening the guard would ship a structurally unpassable gate, which is the trap the previous pass deliberately avoided. So a test asserts these families STILL HAVE findings and reds the moment someone fixes them, telling the reader to promote the roots and delete the ratchet. Needs an owner decision on a light-theme teal or success ink, or acceptance that these rules change shape rather than colour."
+      "note": ".epc-b 2.46, .epc-c 2.66, .du 2.78, .epc-a 3.86 and .st-ok at 4.45, all measured. --ca-teal-text is ALREADY the deepest teal ink the palette holds and still misses on --bg at 18%, so unlike --err there is no ink to bind to; --success has no deepened light ink at all and no decision behind one. Widening the guard would ship a structurally unpassable gate, which is the trap the previous pass deliberately avoided. So a test asserts these families STILL HAVE findings and reds the moment someone fixes them, telling the reader to promote the roots and delete the ratchet. Needs an owner decision on a light-theme teal or success ink, or acceptance that these rules change shape rather than colour. Two of this row's own premises were wrong. \"--success has no deepened light ink at all\" - it has had --success-text: #15692E in the light block since Release 2.3, with measured wash ratios beside it. \"The ink lever is exhausted\" - true only of .st-ok. Four of the five rules were not using the AA-safe ink they already had, binding --c-verified (which resolves to the FILL teal) or raw --success as text on a wash of themselves: the exact shape this file has already fixed three times. The model was validated before anything changed: recomputing each CURRENT ratio from the tokens reproduced the row's independent axe figures EXACTLY, all five. .epc-c 2.66 to 4.65, .du 2.78 to 4.86, .epc-a 3.86 to 5.16, .epc-b 2.46 to 4.60, .st-ok 4.45 to 4.60. Dark theme re-checked at 7.54 to 9.16:1. No brand value was invented - the wash alpha is a lever this file explicitly sanctions for the case where the ink is exhausted. The ratchet did its job and was deleted, which is what it asked for. And promoting the families BROKE A CONTROL: its out-of-scope plant was .st-ok on --teal-d, chosen because that family was out of scope. Moved to --lime by MEASUREMENT (4.36:1, sub-AA); --gold was tried first and rejected for clearing at 4.73 and 6.87, which would have proved nothing."
     },
     {
       "id": "R27-A11Y-CONTRAST-04",
