@@ -25,7 +25,7 @@ Subject rights supported end to end. Full Data Processing Agreement available fo
 
 ### UK and EU data residency
 
-Primary customer data stays in the UK region. Supporting services operate in the EU under SCCs.
+Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland). Supporting services operate in the EU under SCCs.
 
 ### ISO 27001 controls<sup>*</sup>
 
@@ -49,7 +49,7 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 
 ## UK & EU data residency
 
-- Primary customer data is stored in Supabase’s UK region.
+- Primary customer data is stored in Supabase’s EU region, AWS eu-west-1 (Ireland).
 - Supporting services may process metadata in the EU (PostHog EU Cloud).
 - Other processors operate under Standard Contractual Clauses (SCCs).
 - No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy) for the full sub-processor list.
