@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T02:22:41.626Z",
+  "updated": "2026-08-17T02:27:51.756Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T02:22:41.522Z",
-    "sourceFingerprint": "301:1352792625",
+    "generatedAt": "2026-08-17T02:27:51.656Z",
+    "sourceFingerprint": "306:-1600094455",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 301,
-    "done": 186,
-    "remaining": 115,
+    "totalRaised": 306,
+    "done": 189,
+    "remaining": 117,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 115,
-        "open": 93,
+        "items": 117,
+        "open": 94,
         "built": 14,
-        "wip": 8,
+        "wip": 9,
         "decision": 0
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 115,
+        "items": 117,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -824,11 +824,8 @@
       "sev": "P1",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P2] the public entry points breach the Core Web Vitals budget",
-      "note": "Could not be seen until the Lighthouse gate was repaired: it previously audited six URLs that all redirected to /login. Measuring four real routes, /login gives LCP 4402.9ms vs 2500, TBT 225.5ms vs 100, TTI 5200 vs 5000, perf 0.81 vs 0.85 - stable across two independent 5-run passes. Fix is app code, not budgets.",
-      "supersededBy": [
-        "OPEN"
-      ]
+      "title": "[SEV:P1] the FIRST real Lighthouse measurement in this project's history: all 4 public routes miss the performance floor",
+      "note": "Lighthouse CI had 89 failures / 0 successes between 2026-07-19 and 2026-08-13 and had NEVER produced a real number - first because it audited web/public/*.html instead of routes, then because six of its eight URLs all redirected to /login, then because its build step died on the R27-BUILD-01 type errors. With the build fixed it finally ran: 4 distinct URLs, 20 runs. The numbers are genuine and they are misses, mobile form factor under the pinned simulated Slow-4G / 4x-CPU profile: performance /login 0.79, /signup 0.81, /pricing 0.78, /tools 0.60 against a 0.85 floor. All four also miss LCP, TTI and TBT. /tools is the outlier and the real finding: TBT 808ms against a 100ms budget (8x over, and ~4x worse than /login's 217ms, so it is a property of that page and not merely CPU throttling), LCP 4,886ms vs 2,500, TTI 5,726ms vs 5,000, plus errors-in-console - the browser is logging errors on a public page. /login for reference: LCP 4,430ms, TTI 5,193ms, TBT 217ms. NOT a merge blocker - branch protection requires only Run Tests + All CI Gates Pass, and Lighthouse is neither. Do NOT respond by raising budgets: the config's own note pre-committed to settling the TBT-100 double-gating question against REAL numbers once a green run existed, and these are those numbers - but a 0.60 score and an 8x TBT breach are not a threshold-calibration argument, they are a page that needs work. Any TBT change must move REQ-PLATFORM-159 and web/perf/core-web-vitals-budget.test.ts together."
     },
     {
       "id": "R27-MIG-06",
@@ -863,11 +860,8 @@
       "sev": "P1",
       "sevExplicit": true,
       "status": "FIXED",
-      "title": "[SEV:P1] the portal radius scale is disconnected from the central one",
-      "note": "--radius-sm/--radius-md are declared ONLY in apps/portal/src/app/crowagent-brand-tokens.css and read at 312 portal call sites; they do not exist in packages/tokens. They are also Tailwind v4 built-ins (6px/4px) silently overridden to 8px/6px - delete the portal file and 312 sites change size with no build error and no guard. Aliasing to var(--ca-radius-*) is byte-identical today. FIXED. Re-measured: 376 call sites, not 312 (--radius-md 312 + --radius-sm 64). Both are now var(--ca-radius-md) / var(--ca-radius-sm) at crowagent-brand-tokens.css:135-136 - byte-identical at the default 16px root (0.5rem=8px, 0.375rem=6px) and, under text-zoom, now scaling WITH the shared @crowagent/ui Card primitive instead of against it (the portal was rendering BOTH families at once). --radius-2/-3 (2px/3px hairlines) stay portal-owned: the canonical scale's smallest step is 6px and minting a 2px step would be inventing a brand value. GUARD apps/portal/src/app/__tests__/portal-radius-is-central.test.ts - asserts the ABSENCE of a radius LENGTH in the override layer, plus TWO red proofs, one of which covers the failure mode with no error message (DELETING the declaration hands 376 sites to Tailwind's own 4px/6px). Red-proved on the real file: re-declaring --radius-md: 8px fails 4 assertions; restored, 55/55 portal tests pass.",
-      "supersededBy": [
-        "FIXED"
-      ]
+      "title": "[SEV:P1] the undefined-token guard reported 15 false findings because its corpus missed nine stylesheets",
+      "note": "Gate 1 Web failed naming --settings-gutter, --fs-page-title, --settings-prose-measure and 12 more as undefined. All 15 ARE declared, in app/styles/settings.css, which globals.css:78 imports - so they are in the cascade. DECLARATION_SOURCES was a hand-maintained list naming globals.css but NONE of the nine stylesheets it imports. The file's own comment records the identical failure on 2026-08-12 (\"Omit this path and the guard reports every one of them as undefined\") and the response then was to add one more path by hand. A list that must be updated whenever a stylesheet is added drifts again, and each drift is a wave of false findings that trains the reader to distrust the guard - which is how a REAL undefined token eventually gets waved through. Now follows the @import graph from the seeds, relative imports only (a bare specifier resolves through node_modules and guessing there would be a second resolver disagreeing with the bundler), with an anti-vacuity throw if the graph resolves to no more files than the seeds. 7/7 including negative controls."
     },
     {
       "id": "R27-GUARD-04",
@@ -946,12 +940,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "BUILT",
-      "title": "[SEV:P2] the CrowMark Buyer rail is gated by an entitlement AND a second fail-closed flag, and the feature_flags row that says on gates NOTHING",
-      "note": "Found 2026-08-15 on the owner's running localhost:3000: the org IS entitled (product_context.council = active/enabled, tier council_standard) yet the whole Buyer section - Dashboard, Requirements, Evaluations, Contracts, Reporting, Suppliers, Buyer settings - was absent from the rail. shouldShowPublicSector = flagOn && hasPublicSectorAccess (nav-config.tsx:636-642). flagOn = isFeatureEnabled(\"council.edition\"), whose precedence is feature_flag_overrides.enabled -> else env default -> COUNCIL_EDITION \\ — \\ — NEXT_PUBLIC_COUNCIL_EDITION. No override row existed for the org and NEITHER env var was in web/.env.local, so it failed closed. Fixed by setting both in .env.local (untracked); re-measured on the live surface, all 7 rows returned. PROD IS NOT AFFECTED - both vars are recorded set on Vercel (R2.6.2 register:6625,16955), so the env default resolves true for all 9 entitled prod orgs. That was CHECKED before raising it, not assumed. THE STRUCTURAL HALF IS STILL OPEN and is the real finding: (a) public.feature_flags holds council.edition = 'on' on BOTH staging and prod, but isFeatureEnabled never reads that table - it reads feature_flag_overrides. A platform-wide kill-switch row that reads on while gating nothing is a status surface that lies, and is one admin action away from someone believing they enabled a product they did not. (b) Prod has 9 orgs entitled to council and only ONE override row, so entitlement and visibility are held in two places that can disagree silently - the same two-writers-one-policy shape this release has closed repeatedly. Converge them or delete the inert row.",
-      "supersededBy": [
-        "FIXED"
-      ]
+      "status": "FIXED",
+      "title": "[SEV:P2] a stepper tab is unreachable unless you are already in its stage",
+      "note": "The REAL defect behind audit item P1-8, which asked for /answers to be \"added to the stepper\". It has been a tab since CM-LIFECYCLE-003 (crowmark-contract-subnav-config.ts:235, RESPONSE group). The audit saw it absent because the subnav is TWO-LEVEL and level 2 renders only visibleTabs(activeGroup), so /answers cannot be seen or reached unless the user is already in the Response stage. Implementing P1-8 as written would have added a tab that already exists and left the actual defect untouched. Intended behaviour to be established from the spec first - a two-level subnav may be deliberate, in which case the fix is discoverability rather than flattening."
     },
     {
       "id": "R27-GUARD-06",
@@ -1382,11 +1373,8 @@
       "sev": "P1",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P1] copy names three destinations, and the audit was wrong about why",
-      "note": "CORRECTION TO THE AUDIT, measured by workstream F: the surfaces DO resolve. /bid-editor is a live 308 to /answers, and /crowmark/contracts/[id]/requirements is a real page that is not a tab. So the copy is STALE, not dangling, and the fix is rewording rather than repointing: \"Open the bid editor\" and \"Add them in the bid editor\" name a route that now redirects to Answers. Left for E, which wins on any string.",
-      "supersededBy": [
-        "OPEN"
-      ]
+      "title": "[SEV:P1] Copy points at THREE destinations that do not exist: 'Requirements tab', 'bid editor', 'CrowMark Buyer settings'",
+      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §5.1"
     },
     {
       "id": "R27-CM-P1-06",
@@ -1942,12 +1930,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "FIXED",
-      "title": "[SEV:P1] three E2E/a11y gates have never passed once",
-      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check. The cause was TWO WRITERS OF ONE FACT. The fact is \"which account do E2E journeys run as\", and it had two: e2e-core-journeys.yml used STAGING_SUPABASE_URL + STAGING_E2E_USER_*, while e2e-critical-journeys.yml used NEXT_PUBLIC_SUPABASE_URL + E2E_USER_*. gh secret list dates the drift: the STAGING pair was set 2026-08-09; E2E_USER_PASSWORD 2026-07-05 and E2E_USER_EMAIL 2026-06-03. Every test failed with 400 invalid_credentials, which is what a five-week-old password looks like from outside. The drift was invisible because the thing that would have shown it was switched off - both gates skip on a draft PR, and a skipped check reads as green-adjacent. Converged onto the maintained pair and guarded in both directions, including an assertion that at least one workflow distinguishes a CREDENTIAL failure from a product failure, because a stale password looks exactly like a broken login screen and without that message the next person debugs the product. Two things this does not fix. The app also failed to boot in that run (\"App did not become ready on 127.0.0.1:3000/login within 180s\"), and whether STAGING_E2E_USER_PASSWORD is itself still valid cannot be established from here. Owner action: confirm that secret, or grant a way to verify it.",
-      "supersededBy": [
-        "WIP"
-      ]
+      "status": "WIP",
+      "title": "[SEV:P1] NO E2E has ever run against R2.7 work",
+      "note": "The E2E gates carry if: pull_request.draft == false and R2.7 is a draft PR, so they have skipped 30 of 30 runs. This is the workflow behaving exactly as designed, which is why nothing flagged it - a skipped check is green-adjacent and reads as \"fine\". It is a release-readiness fact: every journey claim on this release rests on unit and integration evidence only. Either mark the PR ready and accept the Actions spend, or state explicitly that R2.7 ships without E2E coverage. A skipped gate is not a passing gate. They ran. PR #771 is a READY pull request rather than a draft, so the if: pull_request.draft == false condition stopped excluding them and the journey gates executed for the first time this release. Measured across the last 50 runs of each: Critical Journeys 48 skipped / 2 failed / 0 success; Core Journeys the same; Portal E2E 42 skipped / 7 cancelled / 1 failed / 0 success. So the row's \"never run\" was right and its sibling row's \"never passed\" was also right, for the same reason. See R27-E2E-01 (second row) for what the run revealed."
     },
     {
       "id": "R27-SEGMENT-00",
@@ -2355,6 +2340,15 @@
       "note": "page.a11y.test.tsx > exposes the stepper as a named list looks for role=\"list\" named \"Builder progress\". The only producer is stepperAria in messages/public-sector/builder.ts:49, and a search across all of web/src and web/app finds ONE occurrence, its own definition. The stepper was replaced by WizardNav's role=\"progressbar\" under R27-CM-P1-18 and the assertion was never updated. A gate that cannot pass is not a gate; either the surface is supplied or the assertion follows the component."
     },
     {
+      "id": "R27-CM-P1-05b",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] copy names three destinations, and the audit was wrong about why",
+      "note": "CORRECTION TO THE AUDIT, measured by workstream F: the surfaces DO resolve. /bid-editor is a live 308 to /answers, and /crowmark/contracts/[id]/requirements is a real page that is not a tab. So the copy is STALE, not dangling, and the fix is rewording rather than repointing: \"Open the bid editor\" and \"Add them in the bid editor\" name a route that now redirects to Answers. Left for E, which wins on any string. RE-IDENTIFIED 2026-08-17: this row was filed as R27-CM-P1-05, which a DIFFERENT defect already used. A duplicated id means a tally counts one of the two, and a reader closing R27-CM-P1-05 cannot know which they closed. The earlier occurrence keeps the original id; this one takes R27-CM-P1-05b. Nothing about the finding changed."
+    },
+    {
       "id": "R27-SEGMENT-11",
       "src": "R2.6.2 tracker",
       "sev": "P2",
@@ -2571,6 +2565,15 @@
       "note": "OWNER-REPORTED. layout.css hid .shell-sidebar-slot on /settings because 'the section HAS ITS OWN SETTINGS SUB-NAV'. R27-SET-RAIL-01 deleted that sub-nav and moved the ~25 destinations INTO the rail; the rule stayed, so the rail was hidden AND the menu that replaced the column with it. 21 rail rows sat in the DOM inside a display:none wrapper. WHY MY VERIFICATION MISSED IT: I counted a[href] in the DOM and got 21. DOM PRESENCE IS NOT VISIBILITY - 21 invisible links counted identically to 21 visible ones, so a page with zero navigation passed my check and I reported it verified. The measurement that finds it is getComputedStyle + getBoundingClientRect on an ancestor walk. Measured after: 1440 and 1280 -> visible aside 1 and 24 settings links (was 0 and 5); 390 -> drawer holds 24. CONTROL: at 1000px /home, /public-sector AND /settings all show 0 visible aside, so the sub-1024 behaviour is shell-wide and pre-existing, not this defect."
     },
     {
+      "id": "R27-NAV-01b",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "BUILT",
+      "title": "[SEV:P2] the CrowMark Buyer rail is gated by an entitlement AND a second fail-closed flag, and the feature_flags row that says on gates NOTHING",
+      "note": "Found 2026-08-15 on the owner's running localhost:3000: the org IS entitled (product_context.council = active/enabled, tier council_standard) yet the whole Buyer section - Dashboard, Requirements, Evaluations, Contracts, Reporting, Suppliers, Buyer settings - was absent from the rail. shouldShowPublicSector = flagOn && hasPublicSectorAccess (nav-config.tsx:636-642). flagOn = isFeatureEnabled(\"council.edition\"), whose precedence is feature_flag_overrides.enabled -> else env default -> COUNCIL_EDITION \\ — \\ — NEXT_PUBLIC_COUNCIL_EDITION. No override row existed for the org and NEITHER env var was in web/.env.local, so it failed closed. Fixed by setting both in .env.local (untracked); re-measured on the live surface, all 7 rows returned. PROD IS NOT AFFECTED - both vars are recorded set on Vercel (R2.6.2 register:6625,16955), so the env default resolves true for all 9 entitled prod orgs. That was CHECKED before raising it, not assumed. THE STRUCTURAL HALF IS STILL OPEN and is the real finding: (a) public.feature_flags holds council.edition = 'on' on BOTH staging and prod, but isFeatureEnabled never reads that table - it reads feature_flag_overrides. A platform-wide kill-switch row that reads on while gating nothing is a status surface that lies, and is one admin action away from someone believing they enabled a product they did not. (b) Prod has 9 orgs entitled to council and only ONE override row, so entitlement and visibility are held in two places that can disagree silently - the same two-writers-one-policy shape this release has closed repeatedly. Converge them or delete the inert row. RE-IDENTIFIED 2026-08-17: this row was filed as R27-NAV-01, which a DIFFERENT defect already used. A duplicated id means a tally counts one of the two, and a reader closing R27-NAV-01 cannot know which they closed. The earlier occurrence keeps the original id; this one takes R27-NAV-01b. Nothing about the finding changed."
+    },
+    {
       "id": "R27-COMMS-06",
       "src": "R2.6.2 tracker",
       "sev": "P0",
@@ -2715,6 +2718,15 @@
       "note": "scripts/generate-python-tokens.mjs --check is invoked by NO workflow (0 hits across .github/). Yet ~25 api/ modules and a web test comment assert it gates drift. The Python token mirror consumed by every PDF/DOCX/email generator has no drift gate at all."
     },
     {
+      "id": "R27-DS-04b",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] the portal radius scale is disconnected from the central one",
+      "note": "--radius-sm/--radius-md are declared ONLY in apps/portal/src/app/crowagent-brand-tokens.css and read at 312 portal call sites; they do not exist in packages/tokens. They are also Tailwind v4 built-ins (6px/4px) silently overridden to 8px/6px - delete the portal file and 312 sites change size with no build error and no guard. Aliasing to var(--ca-radius-*) is byte-identical today. FIXED. Re-measured: 376 call sites, not 312 (--radius-md 312 + --radius-sm 64). Both are now var(--ca-radius-md) / var(--ca-radius-sm) at crowagent-brand-tokens.css:135-136 - byte-identical at the default 16px root (0.5rem=8px, 0.375rem=6px) and, under text-zoom, now scaling WITH the shared @crowagent/ui Card primitive instead of against it (the portal was rendering BOTH families at once). --radius-2/-3 (2px/3px hairlines) stay portal-owned: the canonical scale's smallest step is 6px and minting a 2px step would be inventing a brand value. GUARD apps/portal/src/app/__tests__/portal-radius-is-central.test.ts - asserts the ABSENCE of a radius LENGTH in the override layer, plus TWO red proofs, one of which covers the failure mode with no error message (DELETING the declaration hands 376 sites to Tailwind's own 4px/6px). Red-proved on the real file: re-declaring --radius-md: 8px fails 4 assertions; restored, 55/55 portal tests pass. — [2026-08-17] VERIFIED INDEPENDENTLY, not taken from this row. The tree holds it: crowagent-brand-tokens.css:134-135 reads --radius-sm: var(--ca-radius-sm) / --radius-md: var(--ca-radius-md), and the override layer declares no radius LENGTH. Guard re-run 6/6, exit 0. RE-RED-PROVED ON THE REAL FILE: re-declaring --radius-md: 8px (confirmed on disk before the run) fails 4 assertions - the absence sweep, the alias resolution, and BOTH named red proofs - exit 1; restored -> 6/6, exit 0, git diff for the file EMPTY. NOTE FOR THE BOARD: THIS ID IS USED TWICE. Row 182 is also R27-DS-04 and is a DIFFERENT defect (the undefined-token guard's corpus missing nine stylesheets,"
+    },
+    {
       "id": "R27-DS-05",
       "src": "R2.6.2 tracker",
       "sev": "P1",
@@ -2746,7 +2758,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the shared Python email wrappers every backend mail passes through are themselves hardcoded",
       "note": "Found while closing R27-DS-06 and filed rather than left in a commit message. DS-06 is scoped to 'email HTML built inside API routes' and that scope is now zero - but the same detector over the layers those routes CALL reads 320 raw literals across 18 files: api/app/services 125 across 12 files (178 scanned, 12 emitting styled HTML) and api/app/tasks 195 across 6 files (13 scanned, 6 styled). Worst: tasks/email_sequences.py 145, services/email_templates.py 35, tasks/scheduler.py 24, services/email_dispatcher.py 16, services/email_branding.py 12. THE TWO SHARED WRAPPERS ARE IN THE LIST, which is why this outranks the routers it was found behind: wrap_internal_email (services/email_templates.py) paints the #F4F7FA page, the #FFFFFF card, a #e2e8f0 hairline and an 'Inter','Segoe UI',system-ui,... stack, and render_branded_email (services/email_branding.py) does the same for every branded backend email - so EVERY Python email, including the six routers just centralised, still renders a hardcoded shell around token-bound content. Several carry #E4ECF7 / #0CC9A8, i.e. the pre-convergence palette the 2026-08-11 freeze retired. Nothing governs this: brand-lint.sh --scope=changed collects *.tsx *.ts *.css *.scss only (brand-lint.sh:267-270) and has NO Python in its corpus at all, and the R27-DS-06 guard's discovering sweep deliberately stops at api/app/routers/** - its corpus boundary is stated in the test file so a green run there cannot be misread as covering this. NOT fixed in the DS-06 session: 320 sites across a shared render path is a scope change, not a follow-through, and it needs its own before/after and red-proof."
     },
@@ -2794,6 +2806,15 @@
       "status": "FIXED",
       "title": "[SEV:P2] CrowMark's contract workspace is the least-tested surface in the product",
       "note": "12 of 45 CrowMark pages carry a test signal (27%), against 12/12 for CrowMark Buyer. 21 of the 23 /crowmark/contracts/[id]/* sub-tabs have ZERO mentions in any test file, and all 23 are excluded from the inbound-nav gate as dynamic routes. This is the flagship product's core workflow."
+    },
+    {
+      "id": "R27-E2E-01b",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] three E2E/a11y gates have never passed once",
+      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check. The cause was TWO WRITERS OF ONE FACT. The fact is \"which account do E2E journeys run as\", and it had two: e2e-core-journeys.yml used STAGING_SUPABASE_URL + STAGING_E2E_USER_*, while e2e-critical-journeys.yml used NEXT_PUBLIC_SUPABASE_URL + E2E_USER_*. gh secret list dates the drift: the STAGING pair was set 2026-08-09; E2E_USER_PASSWORD 2026-07-05 and E2E_USER_EMAIL 2026-06-03. Every test failed with 400 invalid_credentials, which is what a five-week-old password looks like from outside. The drift was invisible because the thing that would have shown it was switched off - both gates skip on a draft PR, and a skipped check reads as green-adjacent. Converged onto the maintained pair and guarded in both directions, including an assertion that at least one workflow distinguishes a CREDENTIAL failure from a product failure, because a stale password looks exactly like a broken login screen and without that message the next person debugs the product. Two things this does not fix. The app also failed to boot in that run (\"App did not become ready on 127.0.0.1:3000/login within 180s\"), and whether STAGING_E2E_USER_PASSWORD is itself still valid cannot be established from here. Owner action: confirm that secret, or grant a way to verify it. RE-IDENTIFIED 2026-08-17: this row was filed as R27-E2E-01, which a DIFFERENT defect already used. A duplicated id means a tally counts one of the two, and a reader closing R27-E2E-01 cannot know which they closed. The earlier occurrence keeps the original id; this one takes R27-E2E-01b. Nothing about the finding changed."
     },
     {
       "id": "R27-A11Y-01",
@@ -2929,6 +2950,15 @@
       "status": "FIXED",
       "title": "[SEV:P1] admin surface design and UX transformation (11 routes)",
       "note": "Six of the 11 admin routes have NO test coverage; /admin/eval-annotation and /admin/rag-labelling have zero mentions anywhere in the test corpus. Priority is destructive and privileged actions - member removal, role change, key rotation, feature flags, data-privacy - each needing a specific confirmation, an in-flight state, and a failure that cannot look like a success. An admin audit log that silently renders empty on a failed read is a compliance problem, not a UI nit."
+    },
+    {
+      "id": "R27-PERF-01b",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] the public entry points breach the Core Web Vitals budget",
+      "note": "Could not be seen until the Lighthouse gate was repaired: it previously audited six URLs that all redirected to /login. Measuring four real routes, /login gives LCP 4402.9ms vs 2500, TBT 225.5ms vs 100, TTI 5200 vs 5000, perf 0.81 vs 0.85 - stable across two independent 5-run passes. Fix is app code, not budgets. RE-IDENTIFIED 2026-08-17: this row was filed as R27-PERF-01, which a DIFFERENT defect already used. A duplicated id means a tally counts one of the two, and a reader closing R27-PERF-01 cannot know which they closed. The earlier occurrence keeps the original id; this one takes R27-PERF-01b. Nothing about the finding changed."
     },
     {
       "id": "R27-CI-01",
