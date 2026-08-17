@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T09:49:28.407Z",
+  "updated": "2026-08-17T10:51:48.222Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T09:49:27.090Z",
-    "sourceFingerprint": "314:440236240",
+    "generatedAt": "2026-08-17T10:51:47.961Z",
+    "sourceFingerprint": "315:-643753636",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 314,
+    "totalRaised": 315,
     "done": 213,
-    "remaining": 101,
+    "remaining": 102,
     "phases": {
       "1": {
         "items": 0,
@@ -51,11 +51,11 @@
         "decision": 0
       },
       "6": {
-        "items": 101,
-        "open": 66,
+        "items": 102,
+        "open": 64,
         "built": 22,
-        "wip": 12,
-        "decision": 1
+        "wip": 11,
+        "decision": 5
       }
     }
   },
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 101,
+        "items": 102,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -817,6 +817,15 @@
       "status": "FIXED",
       "title": "[SEV:P0] the public pricing endpoint advertises an \"Agency\" tier at GBP 399 with \"Unlimited users\" that we do not sell",
       "note": "Live and public, and it was never on this board. The finding existed only in the message of 24bf852c on the held branch, which is the \"findings in commit messages are invisible to the tracker\" defect happening to me. GET /api/v1/pricing/public falls back to a hardcoded table when Stripe is unreachable, and that table contradicts the 2026-08-09 lock of 49/149/549 at 1/5/10 seats, as well as the same endpoint's own contact_sales response. Two writers of one fact; the fallback now derives from the generated pricing_constants.py. Red-proved: reverting to main's file was confirmed to put \"name\": \"Agency\" / 399 / \"Unlimited users\" back on disk at lines 317-320 BEFORE the run, and the suite then failed 4 of 6 on the seat list. Restored, 6 passed, exit 0. Deployment measured rather than hoped: the tip touches api/ and supabase/ only, and the path-gated web/vercel.json ignore simulates to exit 0, skip build; but the repo carries two vercel.json files with opposite ignore behaviour and the last 20 deployments are all off main, so which one governs could not be settled from evidence. Worst case is one production build of web code identical to what is already live. Railway is the target that matters. The carried migration 20260816000001_r27_sec01_... was verified already applied to both staging and production and is committed because main lacked the file, which is how \"25 prod tables with no creating migration\" starts over."
+    },
+    {
+      "id": "R27-RESIDENCY-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "DECISION",
+      "title": "[SEV:P0] the live marketing site publishes a data-residency claim that is FALSE, to buyers in UK public-sector procurement",
+      "note": "THE CLAIM. https://crowagent.ai/security/ returns HTTP 200 and states, twice, \"Primary customer data is stored in Supabase's UK region\" and \"Primary customer data stays in the UK region\". THE MEASUREMENT, taken independently rather than accepted from the handover. Supabase MCP list_projects: production gujtuecjzfiqsdnzgyvo region is eu-west-1, which is IRELAND. Staging is the same. Supabase's UK region is eu-west-2 (London) and we are not in it. So the published sentence is not imprecise, it is wrong. AND THE PROCESSING SIDE IS NOT IRELAND EITHER. X-Vercel-Id on app.crowagent.ai reads lhr1::iad1:: on 3 of 3 requests: lhr1 is only the London EDGE that received the request, and iad1 is the FUNCTION region - Washington DC, UNITED STATES. vercel.json sets no regions key, so the project sits on Vercel's iad1 default and always has. Sessions, auth and server-rendered personal data are processed there. SO THE GAP IS NOT \"Ireland instead of the UK\". Storage is in Ireland; PROCESSING is in the United States. That is an international transfer, disclosed nowhere on the page making the residency claim. THE PLATFORM'S OWN LEGAL PAGES ARE HONEST, WHICH MAKES THIS SHARPER. /residency and /sub-processors both return 200 live and are accurate - sub-processors/page.tsx:155 says \"AWS eu-west-1 (Ireland)\", and :175-183 honestly published that Vercel's function region was \"being confirmed\". It is now confirmed as iad1. So the product's legal disclosure is right and the MARKETING SITE contradicts it. AND THE CORRECTED COPY ALREADY EXISTS BUT CAN NEVER BE READ. web/app/(marketing)/security/page.tsx carries the honest wording under LIVE-COPY-01 - and that page is one of the seven dead routes in R27-ROUTE-01, 308-redirecting to the very marketing page carrying the falsehood. web/__tests__/marketing/security-page.test.tsx is a test guarding a page that never serves: a control that reaches nothing, guarding the correction to a live misstatement. NOT EDITED, DELIBERATELY. The fix lives in the "
     },
     {
       "id": "R27-CRON-01",
@@ -2245,9 +2254,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "[SEV:P1] the Defensible Decision Record is NOT unique, and the owner of the equivalent has not shipped it",
-      "note": "Responsive acquired Bidhive in May 2025, and its shipped bundle contains a weighted, gated, audited, exportable bid/no-bid record. Responsive also holds ISO 42001, ISO 27001, SOC 2 Type II and a contractual NIST AI RMF commitment; CrowAgent holds none of these. The prior R&D paper's \"the decision side is close to unserved\" conflated two claims and fails on the supplier side. The single most decision-relevant unknown in the whole report is whether Responsive intends to ship Bidhive's instrument, because that sets the clock. The stated advantage that remains is execution speed."
+      "note": "[2026-08-17] NOT RE-LITIGATED, DELIBERATELY. Every load-bearing assertion in this row is about a THIRD PARTY (what Responsive acquired, what its bundle contains, which certifications it holds, whether it intends to ship Bidhive's instrument). None of that is measurable from this repo or our infrastructure, and restating an unsourced competitor claim would only launder it into a second place. What IS measurable, and is true of OUR product: the decision-record surface exists and ships - web/app/(dashboard)/public-sector/transparency/page.tsx with web/src/features/public-sector/AiTransparencyRecordPanel.tsx, backed by api/app/services/ai_transparency_record.py - so the row's premise that we have the instrument is sound; what is unproven is that it is UNIQUE. The certification asymmetry is checkable and is real: we hold none of ISO 42001, ISO 27001 or SOC 2, and web/app/(marketing)/security/page.tsx is written to state that honestly rather than imply otherwise - though see R27-COMPETE-06, because that page 308s away and never serves. What needs the owner: whether to compete on the decision record at all given a credible incumbent equivalent, and whether to fund certification. What needs a SOURCE before anyone acts on this row: the Bidhive acquisition, the bundle contents and the certification list are currently uncited. An agent should not resolve this row; it should not be closed until the owner rules. PRIOR PASS: Responsive acquired Bidhive in May 2025, and its shipped bundle contains a weighted, gated, audited, exportable bid/no-bid record. Responsive also holds ISO 42001, ISO 27001, SOC 2 Type II and a contractual NIST AI RMF commitment; CrowAgent holds none of these. The prior R&D paper's \"the decision side is close to unserved\" conflated two claims and fails on the supplier side. The single most decision-relevant unknown in the whole report is whether Responsive intends to ship Bidhive's instrument, because that sets the clock. The stated advantage that remains is"
     },
     {
       "id": "R27-COMPETE-03",
@@ -2256,7 +2265,7 @@
       "sevExplicit": true,
       "status": "WIP",
       "title": "[SEV:P1] the buyer side, where the value is claimed to sit, is EMPTY on production",
-      "note": "Measured on production: 0 contracts, 0 suppliers, 0 evaluation responses, a weight lock never taken (0 of 2 packs), a provenance ladder reaching no table, and an AI transparency record reaching no screen despite shipping. The recommended response is WIRING, NOT BUILDING: put a screen on the transparency record, take one real weight lock, add a free-text criterion, fix the two consistency-check defects live since 5 August, publish a methodology. Sub-rows for each are proposed in docs/research/COMPETITIVE-POSITION-2026-08-16.md. Measured directly on production gujtuecjzfiqsdnzgyvo, 2026-08-17, because \"empty\" is a claim and the difference between zero and two decides whether this is a cold-start problem or a dead surface: buyer requirement packs 2 (both published), evaluations 2, contracts 0. Supplier contracts 24, AI bid drafts 1. Organisations 13. So the buyer side is not empty, it is thin, and council_contracts at zero is the one that is unused. The ratio that matters for the positioning claim is 2 buyer packs against 24 supplier contracts. Corroborates two other rows from a different direction: crowmark_answer_marks is 0, which is independent confirmation of R27-CM-MARK-02 (the marking tab sent a theme key at a uuid column, so no mark could ever be written); and 1 AI draft against 24 contracts says the drafting path is barely exercised, which is the same surface R27-CM-P0-05 found unreadable on reload. Not a defect to fix in code. Recorded so the buyer-side claim is stated with numbers rather than adjectives, and so nobody reads \"empty\" as \"broken\" when the measured position is \"two real packs and no contracts\"."
+      "note": "[2026-08-17] EVERY PRODUCTION NUMBER IN THIS ROW RE-RUN INDEPENDENTLY AGAINST gujtuecjzfiqsdnzgyvo AND ALL REPRODUCE EXACTLY: council_requirements 2, council_evaluations 2, council_contracts 0, council_suppliers 0, evaluation_responses 0, evaluation_prereads 0, crowmark_contracts 24, contracts 24, organisations 13. So the row stands: the buyer side is thin, not empty, and \"EMPTY\" as written in the title is refuted by its own evidence. HOW \"EMPTY\" WAS DISTINGUISHED FROM \"REDIRECTED TO /login\", since conflating them has produced two false GREENs in this release: it was NOT distinguished at the HTTP layer, because at the HTTP layer it CANNOT be. A NEGATIVE CONTROL PROVED THE OBVIOUS METHOD IS BLIND: probing https://app.crowagent.ai/public-sector/does-not-exist-xyz unauthenticated returns 307 -> /login?redirect_to=%2Fpublic-sector%2Fdoes-not-exist-xyz, byte-for-byte the same shape as the eight real buyer routes. The auth gate runs BEFORE routing, so an unauthenticated probe cannot tell a real page from a nonexistent one, let alone a populated one from an empty one - anyone \"verifying the buyer side on production\" with curl would have measured the login redirect and called it evidence either way. The claim was therefore settled where it is actually decidable: by counting rows in the production database directly, bypassing the web tier entirely. That is the only method here that measures the thing rather than a record of it. Contrast the PUBLIC surface, where HTTP does work and was used: /help/getting-started returns a real 200. Consequence for the row: the buyer side is not a dead surface, it is a cold start - 2 published packs and 2 evaluations against 24 supplier contracts. PRIOR PASS: Measured on production: 0 contracts, 0 suppliers, 0 evaluation responses, a weight lock never taken (0 of 2 packs), a provenance ladder reaching no table, and an AI transparency record reaching no screen despite shipping. The recommended response is WIRING, NOT BUILDING: put a screen on "
     },
     {
       "id": "R27-COMPETE-04",
@@ -2281,9 +2290,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "[SEV:P1] UK data residency is UNANIMOUS among buyer-side competitors and CrowAgent is the exception",
-      "note": "6 of 6 buyer-side competitors declare \"United Kingdom\" storage on their framework records. CrowAgent runs in AWS eu-west-1 (Ireland). This is buyer-visible on a published record, it is asked of every supplier, and it is the cheaper of the two problems. Mercell publishes the broadest position (UK and EEA with user control \"Yes\"); Atamis also gives user control. Revised priority order from the study: RLS backstop on the supplier side FIRST, UK region SECOND, a dedicated database LAST and only when a named customer pays. Confirmed: all six buyer-side competitors declare United Kingdom storage on their G-Cloud 14 records; CrowAgent runs in AWS eu-west-1 (Ireland) with no UK option. This is the one isolation-adjacent field the framework publishes, and the only one where CrowAgent is behind every competitor studied. Refuted 1: \"unanimous\" overstates it. Five of six are UK-only; Mercell declares \"United Kingdom and European Economic Area\" with user control \"Yes\", on both its records. The target is Mercell's shape, not a UK-only migration - the problem is having no UK option beside the EEA one, not being in the EEA. Refuted 2: these are declarations, not architecture. Jaggaer's own privacy policy says personal information \"may be processed in the United States and other Third Countries\" while its framework record answers \"United Kingdom\", user control \"No\"; both current, both published by the same company. Off the form, four of them publish no hosting location at all. Currency caveat: all residency evidence is G-Cloud 14; no G-Cloud 15 service record could be read. Two corrections to the earlier pass from the same records: In-Tend CE Plus is \"No\" and Delta Cyber Essentials is \"No\", both answered fields previously logged as not published. Revised priority: RLS backstop on the supplier side FIRST, UK region SECOND, a dedicated database LAST."
+      "note": "[2026-08-17] WHERE OUR DATA ACTUALLY LIVES, MEASURED ON THE LIVE SURFACES RATHER THAN ASSERTED. The row says \"CrowAgent runs in AWS eu-west-1 (Ireland)\". That describes the DATABASE ONLY, and it is the most flattering component. Measured: Supabase prod gujtuecjzfiqsdnzgyvo = eu-west-1 and staging ipgrnwvfnumgvnxkpxsc = eu-west-1 (Supabase MCP list_projects, live). Railway API + worker = Google Cloud europe-west4-drams3a (Amsterdam, Netherlands) on both services (Railway MCP get-service-config, live) - a THIRD country the row never mentions. Sentry org crowagent-ltd regionUrl = https://de.sentry.io (Germany) (Sentry MCP find_organizations, live), corroborated by the CSP allowing https://*.ingest.de.sentry.io at web/next.config.mjs:304. PostHog = EU Cloud, eu-central-1 Frankfurt (same CSP line). AND THE ONE NOBODY HAD MEASURED: the Next.js application itself executes in the UNITED STATES. web/app/(legal)/sub-processors/page.tsx:175-183 publishes, honestly, that Vercel's \"function region for our projects is being confirmed\". It is now confirmed: curl -sI https://app.crowagent.ai/login returns X-Vercel-Id: lhr1::iad1::..., i.e. London EDGE, iad1 = Washington DC FUNCTION region, reproduced 6/6 across /login, /signup, /tools and /help/getting-started. vercel.json sets no regions key, so the project sits on Vercel's iad1 default and always has. The precise claim, because the distinction is the whole point: STORAGE is in Ireland; PROCESSING - session cookies, auth, server-rendered personal data - happens in the US. So the residency gap is not \"Ireland instead of the UK\", it is a US transfer sitting under a UK-company product sold into UK public-sector procurement. 🚨 A LIVE PUBLISHED CLAIM IS FALSE, ON EXACTLY THIS TOPIC. https://crowagent.ai/security (fetched live 2026-08-17) states \"Primary customer data is stored in Supabase's UK region.\" It is not; it is Ireland, measured above, and this repo's own web/app/(legal)/sub-processors/page.tsx:155 says AWS eu-west-1 (Ireland)"
     },
     {
       "id": "R27-COMPETE-07",
@@ -2839,9 +2848,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "WIP",
+      "status": "DECISION",
       "title": "[SEV:P1] 7 pages are dead code that can never serve",
-      "note": "[R27-ROUTE-01 2026-08-17] RE-MEASURED INDEPENDENTLY. Denominator: 148 page.tsx routes against 112 redirect rules; exactly 7 pages sit at an unconditional redirect source. The audit was RIGHT, and the set is identical. Mechanism is the SAME for all 7 and it is not \"nothing links to it\": Next applies redirects() before filesystem routing, so the file is unreachable regardless of inbound links - /about, /partners, /security -> crowagent.ai/... (308, config/redirects.mjs:314-316), /contractors -> crowagent.ai (308, :319), /help -> /support (307, :153), /tools/ppn002-calculator (308, :211) and /tools/ppn002-calculator/methodology (via the :path* twin, :212). No parent layout throws and no entitlement gate is involved in any of the 7. The URL-based matcher also reproduces the recorded near-miss correctly on its own: /admin/security is NOT shadowed, because only the marketing /security is a rule source. THE RECORDED DELETION SET WOULD HAVE BROKEN THE BUILD. It claimed the calculator components/ \"have no importer outside their own folder\". That is false, and config/redirects.mjs:191-198 already said so: web/lib/crowmark/sv-onboarding.ts:19 imports CURATED_MEASURES from app/tools/ppn002-calculator/components/measureConstants - LIVE CrowMark code - as do sv-onboarding.test.ts:11 and __tests__/infra/measure-codes-agree.test.ts:42, while scripts/verify-role-tokens.mjs:97-98 pins counts for two component files. measureConstants.ts is 158 lines of pure data with no imports and must be lifted to lib/ BEFORE that tree can go. Two further couplings must land in the same change or the deletion goes red: __tests__/proxy/csp-style-src.test.ts:166 derives CSP style hashes from app/help/page.tsx, and tests/a11y-route-manifest.test.ts:322-329 asserts that file EXISTS as its fixture premise. And /contractors page.tsx:31 is the ONLY caller of /api/contractors/register, so page and handler must go together or neither, discharging two security-lane allowlist entries. All of this is now writte"
+      "note": "[R27-ROUTE-01 2026-08-17 THIRD PASS] RE-MEASURED AGAIN BY AN INDEPENDENT AGENT; THE CORRECTED SET IS STILL INCOMPLETE. Denominator re-derived from scratch: find app -name page.tsx counted = 148, and all 7 shadowed pages reproduce on the LIVE production surface with their Location headers read, not just their status codes. THE STATUS CODE ALONE CANNOT TELL A DEAD PAGE FROM A LIVE ONE, and this row nearly turned on it: /help and /admin/security BOTH return 307. /help -> /support is a redirect rule (page dead); /admin/security -> /login?redirect_to=%2Fadmin%2Fsecurity is an auth gate (page LIVE). Only the Location distinguishes them. TWO CITED FACTS IN THIS ROW ARE WRONG: (1) the path is web/scripts/verify-role-tokens.mjs, NOT scripts/verify-role-tokens.mjs - there is no such file at the repo root, so a deletion plan following this row would have looked for the pins and concluded there were none; its HANDOFF map pins ResultsSummary.tsx: 1 and PPN002Wizard.tsx: 1 and its own comment requires the allowance be REMOVED, not zeroed, when a file goes. (2) measureConstants.ts is 177 lines and DOES have an import (@features/crowmark/lib/sector-labels), not \"158 lines of pure data with no imports\" - the lift to lib/ is still viable because the alias survives a move, but the premise that made it sound free is false. FOUR COUPLINGS THIS ROW STILL DOES NOT NAME, each of which reds the build on deletion: (a) web/src/features/crowmark/lib/__tests__/sector-taxonomy-is-not-copied.test.ts:70 pins the calculator's measureConstants.ts path as a string literal; (b) web/tests/metadata-title-brand.test.ts:206 asserts app/help/page.tsx carries the title \"Help Centre - CrowAgent\"; (c) web/tests/a11y/routes.ts:187,399 carry /help manifest entries whose notes describe the page as existing; (d) web/src/shared/lib/proxy/security-headers.ts:159 names app/help/page.tsx as the source of the .help-card:hover CSP style hashes, which is the other half of the csp-style-src.test.ts:166 coupling already r"
     },
     {
       "id": "R27-ROUTE-02",
