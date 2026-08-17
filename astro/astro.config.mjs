@@ -220,6 +220,42 @@ export default defineConfig({
   // `-webkit-background-clip` on the clipped-gradient headings that once produced
   // this site's invisible-text P0. Those are load-bearing, they are in the
   // source rather than generated, and they are untouched.
+  //
+  // ── CORRECTION [R27-WEB-PREFIX-01, 2026-08-17] ────────────────────────────
+  // THE LAST SENTENCE ABOVE IS NO LONGER TRUE, and it is left in place rather
+  // than quietly edited because the reasoning around it is still correct and
+  // worth reading. `-webkit-background-clip` is NOT untouched any more.
+  //
+  // MEASURED ON THE LIVE SITE, not in the source: `src/` contains 15
+  // `-webkit-background-clip` declarations and the three stylesheets served from
+  // crowagent.ai contain ZERO. lightningcss (1.33.0, installed and running with
+  // NO configured `targets`, because nothing here sets `build.cssMinify` or
+  // `css.transformer`) strips it as unnecessary for its default target set. This
+  // began with the Astro 5 -> 7.2.0 bump on 2026-08-09 and shipped in the
+  // 2026-08-13 deploy.
+  //
+  // IT IS NOT THE INVISIBLE-TEXT P0 COMING BACK, and that distinction is the
+  // whole point of writing this down. lightningcss narrowed the guard IN LOCKSTEP
+  // with the declaration: source says
+  //     @supports ((background-clip: text) or (-webkit-background-clip: text))
+  // and the shipped CSS says
+  //     @supports (background-clip: text)
+  // so a browser that only understands the prefixed form now evaluates that
+  // condition as FALSE, skips the whole block, and gets the deliberate
+  // `color: var(--c-text)` fallback. Readable text, not transparent text. The
+  // transformation is self-consistent; had it removed the declaration and LEFT
+  // the `or (-webkit-...)` clause, that WOULD have been the P0 again, because
+  // those browsers would have entered the block and applied
+  // `-webkit-text-fill-color: transparent` with no working clip.
+  //
+  // WHAT IS ACTUALLY LOST is cosmetic: WebKit versions that support only the
+  // prefixed property no longer get the gradient heading, they get flat text.
+  // Deliberately NOT "fixed" by pinning lightningcss targets: the gain is a
+  // gradient on old Safari, the cost is a build-config change plus a production
+  // Cloudflare deploy, and the fallback is readable either way. Recorded as the
+  // decision it is rather than left as an unexplained difference between src and
+  // dist. If it IS ever restored, set explicit `targets` and re-verify in `dist/`
+  // — never in `src/`, which is what made this invisible for eight days.
   vite: {
     css: {
       postcss: { plugins: [] },
