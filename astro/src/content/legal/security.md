@@ -91,7 +91,7 @@ Platform access is enforced in depth: organisation-scoped roles at the applicati
 
 Aligned, not yet certified
 
-Our security controls programme is aligned with ISO 27001 principles. We plan to pursue formal certification as the business scales. Internal security reviews run continuously, and OWASP best practices are applied to all application development.
+**We do not currently hold ISO 27001, SOC 2 or Cyber Essentials certification.** Our security controls programme is aligned with ISO 27001 principles, and Cyber Essentials is the certification we expect to pursue first. Internal security reviews run continuously, and OWASP best practices are applied to all application development.
 
 ## AI data handling
 
