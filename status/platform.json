@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T00:58:05.803Z",
+  "updated": "2026-08-17T01:31:28.768Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T00:58:05.705Z",
-    "sourceFingerprint": "288:992609118",
+    "generatedAt": "2026-08-17T01:31:28.650Z",
+    "sourceFingerprint": "288:-560005018",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 288,
-    "done": 166,
-    "remaining": 122,
+    "done": 170,
+    "remaining": 118,
     "phases": {
       "1": {
         "items": 0,
@@ -51,9 +51,9 @@
         "decision": 0
       },
       "6": {
-        "items": 122,
-        "open": 106,
-        "built": 10,
+        "items": 118,
+        "open": 100,
+        "built": 12,
         "wip": 6,
         "decision": 0
       }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 122,
+        "items": 118,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -670,9 +670,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "[SEV:P1] the RLS parity gate reads a FILE, not the database",
-      "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. Closing it properly needs a read-only prod role queried at gate time, which is a credential-provisioning decision only the owner can make. Second, narrower gap: the snapshot stores only (tablename, policyname), so a policy REWRITTEN under the same name with a weaker USING/WITH CHECK is invisible in both directions - storing qual/with_check is the prerequisite."
+      "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. SHIPPED: scripts/rls/snapshot-freshness.mjs gives the snapshot three states and three DIFFERENT exit codes - fresh (0), older than 7 days (1, even at zero drift), and no readable _meta.captured_at or a future date (2, CANNOT CHECK). Both file-reading gates consume it. Red-proved on the committed snapshot: back-dated 9 days -> TOTAL DRIFT 0 and exit 1; captured_at deleted -> exit 2; restored byte-for-byte (git diff empty) -> exit 0. 9 unit tests, clock injected, wired into the workflow ahead of the gates. Chosen bound is 7 days because the R262-D-223 concealment ran five days and the phantom window eight, so 7 expires on 2026-08-15, a day before the accident that found it. There is no env-var override and a test asserts the module never reads process.env - the remedy for a stale snapshot is to re-capture it, not to raise a number. REJECTED on measurement: \"fail if the snapshot predates the newest supabase/migrations commit\". The newest such commit (cb0a0006, 2026-08-17T01:05) postdates the capture (2026-08-16T16:20), yet creates no policy and no table and prod's policy md5 still matches the snapshot exactly - it would have reddened a provably faithful tree. The asymmetry is the point: if the TREE moves the parity diff already sees it, because the tree is one of its two inputs; the failure a file cannot see is PRODUCTION moving while the tree stands still, and only elapsed time bounds that. NEEDS OWNER, and the answer is measured not assumed: gh secret list returns 55 secrets including SUPABASE_ACCESS_TOKEN, SUPABASE_SERVICE_ROLE_KEY, STAGING_DATABASE_URL and STAGING_DB_PASSWORD - and no production DATABASE_URL and no read-only prod role. The service-role key CANNOT answer this: pg_policies/pg_class are pg_cata"
     },
     {
       "id": "R27-DEP-01",
@@ -1048,9 +1048,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] \"applied via MCP, file never committed\" is an undetected CLASS, not one incident",
-      "note": "R262-D-223 was applied to prod and staging and its migration file was never written, which is exactly the family as the known 25-prod-tables-with-no-creating-migration hazard. Nothing in CI detects it. A replay of the tree therefore silently fails to reproduce production. supabase_migrations.schema_migrations cannot be used to catch it: 666 rows, max version 20260816093554, and MCP stamps APPLY-TIME versions so no repo migration ever appears under its filename prefix - matching must be by NAME. A real guard needs prod catalogue access at gate time, so it shares the credential blocker with R27-RLS-02. R27-RLS-PARITY-01 closed one instance; the class is open."
+      "note": "R262-D-223 was applied to prod and staging and its migration file was never written, the same family as the known 25-prod-tables-with-no-creating-migration hazard, and nothing in CI detected it. A DETECTOR NOW EXISTS AND IS CI-REQUIRED in rls-parity.yml. It ignores the ledger and compares production's CATALOGUE against what the migration corpus CREATES, replaying every CREATE TABLE / DROP TABLE / ALTER TABLE ... RENAME TO in basename apply order. That distinction is the whole value: scripts/verify-migrations-have-files.mjs reads supabase_migrations.schema_migrations and is the right question about the LEDGER, but an object created by raw execute_sql leaves NO ledger row, so it has nothing to find - the 25-table incident is invisible to it and visible to this. Policies are covered by IMPORTING verify-rls-parity.mjs's replay, not by writing a second parser. DENOMINATORS, all floored so a collapsed reader exits 2 rather than 0: 655 migration files scanned, 312 tables the migrations create, 314 production tables, 2 declared prod-only, 0 in prod with no creating migration, 0 in migrations not in prod, policies 515 expected / 515 prod / 0 out-of-band / 0 unapplied. It asserts the ABSENCE of drift - nowhere does it hold a list of today's findings. Red-proved: renaming the CREATE TABLE in 20260406100000_zapier_hooks.sql (plant confirmed on disk first) produced IN PROD, NO MIGRATION: 1 zapier_hooks and IN MIGRATIONS, NOT IN PROD: 1, exit 1; restoring gave an empty git diff and exit 0. Adding a CREATE POLICY prod lacks moved the policy arm to unapplied 1, exit 1 on BOTH gates. Hand-editing the snapshot's table list produced exit 2 checksum mismatch (the md5 is computed in Postgres and re-derived on every run, so a mistranscribed capture can never be silently compared). 19 unit tests + 4 in web/__tests__/infra/. **The two production tables with no creating migration are _deleted_orphan_*, and they are DECLARED, not baselined: R262-D-154 excluded them deliberately because they "
     },
     {
       "id": "R27-HANDBACK-08",
@@ -1963,9 +1963,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] OWNER-REPORTED: every dropdown and every front-end surface must serve all customer types",
-      "note": "Owner: \"all the front end ui and ux must be wired to serve all kind of cutomers and all the dropdown values must support and super easy for all the vendors and suppliers and buyers\". This is the CAPTURE half of R27-SEGMENT-00. threshold_category has existed with a CHECK constraint since migration 20260990000000_ws6_jurisdiction.sql and NO FORM HAS EVER ASKED FOR IT - measured: the only web references are a summary READER and tests. That is why 11 of 24 production contracts carry no value, and why every unclassified buyer resolves to a council. Scope: an explicit organisation-type question at the point it matters; every select audited for whether its options cover central government, NHS, universities, academy trusts, housing associations, police and fire, utilities, devolved administrations AND private companies; and the 8 CANONICAL_SECTORS reviewed, since they describe WHAT IS BOUGHT while being asked to carry WHO IS BUYING. Wording matters as much as coverage - a private buyer must never be asked to pick a Schedule 1 row."
+      "note": "Owner: \"all the front end ui and ux must be wired to serve all kind of cutomers and all the dropdown values must support and super easy for all the vendors and suppliers and buyers\". This is the CAPTURE half of R27-SEGMENT-00. threshold_category has existed with a CHECK constraint since migration 20260990000000_ws6_jurisdiction.sql and NO FORM HAS EVER ASKED FOR IT - measured: the only web references are a summary READER and tests. That is why 11 of 24 production contracts carry no value, and why every unclassified buyer resolves to a council. Scope: an explicit organisation-type question at the point it matters; every select audited for whether its options cover central government, NHS, universities, academy trusts, housing associations, police and fire, utilities, devolved administrations AND private companies; and the 8 CANONICAL_SECTORS reviewed, since they describe WHAT IS BOUGHT while being asked to carry WHO IS BUYING. Wording matters as much as coverage - a private buyer must never be asked to pick a Schedule 1 row. [2026-08-17] CLOSED, PARTLY BY MEASUREMENT. NINE distinct sector vocabularies were counted across the repo. Three LIVE hand-written copies were the defect and now DERIVE from web/src/features/crowmark/lib/sector-labels.ts: contract-wizard/EditContractModal.tsx (the pre-V2 FIVE, writing legacy fm/it back into crowmark_contracts.sector and unable to express education/transport/other; its geography list also omitted uk_wide), app/tools/ppn002-calculator/components/measureConstants.ts (the PUBLIC free tool, which INVENTED ict and security - codes in no CHECK constraint anywhere - omitted four canonical sectors, and said national where every engine branches on uk_wide), and public-sector/requirement-logic.ts CONTRACT_TYPES (the eighth vocabulary: three of eight options - Highways & infrastructure, Social care, Waste & environmental - are statutory LOCAL-AUTHORITY service functions, so a university, NHS trust, academy trust, housing association or priv"
     },
     {
       "id": "R27-SEGMENT-04",
@@ -2035,9 +2035,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the jurisdiction registry cannot express one statute governing two jurisdictions",
-      "note": "The registry advertises that adding or correcting a jurisdiction is \"a ruleset plus a source and no engine change\". That promise does not hold for R27-SEGMENT-04. build_jurisdiction_registry enforces ONE JURISDICTION PER REGIME - an invariant ruleset_for_regime depends on and a test positively asserts - so setting NI's governing_regime to procurement_act_2023 makes the generator RAISE, because England & Wales already claims it. The real law breaks that bijection: one statute governs two jurisdictions that differ (their suitability rules differ), so they cannot share a ruleset either. NI's key therefore stays ppr_2016 while every user-facing string correctly names the Act - an internal inconsistency recorded rather than worked around. Fixing it needs jurisdiction-keyed lookups across both tiers plus the crowmark_contracts_governing_regime_check constraint. Safe to defer on measured grounds: prod has ZERO NI contracts and governing_regime is NULL on 24 of 24 rows."
+      "note": "The registry advertises that adding or correcting a jurisdiction is \"a ruleset plus a source and no engine change\". That promise does not hold for R27-SEGMENT-04. build_jurisdiction_registry enforces ONE JURISDICTION PER REGIME - an invariant ruleset_for_regime depends on and a test positively asserts - so setting NI's governing_regime to procurement_act_2023 makes the generator RAISE, because England & Wales already claims it. The real law breaks that bijection: one statute governs two jurisdictions that differ (their suitability rules differ), so they cannot share a ruleset either. NI's key therefore stays ppr_2016 while every user-facing string correctly names the Act - an internal inconsistency recorded rather than worked around. Fixing it needs jurisdiction-keyed lookups across both tiers plus the crowmark_contracts_governing_regime_check constraint. Safe to defer on measured grounds: prod has ZERO NI contracts and governing_regime is NULL on 24 of 24 rows. [2026-08-17] CLOSED, AND THE ROW'S OWN BLOCKER WAS STALE. The row said the fix needed the crowmark_contracts_governing_regime_check constraint changing. It did not: migration 20261931000000 had already replaced the enumerated CHECK with a FORMAT-only regex (^[a-z][a-z0-9_]{1,62}$), so no migration was required and none was written. What was required: (1) build_jurisdiction_registry no longer raises on a shared regime - the bijection was an assumption in the LOOKUPS, never a fact about the law - and TWO POSITIVE INVARIANTS replace it so a guard was not merely deleted (jurisdictions sharing a regime must name the statute identically, and must differ somewhere or be pooled into one ruleset); (2) _REGIME_TO_JURISDICTION became one-to-many on BOTH tiers - the old {regime: jurisdiction} comprehension kept whichever entry it saw LAST and lost the other silently; (3) ruleset_for_regime / rulesetForRegime take an optional jurisdiction and raise AmbiguousRegimeError rather than picking one; (4) field lookups ANSWER wh"
     },
     {
       "id": "R27-DEPLOY-01",
@@ -2098,18 +2098,18 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "[SEV:P1] 24 reachable CrowMark routes have no registry entry, 20 of them writing their own title",
-      "note": "Found by workstream F's binding guard, on routes the product QA audit never visited. This is the P0-08 state, still live, on a different set of routes - 20 live pages each authoring their own document.title with nothing binding it to a nav label or breadcrumb. A further 12 registry nodes are read by no page. Both lists are ratchets in platformNav.route-binding.test.ts and UNNAMED_PRODUCT_ROUTES / LEGACY_FALLBACK_BASELINE: each FAILS if it grows and also if it goes stale, so the debt is visible and bounded rather than discovered again by the next audit. Workstream C owns 20 of them."
+      "note": "[R27-NAV-03 2026-08-17] RE-MEASURED AND CLOSED. Denominator: 148 page.tsx routes in web/app/, 56 of them product routes. The audit's 24 was right when written. State on arrival was 9 (WS-C migrated 15); state now is 2, and six of the nine left by measurement rather than by anyone editing a list. /crowmark/reports/board and /crowmark/reports/[template] are now registry nodes (crowmark.reports.board, crowmark.reports.template), both migrated to PageShell + PageShellSkeleton. Board needed ZERO new copy: its <h1> already resolved crowmark.reportPage.boardTitle while the page exported the literal 'CrowMark - Board executive summary' in a different word order - P0-8 on the row that was excused for not having a name. [template] was held because \"a single registry label would REPLACE a per-report tab title\"; that was a limit of the MECHANISM, so the registry was extended: routeMetadata(navId, { entity }) and routeMetadataTitle(node, t, entity) swap the title's LEAF for the instance while the · {section} suffix stays the registry's. The six redirect entries are gone from UNNAMED_PRODUCT_ROUTES because reachability is now derived from source every run, from the same two primitives routes-have-inbound-nav.test.ts uses for R27-ROUTE-01 (route-level redirect() with no JSX, plus config/redirects.mjs shadowing) - two guards, one definition of dead. That hand-written prose list had been WRONG TWICE (two redirects filed as live pages owed an entry). Bug found and fixed in a shared primitive: staticRedirectTarget in __tests__/_lib/nav-extraction.ts extracted a redirect argument \"up to the first )\", so any target containing a CALL was truncated - /crowmark/contracts/[id], which forwards every caller, was classified as NOT a redirect and was therefore invisible to crowmark-never-sends-you-to-a-redirect.test.ts, whose entire subject that is. Replaced with a nesting-aware firstCallArgument; route-level redirects 9 -> 10, matching the count its own docstring claimed. Red-proved both direc"
     },
     {
       "id": "R27-SEGMENT-14",
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] a supplier bidding only private buyers still carries a permanent sidebar of 28 UK statutory questions",
-      "note": "The ORG-LEVEL master SQ was deliberately not touched while closing R27-SEGMENT-09. Per-contract SQ is now correctly absent on a private bid, but the org-level master questionnaire is a permanent sidebar row of Selection Questionnaire content that only binds UK public procurement. Needs an owner call on whether a supplier who never bids public work should see it at all, since removing it silently would strip a surface some suppliers rely on and keeping it contradicts the sector model everywhere else. Owner decision: show the org-level master Selection Questionnaire only once an organisation has at least one PUBLIC bid, and keep the answers if they later have none. The data to do this already exists: buyer_sector is CHECK-constrained and backfilled on all 24 production contracts. Nothing is deleted, and a private-only supplier stops being asked to declare against a regime that does not bind them."
+      "note": "The ORG-LEVEL master SQ was deliberately not touched while closing R27-SEGMENT-09. Per-contract SQ is now correctly absent on a private bid, but the org-level master questionnaire is a permanent sidebar row of Selection Questionnaire content that only binds UK public procurement. Needs an owner call on whether a supplier who never bids public work should see it at all, since removing it silently would strip a surface some suppliers rely on and keeping it contradicts the sector model everywhere else. Owner decision: show the org-level master Selection Questionnaire only once an organisation has at least one PUBLIC bid, and keep the answers if they later have none. The data to do this already exists: buyer_sector is CHECK-constrained and backfilled on all 24 production contracts. Nothing is deleted, and a private-only supplier stops being asked to declare against a regime that does not bind them. [2026-08-17] CLOSED AS DECIDED. The org-level master Selection Questionnaire tab (/crowmark/selection-questionnaire, in the CrowMark Library strip) now carries publicProcurementOnly: true in crowmark-subnav-config.ts and is filtered out only when the organisation's posture is no_public_bids. THE POSTURE IS THREE-STATE, NOT A BOOLEAN, and that is the safety property: unknown - loading, 401, 404, 500 or a dropped connection - KEEPS the surface, so no network blip removes a statutory tool from a supplier entitled to it; only a LOADED history containing no explicitly public buyer_sector hides it. The rule lives once in web/src/shared/lib/crowmark/segment-posture.ts and COMPOSES isPublicSector rather than re-spelling it, so an unrecorded sector is never counted as evidence of a private buyer. NOTHING IS DELETED AND IT IS REVERSIBLE BY CONSTRUCTION: the answers are crowmark_sq_responses rows with contract_id IS NULL and no code path here writes anything; the first public-sector bid brings the tab back with every answer intact, asserted as a test rather than described. CROWMARK_GROU"
     },
     {
       "id": "R27-SEGMENT-15",
@@ -2658,7 +2658,7 @@
       "sevExplicit": true,
       "status": "WIP",
       "title": "[SEV:P1] 7 pages are dead code that can never serve",
-      "note": "/about, /partners, /security, /contractors, /help, /tools/ppn002-calculator and its /methodology are simultaneously in PUBLIC_PATHS, backed by a real page.tsx, AND redirect sources - Next applies redirects() before filesystem routing. /tools/ppn002-calculator still has 5 e2e specs pointed at a URL that 308s: a suite exercising dead code. VERIFIED LIVE 2026-08-16 with curl, and the row is right - all 7 redirect AWAY, so their page.tsx can never render (Next runs redirects() before filesystem routing): /about, /partners, /security -> https://crowagent.ai/... (the EXTERNAL marketing site), /contractors -> https://crowagent.ai/, /help -> /support, /tools/ppn002-calculator and /methodology -> /tools. TWO NEAR-MISSES THAT WOULD HAVE DELETED LIVE CODE, both caught by measuring instead of pattern-matching: (a) a loose find */security/page.tsx also matched app/(dashboard)/admin/(org)/security/page.tsx, the LIVE /admin/security page; (b) /help/getting-started returns 200, so app/help/[slug] is live and only the INDEX is dead - app/help/layout.tsx and loading.tsx wrap the slug subtree and must be kept. ArticleSearch.tsx is imported ONLY by the dead index, so it dies with it; the calculator components/ have no importer outside their own folder. EXACT SAFE DELETION SET: app/(marketing)/{about,partners,security,contractors}/, all of app/tools/ppn002-calculator/, and from app/help/ ONLY page.tsx + ArticleSearch.tsx + ArticleSearch.test.tsx. DEFERRED, not skipped: six of those files carry uncommitted modifications from the concurrent design-system codemod, and git rm would have destroyed its in-flight work. Do it once that agent lands. Then repoint or delete the 5 e2e specs, and add the real guard: a test that FAILS when any redirects() source also has a page.tsx."
+      "note": "[R27-ROUTE-01 2026-08-17] RE-MEASURED INDEPENDENTLY. Denominator: 148 page.tsx routes against 112 redirect rules; exactly 7 pages sit at an unconditional redirect source. The audit was RIGHT, and the set is identical. Mechanism is the SAME for all 7 and it is not \"nothing links to it\": Next applies redirects() before filesystem routing, so the file is unreachable regardless of inbound links - /about, /partners, /security -> crowagent.ai/... (308, config/redirects.mjs:314-316), /contractors -> crowagent.ai (308, :319), /help -> /support (307, :153), /tools/ppn002-calculator (308, :211) and /tools/ppn002-calculator/methodology (via the :path* twin, :212). No parent layout throws and no entitlement gate is involved in any of the 7. The URL-based matcher also reproduces the recorded near-miss correctly on its own: /admin/security is NOT shadowed, because only the marketing /security is a rule source. THE RECORDED DELETION SET WOULD HAVE BROKEN THE BUILD. It claimed the calculator components/ \"have no importer outside their own folder\". That is false, and config/redirects.mjs:191-198 already said so: web/lib/crowmark/sv-onboarding.ts:19 imports CURATED_MEASURES from app/tools/ppn002-calculator/components/measureConstants - LIVE CrowMark code - as do sv-onboarding.test.ts:11 and __tests__/infra/measure-codes-agree.test.ts:42, while scripts/verify-role-tokens.mjs:97-98 pins counts for two component files. measureConstants.ts is 158 lines of pure data with no imports and must be lifted to lib/ BEFORE that tree can go. Two further couplings must land in the same change or the deletion goes red: __tests__/proxy/csp-style-src.test.ts:166 derives CSP style hashes from app/help/page.tsx, and tests/a11y-route-manifest.test.ts:322-329 asserts that file EXISTS as its fixture premise. And /contractors page.tsx:31 is the ONLY caller of /api/contractors/register, so page and handler must go together or neither, discharging two security-lane allowlist entries. All of this is now writte"
     },
     {
       "id": "R27-ROUTE-02",
