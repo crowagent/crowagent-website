@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T06:41:43.241Z",
+  "updated": "2026-08-17T07:04:38.407Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T06:41:43.076Z",
-    "sourceFingerprint": "309:1733301400",
+    "generatedAt": "2026-08-17T07:04:37.361Z",
+    "sourceFingerprint": "312:-822806961",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 309,
-    "done": 201,
-    "remaining": 108,
+    "totalRaised": 312,
+    "done": 205,
+    "remaining": 107,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 108,
-        "open": 75,
-        "built": 20,
-        "wip": 13,
+        "items": 107,
+        "open": 74,
+        "built": 21,
+        "wip": 12,
         "decision": 0
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 108,
+        "items": 107,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -771,7 +771,7 @@
       "sevExplicit": true,
       "status": "WIP",
       "title": "[SEV:P1] production main is RED on two migration gates right now, and nothing has pushed to it since R2.6.2 so nobody saw",
-      "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did."
+      "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did. [2026-08-17, AFTER THE MERGE] TWO CORRECTIONS TO THIS ROW, BOTH MEASURED. (1) The title is wrong: those two migration gates DO NOT RUN ON main AT ALL. Enumerating every workflow on the merged commit 5e751ade returns eight, and neither migration gate is among them - they are PULL-REQUEST ONLY. The row read a PR check list and described it as the state of main, which is the \"a record of a thing is not the thing\" shape. So main was never red on a migration gate; the PR was. (2) main IS "
     },
     {
       "id": "R27-BOARD-05",
@@ -819,11 +819,20 @@
       "note": "Live and public, and it was never on this board. The finding existed only in the message of 24bf852c on the held branch, which is the \"findings in commit messages are invisible to the tracker\" defect happening to me. GET /api/v1/pricing/public falls back to a hardcoded table when Stripe is unreachable, and that table contradicts the 2026-08-09 lock of 49/149/549 at 1/5/10 seats, as well as the same endpoint's own contact_sales response. Two writers of one fact; the fallback now derives from the generated pricing_constants.py. Red-proved: reverting to main's file was confirmed to put \"name\": \"Agency\" / 399 / \"Unlimited users\" back on disk at lines 317-320 BEFORE the run, and the suite then failed 4 of 6 on the seat list. Restored, 6 passed, exit 0. Deployment measured rather than hoped: the tip touches api/ and supabase/ only, and the path-gated web/vercel.json ignore simulates to exit 0, skip build; but the repo carries two vercel.json files with opposite ignore behaviour and the last 20 deployments are all off main, so which one governs could not be settled from evidence. Worst case is one production build of web code identical to what is already live. Railway is the target that matters. The carried migration 20260816000001_r27_sec01_... was verified already applied to both staging and production and is committed because main lacked the file, which is how \"25 prod tables with no creating migration\" starts over."
     },
     {
+      "id": "R27-CI-FLAKE-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "BUILT",
+      "title": "[SEV:P1] the required gate on main is red on 2 of 842 test files that pass everywhere else, and a third timeout increase is not the fix",
+      "note": "What is red, measured on the merged commit 5e751ade: Gate 1: Tests - Web reports 2 failed of 842 files, 840 passed. The two are EditContractModal.deadline.test.tsx (\"surfaces a failed deadline write instead of closing silently\") and DiagramPanel.test.tsx (\"lets a user write a diagram from scratch\"). All CI Gates Pass and Require CI Quality Gates fail only as consequences; the other six workflows on that commit all succeeded. THE SAME COMMIT PASSED THIS GATE AS A PR. Job-set comparison confirms Gate 1: Tests - Web ran in both, succeeding in run 31989072265 and failing in 31998470766. So it is not a missing job and not a code difference. Reproduction attempts, all negative: both files pass locally in isolation (2 files / 17 tests, exit 0), and 6 of 6 consecutive runs passed at --maxWorkers=4 with three agents loading the machine and 4.6GB free, so it is not the low-memory fabrication case either. It appears only inside the full 842-file run. WHY THE OBVIOUS FIX IS WRONG. R261-CLOSE-001 already diagnosed this as a budget race and raised the assertion to a 10-second findByText against a 15-second testTimeout (the comment is at EditContractModal.deadline.test.tsx:213-221), and it still fails. Ten seconds of jsdom with fetch stubbed is not a budget. This is the recorded trap: a longer timeout cannot fix a request that was never made, and three increases in a row is the signature of a misdiagnosis, not of a slow machine. What the evidence actually points at: the save handler's FIRST await is supabase.auth.getUser(), before any fetch, and the failing DOM shows an OPEN dialog with NO error node - which is also exactly what a SUCCESSFUL save renders, because onClose is a vi.fn() that does not really close. So \"the write succeeded\" and \"the write failed but the error never rendered\" are INDISTINGUISHABLE in the current assertion, and the test cannot tell which of the two it is seeing. That is the defect to fix: assert that the deadline PATCH was actually issued and returned 50"
+    },
+    {
       "id": "R27-PRICE-02",
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the Stripe path of the public pricing endpoint serves the RAW Stripe catalogue: internal keys as customer-facing names, the never-publish GBP 549, and duplicates",
       "note": "Found by verifying the R27-PRICE-01 fix instead of trusting \"source\": \"stripe\". That field flipping away from fallback proves only that Stripe answered; it says nothing about what Stripe answered WITH. Measured on the live response: crowmark carries 15 entries, 13 of them with NO stripe_price_id_monthly and 14 priced 0. The names served are raw internal keys — council_county, council_standard, council_small, portfolio, pro, starter — which puts the FORBIDDEN word council on a public unauthenticated endpoint. CrowMark is served at price_monthly: 549, the tier the 2026-08-09 lock marks publish: never. portfolio, pro, starter and CrowMark each appear twice. Every row reports \"1 user\", including the 549 one that is a 10-seat tier. core is an empty array. BLAST RADIUS, measured rather than assumed: NOTHING CONSUMES THIS ENDPOINT. A repo-wide search finds only api/tests/, the auth.py public allowlist, the rate_limit.py table, docstrings and the status board; the marketing site has its own pricing and never fetches it. So this is a public endpoint leaking the internal product catalogue, NOT a page showing customers wrong prices. That reframes R27-PRICE-01 too, which was filed P0 as \"advertises ... that we do not sell\": nothing advertised it to anyone either, so the fix was right and the P0 grade was not. The fallback and the Stripe path were fixed and reviewed as one thing and are not**: R27-PRICE-01 corrected the hardcoded fallback table only, and the path it falls back FROM is the worse of the two. A guard asserting the fallback is canonical cannot see this, because on a healthy Stripe connection the fallback never runs — the guard gives assurance in the form the defect does not take."
     },
@@ -2965,7 +2974,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "WIP",
+      "status": "FIXED",
       "title": "[SEV:P1] tap targets below 44px on public routes, measured at real mobile viewports",
       "note": "Playwright viewport emulation (verified: requested 320 -> measured vw=320; Chrome window-resize was measured to report 1265 for the same request and is the WRONG instrument). Results at 320/390/768: /login 6 offenders, /signup 12, /pricing 2 (10 at 1024), /tools 0. Examples: \"Privacy\" 42x15, \"Terms\" 35x15, \"Cookie Policy\" 77x15, \"Sign up\" 51x17. GOOD NEWS, stated because it bounds the work: ZERO horizontal overflow on any public route at any viewport. RE-MEASURED 2026-08-17 against a production build, and the row's four numbers reproduce EXACTLY only when the WCAG inline exception is switched off entirely. Instrument: web/e2e/_r27-public-tap-audit.mjs (new), 4 routes x 4 viewports = 16 readings, 44px house floor, Playwright viewport emulation, with per-reading controls: requested width equals window.innerWidth on 16 of 16; landed path equals requested on 16 of 16; considered is 9 to 25 per reading so no reading is vacuous; and an EMULATION control - /login's lg:flex brand panel computes display:none at 390 and flex at 1440, so the mobile pass genuinely rendered a mobile layout. THREE READINGS PER CELL: raw (no inline exception) /login 6, /signup 12, /pricing 2 and 10 at 1024, /tools 0 - the row's numbers to the unit; loose (the exception e2e/touch-target-probe.ts actually implements) 0 / 3 / 0 and 8 at 1024 / 0; strict (inline exception tightened) 3 / 6 / 0 and 8 at 1024 / 0. THE 1024 COUNT IS A POINTER-TYPE ARTEFACT, NOT A MOBILE FINDING. All 8 are marketing-nav links carrying .ca-tap-target, whose query is (pointer: coarse), (max-width: 1023.98px); re-running the SAME 1024px viewport with hasTouch (a real tablet) takes the count from 8 to 0 and the links from 20px to 44px tall. At 1024 with a mouse the 20px height is the deliberate desktop-density decision recorded at app/styles/utilities.css section 9a. THE ONE REAL RESIDUAL, AND IT WAS INVISIBLE TO THE EXISTING GATE. touch-target-probe.ts:213-227 exempts an inline <a> when the parent is a prose tag AND parentTex"
     },
@@ -3004,6 +3013,24 @@
       "status": "FIXED",
       "title": "[SEV:P1] both Lighthouse gates measured a redirect, and the portal one was GREEN because of it",
       "note": "Web audited ONE page six times; portal audited /login five times while reporting \"5 critical routes\", and passed, because the login page clears every budget. My first fix REINTRODUCED the defect (/security 301s off-box to production), caught by the CI log reporting resolved URLs. Now guarded by a property assertion - no audited URL may be a redirect source - read from the same redirects.mjs Next serves, and red-proved."
+    },
+    {
+      "id": "R27-LHCI-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] two Lighthouse controls that assert nothing: 17 assertion keys naming no audit, and a step name advertising URLs the job does not audit",
+      "note": "(1) SEVENTEEN OF 47 AUDIT ASSERTIONS IN web/lighthouserc.js NAMED NO AUDIT. Reported by the runner as \"<id>\" is not a known audit (@lhci/utils/src/assertions.js:138-155: the audit result is undefined, so lhci emits an auditRan failure). All 17 sat at warn, where an auditRan failure does not fail the build, so they read as deliberate policy and were inert. THE HANDBACK SAID 16; MEASURED 17, so the list was enumerated rather than trusted. DENOMINATOR AND METHOD: .github/workflows/lighthouse-ci.yml installs @lhci/cli@0.14.x, and @lhci/cli@0.14.0 pins \"lighthouse\": \"12.1.0\" EXACTLY, not as a range. Lighthouse 12.1.0's default config declares 158 audits, enumerated from each audit module's own meta.id. 51 assertion keys, 4 categories:*, 47 audit keys, 17 unmatched. PER-KEY VERDICT, cross-checked against lighthouse 13.4.0 which is in web/node_modules and is NOT what the job runs: NEVER EXISTED IN THE VERSION THIS GATE RUNS, 15 keys - present in 13.4.0, absent in 12.1.0, i.e. written against a Lighthouse this job does not install (clickjacking-mitigation, cls-culprits-insight, document-latency-insight, dom-size-insight, duplicated-javascript-insight, font-display-insight, forced-reflow-insight, image-delivery-insight, lcp-discovery-insight, legacy-javascript-insight, modern-http-insight, network-dependency-tree-insight, render-blocking-insight, third-parties-insight, viewport-insight). Lighthouse 12.1.0 ships ZERO *-insight audits; the config's own comment called them \"Lighthouse-12 Insights\" and that was the misconception. RENAMED, 2 keys - absent from BOTH 12.1.0 and 13.4.0: long-critical-network-tree-insight became network-dependency-tree-insight, and interaction-to-next-paint-insight became inp-breakdown-insight. Both replacements exist in 13.4.0 and neither exists in 12.1.0, so re-pointing them would still name nothing; all 17 were REMOVED and the two mappings recorded in the file so a future lhci bump re-adds the correct names. REMOVAL IS NOT A LOOSENING, verified no"
+    },
+    {
+      "id": "R27-CSP-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] the dev CSP blocked the pre-paint theme bootstrap on every route, and the guard for exactly that filtered the broken lines out of its own corpus",
+      "note": "THE DEFECT. web/src/shared/lib/proxy/security-headers.ts:318 and :352 built the DEV script-src as 'self' 'nonce-X' 'unsafe-inline' 'unsafe-eval' <hosts> with NO hash sources. The file's own header at lines 24-30 states the rule that makes this fatal: when a nonce is present a modern browser IGNORES 'unsafe-inline'. The pre-paint theme bootstrap is baked into the STATIC SHELL under cacheComponents: true, so it cannot carry a per-request nonce - which is why THEME_BOOTSTRAP_SCRIPT_HASH exists - so under next dev it was BLOCKED on every route, measured as a console error on 4 of 4 public routes. Verified still present on disk before the change. SCOPE, STATED SO IT IS NOT OVER-CLAIMED: this is DEV-ONLY. Production already carried the hashes and was never affected, and this is NOT the cause of the CI errors-in-console finding - that one is attributed under R27-PERF-01 to the placeholder Supabase credentials making /tools render its error boundary. What it did cost is every developer's local pre-paint theme, a black flash on every navigation, on the one build where you would assume you were seeing what production serves. FIX: ${CSP_SCRIPT_ELEM_HASHES} inserted into BOTH dev branches, the enforcing builder and the Report-Only builder. The Report-Only one matters independently: without the hashes it reports the theme bootstrap as a violation on every route, a fabricated finding pointed at a script the enforcing policy deliberately permits, which is the fastest way to teach a team to ignore its own CSP reports. THE GUARD COULD NOT SEE IT, BY CONSTRUCTION. web/__tests__/proxy/csp-theme-bootstrap.test.ts:79-81 built its corpus as lines containing \"script-src 'self'\" AND NOT containing \"unsafe-inline\" - and the lines containing unsafe-inline ARE the two dev branches, i.e. precisely the broken set. Its assertion >= 3 was satisfied by the 3 prod lines that were always correct. The filter is gone; the corpus is now every script-src line, comments stripped via the repo's one stripp"
     },
     {
       "id": "R27-INFRA-01",
