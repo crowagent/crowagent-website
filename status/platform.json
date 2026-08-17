@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T01:31:28.768Z",
+  "updated": "2026-08-17T01:42:58.953Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T01:31:28.650Z",
-    "sourceFingerprint": "288:-560005018",
+    "generatedAt": "2026-08-17T01:42:58.792Z",
+    "sourceFingerprint": "289:1227995584",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 288,
-    "done": 170,
+    "totalRaised": 289,
+    "done": 171,
     "remaining": 118,
     "phases": {
       "1": {
@@ -52,9 +52,9 @@
       },
       "6": {
         "items": 118,
-        "open": 100,
+        "open": 101,
         "built": 12,
-        "wip": 6,
+        "wip": 5,
         "decision": 0
       }
     }
@@ -772,6 +772,15 @@
       "status": "WIP",
       "title": "[SEV:P1] production main is RED on two migration gates right now, and nothing has pushed to it since R2.6.2 so nobody saw",
       "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did."
+    },
+    {
+      "id": "R27-CI-FLAKE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P3] Migration Apply Check can fail for a reason that is not the migrations",
+      "note": "On 02a3517a the job failed at Install Supabase CLI: Failed to resolve latest Supabase CLI release: rate limit exceeded. It never reached a migration. Recorded because the same job legitimately caught a real defect hours earlier (the R27-TENANCY-01 backfill could not be applied to a fresh database), and a red from this job must be read before it is believed in either direction. The distinguishing evidence is the step name: a genuine failure dies inside Start local stack + apply all migrations."
     },
     {
       "id": "R27-STRIPE-15",
@@ -2818,9 +2827,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "WIP",
+      "status": "FIXED",
       "title": "[SEV:P1] Gate 1 Tests-Web red, and a second failure hidden behind the first",
-      "note": "Four causes fixed: a comment that spelled a placeholder Tailwind utility literally (Tailwind v4 scans comments); two per-character typing races into controlled inputs; and tsc unable to resolve @upstash from packages/server-infra, which only reproduced in CI because resolution walks UP and never into the sibling web/node_modules. The tsc failure was NOT new - it was unreachable until the test failures ahead of it were fixed. Measured rather than assumed. Gate 1: Tests - Web failed on the release branch in 36 seconds, long before vitest runs, so it died in a pre-step: verify-chassis-ratchet, subtest \"CONTROL: the real baseline against the real ledger is silent\". The ledger recorded 107 files / 156 sites against an actual 106 / 154, i.e. the ratchet failed on an IMPROVEMENT nobody recorded, which is the LEDGER_SLACK case it is built to catch. Already fixed locally in 63c33635, and the gate now reads 105/152 both sides, exit 0. The two failures seen on main are separate and also already fixed locally: CI's node was bumped 20 to 22 (--experimental-strip-types is a bad option on Node 20) and the shimmer population was re-measured 91 to 90 to 71. Before pushing, every gate the job runs was executed locally, not only the one that changed - all 12 green. That found two further regressions nothing had reported yet, filed as R27-ARCH-RESP-01 and the BFF grandfathering."
+      "note": "Four causes fixed: a comment that spelled a placeholder Tailwind utility literally (Tailwind v4 scans comments); two per-character typing races into controlled inputs; and tsc unable to resolve @upstash from packages/server-infra, which only reproduced in CI because resolution walks UP and never into the sibling web/node_modules. The tsc failure was NOT new - it was unreachable until the test failures ahead of it were fixed. Measured rather than assumed. Gate 1: Tests - Web failed on the release branch in 36 seconds, long before vitest runs, so it died in a pre-step: verify-chassis-ratchet, subtest \"CONTROL: the real baseline against the real ledger is silent\". The ledger recorded 107 files / 156 sites against an actual 106 / 154, i.e. the ratchet failed on an IMPROVEMENT nobody recorded, which is the LEDGER_SLACK case it is built to catch. Already fixed locally in 63c33635, and the gate now reads 105/152 both sides, exit 0. The two failures seen on main are separate and also already fixed locally: CI's node was bumped 20 to 22 (--experimental-strip-types is a bad option on Node 20) and the shimmer population was re-measured 91 to 90 to 71. Before pushing, every gate the job runs was executed locally, not only the one that changed - all 12 green. That found two further regressions nothing had reported yet, filed as R27-ARCH-RESP-01 and the BFF grandfathering. The release branch was red on 19 tests across 14 files, and the two failure sets differ from main's, which is why both had to be read. Every one was a control that had outlived what it asserted, and none was a product defect. The substantial one: the Python swallow ratchet was counting CONTRACTS, not defects. It read 53 against a ceiling of 52; reading them found parsers and fail-closed predicates whose falsy return IS their contract, including middleware/auth.py's signature check whose own docstring documents it as failing closed. Fixing any of those means damaging correct code to satisfy a counter. Narrowed t"
     },
     {
       "id": "R27-LHCI-01",
