@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T01:55:18.955Z",
+  "updated": "2026-08-17T01:58:57.434Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T01:55:18.800Z",
-    "sourceFingerprint": "289:-522555030",
+    "generatedAt": "2026-08-17T01:58:57.332Z",
+    "sourceFingerprint": "289:-129628054",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 289,
-    "done": 172,
-    "remaining": 117,
+    "done": 174,
+    "remaining": 115,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 117,
-        "open": 97,
+        "items": 115,
+        "open": 95,
         "built": 12,
         "wip": 8,
         "decision": 0
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 117,
+        "items": 115,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -616,9 +616,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] MFA soft-lock and enterprise domain restriction both FAIL OPEN, unlogged",
-      "note": "From the architecture audit. The correct fail-CLOSED pattern already exists one layer up under [R262-SWALLOW-01] - so the remedy is present in the codebase and not adopted here, which is the audit's meta-finding in miniature."
+      "note": "From the architecture audit. The correct fail-CLOSED pattern already exists one layer up under [R262-SWALLOW-01] - so the remedy is present in the codebase and not adopted here, which is the audit's meta-finding in miniature. BOTH CONFIRMED ON DISK AND FIXED. (1) mfa-attempt.ts:56,58 returned false on read error AND on throw; all three callers (mfa/verify/actions.ts x2, mfa/step-up/actions.ts) branched on it as \"not locked, let them try another code\", and NOTHING was logged - so a missing/rotated SUPABASE_SERVICE_ROLE_KEY disabled the one IP-rotation-proof MFA lock permanently and invisibly. isMfaSoftLocked now returns \"clear\" \\ — \"locked\" \\ — \"unknown\"; a new softLockDenial() holds the refusal policy in ONE place so no future call site can re-derive \"does unknown mean stop?\" wrongly. Only \"locked\" says \"too many failed attempts\" - \"unknown\" never makes that claim about a user who made no attempts. recordMfaAttempt stays non-fatal (it runs AFTER the verify decision) but is now logged: a silently failing insert freezes the counter and the lock never fires. (2) email-domain-validation.ts:305,332 collapsed \"no restriction\" and \"could not read\" into one null that validateEmailDomain turned into {allowed:true}; the catch arm's own comment read \"Fail open - don't block signups if we can't check restrictions\", an accurate description of a defect. getOrgDomainRestriction now returns a discriminated OrgDomainRestrictionRead, and unavailable REFUSES. GUARD web/__tests__/auth/fail-closed-mfa-and-domain-restriction.test.ts - 7 tests, sweeping 3 MFA + 4 domain induced failure modes, asserting the ABSENCE of any admitting outcome with the denominator pinned non-zero. RED-PROVED THREE WAYS, each plant grepped on disk first: (a) restore the fail-open return -> 2 fail, 6 MFA admissions + 4 of 4 domain admissions named; (b) keep fail-closed but strip observability -> 2 fail on the unlogged assertion (3 and 4 modes); (c) \"fix\" it by denying EVERYONE -> all 3 POSITIVE tests fail, so de"
     },
     {
       "id": "R27-MIG-01",
@@ -1942,11 +1942,11 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] three E2E/a11y gates have never passed once",
-      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check.",
+      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check. The cause was TWO WRITERS OF ONE FACT. The fact is \"which account do E2E journeys run as\", and it had two: e2e-core-journeys.yml used STAGING_SUPABASE_URL + STAGING_E2E_USER_*, while e2e-critical-journeys.yml used NEXT_PUBLIC_SUPABASE_URL + E2E_USER_*. gh secret list dates the drift: the STAGING pair was set 2026-08-09; E2E_USER_PASSWORD 2026-07-05 and E2E_USER_EMAIL 2026-06-03. Every test failed with 400 invalid_credentials, which is what a five-week-old password looks like from outside. The drift was invisible because the thing that would have shown it was switched off - both gates skip on a draft PR, and a skipped check reads as green-adjacent. Converged onto the maintained pair and guarded in both directions, including an assertion that at least one workflow distinguishes a CREDENTIAL failure from a product failure, because a stale password looks exactly like a broken login screen and without that message the next person debugs the product. Two things this does not fix. The app also failed to boot in that run (\"App did not become ready on 127.0.0.1:3000/login within 180s\"), and whether STAGING_E2E_USER_PASSWORD is itself still valid cannot be established from here. Owner action: confirm that secret, or grant a way to verify it.",
       "supersededBy": [
-        "OPEN"
+        "WIP"
       ]
     },
     {
