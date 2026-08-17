@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T10:51:48.222Z",
+  "updated": "2026-08-17T12:58:43.523Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,7 +8,7 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T10:51:47.961Z",
+    "generatedAt": "2026-08-17T12:58:42.785Z",
     "sourceFingerprint": "315:-643753636",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 315,
@@ -57,7 +57,8 @@
         "wip": 11,
         "decision": 5
       }
-    }
+    },
+    "stale": true
   },
   "legend": {
     "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
@@ -224,7 +225,9 @@
     ],
     "assignment": "docs/release-2.7/PHASE-ASSIGNMENT-2026-08-17.md"
   },
-  "unreadable": [],
+  "unreadable": [
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 315:-643753636 vs 317:1202260370). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+  ],
   "issues": [
     {
       "id": "R262-D-224",
@@ -3067,6 +3070,24 @@
       "status": "FIXED",
       "title": "[SEV:P0] STAGING cron was firing at PRODUCTION, including /api/cron/dunning",
       "note": "Five jobs hard-coded https://app.crowagent.ai. Only a secret mismatch (401) prevented live dunning mail to real customers from a staging database - a coincidence, not a control. cron.job_run_details recorded them as SUCCEEDED because pg_cron records only that the request was queued. Deactivated with verbatim restore recorded."
+    },
+    {
+      "id": "R27-SEC-09",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "CLEARED",
+      "title": "[SEV:P2] the Supabase security advisor flags user_org_ids() as anon-executable, and its own remediation would take 35 tables down",
+      "note": "THE FLAG. Prod advisor anon_security_definer_function_executable WARN: public.user_org_ids() is a SECURITY DEFINER function the anon role can call via /rest/v1/rpc/user_org_ids. MEASURED, NOT REASONED. Called live with the publishable key: returns [] at HTTP 200. user_admin_org_ids and user_org_ids_write return HTTP 401 permission denied for anon, so only the one function is exposed. PAIRED CONTROLS, because [] alone proves nothing here - this repo's own rule is that an RLS denial is also HTTP 200 with []. Positive: the same key reads /rest/v1/organisations at 200, so the key works. Negative: a bogus key returns 401, so the auth layer discriminates. The emptiness is structural, not incidental: all three functions filter on auth.uid(), which is NULL for anon, and all three pin search_path to public, pg_temp so there is no search-path hijack. SO THERE IS NO LEAK. THE REAL FINDING IS THE REMEDIATION. The advisor says to revoke EXECUTE from anon. pg_policies shows 47 policies across ~35 tables whose USING/CHECK expressions call user_org_ids() and whose roles is {public}, which includes anon - evidence_entries, narratives, support_tickets, report_templates, crowmark_*, crm_* and the rest. A policy expression is evaluated with the CALLER's privileges, so revoking EXECUTE from anon converts today's clean empty result into ERROR: permission denied for function user_org_ids on every one of those tables for any anon-role request. An advisory that is correct in the abstract and an outage here. Left in place deliberately. If the WARN needs silencing later, the safe order is to narrow the policies' roles from {public} to {authenticated} FIRST, prove it paired, and only then revoke - never the revoke alone."
+    },
+    {
+      "id": "R27-BOARD-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] two of the six board buckets were names the board publishes and cannot read",
+      "note": "CLEARED and DECISION were BUCKETS THAT WERE NOT TERMS. Six buckets, four writable by name: an author writing the obvious word - the word the board prints in its own legend - got the row filed OPEN by the fallback, because the only routes in were N/A, NOT NEEDED, KNOWN FLAKE, SUPERSEDED, WITHDRAWN, WONTFIX, WILL NOT DO, REFUTED, BLOCKED and DEFERRED. This is R27-BOARD-03's own defect - a published verb the classifier cannot read - surviving in the bucket names after the term list was converged. MEASURED BEFORE CHANGING ANYTHING: all 308 tracker rows parse against the current vocabulary and 0 are unreadable, so the gap was LATENT and no row was actually misfiled. Closed now rather than after it costs a wrong count. FIXED AS A CLASS, NOT AS TWO INSTANCES: the loader in build-platform-board.js now THROWS if any bucket name is absent from terms, following the precedent of the hyphenated-term check beside it, which also makes the class impossible rather than listing the bad cases. Fixing only the two would leave the NEXT bucket free to repeat it. RED-PROVED: deleting the CLEARED term makes the build exit 1 naming the bucket; restoring it exits 0. CONTROL: counts are byte-identical before and after - 315 items, BUILT 22, OPEN 64, FIXED 200, WIP 11, CLEARED 13, DECISION 5 - so the change reclassifies nothing that exists. Both readers verified: the board builds, and release_tally.py --check reads 290 rows with 0 unclassified at exit 0."
     }
   ]
 }

@@ -95,6 +95,29 @@ const STATUS_VOCAB = (() => {
     // The verdict split below breaks on '-', so such a term could never match.
     throw new Error(`${VOCAB_FILE}: hyphenated term(s) ${hyphenated.map(([t]) => t).join(', ')} can never be read - use spaces`);
   }
+  /* [R27-BOARD-04 2026-08-17] EVERY BUCKET NAME MUST ITSELF BE A WRITABLE TERM.
+   *
+   * CLEARED and DECISION were buckets that were NOT terms. An author writing the
+   * obvious word - the very word this board prints in its own legend - got a row
+   * filed OPEN by the fallback. Six buckets, four writable. That is the same
+   * "a verb the board publishes and cannot read" defect the shared vocabulary was
+   * built to end, hiding in the bucket names rather than in the term list.
+   *
+   * Asserted here rather than fixed once in the JSON, because fixing the two
+   * instances leaves the NEXT bucket free to repeat it. The hyphen check above is
+   * the precedent: it does not enumerate the bad terms, it makes the class
+   * impossible. Throwing matches this loader's existing contract - a broken
+   * vocabulary must fail loudly, since a silently wrong bucket looks exactly like
+   * a working board. */
+  const bucketNames = Object.keys(raw.buckets || {});
+  const unwritable = bucketNames.filter((b) => !(b in (raw.terms || {})));
+  if (unwritable.length) {
+    throw new Error(
+      `${VOCAB_FILE}: bucket name(s) ${unwritable.join(', ')} are not terms, so writing them ` +
+        `in a status cell files the row as "${raw.fallback || 'OPEN'}" instead. Add each as a ` +
+        `self-mapping term (e.g. "${unwritable[0]}": "${unwritable[0]}").`,
+    );
+  }
   // Longest first so NOT MET is never swallowed by MET.
   return { list: terms.sort((a, b) => b[0].length - a[0].length), fallback: raw.fallback || 'OPEN' };
 })();
