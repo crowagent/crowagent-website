@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T00:11:44.108Z",
+  "updated": "2026-08-17T00:17:37.388Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T00:11:43.925Z",
-    "sourceFingerprint": "280:1198773023",
+    "generatedAt": "2026-08-17T00:17:37.277Z",
+    "sourceFingerprint": "284:215350912",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 280,
-    "done": 157,
-    "remaining": 123,
+    "totalRaised": 284,
+    "done": 162,
+    "remaining": 122,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 123,
-        "open": 109,
+        "items": 122,
+        "open": 108,
         "built": 10,
         "wip": 4,
         "decision": 0
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 123,
+        "items": 122,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -738,13 +738,31 @@
       "note": "Found by running the (unwired) verify-migrations-have-files.mjs against prod schema_migrations: 667 applied vs 647 files. Named and individually verified: r262_d199_revoke_anon_insert_on_leads and r262_d200_drop_orphan_csrd_function_and_leads_columns, both applied to PRODUCTION on 2026-08-10, neither has a file. Plus r262_d223_archive_csrd_crowmark_crosswalk, whose archive DDL still has no file - only today's *declaration* file exists (R27-RLS-PARITY-01). So R262-D-223 was not a one-off: it is the third instance, and two are still open. Note the run also reported 149 name-unmatched rows, but the SQL-hash side was disabled (shipping 667 SQL bodies was impractical), so 149 is an upper bound, not a measured count - do not quote it as a finding. One of the four checked, ...file_replay_verify, hashes identical to a migration that DOES have a file, i.e. a benign re-apply. Fixing needs the two missing files written from the live prod catalogue, same method as R27-RLS-PARITY-01."
     },
     {
+      "id": "R27-SEC-PATCH-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] a dependency gate cited as evidence in a certification document could not fail the build, and there was no patching SLA at all",
+      "note": "This one indicts my own work. The Cyber Essentials preparation stated \"CI fails on high and critical CVEs\" and named npm audit --audit-level=high as the gate. The step carried continue-on-error: true, so it could not fail anything. A control that cannot fail, offered as evidence to an assessor, is the worst form of this repo's signature defect. Measured rather than guessed: web/ holds 17 high and 0 critical; --audit-level=high exits 1 and --audit-level=critical exits 0. All 17 sit under @lhci/cli or @percy/cli, both devDependencies, or transitively beneath them; package.json declares 46 runtime and 29 development dependencies and no runtime dependency is affected. Gating on high would have been structurally unpassable on day one, so the step is split into a report that may fail and a gate that may not, firing on critical, which now agrees with the sibling workflow that already gated there for the same stated reason. The missing SLA is written: docs/security/patching-and-vulnerability-remediation.md, 14 days for high and critical, with an explicit statement that host patching belongs to Vercel, Railway and Supabase because there is no server we operate."
+    },
+    {
+      "id": "R27-ATRS-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] the AI transparency record returned HTTP 500 on every call, on every contract, since f987f311",
+      "note": "The task was to give the record a screen; the record had never worked. CONTRACT_FIELDS selected title from crowmark_contracts and that column does not exist, it is contract_name, which every other reader already uses. PostgREST answers with 42703, the loader raised, the router mapped it to 500. Fifty-three tests missed it because all 53 hand-build the contract dict and never touch the field list; adding a screen without looking would have rendered an error. Proved at the layer: both spellings issued as the literal PostgREST select against live staging, title returning HTTP 400 42703, contract_name returning HTTP 200 with one row. The guard that should have caught it was itself blind - the schema-conformance test read only .select(\"<literal>\") and skipped .select(CONSTANT), which is the house style here; widened to resolve module constants, exposing 21 previously invisible call sites across 7 modules and 16 tables, records checked rising to 517. The weight lock is now verified through a real staging round trip with three tamper moves each flipping the verdict; production still holds zero locks. One item refused on purpose: a free-text criterion would sit OUTSIDE the weight lock because RequirementBuilder.tsx:310 passes criterion_ids: selectedMeasureIds, so a partial build would silently weaken the flagship control."
+    },
+    {
       "id": "R27-MAIN-RED-01",
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
       "status": "WIP",
       "title": "[SEV:P1] production main is RED on two migration gates right now, and nothing has pushed to it since R2.6.2 so nobody saw",
-      "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is actually red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did."
+      "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did."
     },
     {
       "id": "R27-PRICE-01",
@@ -1192,9 +1210,27 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] Rubric marking does not persist",
-      "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §7.1. Measured on the LIVE PRODUCTION app with network interception. POST /api/crowmark/response/mark 200 in 3,495ms. Gone after reload. Root cause confirmed by reading the handler: crowmark_response.py:1111 calls mark_answer(...) and RETURNS it - no insert, no upsert anywhere. Storage now exists: crowmark_answer_marks + crowmark_answer_mark_criteria applied to prod AND staging (RLS on, 1 org_isolation policy each, 22 + 13 columns), shape mirroring the engine's return value and _row() verbatim so persistence re-derives nothing. Two decisions carried into the schema: answer_sha256 is NOT NULL so a consumer can always tell a current mark from one taken against an answer since rewritten (otherwise the UI shows a stale mark as if current), and the table is APPEND-ONLY because the amend->re-mark loop IS the history. Honest framing is enforced by a self-assertion that FAILS on any column named like %win%/%probability%/%likelihood% - checked by the database, not trusted to a comment. DELIBERATELY NOT CLOSED: FU-P0-5a the endpoint must INSERT; FU-P0-5b a GET must return the newest mark plus whether the hash still matches; FU-P0-5c the UI must render it on load. Assign to CrowMark workstream B."
+      "note": "FU-P0-5c CLOSED 2026-08-16 (workstream B), and the remaining work was WIRING, NOT BUILDING - the strongest possible case of it. The storage was live on prod AND staging, the endpoint INSERTed, a read-back GET existed and returned a three-state answer_state, and NONE of it was reachable from a browser: web/app/api/crowmark/response/mark/route.ts exported POST only, and BidMarkingPanel started every mount at result = null. So the product wrote a row to a real table on every click and then rendered \"not marked\" the moment the page reloaded - the P0-5 symptom fully intact with the fix sitting underneath it. Closed by adding the GET proxy, a fetchLatestMark + storedMarkToResult client (which re-derives nothing: the schema mirrors the engine and the whole engine return lives in the mark jsonb, so the engine's own framing/detail/amendment prose is read back verbatim), and a mount-time READ in the panel. The engine is deliberately NOT re-run on mount - that would fire an unasked 3.5s call on every question view and break the deliberate-action contract the sibling bid-fit panel keeps; it is two indexed selects instead. The stored mark is never shown without its staleness: stale and no_answer render a role=\"status\" qualifier, because a mark taken against text the writer has since rewritten is a record of a thing displayed as the thing. Panel tests 10 -> 18, every negative paired with a positive (a no_mark control proves the panel renders nothing without a stored row; a current control proves the qualifier is not unconditional). RED-PROVED TWICE, plant asserted present on disk before each run: plant A (read the store, do not render it - the exact defect shape) -> 6 failed / 12 passed; plant B (render it, drop the staleness qualifier) -> 3 failed / 15 passed. Both removed, 18 passed, exit 0, tsc 0. ORIGINAL FINDING: OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §7.1. Measured on the LIVE PRODUCTION app with network interception. POST /api/crowmark/respons"
+    },
+    {
+      "id": "R27-CM-MARK-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] THE ENTIRE 'Marking' STAGE TAB SENT A QUESTION KEY THE ENGINE CANNOT RESOLVE - the flagship differentiator, on a tab of its own, wired to nothing",
+      "note": "Found while closing R27-CM-P0-05, and MEASURED on production, not inferred. MarkingTab listed GET /contracts/{id}/bid-answers, whose questions are the five literal PPN 002 themes shipped in crowmark_bid_answers.py::PPN002_BID_QUESTIONS (theme1_recovery ... theme5_wellbeing), and passed that question_key to BidMarkingPanel as questionId. crowmark_response.py::_load_draft_context resolves that value as bid_questions.id, and bid_questions.id is a uuid column on prod (verified read-only 2026-08-16). So every \"Mark this answer\" button on that tab sent question_id: \"theme1_recovery\" at a uuid column. Production holds 0 rows in crowmark_answer_marks. The same defect had a second site: AnswerEditor rendered the panel for BOTH sources, and AnswerQuestion.id is documented in model.ts as \"a uuid for 'tender', a slug for 'ppn'\" - so marking failed for every PPN theme question there too, since the panel shipped. FIXED at both sites: MarkingTab now reads listTenderQuestions (real bid_questions rows) and pairs each with its saved answer under the bid_question:<uuid> key; AnswerEditor renders the panel only when !isPpn. New MarkingTab.test.tsx (3 tests) asserts the WIRE - every id sent is the uuid, none matches ^theme\\d, and a no-tender-question CONTROL proves the \"exactly one control\" count is measuring the wiring and not the fixture. RED-PROVED: the pre-fix wiring planted back, asserted present on disk, 2 failed; removed, 3 passed, exit 0. NOT CLOSED, and deliberately: PPN theme answers still cannot be marked at all. Giving a theme a markable identity needs a bid_questions row (or a nullable question_id on crowmark_answer_marks, today a NOT NULL FK) - a schema change, not a UI one. Raised as R27-CM-MARK-03."
+    },
+    {
+      "id": "R27-CM-MARK-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] a PPN 002 theme answer cannot be rubric-marked at all - the marking store has no identity for one",
+      "note": "Split out of R27-CM-MARK-02 rather than bundled into it. crowmark_answer_marks.question_id is uuid NOT NULL REFERENCES bid_questions(id), and a PPN theme answer has no bid_questions row - it lives in crowmark_bid_answers under a slug question_key with question_id NULL. So the marking engine, which the product names as its differentiator, covers only ITT-derived tender questions and not the fixed PPN 002 theme set that every bid shares. Two candidate shapes, both a migration: mint a bid_questions row per theme per contract, or relax crowmark_answer_marks to carry question_key when question_id is null (with a CHECK that exactly one is present). The second is probably right - a theme is not a tender question and minting fake ones would pollute every reader of bid_questions. Prod scale for context: 2 crowmark_bid_answers rows total, 1 tender-keyed and 1 PPN-keyed, 1 bid_questions row."
     },
     {
       "id": "R27-CM-P0-06",
@@ -2026,9 +2062,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the SAME entitlement divergence caps paying orgs at 5 AI calls a day instead of 200",
-      "note": "_shared.py::_enforce_ai_metering sets the per-user daily AI cap from profiles.plan, the same stale record R27-I-05 just removed from contract creation: {\"free\":5,\"pro\":200,\"growth\":1000}.get(plan, 5). The two staging Pro orgs are capped at 5 AI calls a day instead of 200. It was ALLOWLISTED rather than fixed, deliberately: the V2 ladder is free/starter/pro/portfolio, the specs declare a daily figure for the FREE tier only (5/day/user), and the map has no starter or portfolio entry, so a Portfolio org already falls to the default of 5. Choosing those two numbers would either loosen an anti-abuse cap or tighten a paid one, which is a pricing decision, not an engineering one. Needs the owner to set the daily figures for starter and portfolio. The reasoning is recorded in the guard test as its single allowlist entry, with a test_allowlist_has_no_dead_entries so the exemption cannot rot. Owner decision: point the daily AI cap at get_crowmark_tier, the same canonical resolver contract creation now uses, keep free at 5 and pro at 200, and give Starter and Portfolio the Pro figure for now. This deliberately does NOT invent pricing, and the owner can set deliberate numbers later without another code change. Closing it means removing this function's entry from the profiles.plan AST guard's allowlist, which has a dead-entry test that will fail if a stale exemption is left."
+      "note": "CLOSED 2026-08-16. _enforce_ai_metering now resolves get_crowmark_tier(org_id) ONCE at the top and keys a named module constant _DAILY_AI_CALL_CAP = {free:5, starter:200, pro:200, portfolio:200}; the profiles.plan read is gone, and so is the second, duplicate tier lookup that used to sit further down for the credit debit. growth is deliberately NOT carried over - it is not a rung on the canonical ladder, so the resolver can never return it and an entry would be dead policy. The 429 now names the resolved TIER instead of a profiles.plan value it was never taken from. Allowlist entry removed from test_no_profiles_plan_entitlement_reads.py; _ALLOWED is now EMPTY and the guard asserts total absence. Its two controls that depended on the entry were rebuilt rather than deleted: the within-a-module discrimination test is re-based on stripe_webhook.py (which holds both kinds of function, and fails if EITHER set is empty), and a new positive control asserts the cap acquired get_crowmark_tier + _DAILY_AI_CALL_CAP and that every rung of PRODUCT_TIER_ORDER[\"crowmark\"] has an entry - a MISSING rung is exactly how starter and portfolio were silently getting the free tier's 5. Four behavioural tests added as a matched pair (portfolio at 50 uses -> 200; starter at 150 -> 200; free at 5 -> 429 naming the free tier; unresolvable tier -> 503, never \"you are on free\"). RED-PROVED: the pre-fix code planted back, asserted present on disk, then 4 failures - the guard's absence assertion, the new positive assertion, and both paid-tier behavioural tests - while the free-tier control stayed GREEN, so the pair discriminates rather than the cap being deleted. Plant removed, 12 passed, exit 0. ORIGINAL FINDING: _shared.py::_enforce_ai_metering set the per-user daily AI cap from profiles.plan, the same stale record R27-I-05 just removed from contract creation: {\"free\":5,\"pro\":200,\"growth\":1000}.get(plan, 5). The two staging Pro orgs are capped at 5 AI calls a day instead of 200. It was ALLOWLIST"
     },
     {
       "id": "R27-NAV-03",
@@ -2099,7 +2135,7 @@
       "sev": "P1",
       "sevExplicit": true,
       "status": "CLEARED",
-      "title": "[SEV:P1] Cyber Essentials is the one MANDATED gate for UK public sector sales and nothing evidences that we hold it",
+      "title": "[SEV:P1] Cyber Essentials - owner challenged the premise and was right; it is a SALES prerequisite for central government and the NHS, not a duty we are under",
       "note": "The tenancy analysis reached a conclusion worth acting on ahead of any engineering: a dedicated database addresses NONE of the four things that will block these sales. Data sits in Ireland rather than the UK; bid content reaches a US sub-processor and a Gemini endpoint that is not region pinned; Cyber Essentials is the one mandated gate and no repository evidence shows we hold it; and the supplier product has no database-level tenant separation. The published residency page is already candid about the first two and must not be softened. Certification is an owner action, not an engineering task. OWNER DECISION. GBP320 plus VAT against a PPN 014 pre-award gate for central government and NHS is the cheapest item on this board blocking an entire segment. CE Plus deferred until a named buyer asks for it. Competitive position, verified from vendors' own published pages 2026-08-16: Jaggaer and Atamis hold CE AND CE Plus; In-Tend holds CE only; Mercell holds none; Delta eSourcing publishes NO certifications at all while claiming 300+ UK public sector clients, so this is a gate for central government and the NHS rather than an absolute barrier to public sector selling. NEXT ACTION IS MINE, not the owner's: draft the IASME self-assessment answers against the real infrastructure across the five controls (firewalls, secure configuration, access control, malware protection, patch management), so the owner submits a prepared application rather than starting from a blank questionnaire. MY FRAMING WAS WRONG AND THE OWNER CAUGHT IT. I called Cyber Essentials \"the one MANDATED gate\", which reads as a legal duty on CrowAgent. It is not. PPN 014 is addressed to the CONTRACTING AUTHORITY, telling government buyers to require Cyber Essentials from suppliers before award where the contract handles personal data or data at OFFICIAL. CrowAgent is not bidding for government contracts, so no duty attaches to the company. It reaches us only when a public body BUYS the software, because in that"
     },
     {
