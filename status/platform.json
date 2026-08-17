@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T02:38:14.294Z",
+  "updated": "2026-08-17T02:44:43.802Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T02:38:14.185Z",
-    "sourceFingerprint": "307:1695918478",
+    "generatedAt": "2026-08-17T02:44:43.661Z",
+    "sourceFingerprint": "307:-1927779258",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 307,
     "done": 190,
@@ -776,11 +776,11 @@
     {
       "id": "R27-CI-FLAKE-02",
       "src": "R2.6.2 tracker",
-      "sev": "P2",
+      "sev": "P1",
       "sevExplicit": true,
-      "status": "CLEARED",
-      "title": "[SEV:P2] a render-timing test flakes in CI, and the test already knows it does",
-      "note": "compliance-matrix-grid.test.tsx \"dims the row whose PATCH is in flight\" failed Gate 1 Web on PR #771, expecting opacity-60 on the in-flight row and finding only the transition classes. The component is correct: it passes getRowClassName to the shared DataTable, and the primitive applies it at data-table.tsx:1264. Evidence it is a flake rather than a defect, gathered before touching anything: two solo runs green (11 passed each), three PAIRED runs with the other failing file green (21 passed each), at 5,238MB free RAM. The test file already documents this exact class and has raised its own budget to 8,000ms because \"on a loaded machine (parallel vitest workers) the default budget is the known cause of this repo's spurious render-timing failures\". It flaked anyway. Only the failed job was re-run, never the whole workflow, and only after the evidence above, because retrying a red without evidence is how a real failure gets laundered into a green. The durable fix is not a longer timeout. A third increase would be the same mistake at a larger number. The assertion depends on observing an INTERMEDIATE render between a blur and a promise that never resolves; it should assert the state the component exposes rather than the frame in which React happens to paint it. Filed rather than done, because changing it is a real piece of work and this row is not blocking."
+      "status": "FIXED",
+      "title": "[SEV:P1] the ONLY test failing Gate 1 Web on both branches, and my first diagnosis of it was wrong",
+      "note": "compliance-matrix-grid.test.tsx \"dims the row whose PATCH is in flight\" failed Gate 1 Web on PR #771, expecting opacity-60 on the in-flight row and finding only the transition classes. The component is correct: it passes getRowClassName to the shared DataTable, and the primitive applies it at data-table.tsx:1264. Evidence it is a flake rather than a defect, gathered before touching anything: two solo runs green (11 passed each), three PAIRED runs with the other failing file green (21 passed each), at 5,238MB free RAM. The test file already documents this exact class and has raised its own budget to 8,000ms because \"on a loaded machine (parallel vitest workers) the default budget is the known cause of this repo's spurious render-timing failures\". It flaked anyway. Only the failed job was re-run, never the whole workflow, and only after the evidence above, because retrying a red without evidence is how a real failure gets laundered into a green. The durable fix is not a longer timeout. A third increase would be the same mistake at a larger number. The assertion depends on observing an INTERMEDIATE render between a blur and a promise that never resolves; it should assert the state the component exposes rather than the frame in which React happens to paint it. Filed rather than done, because changing it is a real piece of work and this row is not blocking. I filed this as a flake on five clean local runs and re-ran the CI job. That was wrong. Anchoring the row differently and running it three times failed ONCE locally, which killed the environment-dependent-index hypothesis. The real cause is not render timing. change and blur fire in immediate succession, and the blur handler PATCHes only if the trimmed value DIFFERS. If the field's local state has not committed when blur reads it, the handler correctly decides nothing changed: no request is sent, savingId is never set, and no amount of waiting produces a class nothing is going to apply. A longer timeout cannot fix a r"
     },
     {
       "id": "R27-CI-FLAKE-01",
