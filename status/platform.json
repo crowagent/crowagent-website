@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T03:03:18.207Z",
+  "updated": "2026-08-17T03:08:39.908Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T03:03:17.995Z",
-    "sourceFingerprint": "307:-1785736974",
+    "generatedAt": "2026-08-17T03:08:39.693Z",
+    "sourceFingerprint": "308:-799736216",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 307,
-    "done": 193,
+    "totalRaised": 308,
+    "done": 194,
     "remaining": 114,
     "phases": {
       "1": {
@@ -774,6 +774,15 @@
       "note": "Opening PR #771 against main ran CI against main for the first time since fd78a333, and two gates failed: Migrations vs prod RLS snapshot must match and Apply migrations to a fresh ephemeral DB. Neither is caused by the hotfix, and this was measured rather than argued. (1) The RLS gate reads files, so it was run locally at HEAD and at HEAD^: identical output, TOTAL DRIFT 10, exit 1 at both, with the file count moving 644 to 645. The hotfix adds a migration and moves drift by zero. (2) The ephemeral gate needs a local stack, so the equivalent proof came from history: the exact same 20260816000001_r27_sec01_avatars...sql file is present at edd0a803 on the held branch, where Migration Apply Check succeeded. A file that passes there cannot be what fails here. What is red on main: 8 policies live in production with no migration file (the R27-MIG-03 class, out-of-band MCP applies), 2 migration files never reached production (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications_service_all), and the ephemeral apply dies inside the R262-TRIAL-V4 ai-credit month_fmt assertions. The prod snapshot the gate compares against was captured 2026-08-08. Why nobody saw it: these gates only run on a push, and the last push to main was the R2.6.2 certification merge. A gate that never runs is indistinguishable from a gate that passes. Resolution: the held branch is green on both, so the release merge closes this. Recorded so that a red main is not mistaken for damage the hotfix did."
     },
     {
+      "id": "R27-BOARD-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P3] unescaped pipes in note prose split their own rows, and a row-shape check would report 28 false alarms",
+      "note": "A handed-back finding, re-measured before filing, and the number was wrong. It was reported as \"255 of 278 rows have a column count other than 6\". Measured: 28 of 293. And the important half is the part that was not measured: ZERO of them put a pipe BEFORE the status cell. The board reads the verdict by INDEX, so every one of those 28 extra pipes lands after the verdict and none of them moves it. A row-shape check would have flagged all 28 and found no defect in any. So the guard asserts the property the board depends on rather than the tidiness rule it does not: the severity marker must still be in cell 2, which is the same as saying the status is still in cell 3. If prose ever puts a pipe before the status, the verdict silently becomes whatever the prose fragment happens to start with, and that is a board that lies rather than one that looks untidy. Red-proved by planting a pipe ahead of a severity marker."
+    },
+    {
       "id": "R27-CI-FLAKE-02",
       "src": "R2.6.2 tracker",
       "sev": "P1",
@@ -1023,7 +1032,7 @@
       "sevExplicit": true,
       "status": "FIXED",
       "title": "[SEV:P1] a DAY-ZERO award is reported as BREACHED to the contracting authority",
-      "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent. RESOLVED 2026-08-17. The exact comparison was monitoring-logic.ts:70 if (overdue — — pct < 80) status = \"red\", with the literal \"(breached)\" coming from SocialValueThemeBars.tsx:26 pct >= 95 ? \"on\" : pct >= 80 ? \"risk\" : \"breach\" - a function that took NO due date at all. The shape was a MISSING \"not yet due\" state, not an off-by-one: the boundary comparison asOf > dueDate was already correct and inclusive of the due day, and a null date was handled for overdue. KpiRagStatus had four members but only TWO on the time axis - a passed deadline escalated to red, and nothing else consulted the calendar - so pct < 80 made the breach claim on its own. Re-measured on live staging: the awarded contract's SIX council_commitments (created 2026-08-16 16:55, target 56,740.8 total) ALL carry due_date NULL and actual 0, which is exactly the \"6 under-delivery alerts / 0% / every theme breached\" screen. So the operative case is a null deadline banded as a passed one. Fixed with a fifth status not_yet_due plus an explicit three-state dueState (overdue / not_due / no_due_date) - \"no deadline is recorded\" is not a synonym for \"the deadline has not passed\". red now requires a passed deadline; every other transition is unchanged, and detectUnderDelivery gains ONE precondition rather than a re-tuning, so no"
+      "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent. RESOLVED 2026-08-17. The exact comparison was monitoring-logic.ts:70 if (overdue OR pct < 80) status = \"red\" (written with the word OR here because a literal double pipe splits this markdown table into extra columns), with the literal \"(breached)\" coming from SocialValueThemeBars.tsx:26 pct >= 95 ? \"on\" : pct >= 80 ? \"risk\" : \"breach\" - a function that took NO due date at all. The shape was a MISSING \"not yet due\" state, not an off-by-one: the boundary comparison asOf > dueDate was already correct and inclusive of the due day, and a null date was handled for overdue. KpiRagStatus had four members but only TWO on the time axis - a passed deadline escalated to red, and nothing else consulted the calendar - so pct < 80 made the breach claim on its own. Re-measured on live staging: the awarded contract's SIX council_commitments (created 2026-08-16 16:55, target 56,740.8 total) ALL carry due_date NULL and actual 0, which is exactly the \"6 under-delivery alerts / 0% / every theme breached\" screen. So the operative case is a null deadline banded as a passed one. Fixed with a fifth status not_yet_due plus an explicit three-state dueState (overdue / not_due / no_due_date) - \"no deadline is recorded\" is not a synonym for \"the deadline has not passed\". red now requires a passed deadline; every o"
     },
     {
       "id": "R27-JOURNEY-01",
