@@ -45,6 +45,50 @@ const objectish = new Set(
   referenced.filter((f) => new RegExp(`Object\\.(entries|keys|values)\\(DATA\\.${f}`).test(page)),
 );
 
+/* [R27-BOARD-08 2026-08-17] FIELDS THE PAGE READS BEHIND A GUARD ARE OPTIONAL,
+   AND TREATING THEM AS MANDATORY MADE THIS CHECK CRY WOLF ON EVERY RUN.
+
+   `issues.json` has no `phaseBreakdown` — correctly, since the website board has
+   no phases — and this script reported it as "the page would throw". It would not.
+   index.html:335 reads it as
+
+       const pb = DATA.phaseBreakdown && typeof DATA.phaseBreakdown === 'object'
+                    ? DATA.phaseBreakdown : null;
+
+   and then branches on `pb &&`, so a missing field renders no panel and throws
+   nothing. The check therefore exited 1 on a healthy board, on every single
+   invocation — including inside start-tracker.cmd, which prints a scary WARNING
+   about a board that "will render as Could not load" and then serves it perfectly.
+
+   That is worse than a missing check. A gate that is always red teaches everyone
+   to ignore it, so the day it reports the REAL defect it was written for — the
+   `DATA.directives.map()` crash that made the Platform tab unviewable for a day —
+   nobody will look. Fixing the false positive is what keeps the true positive
+   audible.
+
+   Detected from the page, not from a hand-kept list, for the same reason the rest
+   of this script is: a field is OPTIONAL if every read of it is protected by a
+   truthiness test, an optional-chain, a `typeof` check or a `||` default. If ANY
+   read is unguarded the field stays mandatory, which is the safe direction —
+   `directives` is read as `DATA.directives.map(...)` bare, so it remains required
+   and this change does not weaken the case that matters. */
+const guarded = new Set(
+  referenced.filter((f) => {
+    const reads = [...page.matchAll(new RegExp(`DATA\\.${f}\\b`, 'g'))];
+    if (!reads.length) return false;
+    return reads.every((m) => {
+      // 40 chars either side is enough to see the guard that wraps a read.
+      const before = page.slice(Math.max(0, m.index - 40), m.index);
+      const after = page.slice(m.index + m[0].length, m.index + m[0].length + 12);
+      return (
+        /(&&|\|\||\?|!|typeof)\s*$/.test(before) ||          // guarded before the read
+        /^\s*(&&|\|\||\?\.|\?)/.test(after) ||                // guards immediately after
+        new RegExp(`typeof\\s+DATA\\.${f}`).test(before + m[0]) // typeof DATA.x
+      );
+    });
+  }),
+);
+
 const boards = ['issues.json', 'platform.json'];
 let failed = false;
 
@@ -66,9 +110,17 @@ for (const file of boards) {
   }
 
   const problems = [];
+  const notes = [];
   for (const field of referenced) {
     const v = data[field];
     if (v === undefined || v === null) {
+      // [R27-BOARD-08] Absent is fine when EVERY read of it is guarded; the page
+      // renders one section fewer and throws nothing. Reported as a note so the
+      // absence is still visible, never as a failure.
+      if (guarded.has(field)) {
+        notes.push(`${field} absent — optional, every read of it is guarded`);
+        continue;
+      }
       problems.push(`${field} is ${v === null ? 'null' : 'MISSING'}`);
       continue;
     }
@@ -87,8 +139,16 @@ for (const file of boards) {
     for (const p of problems) console.error(`     · ${p}`);
     failed = true;
   } else {
-    console.log(`✅ ${file} — supplies all ${referenced.length} fields the page reads`);
+    const mandatory = referenced.length - notes.length;
+    console.log(
+      `✅ ${file} — supplies all ${mandatory} mandatory field(s) the page reads` +
+        (notes.length ? `, and ${notes.length} guarded optional one(s) are absent` : ''),
+    );
   }
+  // Printed whether or not the board failed: an absent optional field is not an
+  // error, but it IS a section the reader will not see, and silence about it is
+  // how a missing panel gets mistaken for an empty one.
+  for (const n of notes) console.log(`     · ${n}`);
 }
 
 console.log(`\npage reads: ${referenced.join(', ')}`);
