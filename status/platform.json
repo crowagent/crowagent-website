@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T12:58:43.523Z",
+  "updated": "2026-08-17T13:40:21.973Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T12:58:42.785Z",
-    "sourceFingerprint": "315:-643753636",
+    "generatedAt": "2026-08-17T13:40:21.066Z",
+    "sourceFingerprint": "319:179245211",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 315,
-    "done": 213,
-    "remaining": 102,
+    "totalRaised": 319,
+    "done": 216,
+    "remaining": 103,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 102,
-        "open": 64,
+        "items": 103,
+        "open": 65,
         "built": 22,
         "wip": 11,
         "decision": 5
@@ -196,7 +196,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 102,
+        "items": 103,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -226,7 +226,7 @@
     "assignment": "docs/release-2.7/PHASE-ASSIGNMENT-2026-08-17.md"
   },
   "unreadable": [
-    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 315:-643753636 vs 317:1202260370). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 319:179245211 vs 321:662044282). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
   ],
   "issues": [
     {
@@ -405,7 +405,7 @@
       "sevExplicit": false,
       "status": "BUILT",
       "title": "SC-14 - a drafted answer cites a chunk retrieved from the tender itself",
-      "note": "carried from R2.6.2 (P2). The R2.6.2 row read PARTIAL and named the vector arm UNEXERCISED; the carry-over flattened it to BUILT and lost that caveat. Re-measured 2026-08-13 on staging ipgrnwvfnumgvnxkpxsc: content_chunks = 948 tender_document rows, 0 embedded - unchanged. Lexical arm IS live-proven (chunk_id 2bbfce4c traced end-to-end into a real tender_chunk citation)."
+      "note": "carried from R2.6.2 (P2). The R2.6.2 row read PARTIAL and named the vector arm UNEXERCISED; the carry-over flattened it to BUILT and lost that caveat. Re-measured 2026-08-13 on staging ipgrnwvfnumgvnxkpxsc: content_chunks = 948 tender_document rows, 0 embedded - unchanged. Lexical arm IS live-proven (chunk_id 2bbfce4c traced end-to-end into a real tender_chunk citation). [2026-08-17] THE BACKFILL IS NOW FULLY DRAINED ON BOTH ENVIRONMENTS, AND THE VECTOR ARM IS PROVEN SEARCHABLE. Re-triggered /cron/rag-backfill on staging in capped passes: embedded 100, 100, 69, then 0, and the loop stopped itself on the zero rather than spinning. Verified in Supabase, not from the endpoint's own claim (the endpoint reports what it attempted): staging content_chunks 1131 / 1131 embedded, 0 missing, 100% - up from the 761/1130 measured at the start of this pass and the 642 recorded on 2026-08-15. Production was ALREADY complete and nobody had checked: 508 / 508, 0 missing. So the prerequisite is done everywhere. CONTROL ON THE TRIGGER ITSELF, before trusting any of it: a deliberately wrong X-Cron-Secret returns 403, not the 503 an unconfigured key gives, so the secret is genuinely reaching runtime and a 200 means the real job ran. Staging carries SCHEDULER_ENABLED=false with RAG_BACKFILL_CRON_ENABLED=true, which is exactly why this needs manual re-triggering and will not self-drain, and SUPABASE_URL correctly points at ipgrnwvfnumgvnxkpxsc - worth stating given R27-INFRA-01 was staging cron firing at production. THE VECTOR ARM IS NO LONGER UNEXERCISED. A pgvector nearest-neighbour query over the drained corpus: probe chunk \"Q53 ... new entrant (including a SPV)\" returns ITSELF at cosine distance 0.0000 (the positive control - identity must be zero or the metric is wrong), then Q55 \"bidding as a SPV, JV\" at 0.1700, then Q50 Companies House number at 0.1789, then an unrelated Cyber Essentials question at 0.1929. The ranking is topical, so the embeddings discriminate rather than being no"
     },
     {
       "id": "CARRY-20",
@@ -682,9 +682,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2] local and CI resolved DIFFERENT fastapi versions, so 8 of 9 CI failures were invisible locally",
-      "note": "api/requirements.txt:15 reads fastapi>=0.115.12,<0.142; the venv had 0.136.1 while CI resolves 0.141.1. The behaviour that broke every route sweep (a bare .routes walk seeing only directly-registered routes; iter_effective_routes yielding a RouteContext rather than a starlette.routing.Route) only exists on >= 0.137, so pre-fix the tests PASSED locally and FAILED in CI - the precise trap that the \"verify locally, never push to see if CI passes\" rule assumes does not exist. CORRECTED DOWN from P1 after reading the file: the requirements comment ALREADY documents this deliberately, naming both versions, on the grounds that the code fix is version-robust in both directions and the bound exists to stop the next breaking change arriving unannounced. I did NOT independently verify that robustness claim - doing so means downgrading the venv and re-running, which is not worth it. So: do NOT pin. The residual gap is narrow and real - nothing asserts local and CI resolve compatibly, and nothing exercises both versions - but the venv is now on 0.141.1 and the deliberate range serves security patching. Revisit only if a version-sensitive divergence recurs."
+      "note": "THE OLD NOTE ON THIS ROW SAID \"do NOT pin, the residual gap is narrow\". MEASUREMENT REFUTES IT. A fresh pip install --dry-run --ignore-installed --report over the whole of api/requirements.txt - literally what CI and Railway build - compared against the installed venv showed 28 of 40 declared top-level packages resolving to a DIFFERENT version locally, including supabase==2.31.0 and postgrest==2.31.0: declarations that were ALREADY exact pins while the venv ran 2.30.0. A pin nobody checks is a comment. Worst was starlette - fastapi==0.141.1 requires only starlette>=0.46.0, so the >=1.0.1 floor left it entirely free and local ran 1.3.1 against a fresh-resolve 1.6.0, three minors apart on the package that owns starlette.routing.Route, the class every route sweep isinstance-checks. fastapi was the LEAST divergent of the set, and only by the accident that <0.142 sits just above the newest release. The mechanism was mis-stated too: it is not that the two resolvers disagree, it is that a RANGE never converges a LONG-LIVED VENV - pip install -r leaves an already-satisfying 0.136.1 exactly where it is, while CI installs from scratch on every run. FIX: fastapi==0.141.1 (api/requirements.txt:33) and starlette==1.6.0 (:49), each with the reasoning written above the line, using the mechanism this repo ALREADY uses (exact == plus a written reason, as for supabase/postgrest); there is no pip-compile, lockfile or constraints file in this repo and none was introduced. The venv was aligned to the file (starlette 1.3.1 to 1.6.0, supabase and postgrest 2.30.0 to 2.31.0). GUARD api/tests/test_r27_dep_01_pinned_resolution_guard.py - 3 tests, running in BOTH environments from one file: resolution-sensitive packages must be exact pins, every == must equal the INSTALLED version, and a corpus floor so the parser cannot go vacuous. Red-proved 3 ways: the original range fails the pin test; fastapi==0.136.1 fails the installed-version test naming both numbers; a 3-line requirements.txt fails t"
     },
     {
       "id": "R27-GUARD-02",
@@ -1324,6 +1324,15 @@
       "status": "FIXED",
       "title": "[SEV:P1] a PPN 002 theme answer cannot be rubric-marked at all - the marking store has no identity for one",
       "note": "Split out of R27-CM-MARK-02 rather than bundled into it. crowmark_answer_marks.question_id is uuid NOT NULL REFERENCES bid_questions(id), and a PPN theme answer has no bid_questions row - it lives in crowmark_bid_answers under a slug question_key with question_id NULL. So the marking engine, which the product names as its differentiator, covers only ITT-derived tender questions and not the fixed PPN 002 theme set that every bid shares. Two candidate shapes, both a migration: mint a bid_questions row per theme per contract, or relax crowmark_answer_marks to carry question_key when question_id is null (with a CHECK that exactly one is present). The second is probably right - a theme is not a tender question and minting fake ones would pollute every reader of bid_questions. Prod scale for context: 2 crowmark_bid_answers rows total, 1 tender-keyed and 1 PPN-keyed, 1 bid_questions row. RESOLVED 2026-08-17 - migration 20262230000000_r27_cm_mark_03_markable_ppn002_theme_subject.sql. Re-measured live first: prod holds 0 marks / 0 mark criteria / 1 bid_questions / 2 bid answers (1 PPN-keyed); staging 0 / 0 / 0 / 1. Zero rows in both, so no data was migrated and the options were wide. Four shapes considered, three rejected in the file: (A) nullable FK alone - a mark attributed to NOTHING, and it would newly accept a tender insert that forgot question_id; (B) mint a bid_questions row per theme per contract - list_questions and the export surfaces enumerate that table, so five synthetic rows per contract would show a buyer five questions it never asked, and it would contradict crowmark_bid_answers, which stores a theme with question_id NULL; (C) a ppn002_themes reference table - a SECOND source for a vocabulary PPN002_BID_QUESTIONS already owns. (D) CHOSEN: a discriminated subject - question_id nullable, new theme_key text, CHECK num_nonnulls(question_id, theme_key) = 1 so a mark is never attributed to nothing nor to two things, and a CLOSED five-key vocabulary CHECK so an arbi"
+    },
+    {
+      "id": "R27-CM-RBAC-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] BOTH rubric-mark routes wrote a mark of record with NO role gate, and a STALE EXEMPTION hid one of them from the guard that exists to find it",
+      "note": "Handed over as one CI-red claim - \"mark_theme_answer_endpoint is a mutating CrowMark route with no server-side RBAC check\" - and the claim was RIGHT ABOUT THE ROUTE AND WRONG ABOUT THE DEFECT. Measured at HEAD: NEITHER mark route carried a capability gate. mark_answer_endpoint (crowmark_response.py:1404) was sitting in _EXEMPT as \"pure deterministic rubric mark, stateless, no write\", so the guard skipped its body before reading it and reported only the twin. That reason was true when written and stopped being true at R27-CM-P0-05 FU-P0-5a, which added _persist_mark - the route now INSERTs an append-only mark of record into crowmark_answer_marks(+_criteria) attributed to the verified acting user, and its own docstring says so (\"The mark is now STORED\"). So the real defect is not an exemption that was never extended to the theme twin; it is an exemption that should no longer exist, and the theme route was the only one the guard could still see. A viewer could append a mark of record, in their own name, to any contract in their org, on both routes. THIRD INSTANCE OF ONE CLASS on this router (after assess_bid_fit_endpoint, R255-GUARD-001), all three invisible for the same reason: the write went into a HELPER, so no line in the handler body looked like a write to the guard or to a human re-reading the exemption. FIX: require_capability_in_org(..., rbac.EDIT_DATA) in both handlers (crowmark_response.py:1437, :1737), placed BEFORE the engine runs so a caller who may not store a mark does not get one computed either, and mark_answer_endpoint removed from _EXEMPT. GUARD - the class, not the instance: test_no_write_exemption_names_a_handler_that_persists asserts the ABSENCE of a reachable write under every exemption that CLAIMS one is absent. The code side is AST, never text (a text scan cannot tell supabase.table(T).update(...) from payload.update(...), and these writes span lines); it follows same-module calls TRANSITIVELY, which is the whole point, since all three real def"
     },
     {
       "id": "R27-CM-P0-06",
@@ -3088,6 +3097,33 @@
       "status": "FIXED",
       "title": "[SEV:P2] two of the six board buckets were names the board publishes and cannot read",
       "note": "CLEARED and DECISION were BUCKETS THAT WERE NOT TERMS. Six buckets, four writable by name: an author writing the obvious word - the word the board prints in its own legend - got the row filed OPEN by the fallback, because the only routes in were N/A, NOT NEEDED, KNOWN FLAKE, SUPERSEDED, WITHDRAWN, WONTFIX, WILL NOT DO, REFUTED, BLOCKED and DEFERRED. This is R27-BOARD-03's own defect - a published verb the classifier cannot read - surviving in the bucket names after the term list was converged. MEASURED BEFORE CHANGING ANYTHING: all 308 tracker rows parse against the current vocabulary and 0 are unreadable, so the gap was LATENT and no row was actually misfiled. Closed now rather than after it costs a wrong count. FIXED AS A CLASS, NOT AS TWO INSTANCES: the loader in build-platform-board.js now THROWS if any bucket name is absent from terms, following the precedent of the hyphenated-term check beside it, which also makes the class impossible rather than listing the bad cases. Fixing only the two would leave the NEXT bucket free to repeat it. RED-PROVED: deleting the CLEARED term makes the build exit 1 naming the bucket; restoring it exits 0. CONTROL: counts are byte-identical before and after - 315 items, BUILT 22, OPEN 64, FIXED 200, WIP 11, CLEARED 13, DECISION 5 - so the change reclassifies nothing that exists. Both readers verified: the board builds, and release_tally.py --check reads 290 rows with 0 unclassified at exit 0."
+    },
+    {
+      "id": "R27-SEC-10",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] 17 RLS policies named as prohibitions are PERMISSIVE no-ops that forbid nothing",
+      "note": "THE SHAPE. content_chunks_no_client_write, crowmark_tone_profiles_no_client_write, retrieval_traces_no_client_write, retrieval_relevance_labels_no_client_write, compliance_controls_no_write and 12 more are declared PERMISSIVE, cmd=ALL, USING false, WITH CHECK false. In PostgreSQL permissive policies are OR-ed, so a permissive policy evaluating false contributes nothing and denies nothing. false OR <other policy> is just <other policy>. Dropping every one of these 17 policies would change the current behaviour of the database in no way at all. They are the appearance of a write prohibition without the effect - a control that reaches nothing, wearing the name of the thing it does not do. To actually forbid, a policy must be declared AS RESTRICTIVE, which is AND-ed. CORRECTLY GRADED, AND THIS IS THE HONEST PART: NOTHING IS EXPOSED TODAY. Writes to all 17 tables really are blocked - by RLS default-deny, because a table with RLS on and no permissive policy granting a write refuses it. Verified per table, not assumed: a query joining the 17 no-op policies against every permissive policy whose WITH CHECK is not false returns NONE for all 17. So this is LATENT. THE HAZARD IS THE NEXT MIGRATION. Add one ordinary permissive write policy - ..._org_write FOR ALL USING (organisation_id IN user_org_ids()) - and writes open immediately, because the _no_client_write policy beside it cannot veto anything. A reviewer reading the schema, or a security consultant reading the policy names, would conclude the opposite. That is how this defect eventually costs something. Also inside this set, a possible functional bug worth a separate look, flagged NOT asserted: organisation_members.org_members_update is one of the 17 - a policy named as if it PERMITS updates that permits none. If any client-side path updates organisation_members directly it fails silently, because an RLS denial is HTTP 200 with []. If the only writer is the service-role API then this is merely misnamed. FIX SHAPE: either"
+    },
+    {
+      "id": "R27-DB-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P3] production database hygiene, with denominators - 15 duplicate indexes, 45 unindexed FKs, 2 leftover backup tables, and 591 findings that are NOISE",
+      "note": "Production performance advisor returns 1,333 lints. Triaged rather than transcribed, because filing all of them would bury the four that matter. NOT ACTIONABLE, AND SAYING SO IS THE POINT: 591 unused_index. They are unused because the product has no customer traffic yet - an index cannot show usage on a system nobody queries. Acting on these pre-launch would drop indexes that exist precisely for the load that has not arrived. Re-run this advisor AFTER real traffic; before then the signal is structurally meaningless. Same reasoning discounts most of the 45 unindexed_foreign_keys for now, though those are cheap and safe to add. GENUINELY ACTIONABLE: 15 duplicate_index - identical index pairs, one of each is pure write cost and disk for nothing: activity_log, billing_audit_log, company_capability_codes, crowmark_contracts (idx_crowmark_contracts_org vs ..._organisation_id), email_log, evidence_items (TWO pairs), evidence_tracker_state (TWO pairs), portal_audit_log, portal_user_backup_codes, product_subscriptions, revoked_tokens, scheduled_reports, stripe_processed_events. The naming pattern (_org vs _organisation_id, X_idx vs idx_X) says these are two migrations creating the same index under two conventions - consistent with the 25-tables-with-no-creating-migration finding. 3 auth_rls_initplan on saved_views (both policies) and eval_annotations_write: auth.<fn>() re-evaluated per ROW. The repo has already fixed this class elsewhere - user_org_ids() and friends correctly use (SELECT auth.uid()) - so these three are stragglers, not a new pattern. 2 LEFTOVER BACKUP TABLES IN PRODUCTION, which is the one with a compliance edge: _r262_d197_product_context_backup and _r262_d223_csrd_crosswalk_archive both have RLS enabled with no policies (so default-deny, not exposed) but they are snapshots of customer data - the first of product_context, i.e. entitlements - persisting in prod after the migration that created them. _r262_d223_csrd_crosswalk_archive also has no primary key. "
+    },
+    {
+      "id": "R27-BOARD-06",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P3] the board's freshness line made a CURRENT board look an hour stale, and named a file it was not polling",
+      "note": "RENUMBERED FROM R27-BOARD-05 AFTER AN ID COLLISION, AND MY FIRST WRITE-UP OF THAT COLLISION WAS WRONG. Another agent in this same checkout claimed R27-BOARD-05 for a different defect (unescaped pipes splitting note rows) within the same minute; both of us picked the next free id by grepping the file, a read-then-write with no lock. I first recorded that \"the board did not error\" and that a finding \"simply disappeared with no diagnostic\". THAT WAS FALSE, and a control is what caught me. I wrote a duplicate-id check, then red-proved it against a copied tree via --sources - and it did not fire, because the merge at build-platform-board.js:676-722 had already deduped before my check ran. So my guard was a no-op. Reading the merge properly showed it already reports: with a duplicate present the build prints [board] collapsed 1 repeated id entry: R27-BOARD-05: FIXED(tracker) → FIXED, and with none it prints nothing. The existing control works and discriminates. What actually failed was me: I had grepped the build output only for the item-count line and never read the rest. My no-op guard was removed rather than left in as decoration. THE RESIDUAL DEFECT IS REAL BUT SMALLER THAN I CLAIMED: the collapse notice went to stderr only, so a reader of the BOARD - the surface people actually look at - could not see that two findings had become one. Fixed at the merge site, where the duplicates are still visible, by also pushing the collapse into unreadable, which the page renders. Deliberately NOT a throw: the blast radius is one row, and killing the owner's only status surface would be the worse failure. RED-PROVED BOTH DIRECTIONS on copied sources so the real tracker was never touched: duplicate present → stderr line plus exactly 1 rendered entry; ids unique → silent, 0 entries. The lesson worth keeping is not about duplicate ids. I nearly filed \"the board hides this\" as a defect when the board had said so plainly and I had not looked, and the fix I had already written would hav"
     }
   ]
 }

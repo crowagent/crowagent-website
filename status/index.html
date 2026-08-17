@@ -481,8 +481,34 @@ function render(){
     }
   }
 
-  document.getElementById('updated').textContent =
-    'Data last written '+DATA.updated+'. This page re-reads issues.json every 20 seconds.';
+  /* [R27-BOARD-05 2026-08-17] THIS LINE MADE A CURRENT BOARD LOOK AN HOUR STALE,
+     and the owner asked "is this updated?" because of it.
+
+     It printed `DATA.updated` raw. That field is written as
+     `new Date().toISOString()`, i.e. UTC with a Z suffix, so during BST the board
+     reported "13:28" to a reader whose clock said "14:29" - one hour in the past,
+     on the single line whose entire job is to tell you how fresh the data is. The
+     data was current; only the label lied. A freshness indicator that reads stale
+     is worse than none, because it argues against the truth.
+
+     Rendered in the viewer's own locale now, with the raw UTC kept in the title
+     attribute so a cross-machine comparison is still possible.
+
+     The sentence also hard-coded "issues.json" while the Platform tab reads
+     platform.json, so on that tab it named a file it was not polling. It now
+     names the file this board actually re-reads - see the setInterval below,
+     which polls any board that has no `views`. */
+  const upEl = document.getElementById('updated');
+  const raw = DATA.updated;
+  let when = raw;
+  try {
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) when = d.toLocaleString();
+  } catch (e) { /* fall back to the raw string: a bad date must not blank the line */ }
+  upEl.textContent =
+    'Data last written ' + when + ' (your local time). This page re-reads ' +
+    BOARDS[board].file + ' every 20 seconds.';
+  upEl.title = 'Source timestamp, UTC: ' + raw;
 }
 
 document.getElementById('filters').addEventListener('click',e=>{
