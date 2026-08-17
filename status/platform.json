@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T03:02:25.630Z",
+  "updated": "2026-08-17T03:03:18.207Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T03:02:25.472Z",
-    "sourceFingerprint": "307:1019472792",
+    "generatedAt": "2026-08-17T03:03:17.995Z",
+    "sourceFingerprint": "307:-1785736974",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 307,
     "done": 193,
@@ -52,8 +52,8 @@
       },
       "6": {
         "items": 114,
-        "open": 89,
-        "built": 15,
+        "open": 88,
+        "built": 16,
         "wip": 10,
         "decision": 0
       }
@@ -560,11 +560,11 @@
     {
       "id": "R27-HANDBACK-01",
       "src": "R2.6.2 tracker",
-      "sev": "P1",
+      "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P1] 240 raw rounded-[Npx] literals remain in 7 directories other agents held during the codemod",
-      "note": "From R27-DS-05. The codemod rewrote 554 across 210 files with 0 unmapped; these 240 in 67 files were DEFERRED ONLY because another agent held the files, and the guard caps them so they can only shrink. One node scripts/radius-literal-codemod.mjs --write run finishes it. Recorded rather than left in an agent report - a deferral that is not a row is a drop."
+      "status": "BUILT",
+      "title": "[SEV:P2] the radius hand-over: 159 of 213 finished; 55 remain in the ONE directory another lane still holds",
+      "note": "From R27-DS-05. The codemod rewrote 554 across 210 files with 0 unmapped; these 240 in 67 files were DEFERRED ONLY because another agent held the files, and the guard caps them so they can only shrink. One node scripts/radius-literal-codemod.mjs --write run finishes it. Recorded rather than left in an agent report - a deferral that is not a row is a drop. The deferral list said so itself: \"the mapping above applies to them unchanged and finishing them is one --write run once those directories are free\". Six of its seven entries were free, so they were finished rather than left to calcify. 159 literals across 39 files rewritten to central tokens: the settings tree, account, the auth shell, the layout widgets and the notification bell. Not one value chosen by hand, and unmapped (no token) was ZERO before and after, so nothing needed a token that does not exist. 55 remain in 12 files, all under web/app/(dashboard)/public-sector/, because another lane is editing it. Rewriting a file mid-edit is how a change gets cut in half, which has already happened once today. That is a timing deferral with a named owner, not a view that the literals are acceptable there, and the codemod's comment says so, so nobody later reads the entry as an exemption. Staged by measurement rather than by directory, because three agents were writing to the tree: each modified file's diff was inspected and only those whose EVERY changed line was a radius rewrite were staged. 39 matched, 26 were left alone, and git diff --cached confirmed zero files from another lane."
     },
     {
       "id": "R27-HANDBACK-02",
@@ -1023,7 +1023,7 @@
       "sevExplicit": true,
       "status": "FIXED",
       "title": "[SEV:P1] a DAY-ZERO award is reported as BREACHED to the contracting authority",
-      "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent."
+      "note": "Found by running the journey the audit said was never exercised. Seconds after awarding a contract, /public-sector showed \"6 under-delivery alerts\", \"Portfolio delivery rate 0%\" and every theme \"(breached)\". Root cause is real, not cosmetic: monitoring-logic.ts computeKpiStatus returns red whenever pct < 80 regardless of due_date - the date is consulted only for overdue. Nothing is yet due on a contract awarded today. So the product tells a contracting authority that its brand-new contract has already breached its social-value commitments. Reported, not coded around: the correct day-0 band (\"not yet due\" vs \"no data\" vs red) is a product decision, not a guess for an implementing agent. RESOLVED 2026-08-17. The exact comparison was monitoring-logic.ts:70 if (overdue — — pct < 80) status = \"red\", with the literal \"(breached)\" coming from SocialValueThemeBars.tsx:26 pct >= 95 ? \"on\" : pct >= 80 ? \"risk\" : \"breach\" - a function that took NO due date at all. The shape was a MISSING \"not yet due\" state, not an off-by-one: the boundary comparison asOf > dueDate was already correct and inclusive of the due day, and a null date was handled for overdue. KpiRagStatus had four members but only TWO on the time axis - a passed deadline escalated to red, and nothing else consulted the calendar - so pct < 80 made the breach claim on its own. Re-measured on live staging: the awarded contract's SIX council_commitments (created 2026-08-16 16:55, target 56,740.8 total) ALL carry due_date NULL and actual 0, which is exactly the \"6 under-delivery alerts / 0% / every theme breached\" screen. So the operative case is a null deadline banded as a passed one. Fixed with a fifth status not_yet_due plus an explicit three-state dueState (overdue / not_due / no_due_date) - \"no deadline is recorded\" is not a synonym for \"the deadline has not passed\". red now requires a passed deadline; every other transition is unchanged, and detectUnderDelivery gains ONE precondition rather than a re-tuning, so no"
     },
     {
       "id": "R27-JOURNEY-01",
@@ -1266,7 +1266,7 @@
       "sevExplicit": true,
       "status": "FIXED",
       "title": "[SEV:P1] a PPN 002 theme answer cannot be rubric-marked at all - the marking store has no identity for one",
-      "note": "Split out of R27-CM-MARK-02 rather than bundled into it. crowmark_answer_marks.question_id is uuid NOT NULL REFERENCES bid_questions(id), and a PPN theme answer has no bid_questions row - it lives in crowmark_bid_answers under a slug question_key with question_id NULL. So the marking engine, which the product names as its differentiator, covers only ITT-derived tender questions and not the fixed PPN 002 theme set that every bid shares. Two candidate shapes, both a migration: mint a bid_questions row per theme per contract, or relax crowmark_answer_marks to carry question_key when question_id is null (with a CHECK that exactly one is present). The second is probably right - a theme is not a tender question and minting fake ones would pollute every reader of bid_questions. Prod scale for context: 2 crowmark_bid_answers rows total, 1 tender-keyed and 1 PPN-keyed, 1 bid_questions row."
+      "note": "Split out of R27-CM-MARK-02 rather than bundled into it. crowmark_answer_marks.question_id is uuid NOT NULL REFERENCES bid_questions(id), and a PPN theme answer has no bid_questions row - it lives in crowmark_bid_answers under a slug question_key with question_id NULL. So the marking engine, which the product names as its differentiator, covers only ITT-derived tender questions and not the fixed PPN 002 theme set that every bid shares. Two candidate shapes, both a migration: mint a bid_questions row per theme per contract, or relax crowmark_answer_marks to carry question_key when question_id is null (with a CHECK that exactly one is present). The second is probably right - a theme is not a tender question and minting fake ones would pollute every reader of bid_questions. Prod scale for context: 2 crowmark_bid_answers rows total, 1 tender-keyed and 1 PPN-keyed, 1 bid_questions row. RESOLVED 2026-08-17 - migration 20262230000000_r27_cm_mark_03_markable_ppn002_theme_subject.sql. Re-measured live first: prod holds 0 marks / 0 mark criteria / 1 bid_questions / 2 bid answers (1 PPN-keyed); staging 0 / 0 / 0 / 1. Zero rows in both, so no data was migrated and the options were wide. Four shapes considered, three rejected in the file: (A) nullable FK alone - a mark attributed to NOTHING, and it would newly accept a tender insert that forgot question_id; (B) mint a bid_questions row per theme per contract - list_questions and the export surfaces enumerate that table, so five synthetic rows per contract would show a buyer five questions it never asked, and it would contradict crowmark_bid_answers, which stores a theme with question_id NULL; (C) a ppn002_themes reference table - a SECOND source for a vocabulary PPN002_BID_QUESTIONS already owns. (D) CHOSEN: a discriminated subject - question_id nullable, new theme_key text, CHECK num_nonnulls(question_id, theme_key) = 1 so a mark is never attributed to nothing nor to two things, and a CLOSED five-key vocabulary CHECK so an arbi"
     },
     {
       "id": "R27-CM-P0-06",
