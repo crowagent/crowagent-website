@@ -717,6 +717,32 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
   if (superseded.length) {
     const collapsed = issues.length - byId.size;
     console.error(`[board] collapsed ${collapsed} repeated id entr${collapsed === 1 ? 'y' : 'ies'}: ${superseded.join(', ')}`);
+    /* [R27-BOARD-06 2026-08-17] ALSO SURFACE THE COLLAPSE ON THE PAGE, not only on stderr.
+     *
+     * This merge is CORRECT and its stderr line already works - proven by control:
+     * with a duplicate present it printed "collapsed 1 repeated id entry:
+     * R27-BOARD-05: FIXED(tracker) → FIXED", and with none it printed nothing.
+     * Nothing here is being fixed because it was broken.
+     *
+     * What happened is narrower and worth closing anyway. Two agents in one
+     * checkout picked the same next-free id within a minute (grep-then-write, no
+     * lock) and filed two UNRELATED findings as R27-BOARD-05. The merge did the
+     * only sane thing and kept one. But the notice went to STDERR ONLY, so a
+     * reader of the BOARD - which is the status surface people actually look at -
+     * had no way to see that two findings had become one. It was caught because
+     * the item total was 319 where 320 was expected.
+     *
+     * `unreadable` renders on the page, so the collapse is now visible where the
+     * consequence is. Deliberately NOT a throw: the blast radius is one row, and
+     * killing the owner's only status surface would be the worse failure. */
+    unreadable.push({
+      src: 'duplicate row ids in the tracker/register sources',
+      why:
+        `${collapsed} repeated id entr${collapsed === 1 ? 'y was' : 'ies were'} collapsed by ` +
+        `last-mention-wins. If two UNRELATED findings were filed under one id, only one of ` +
+        `them is on this board. Renumber one of each pair in the source document: ` +
+        `${superseded.join(', ')}`,
+    });
     issues.length = 0;
     issues.push(...byId.values());
   }

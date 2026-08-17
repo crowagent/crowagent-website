@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T13:40:21.973Z",
+  "updated": "2026-08-17T14:38:41.739Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T13:40:21.066Z",
-    "sourceFingerprint": "319:179245211",
+    "generatedAt": "2026-08-17T14:38:38.942Z",
+    "sourceFingerprint": "328:1477150880",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 319,
-    "done": 216,
-    "remaining": 103,
+    "totalRaised": 328,
+    "done": 221,
+    "remaining": 107,
     "phases": {
       "1": {
         "items": 0,
@@ -51,14 +51,13 @@
         "decision": 0
       },
       "6": {
-        "items": 103,
-        "open": 65,
+        "items": 107,
+        "open": 66,
         "built": 22,
-        "wip": 11,
+        "wip": 14,
         "decision": 5
       }
-    },
-    "stale": true
+    }
   },
   "legend": {
     "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
@@ -196,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 103,
+        "items": 107,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -225,9 +224,7 @@
     ],
     "assignment": "docs/release-2.7/PHASE-ASSIGNMENT-2026-08-17.md"
   },
-  "unreadable": [
-    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 319:179245211 vs 321:662044282). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
-  ],
+  "unreadable": [],
   "issues": [
     {
       "id": "R262-D-224",
@@ -3124,6 +3121,69 @@
       "status": "FIXED",
       "title": "[SEV:P3] the board's freshness line made a CURRENT board look an hour stale, and named a file it was not polling",
       "note": "RENUMBERED FROM R27-BOARD-05 AFTER AN ID COLLISION, AND MY FIRST WRITE-UP OF THAT COLLISION WAS WRONG. Another agent in this same checkout claimed R27-BOARD-05 for a different defect (unescaped pipes splitting note rows) within the same minute; both of us picked the next free id by grepping the file, a read-then-write with no lock. I first recorded that \"the board did not error\" and that a finding \"simply disappeared with no diagnostic\". THAT WAS FALSE, and a control is what caught me. I wrote a duplicate-id check, then red-proved it against a copied tree via --sources - and it did not fire, because the merge at build-platform-board.js:676-722 had already deduped before my check ran. So my guard was a no-op. Reading the merge properly showed it already reports: with a duplicate present the build prints [board] collapsed 1 repeated id entry: R27-BOARD-05: FIXED(tracker) → FIXED, and with none it prints nothing. The existing control works and discriminates. What actually failed was me: I had grepped the build output only for the item-count line and never read the rest. My no-op guard was removed rather than left in as decoration. THE RESIDUAL DEFECT IS REAL BUT SMALLER THAN I CLAIMED: the collapse notice went to stderr only, so a reader of the BOARD - the surface people actually look at - could not see that two findings had become one. Fixed at the merge site, where the duplicates are still visible, by also pushing the collapse into unreadable, which the page renders. Deliberately NOT a throw: the blast radius is one row, and killing the owner's only status surface would be the worse failure. RED-PROVED BOTH DIRECTIONS on copied sources so the real tracker was never touched: duplicate present → stderr line plus exactly 1 rendered entry; ids unique → silent, 0 entries. The lesson worth keeping is not about duplicate ids. I nearly filed \"the board hides this\" as a defect when the board had said so plainly and I had not looked, and the fix I had already written would hav"
+    },
+    {
+      "id": "R27-BOARD-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] the release tally counted 25 rows in NO total, and printed unclassified: 0 on the same line",
+      "note": "HANDED TO ME BY ANOTHER AGENT AS A CLAIM, VERIFIED AT THE LINE, AND TRUE. scripts/release_tally.py:174 read done = counts[\"DONE\"] + counts[\"MET\"] - a hand-listed pair - while OUTSTANDING three lines above it was correctly derived from status-vocabulary.json and even documents why: \"so a term added there is counted correctly here without a second edit\". So the two halves of one tally were governed by two different mechanisms, and the derived half was right. CONSEQUENCE: every row written FIXED, RESOLVED, CLOSED, CORRECTED or ✅ - all valid, all recommended to authors by this very tracker - classified correctly and was then added into neither figure. Measured: 291 rows, complete 174, outstanding 92 - 25 rows counted nowhere. WHY IT SURVIVED, AND THIS IS THE PART WORTH KEEPING: unclassified: 0 printed on the same output line, which reads as \"everything is accounted for\". Those 25 rows *were* classified. They were simply never summed. I QUOTED THAT EXACT LINE EARLIER TODAY - \"290 rows, 0 unclassified\" - as evidence that this reader worked, in the commit closing R27-BOARD-04. I did not subtract. A total that does not reconcile is invisible to reading and obvious to arithmetic, and nothing was doing arithmetic. FIXED AS A CLASS. COMPLETE and CLEARED are now derived from the bucket mapping exactly as OUTSTANDING always was, and CLEARED is reported as its OWN figure rather than folded into complete, because FIXED is work that was done while CLEARED is a row whose premise was false - adding them would inflate apparent output with items nobody built. Then the actual fix: the four figures must sum to the row count, printed unconditionally and a non-zero exit under --check, so any future bucket added to the vocabulary without being routed here is caught by arithmetic rather than going quietly missing. RED-PROVED: re-routing DONE into a synthetic unrouted bucket → exit 1, \"174 counted in NO figure above\", and it NAMES the stray bucket; restored → exit 0. After: 291 = 186 complete"
+    },
+    {
+      "id": "R27-CM-FEED-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] a 429 told users to check the platform status, and the log invented 4 attempts when 1 request was made",
+      "note": "Found on Sentry (CROWAGENT-WEB-2Q/2P), not in the repo. (1) THE USER WAS TOLD THE WRONG THING. Every non-timeout failure rendered one sentence - \"Unable to load opportunities. Please retry, or check the platform status indicator.\" For a 429 that is actively misleading: the platform is healthy, WE rate-limited the user, and the indicator they are sent to reads green while they retry into a limiter. shared/lib/load-error.ts already held the correct sentence for 429 and for every other status - it was simply never imported into this component, so the right copy existed and was unreachable. Two paths, one policy; converged on the shared humaniser with the existing translated string as the fallback, so no copy was lost. (2) THE TELEMETRY WAS FABRICATED. attempts was logged as BACKOFFS_MS.length, a constant 4, while the retry loop breaks immediately on a non-retryable status - so a 429 makes exactly ONE request and was reported as four. That did not stay harmless: R262-D-19's analysis reasoned from \"4 attempts\" that the feed had hammered the API, when it had called it once. HttpError now replaces new Error('HTTP ' + status) so the status survives into both the message and the log instead of being recoverable only by regex over a string, and the retryable test is status-based (>=500) with the same policy as before. RED-PROVED against the shipped component (checked out from HEAD, run, restored): 3 failed / 3, including literally expected 4 to be 1; 3 passed / 3 on the fix. Assertions pinned as the ABSENCE of the misleading sentence plus the PRESENCE of a rate-limit meaning, and attempts asserted against the number of calls the fetch mock actually received - a definition that cannot drift from reality because reality is what it counts. brand-lint 0, tsc 0."
+    },
+    {
+      "id": "R27-SENTRY-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "WIP",
+      "title": "[SEV:P1] job_runs reported 100% success across a 24.5h window in which it lost over half its rows",
+      "note": "The ledger write failed against the same degraded Supabase endpoint the jobs were using, so ~51 scheduler cycles that raised ReadTimeout (Sentry CROWAGENT-API-3Z) are recorded nowhere, and what remains reads as an unbroken run of successes. Measured row loss over 2026-08-13 18:50Z - 2026-08-14 20:46Z: webhook_dlq_sweep 135 of an expected 290, crowagent_dlq_sweep 21 of 48, stripe_event_dlq_drain 44 of 97. The defect is not the outage - it is that a job ledger cannot distinguish \"ran and succeeded\" from \"we failed to record anything\". Same shape as R27-CRON-01 (a job that never worked, recorded as fine) and R27-BOARD-07 (unclassified: 0 while 25 rows were counted nowhere): a monitoring surface silent about its OWN failure will show a green history for an incident, and someone will later read that history as evidence. No work was actually dropped - the newest DLQ row is 2026-08-13 21:16 and the drain's updated_at values prove it kept working through the incident. A COMMITTED DIAGNOSIS IS ALSO WRONG: 833950ca added maxDuration = 60 with a 19-line explanation, but the drain averages 2.2s with a max of 13.3s over 1640 succeeded runs against that 60s cap, and the timeouts stopped three days ago while the fix was still undeployed. A route-level cause also cannot explain why two jobs that never call that route lost the same ~55% of rows in the same window. The maxDuration is harmless; the explanation is not."
+    },
+    {
+      "id": "R27-SENTRY-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "WIP",
+      "title": "[SEV:P2] every \"Users: 0\" on the Sentry board is meaningless, and a comment claims the opposite",
+      "note": "Sentry.setUser() is called nowhere in web/, while web/sentry.client.config.ts:105-106 states \"We set identifiable fields ourselves via setUser()\" - which makes the email-hashing branch at :142-154 dead code. With 6 active accounts, \"Users: 0\" means \"we never identify anyone\", not \"nobody was affected\". This has been quietly misreading every production issue triaged this release, including the ones cleared as beta artefacts partly because they showed zero users. A comment asserting a property the code does not have is the same defect class as the _no_client_write policies in R27-SEC-10. Privacy is a real constraint on the fix, not a footnote: Sentry is published as an EU sub-processor with scrubbed telemetry, so an opaque id may be the right answer rather than an email - but the code and the comment must agree afterwards."
+    },
+    {
+      "id": "R27-SENTRY-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "WIP",
+      "title": "[SEV:P3] a 402 entitlement gate is rendered as an ERROR with a retry that cannot work, and the API's banner fields are discarded",
+      "note": "A 402 is not a failure, it is \"your plan does not include this, here is how to fix it\". ~25 panels render it in a role=\"alert\" card with a futile \"Try again\", so a screen reader announces a routine entitlement state as an error. Meanwhile api/app/dependencies/crowmark_access.py:4-7 deliberately ships update_payment_url and grace_period_ends_at \"so the client can show the right banner\" and no panel consumes either field: the server does the honest thing and the client throws away the useful half. The correct precedent already exists in the tree - OpportunityFeed's paywalled state, which neither retries nor logs it as an error - so this is a RULE 0-C convergence, one central surface applied at call sites, not 25 copies."
+    },
+    {
+      "id": "R27-SENTRY-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P3] the live marketing site permanently violates its own CSP on every response",
+      "note": "CROWAGENT-WEB-N, 26 events. documentUri is https://crowagent.ai/ - the marketing website, not the app, so this is NOT R27-CSP-01. The blocked script is Cloudflare-injected bot management (window.__CF$cv$params={r:'…'}) and the r: value is the CF-RAY of the individual request, so its hash changes on every single response and the site's 16-hash script-src allowlist can never cover it. Permanent enforce-mode violation by construction. No user-facing functional loss - it is bot telemetry, not site behaviour - so P3, and the honest fix is a Cloudflare dashboard setting (or a nonce), not a code change. Two sub-clusters inside the same Sentry issue are ALREADY FIXED and must not be re-filed: the 21 static.cloudflareinsights.com blocks stopped at the 2026-08-13 website deploy, and the 46 app-side style-src-elem/inline blocks stopped 12 days ago when production began issuing a nonce."
+    },
+    {
+      "id": "R27-SENTRY-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "status": "CLEARED",
+      "title": "[SEV:P3] two Sentry clusters investigated and CLEARED - recorded so they are never re-filed",
+      "note": "(a) The \"Failed to fetch\" cluster is ONE incident, not nine defects. 65 of 72 events share one browser (Chrome 151/Windows), one geo, one release, inside 2026-08-13 18:50Z - 2026-08-14 20:46Z, with zero third-party clients. It was a real ~24.5h infrastructure degradation - the prod Supabase host returned Cloudflare 521 Web server is down at 20:32:32Z and Railway ran no deploy in the window - and the client instrumentation behaved exactly as designed ([PROD-18 · WEB-13] already drops unload-time aborts, so these were mid-session, not fast clicking). Do NOT add a \"Failed to fetch\" filter; that would suppress the signal that correctly reported an outage. Same window as R27-SENTRY-01, which is how that one was found. (b) The 8 standing stripe_event_dlq rows need NO owner decision and no customer has stale billing state. raw_payload->>'livemode' is false on all 107 rows ever written - zero live-mode events have ever entered the queue - corroborated by every subscription id carrying the sandbox account substring En1snLP2fA. The two newest are for a decommissioned product (crowagent_crowcyber_portfolio_monthly) and are correctly unresolvable; the other six are subscription.deleted with no org to update. Worth knowing though, and recorded rather than left flattering: the drain has therefore never processed a live event, so its live-mode correctness is unproven by production."
     }
   ]
 }
