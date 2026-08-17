@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T00:05:48.538Z",
+  "updated": "2026-08-17T00:06:30.365Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T00:05:48.346Z",
-    "sourceFingerprint": "278:-2029032311",
+    "generatedAt": "2026-08-17T00:06:30.256Z",
+    "sourceFingerprint": "279:32201884",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 278,
-    "done": 155,
-    "remaining": 123,
+    "totalRaised": 279,
+    "done": 157,
+    "remaining": 122,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 123,
-        "open": 111,
+        "items": 122,
+        "open": 109,
         "built": 10,
-        "wip": 2,
+        "wip": 3,
         "decision": 0
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 123,
+        "items": 122,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -472,9 +472,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the extraction eval gate is documented FAIL-CLOSED and runs OPEN in production",
-      "note": "api/app/services/ai/eval_gate.py header says the surface is \"CLOSED unless a human-annotated corpus exists and its recorded F1 >= bar\". That is true ONLY in enforce mode. resolve_gate_mode() returns ENFORCE only on an explicit env value and otherwise OBSERVE, whose own branch reads open=True, reason=\"observe mode - gate never disables extraction (default posture)\". No EVAL_GATE_MODE, EVAL_GATE_F1, EVAL_GATE_MIN_F1 or EVAL_GATE_ARTIFACT appears in the production Railway variable list (read live 2026-08-16, service crowagent-platform, 69 names). So the corpus is empty, no F1 has ever been recorded, and extraction runs UNMEASURED while a module docstring says it is held. This is why CARRY-14's runtime bar was deliberately NOT deleted with its release criterion: the code-side check is the only thing that would ever hold it. Decide whether OBSERVE is the intended production posture, or set enforce and accept that extraction stops until a corpus exists. The defect is not the posture, it is that the posture and the documentation disagree."
+      "note": "api/app/services/ai/eval_gate.py header says the surface is \"CLOSED unless a human-annotated corpus exists and its recorded F1 >= bar\". That is true ONLY in enforce mode. resolve_gate_mode() returns ENFORCE only on an explicit env value and otherwise OBSERVE, whose own branch reads open=True, reason=\"observe mode - gate never disables extraction (default posture)\". No EVAL_GATE_MODE, EVAL_GATE_F1, EVAL_GATE_MIN_F1 or EVAL_GATE_ARTIFACT appears in the production Railway variable list (read live 2026-08-16, service crowagent-platform, 69 names). So the corpus is empty, no F1 has ever been recorded, and extraction runs UNMEASURED while a module docstring says it is held. This is why CARRY-14's runtime bar was deliberately NOT deleted with its release criterion: the code-side check is the only thing that would ever hold it. Decide whether OBSERVE is the intended production posture, or set enforce and accept that extraction stops until a corpus exists. The defect is not the posture, it is that the posture and the documentation disagree. The correction is to my own brief. The docstring did NOT claim unconditional fail-closed; it already described observe mode accurately. What was false was the TITLE LINE, \"runtime fail-closed eval-gate lever\", and that nothing bound the prose to the code. Re-verified live 2026-08-17: Railway production carries 69 variable names and zero EVAL_GATE_*, so the extractor runs unmeasured and this module does not stop it. It is a lever nobody has pulled, not a gate that is holding. Default unchanged at observe/OPEN; DEFAULT_MIN_F1 stays 0.70 with a DO-NOT-FLIP warning citing CARRY-14. The guard parses the declared posture out of the docstring and compares it to the resolver with the env cleared, asserting the declaration appears exactly once (0 and 2 both fail) and that the cleared set equals the EVAL_GATE_* names in the module source, so \"cleared env\" can never mean \"cleared nothing\"."
     },
     {
       "id": "SC-19",
@@ -736,6 +736,15 @@
       "status": "FIXED",
       "title": "[SEV:P1] TWO MORE production migrations have no file - the class struck THREE times, not once",
       "note": "Found by running the (unwired) verify-migrations-have-files.mjs against prod schema_migrations: 667 applied vs 647 files. Named and individually verified: r262_d199_revoke_anon_insert_on_leads and r262_d200_drop_orphan_csrd_function_and_leads_columns, both applied to PRODUCTION on 2026-08-10, neither has a file. Plus r262_d223_archive_csrd_crowmark_crosswalk, whose archive DDL still has no file - only today's *declaration* file exists (R27-RLS-PARITY-01). So R262-D-223 was not a one-off: it is the third instance, and two are still open. Note the run also reported 149 name-unmatched rows, but the SQL-hash side was disabled (shipping 667 SQL bodies was impractical), so 149 is an upper bound, not a measured count - do not quote it as a finding. One of the four checked, ...file_replay_verify, hashes identical to a migration that DOES have a file, i.e. a benign re-apply. Fixing needs the two missing files written from the live prod catalogue, same method as R27-RLS-PARITY-01."
+    },
+    {
+      "id": "R27-PRICE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "WIP",
+      "title": "[SEV:P0] the public pricing endpoint advertises an \"Agency\" tier at GBP 399 with \"Unlimited users\" that we do not sell",
+      "note": "Live and public, and it was never on this board. The finding existed only in the message of 24bf852c on the held branch, which is the \"findings in commit messages are invisible to the tracker\" defect happening to me. GET /api/v1/pricing/public falls back to a hardcoded table when Stripe is unreachable, and that table contradicts the 2026-08-09 lock of 49/149/549 at 1/5/10 seats, as well as the same endpoint's own contact_sales response. Two writers of one fact; the fallback now derives from the generated pricing_constants.py. Red-proved: reverting to main's file was confirmed to put \"name\": \"Agency\" / 399 / \"Unlimited users\" back on disk at lines 317-320 BEFORE the run, and the suite then failed 4 of 6 on the seat list. Restored, 6 passed, exit 0. Deployment measured rather than hoped: the tip touches api/ and supabase/ only, and the path-gated web/vercel.json ignore simulates to exit 0, skip build; but the repo carries two vercel.json files with opposite ignore behaviour and the last 20 deployments are all off main, so which one governs could not be settled from evidence. Worst case is one production build of web code identical to what is already live. Railway is the target that matters. The carried migration 20260816000001_r27_sec01_... was verified already applied to both staging and production and is committed because main lacked the file, which is how \"25 prod tables with no creating migration\" starts over."
     },
     {
       "id": "R27-STRIPE-01",
@@ -2044,9 +2053,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the tenant datasource catalogue is EMPTY on production, so the isolation seam reads nothing",
-      "note": "public.tenant_datasource_catalog holds 0 rows against 13 organisations. The seam has TWELVE non-test consumers and resolves every one of them to the pooled client by FALLBACK, not because a row says pooled. The module's comment states \"every tenant resolves to datasource_ref = 'supabase:primary' in the WS-6 control-plane catalog\", which is true only in the sense that no tenant resolves to anything at all. A catalogue that is read on every request and contains no rows is the release's signature defect in its purest form. Either populate it so the resolution is a recorded decision, or stop reading it and say the tier is pooled by design."
+      "note": "public.tenant_datasource_catalog holds 0 rows against 13 organisations. The seam has TWELVE non-test consumers and resolves every one of them to the pooled client by FALLBACK, not because a row says pooled. The module's comment states \"every tenant resolves to datasource_ref = 'supabase:primary' in the WS-6 control-plane catalog\", which is true only in the sense that no tenant resolves to anything at all. A catalogue that is read on every request and contains no rows is the release's signature defect in its purest form. Either populate it so the resolution is a recorded decision, or stop reading it and say the tier is pooled by design. The catalogue held ZERO rows against 13 production organisations. Every tenant reached pooled storage by FALLBACK rather than by a recorded decision, and the no-row branch was silent, which is what let an empty table serve every customer unnoticed. Backfilled staging then production with a trigger so it cannot decay on the next signup, plus source: \"catalog\" — \"fallback\" so the difference is observable. A new exposure was introduced and fixed in the same pass: Postgres grants EXECUTE to PUBLIC, so the trigger function was callable by anon and authenticated via /rest/v1/rpc/; revoked, with a negative control on has_function_privilege AND a positive control proving the trigger still fires. Net advisor delta zero. The dedicated claim was FALSE and is corrected: as an isolation tier it appears in exactly two places in shipping code, both writers produce pooled, and there is no connection resolver, secret-ref reader or per-tenant factory. The seam reserves the SHAPE of the decision, not the ability to make it - that is the honest answer to the owner's question about dedicated instances. Guard rewritten to resolve the transitive import graph after buyer-profile/route.ts proved invisible to a text-only read; two measured traps recorded, a prose mention producing 2 of 3 flags from pure prose, and a bare council_ match treating the entitlement"
     },
     {
       "id": "R27-TENANCY-02",
