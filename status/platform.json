@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T01:51:27.978Z",
+  "updated": "2026-08-17T01:51:54.778Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T01:51:27.808Z",
-    "sourceFingerprint": "289:1205837396",
+    "generatedAt": "2026-08-17T01:51:54.557Z",
+    "sourceFingerprint": "289:-559548692",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 289,
-    "done": 171,
-    "remaining": 118,
+    "done": 172,
+    "remaining": 117,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 118,
-        "open": 100,
+        "items": 117,
+        "open": 99,
         "built": 12,
         "wip": 6,
         "decision": 0
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 118,
+        "items": 117,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2413,9 +2413,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the Playwright auth state is EXPIRED, so any sweep using it silently measures /login",
-      "note": "web/.playwright/auth/user.json is expired. H's FIRST 30-row responsive sweep ran against it and every single row measured the login page - not one error, not one failure, just 30 confident measurements of the wrong page. It is the same shape as the Lighthouse audit that scored 6 URLs which all redirected to /login and came back GREEN because of it. Anyone using that file is measuring the login page. H worked around it with a fresh state at .playwright/auth/r27-h-beta.json (gitignored, holds a session token). THE WORKAROUND IS NOT THE FIX: the file needs either a refresh or a fail-fast check that asserts the landed URL is NOT /login before any measurement is trusted. A fixture that expires silently turns every downstream measurement into fiction."
+      "note": "web/.playwright/auth/user.json is expired. H's FIRST 30-row responsive sweep ran against it and every single row measured the login page - not one error, not one failure, just 30 confident measurements of the wrong page. It is the same shape as the Lighthouse audit that scored 6 URLs which all redirected to /login and came back GREEN because of it. Anyone using that file is measuring the login page. H worked around it with a fresh state at .playwright/auth/r27-h-beta.json (gitignored, holds a session token). THE WORKAROUND IS NOT THE FIX: the file needs either a refresh or a fail-fast check that asserts the landed URL is NOT /login before any measurement is trusted. A fixture that expires silently turns every downstream measurement into fiction. Worse than the row said, and my first measurement of it was wrong. All THREE state files were expired, not just user.json: it by 4.8 hours and BOTH \"fresh\" workaround states by more than six. I first reported the auth cookie as expired and it was not. user.json's auth cookie is a SESSION cookie with expires: -1, no expiry at all; what had expired was ca_trial_check, which authenticates nothing. The chunked states carry expires dates in 2027. The cookie metadata reads healthy on all three while the session is dead in all three, so a guard reading it would have reported three good fixtures. Only the JWT inside the cookie value knows. The same control also caught the regex missing Supabase's CHUNKED .0/.1 cookie form, which had reported a perfectly good state as \"not a signed-in session\". Two checks, because either alone leaves a hole: a pre-flight one that fails before the browser starts but cannot see a revoked-yet-unexpired session, and a post-navigation one that catches that but needs a browser. 30 probes converted and the exception list is EMPTY, with the mechanism kept so a new blind probe fails and a stale entry fails too. The codemod's own miss is recorded: it skipped nine files because its regex stopped at a nested vie"
     },
     {
       "id": "R27-BRAND-02",
