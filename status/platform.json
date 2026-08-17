@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-17T02:44:43.802Z",
+  "updated": "2026-08-17T02:52:58.454Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-17T02:44:43.661Z",
-    "sourceFingerprint": "307:-1927779258",
+    "generatedAt": "2026-08-17T02:52:58.257Z",
+    "sourceFingerprint": "307:723762912",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 307,
     "done": 190,
@@ -52,9 +52,9 @@
       },
       "6": {
         "items": 117,
-        "open": 93,
+        "open": 92,
         "built": 15,
-        "wip": 9,
+        "wip": 10,
         "decision": 0
       }
     }
@@ -976,9 +976,9 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "WIP",
       "title": "[SEV:P1] web/tsconfig.json EXCLUDES every test file, so ~843 web tests are never typechecked",
-      "note": "exclude contains **/*.test.ts. Red-proved today: a deliberate const x: number = \"nope\" planted in a web test file produced ZERO errors from npx tsc --noEmit. This qualifies a claim I made earlier in this release. When I closed R27-BUILD-01 I reported \"tsc exit 0, PROVED non-vacuous: 4,271 files read, 1,923 from web/{src,app,lib}\" - that count was accurate for what it measured, but those 1,923 files did NOT include the ~843 test files, and a reader would reasonably assume otherwise. The type-check is real for product code and silent for tests. Not fixed here: un-excluding them mid-release would surface errors across three agents' in-flight work simultaneously. Sequence it for a quiet moment, expect a burst of findings, and fix them as a batch."
+      "note": "exclude contains **/*.test.ts. Red-proved today: a deliberate const x: number = \"nope\" planted in a web test file produced ZERO errors from npx tsc --noEmit. This qualifies a claim I made earlier in this release. When I closed R27-BUILD-01 I reported \"tsc exit 0, PROVED non-vacuous: 4,271 files read, 1,923 from web/{src,app,lib}\" - that count was accurate for what it measured, but those 1,923 files did NOT include the ~843 test files, and a reader would reasonably assume otherwise. The type-check is real for product code and silent for tests. Not fixed here: un-excluding them mid-release would surface errors across three agents' in-flight work simultaneously. Sequence it for a quiet moment, expect a burst of findings, and fix them as a batch. Measured rather than feared. The excludes were removed temporarily, tsc --noEmit run, and the file restored (verified clean afterwards). The result is 369 errors across 115 FILES, not a blanket failure of the ~843 tests: most test files typecheck fine today. By directory: app/api 75, src/features 42, src/shared 30, __tests__/lib 24, tests/api 22, lib/notifications 21, __tests__/api 20. By error code, and this is the encouraging part: TS2322 assignment 71, TS2493 \"tuple type of length 0 has no element at index 0\" 63, TS2345 argument 39, TS2352 conversion 32, TS2540 \"cannot assign to NODE_ENV, read-only\" 25, TS2790 \"operand of delete must be optional\" 23. The large clusters are test IDIOMS, not product defects - destructuring a mock call array as a tuple, assigning process.env.NODE_ENV, deleting a non-optional property - and each cluster has one shape, so they are codemoddable rather than 369 individual judgements. Not attempted now, and the reason is timing not difficulty: three agents are editing test files as this is written, and a repo-wide rewrite of test files mid-flight is how a change gets cut in half. It is one focused pass on a quiet tree."
     },
     {
       "id": "R27-SEC-08",
