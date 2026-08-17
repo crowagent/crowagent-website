@@ -279,17 +279,20 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">The finding that decides it</span>Nobody has made this decision</h2>
+<h2><span class="n">The finding that decides it</span>The decision is recorded now, and only one value is reachable</h2>
 
 <p class="lede">
   The seam that chooses a tenant's database is read on every buyer request by twelve consumers.
-  It reads one table. That table holds zero rows against thirteen production organisations, so
-  every tenant resolves to pooled by fallback rather than by a decision anyone recorded.
+  It reads one table. Until 17 August 2026 that table held <strong>zero rows against thirteen
+  production organisations</strong>, so every tenant resolved to pooled by fallback rather than by
+  a decision anyone had recorded. The catalogue is now backfilled, ten organisations on staging and
+  thirteen on production, with a trigger so it cannot empty again on the next signup. Every row
+  records <strong>pooled</strong>, because pooled is the only value the code can honour.
 </p>
 
 <figure>
 <svg class="fig" viewBox="0 0 900 210" role="img" aria-labelledby="tntitle0">
-  <title id="tntitle0">Thirteen production organisations resolve through an empty catalog table and fall back to the pooled database</title>
+  <title id="tntitle0">Thirteen production organisations now resolve through a populated catalog table, and every recorded decision is pooled</title>
   <defs>
     <marker id="tnm0a" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh" d="M0,0 L8,4 L0,8 z"/></marker>
     <marker id="tnm0b" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh-warn" d="M0,0 L8,4 L0,8 z"/></marker>
@@ -326,7 +329,7 @@
   <text class="lbl-warn" x="630" y="22">THE LIVE PATH FOR ALL 13</text>
   <path class="e-warn" d="M568,90 L598,90 L598,58 L624,58" marker-end="url(#tnm0b)"/>
   <rect class="r-warn" x="630" y="32" width="254" height="54" rx="8"/>
-  <text class="hd" x="646" y="56">FALLBACK to pooled</text>
+  <text class="hd" x="646" y="56">RECORDED as pooled</text>
   <text class="sm" x="646" y="74">datasource_ref: supabase:primary</text>
 
   <path class="e-ghost" d="M568,90 L598,90 L598,124 L624,124" marker-end="url(#tnm0c)"/>
@@ -334,11 +337,12 @@
   <text class="hdmute" x="646" y="122">dedicated</text>
   <text class="sm" x="646" y="140">no writer exists, and the branch throws</text>
 
-  <text class="sm" x="16" y="188">Pooled is not a choice anyone made. It is what the code returns when the table that records the choice is empty.</text>
+  <text class="sm" x="16" y="188">Pooled is a recorded choice now, not a silent default. It is still the only value the code can honour.</text>
 </svg>
 <figcaption>
   The catalog is the control plane for tenant isolation. It is wired, guarded in CI and read on
-  every request, and it has never been given anything to say.
+  every request. It was empty until 17 August 2026; it now holds a row for every organisation, and
+  every row says pooled.
 </figcaption>
 </figure>
 
@@ -488,7 +492,7 @@
         <rect class="r-warn" x="470" y="190" width="406" height="88" rx="8"/>
         <text class="lbl-warn" x="486" y="212">RLS BOUNDARY ON organisation_id</text>
         <text class="sm" x="486" y="232">reads run under the caller's own session client</text>
-        <text class="sm" x="486" y="249">catalog read returns 0 rows, so the tier is pooled</text>
+        <text class="sm" x="486" y="249">catalog now returns a recorded tier, pooled for all 13</text>
         <text class="sm" x="486" y="266">1 route reaches the database around the seam</text>
 
         <text class="cap" x="24" y="296">SHARED DATABASE BOUNDARY</text>
@@ -661,25 +665,26 @@
 
     <!-- ───────────────────────── STATE 2 ───────────────────────── -->
     <section class="pane" data-p="gap" aria-label="What the gap is">
-      <h3>Putting one customer on its own database needs six things. One of them exists.</h3>
+      <h3>Putting one customer on its own database needs six things. Two of them exist.</h3>
       <p>
-        The seam is real, careful and better wired than the handover claimed. It is also one link
-        in a chain, and the other five links have not been built. This is why promotion is not a
-        configuration change: there is no configuration to change.
+        The seam is real, careful and better wired than the handover claimed. The catalogue that
+        feeds it now holds a decision for every organisation. It is still one link in a chain, and
+        the other four links have not been built. This is why promotion is not a configuration
+        change: recording a decision the runtime cannot honour changes nothing.
       </p>
 
       <figure>
       <svg class="fig" viewBox="0 0 900 320" role="img" aria-labelledby="tntitle2">
-        <title id="tntitle2">The six steps needed to promote a tenant to a dedicated database. Only the resolver exists; the other five are missing</title>
+        <title id="tntitle2">The six steps needed to promote a tenant to a dedicated database. The catalog row and the resolver exist; the other four are missing</title>
         <defs>
           <marker id="tnm2a" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh" d="M0,0 L8,4 L0,8 z"/></marker>
         </defs>
 
-        <rect class="r-bad" x="20" y="40" width="270" height="100" rx="10"/>
+        <rect class="r-ok" x="20" y="40" width="270" height="100" rx="10"/>
         <text class="sm" x="36" y="64">1 of 6</text>
         <text class="hd" x="36" y="86">A catalog row</text>
         <text class="sm" x="36" y="104">recording the isolation decision</text>
-        <text class="lbl-bad" x="36" y="128">MISSING &middot; 0 ROWS FOR 13 ORGS</text>
+        <text class="lbl-ok" x="36" y="128">EXISTS &middot; 13 OF 13 &middot; TRIGGER</text>
 
         <path class="e" d="M290,90 L311,90" marker-end="url(#tnm2a)"/>
 
