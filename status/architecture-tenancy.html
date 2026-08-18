@@ -247,11 +247,11 @@
 <div class="bar" style="margin:18px 0 6px">
   <div class="stat"><b>13</b><span>organisations</span></div>
   <div class="stat"><b>1</b><span>database</span></div>
-  <div class="stat"><b style="color:var(--open)">0</b><span>catalog rows</span></div>
+  <div class="stat"><b style="color:var(--fixed)">13</b><span>catalog rows, all pooled</span></div>
   <div class="stat"><b style="color:var(--fixed)">515</b><span>RLS policies</span></div>
-  <div class="stat"><b style="color:var(--wip)">12</b><span>seam consumers</span></div>
+  <div class="stat"><b style="color:var(--wip)">17</b><span>seam consumers</span></div>
   <div class="stat"><b style="color:var(--open)">0</b><span>on the supplier side</span></div>
-  <div class="stat"><b style="color:var(--open)">411</b><span>RLS-bypass call sites</span></div>
+  <div class="stat"><b style="color:var(--open)">418</b><span>RLS-bypass call sites</span></div>
 </div>
 
 <div class="qgrid">
@@ -269,7 +269,9 @@
   <div class="q c">
     <h4>What it costs</h4>
     <p>A second London project is roughly $10 to $60 a month. Cyber Essentials is
-      &pound;320 plus VAT, now decided and proceeding. The build is 6 to 10 weeks, my estimate.</p>
+      &pound;320 plus VAT and was <b>deferred</b> by owner decision on 17 August 2026 until a live
+      public sector opportunity needs it, so nothing has been bought. The build is 6 to 10 weeks,
+      my estimate.</p>
   </div>
   <div class="q d">
     <h4>What to do next</h4>
@@ -282,7 +284,8 @@
 <h2><span class="n">The finding that decides it</span>The decision is recorded now, and only one value is reachable</h2>
 
 <p class="lede">
-  The seam that chooses a tenant's database is read on every buyer request by twelve consumers.
+  The seam that chooses a tenant's database is read on every buyer request by seventeen non-test
+  consumers, sixteen buyer API routes and one page (re-counted 18 August 2026, up from twelve).
   It reads one table. Until 17 August 2026 that table held <strong>zero rows against thirteen
   production organisations</strong>, so every tenant resolved to pooled by fallback rather than by
   a decision anyone had recorded. The catalogue is now backfilled, ten organisations on staging and
@@ -387,9 +390,10 @@
       <code>apps/portal/src/app/api/customers/[id]/provision-council/route.ts:133,147-148</code>
     </p>
     <p>
-      <b>Half the buyer routes do not go through the seam, by design.</b> Of 20 route files under
-      the buyer API tree, 10 import the resolver; 9 are thin proxies forwarding to the FastAPI
-      backend, which has no seam and no RLS; and 1 reads the database without it.
+      <b>Half the buyer routes do not go through the seam, by design.</b> Of 22 route files under
+      the buyer API tree, 16 import the resolver (re-counted 18 August 2026, up from 10 of 20);
+      the rest are thin proxies forwarding to the FastAPI backend, which has no seam and no RLS,
+      or read the database without it.
     </p>
     <p>
       <b>A gap in the guard, found in this review.</b>
@@ -629,15 +633,15 @@
               <tr><td>RLS policies in the production <code>public</code> schema</td><td><b>515</b></td>
                   <td>Snapshot captured from prod 2026-08-16, md5-verified in Postgres and re-derived locally</td></tr>
               <tr><td>Distinct tables carrying at least one policy</td><td><b>309</b></td><td>Same snapshot</td></tr>
-              <tr><td>Public-schema tables in prod, RLS enabled</td><td>approx. <b>280</b>, RLS on <b>100%</b></td>
-                  <td>Security audit, same day. Not reconciled against the 309 above</td></tr>
+              <tr><td>Public-schema tables in prod, RLS enabled</td><td><b>314</b>, RLS on <b>100%</b></td>
+                  <td>Re-read from prod 18 August 2026. The earlier "approx. 280" was never reconciled against the 309 above; this count is exact and the 100% holds</td></tr>
               <tr><td>Committed migrations</td><td><b>653</b></td><td><code>supabase/migrations/*.sql</code></td></tr>
               <tr><td>Primary storage region</td><td><code>eu-west-1</code> (AWS Ireland)</td>
                   <td>Published residency page and the tenant-model migration default</td></tr>
               <tr><td>Organisations sharing the production project</td><td><b>13</b></td>
                   <td>Established 2026-08-16. An earlier pass could not read it and said so</td></tr>
-              <tr><td>Rows in <code>tenant_datasource_catalog</code></td><td><b>0</b></td>
-                  <td>Same read</td></tr>
+              <tr><td>Rows in <code>tenant_datasource_catalog</code></td><td><b>13</b>, every one <code>pooled</code></td>
+                  <td>Re-read from prod 18 August 2026. Was 0 on 16 August; the R27-TENANCY-01 backfill and its insert trigger closed it, so pooled is now a recorded decision rather than a fallback</td></tr>
             </tbody>
           </table>
           </div>

@@ -11,6 +11,66 @@ Last updated: 2026-08-03
 
 ## OPEN — decisions
 
+### OA-35 · Cloudflare bot detection breaks the site's own CSP on every HTML response, and only you can end it · P3 · security posture · **measured 2026-08-17** · platform row `R27-SENTRY-04`
+
+**What is happening, measured on the live site rather than read off this repo.** Cloudflare injects
+its JavaScript Detections bootstrap into the HTML at the edge, after every build step has run:
+
+```
+window.__CF$cv$params={r:'a2cca2533cf6fce5',t:'MTc4NzAxMTE4Mg=='};
+var a=document.createElement('script');
+a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';
+```
+
+Present on 6 of 6 pages fetched (`/`, `/pricing/`, `/contact/`, `/faq/`, `/blog/`, `/accessibility/`)
+and on the 404. The shipped `script-src` names 16 SHA-256 hashes and no `'unsafe-inline'`, so the
+browser refuses it and files a report. 26 events in Sentry `CROWAGENT-WEB-N` with
+`documentUri https://crowagent.ai/`.
+
+**No visitor loses anything.** It is bot telemetry, not site behaviour. The page renders, the forms
+post, the analytics that exist still run. That is why this is a P3 and why I have not taken the
+decision for you.
+
+**Three obvious fixes, and two of them do not exist.**
+
+| route | verdict |
+|---|---|
+| Add a `sha256-` hash for the script | **Impossible.** The `r:` value is the request id. Three consecutive fetches of `/` gave `a2cca30a5e11054f`, `a2cca30b6a29d1f9`, `a2cca30c8baa774f`. A new hash on every response, so no fixed allowlist can ever hold it. |
+| Use a nonce, which is Cloudflare's documented answer | **Not available on this architecture.** Cloudflare copies a `script-src` nonce onto what it injects, but a nonce must be unique per response and this site is static files behind one fixed `_headers` table. A constant nonce is a published password, and the site's own 16 inline scripts would need it stamped on them too. |
+| Turn JavaScript Detections off in the dashboard | **Not a toggle.** Cloudflare's documentation states that for Bot Fight Mode customers it is enabled automatically and cannot be disabled. Ending it that way means turning Bot Fight Mode off for the zone. |
+
+**So there are exactly two real options, and both are yours.**
+
+1. **Accept it.** Record it as a known, permanent, telemetry-only report and stop treating the Sentry
+   issue as actionable. Costs nothing, changes nothing, and the noise continues.
+2. **Send `Cache-Control: no-transform` on HTML.** Cloudflare does not inject JavaScript Detections
+   when the origin response carries it, so the violation ends at source with no change to the policy
+   at all. The cost is real: it also suppresses `cf.bot_management.js_detection.passed` and every
+   other Cloudflare HTML transform on this zone, so you would be trading a silent telemetry report
+   for weaker bot detection on a site whose forms are already protected by Turnstile.
+
+**Why I did not just do option 2.** It is a one-line change in `_headers` and I could have made it
+look like a tidy fix. It is not a CSP change, it is a change to how much bot signal Cloudflare
+collects for this zone, and I cannot verify the effect without a production deploy. Recorded, argued,
+and left to you.
+
+**What I did do.** Wrote the whole measurement into `_headers` directly above the policy line, so the
+next person to look at that directive finds the reason rather than an unexplained report. **The
+dangerous fix is already blocked by a gate, not by a comment:** re-adding `'unsafe-inline'` to
+`script-src` would silence this instantly and hand every injected script permission to run.
+`astro/scripts/check-csp-required-origins.js` fails the deploy chain on it. Red-proved on 2026-08-17:
+a copy of `dist/_headers` with `'unsafe-inline'` planted back into `script-src` went from exit 0 to
+exit 1, reporting `script-src carries 'unsafe-inline'`.
+
+**One thing you should know that is not part of this decision.** The Cloudflare Web Analytics beacon
+allowed onto `script-src` on 2026-08-12 is **not being injected at all any more**. Zero occurrences
+of `beacon.min.js`, `data-cf-beacon` or `cloudflareinsights` across the same 6 live pages. The old
+violations stopped because the beacon stopped arriving, not because the policy started permitting it,
+so Web Analytics is still recording nothing. The permission is correct and stays; the injection needs
+switching on in the dashboard if you want the product.
+
+---
+
 ### OA-34 · Eleven product screenshots still ship, on pages that never got the treatment `/crowmark` did · P1 · credibility · **found 2026-08-03**
 
 `/crowmark` and `/crowmark-buyers` had both their product captures **deleted** and replaced with

@@ -60,6 +60,54 @@ const RULES = [
     why: 'The PPN 002 social value weighting floor is 10%. It has never been 5%. CLAUDE.md rule 8.',
   },
   {
+    /*
+     * R27-CERT-02. A CERTIFICATION CLAIM IS THE ONE FACT A BUYER CAN CHECK IN A
+     * REGISTRY, AND THE ONE THAT ENDS AN EVALUATION WHEN IT IS WRONG.
+     *
+     * ISO/IEC 42001 is the AI management standard, and it is becoming the
+     * credential this market sorts on. CrowAgent holds it, is audited against it
+     * and is booked for it in exactly none of those senses, measured 2026-08-17:
+     * zero occurrences of "42001" anywhere in this repository outside the local
+     * board artefact, and the same day's owner record states CrowAgent holds none
+     * of ISO 42001, ISO 27001 or SOC 2.
+     *
+     * THE RULE FIRES ON A MENTION, NOT ON A VERB, and that is deliberate. The
+     * dangerous copy is not "we are ISO 42001 certified", which nobody would
+     * write by accident. It is a badge in a footer, a logo strip, a comparison
+     * table cell, or "ISO 42001 aligned" written next to a genuine control list,
+     * each of which a procurement reader takes as a status. Naming the standard
+     * on a published page is the act this guards.
+     *
+     * WHICH MAKES THE HEDGE LOAD-BEARING. The site's `/security` page is exemplary
+     * about ISO 27001: "We follow ISO 27001 controls. We are not certified yet",
+     * and "We do not currently hold ISO 27001, SOC 2 or Cyber Essentials
+     * certification". Copy in that shape about 42001 is honest and must not fail,
+     * so `unless` clears a denial within the window and nothing else does. An
+     * aspiration such as "planned" or "on the roadmap" is NOT a denial and is not
+     * listed: a plan published beside a standard reads as progress, which is the
+     * defect this exists to catch.
+     *
+     * IF CERTIFICATION IS EVER ACHIEVED, this rule is the change: quote the
+     * certificate number and the UKAS-accredited body on the page and add a named
+     * exception here. UKAS granted its first ISO/IEC 42001 accreditations in
+     * January 2026 and the pool of accredited bodies is still small, so an
+     * unaccredited certificate is a live risk and a reviewer will ask which body
+     * issued it.
+     */
+    id: 'iso42001-unearned',
+    pattern: /ISO(?:\/IEC)?[\s ]*42001/gi,
+    unless:
+      /\bnot\s+(?:yet\s+)?(?:certified|accredited|audited)\b|\bdo(?:es)?\s+not\s+(?:currently\s+)?hold\b|\bwe\s+hold\s+(?:no|none)\b|\bno\s+ISO(?:\/IEC)?\s*42001\b/i,
+    message: 'ISO 42001 named on a published page without a denial beside it',
+    why:
+      'CrowAgent holds no ISO/IEC 42001 certification and none is in progress. Measured\n' +
+      '      2026-08-17: zero mentions in the site source, and the owner record of the same\n' +
+      '      day states CrowAgent holds none of ISO 42001, ISO 27001 or SOC 2. Publishing an\n' +
+      '      aspiration as a status is a credibility defect in procurement, where the claim is\n' +
+      '      checkable against a certification body register. Either state the position the way\n' +
+      '      /security states it for ISO 27001, or cite the certificate and the accredited body.',
+  },
+  {
     id: 'ppn002-old-themes',
     pattern: near('PPN\\s*002', "COVID-19 recovery|Levelling Up|Levelling-Up", 400),
     unless: /PPN\s*06\/20|superseded|replaced|predecessor|no longer/i,
@@ -97,6 +145,65 @@ const RULES = [
       const n = Number(String(m[1] || m[2]).replace(/,/g, ''));
       return Number.isFinite(n) && n > 150000;
     },
+  },
+  {
+    /*
+     * R27-COMPETE-01a, owner decision D-11 (2026-08-18).
+     *
+     * THE FEATURE IS SOLID. THE CLAIM WAS THE PROBLEM. The Defensible Decision
+     * Record was described internally as unique, and the August competitive
+     * audit found a larger competitor already owns an equivalent instrument.
+     * The owner's decision was to withdraw the uniqueness claim and replace it
+     * with a specific, evidenced difference. This rule is the half of that
+     * decision that cannot be undone by a later copywriter.
+     *
+     * WHY IT IS A PREVENTION RULE WITH NO CURRENT HIT, AND WHY THAT IS THE
+     * POINT. Swept 2026-08-18: the published site makes NO uniqueness claim
+     * about this feature, and /crowmark-buyers is already scrupulously
+     * non-comparative ("Your panel scores, not the AI", "Not an e-sourcing
+     * portal and not a system of record"). The claim lived in research
+     * documents and two API docstrings and never reached the site. So this
+     * rule guards the direction the copy would drift IF the feature were ever
+     * promoted to the marketing site, which is the one moment nobody would
+     * think to re-check the competitive evidence.
+     *
+     * WHY A SUPERLATIVE IS DIFFERENT FROM AN INACCURACY. Every other rule here
+     * catches a fact that is WRONG. This one catches a claim that may well be
+     * TRUE and is simply NOT PROVABLE BY US. A UK public-sector buyer can
+     * disprove "no other platform does this" with one search, and a buyer who
+     * disproves one sentence discounts the whole page. There is no hedged form
+     * that rescues it, which is why this rule has no `unless`: "we believe we
+     * are the only" is the same claim wearing a hat.
+     *
+     * IF A UNIQUENESS CLAIM IS EVER GENUINELY EVIDENCED, this rule is the
+     * change: cite the evidence in the copy itself and add a named exception
+     * below carrying that citation. Quoting a COMPETITOR'S own superlative
+     * (e.g. EasyPQQ's "Unique to EasyPQQ Pro") is also an exception case, not
+     * a reason to weaken the pattern.
+     */
+    id: 'feature-uniqueness-unprovable',
+    pattern: near(
+      'decision\\s+record|decision\\s+of\\s+record|weight(?:ing)?\\s+lock|transparency\\s+record|defensible\\s+decision',
+      'no\\s+(?:other\\s+)?(?:competitor|vendor|rival|platform|product|tool|supplier)s?\\b' +
+        '|nobody\\s+(?:is|else|has|does|can)\\b' +
+        '|no\\s+one\\s+else\\b' +
+        '|the\\s+only\\s+(?:platform|product|tool|vendor|system|company|supplier|one)\\b' +
+        '|only\\s+(?:platform|product|tool|vendor|system|company|supplier)\\b' +
+        '|(?:is|are|remains)\\s+unique\\b' +
+        '|unique(?:ly)?\\s+(?:to|in|positioned|placed)\\b' +
+        '|first\\s+(?:platform|product|tool|vendor|company)\\b' +
+        '|unrivalled|unmatched|industry[-\\s]leading|best[-\\s]in[-\\s]class',
+      240,
+    ),
+    message: 'an unprovable uniqueness claim about the decision record',
+    why:
+      'Owner decision D-11 (2026-08-18) WITHDREW the uniqueness claim about the Defensible\n' +
+      '      Decision Record. A competitor equivalent exists, and the evidence we hold about\n' +
+      '      competitors establishes what their products HAVE, never what they LACK, so no "only"\n' +
+      '      or "no other" claim about this feature can be sourced. Say what the mechanism does\n' +
+      '      instead: the weighting is hashed before any response is read, the digest is\n' +
+      '      re-derivable afterwards, and the lock is tamper-evident rather than tamper-proof.\n' +
+      '      That is checkable by the buyer and needs no claim about anyone else.',
   },
   {
     id: 'em-dash',

@@ -204,6 +204,72 @@
   # here because it restores a capability the account is already carrying, and
   # the beacon is cookieless and stores nothing, so it does not contradict the
   # cookie policy's statement that this website stores nothing.
+  #
+  # ── R27-SENTRY-04, measured live 2026-08-17: A SECOND EDGE INJECTION, AND
+  #    THIS ONE CANNOT BE FIXED BY NAMING AN ORIGIN ───────────────────────────
+  #
+  # Sentry CROWAGENT-WEB-N also carries 26 events whose documentUri is
+  # https://crowagent.ai/ rather than the app. The blocked script is Cloudflare
+  # JavaScript Detections, and it is INLINE:
+  #
+  #   window.__CF$cv$params={r:'a2cca2533cf6fce5',t:'MTc4NzAxMTE4Mg=='};
+  #   var a=document.createElement('script');
+  #   a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';
+  #
+  # MEASURED ON THE LIVE RESPONSE, not derived from this tree. Present on 6 of 6
+  # HTML pages fetched (/, /pricing/, /contact/, /faq/, /blog/, /accessibility/)
+  # and on the 404. It is absent from `astro/dist`, so it is injected at the
+  # edge after every build step, exactly like the beacon above.
+  #
+  # A HASH CANNOT COVER IT, AND THAT IS ARITHMETIC RATHER THAN OPINION. The `r:`
+  # value is per request: three consecutive fetches of / returned r values
+  # a2cca30a5e11054f, a2cca30b6a29d1f9 and a2cca30c8baa774f. The script body
+  # therefore has a different SHA-256 on every single response, so the 16-hash
+  # allowlist that copy-cf-config.js computes from `dist` can never contain it.
+  # This is a permanent enforce-mode violation by construction.
+  #
+  # A NONCE IS THE VENDOR'S ANSWER AND IS NOT AVAILABLE HERE. Cloudflare
+  # documents that it parses the CSP response header and copies a script-src
+  # nonce onto the scripts it injects. A nonce must differ per response; this
+  # file is a static header table served by Cloudflare Pages, so every response
+  # would carry the same value and a fixed nonce is a fixed password. It would
+  # also have to be stamped onto the site's own 16 inline scripts, which are
+  # emitted by a static build. Same conclusion recorded in copy-cf-config.js.
+  #
+  # "TURN IT OFF IN THE DASHBOARD" IS NOT A TOGGLE. Cloudflare's own
+  # documentation states that for Bot Fight Mode customers JavaScript Detections
+  # is automatically enabled AND CANNOT BE DISABLED. So the dashboard route is
+  # to turn Bot Fight Mode off for the zone, which is a bot-posture decision and
+  # not a CSP fix.
+  #
+  # THE ONE REMEDY THAT LIVES IN THIS FILE, and why it is not taken unilaterally:
+  # Cloudflare does not inject JavaScript Detections when the origin response
+  # carries `Cache-Control: no-transform`. That would end the violation at
+  # source, with no change to the policy at all. It also suppresses the
+  # cf.bot_management.js_detection.passed signal and every other Cloudflare HTML
+  # transform on this zone, so it trades a telemetry-only violation for a
+  # reduction in bot detection. That is an owner decision, recorded in
+  # OWNER-ACTIONS.md, not one to take inside a headers file.
+  #
+  # DO NOT "FIX" THIS BY WEAKENING script-src. Re-adding 'unsafe-inline' would
+  # silence the report and hand every injected inline script permission to run,
+  # which is the entire threat this policy exists to stop. That route is closed
+  # by a gate rather than by this comment: check-csp-required-origins.js fails
+  # the deploy chain on a blanket source in script-src. Red-proved 2026-08-17,
+  # planting 'unsafe-inline' back into a copy of dist/_headers took it from
+  # exit 0 to exit 1 reporting "script-src carries 'unsafe-inline'".
+  #
+  # NO USER-FACING LOSS. This is bot telemetry, not site behaviour, so the page
+  # works identically with the script blocked. That is why it is a P3.
+  #
+  # A CORRECTION TO THE BLOCK ABOVE, measured the same day: the Web Analytics
+  # beacon is NOT being injected any more. Zero occurrences of `beacon.min.js`,
+  # `data-cf-beacon` or `cloudflareinsights` across the same 6 live pages. The
+  # violations stopped because the beacon stopped arriving, NOT because this
+  # policy started permitting it, so allowing the two hosts has not restored
+  # analytics. They stay named here because the permission must already be in
+  # place on the day injection is switched back on; the gate asserts they are
+  # permitted, which is still true and still what is wanted.
   Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cloudflareinsights.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}

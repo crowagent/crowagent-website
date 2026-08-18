@@ -394,6 +394,11 @@ if (fs.existsSync(DEFECTS)) {
       sevExplicit: Boolean(sev),
       src: 'R2.6.2 defect register',
       sev: sev || 'P2',
+      /* [R27-BOARD-LANE-01] The register carries UI/UX and product defects, so it
+         defaults to PRODUCT; an explicit `[LANE:CI]` in a heading still wins. A
+         missing lane must never read as CI, because that would quietly move a
+         product defect out of the count the owner reads as release progress. */
+      lane: /\[LANE:CI\]/i.test(rawTitle) ? 'CI' : 'PRODUCT',
       status,
       changed: dateMatch ? dateMatch[1] : null,
       title: stripTrailingStatus(plain(rawTitle.replace(/[🔴🟡🟢✅⚠️]/gu, ''))),
@@ -625,11 +630,53 @@ if (fs.existsSync(TRACKER)) {
     const sevExplicit = Boolean(sevMatch);
     const sevInferred = /P0/.test(cells.join(' ')) ? 'P1' : 'P2';
 
+    /* [R27-BOARD-LANE-01, owner instruction 2026-08-17] SEGREGATE THE CI LANE.
+     *
+     * The owner asked for CI/gate/test items under their own heading, because a
+     * board that mixes "a gate baseline is stale" with "a buyer is shown the
+     * wrong statutory threshold" reports gate maintenance as release progress.
+     *
+     * The lane is read from an EXPLICIT `[LANE:CI]` marker and is NEVER inferred
+     * from prose — for exactly the reason recorded above for `[SEV:Pn]`. A
+     * keyword heuristic was tried first and misfiled in BOTH directions: it put
+     * `R27-PRICE-MIRROR-02` in CI because its title contains "guard" when it is
+     * a production billing defect, and left `R27-TOOL-01` in PRODUCT when its
+     * deliverable is a codemod. Prose cannot answer "what is this row FOR".
+     *
+     * The test is the DELIVERABLE, not the instrument: PERF-01 stays PRODUCT
+     * because Lighthouse merely measured a real Core Web Vitals miss, and SEC-08
+     * / SEC-10 stay PRODUCT because they are real auth and RLS defects that a
+     * guard happened to find. */
+    const lane = /\[LANE:CI\]/i.test(cells.join(' ')) ? 'CI' : 'PRODUCT';
+
+    /* [R27-BOARD-MOVED-01 2026-08-18] THE "WHAT MOVED TODAY" LINE WAS BLIND TO THE
+     * TRACKER, WHICH IS WHERE ESSENTIALLY ALL THE WORK HAPPENS.
+     *
+     * `changed` was set in exactly two places: a defect-register heading's own
+     * date, and the last-mention-wins reconciler when it MOVES an item. A tracker
+     * row being closed set it NOWHERE, so the board reported "no items changed
+     * state" on a day more than twenty rows were closed in this very file.
+     *
+     * That line is not decoration. It exists because the owner read a flat OPEN
+     * count and reasonably concluded nothing had moved (R262-D-76) — so a
+     * movement indicator that cannot see the tracker recreates the exact defect
+     * it was added to solve, and does it while looking healthy.
+     *
+     * The date is read from the STATUS cell only, never the evidence prose: the
+     * evidence routinely cites measurement dates, commit dates and the dates of
+     * PRIOR findings, so scanning the whole row would date a closure by whichever
+     * historical date happened to appear last. The status cell is where a verdict
+     * carries its own date ("FIXED 2026-08-18 - ..."), which is the one date that
+     * means "this row moved". */
+    const statusDate = /\b(20\d\d-\d\d-\d\d)\b/.exec(cells[3] || '');
+
     issues.push({
       id,
       src: section || 'R2.6.2 tracker',
       sev: sevExplicit ? sevMatch[1].toUpperCase() : sevInferred,
       sevExplicit,
+      lane,
+      changed: statusDate ? statusDate[1] : null,
       status: norm,
       title: task,
       note: plain(cells.slice(3).join(' — ')).slice(0, 2000),

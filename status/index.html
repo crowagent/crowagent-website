@@ -158,7 +158,18 @@
     <tbody id="rows"></tbody>
   </table>
 
-  <div class="legend" id="legend">
+  <!-- [R27-BOARD-LANE-02 2026-08-17] THIS DIV AND THE <ul> INSIDE IT BOTH CARRIED
+       id="legend", AND THAT KILLED THE ENTIRE ITEM TABLE ON EVERY LOAD.
+       `getElementById` returns the FIRST match, i.e. this container, so
+       render()'s `getElementById('legend').innerHTML = <li>...` overwrote the
+       whole container — destroying the `<p id="directives">` that lives inside
+       it. The very next statement then dereferenced that deleted element and
+       threw "Cannot set properties of null", which the catch turned into
+       "Could not load platform.json" over an EMPTY table.
+       The data was correct the whole time. Only loading the page could show it:
+       curl proved the JSON, the contract check proved the fields, and both were
+       blind to a DOM exception. The id is now unique; CSS targets `.legend`. -->
+  <div class="legend" id="legendbox">
     <p><b>What the statuses mean</b>, and the distinction that matters most:</p>
     <ul id="legend"></ul>
     <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
@@ -207,17 +218,31 @@ let DATA=null, filter='ALL';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function render(){
-  const items=DATA.issues;
+  /* [R27-BOARD-LANE] THE HEADLINE TILES ARE PRODUCT-SCOPE, NOT COMBINED.
+     They counted every row regardless of lane, so the bar read "12 OPEN" while
+     product-lane OPEN was 5 — the other 7 were CI rows. The owner's rule is
+     that CI is not mixed into release scope, and the tile a reader actually
+     looks at was doing exactly that. CI is not dropped: it gets its own tile,
+     stated as cost, so the exclusion is VISIBLE rather than silent.
+     A row with NO lane counts as PRODUCT — a missing marker must never quietly
+     shrink the release. */
+  const allItems=DATA.issues;
+  const items=allItems.filter(i=>i.lane!=='CI');
+  const ciItems=allItems.filter(i=>i.lane==='CI');
   const counts={};
   for(const i of items) counts[i.status]=(counts[i.status]||0)+1;
 
   const {declared,extra}=statusKeys(counts);
   const present=[...declared,...extra].filter(k=>counts[k]);
 
+  const ciOpen=ciItems.filter(i=>i.status==='OPEN'||i.status==='WIP').length;
   document.getElementById('stats').innerHTML =
-    `<div class="stat"><b>${items.length}</b><span>total</span></div>` +
+    `<div class="stat"><b>${items.length}</b><span>product</span></div>` +
     present.map(k=>
-      `<div class="stat"><b style="color:var(${COLOUR[k]||'--unknown'})">${counts[k]}</b><span>${esc(k)}</span></div>`).join('');
+      `<div class="stat"><b style="color:var(${COLOUR[k]||'--unknown'})">${counts[k]}</b><span>${esc(k)}</span></div>`).join('') +
+    (ciItems.length
+      ? `<div class="stat" title="CI lane is tracked but does not gate the release. Reported as cost, never as progress."><b style="color:var(--unknown)">${ciItems.length}</b><span>CI lane (${ciOpen} outstanding)</span></div>`
+      : '');
 
   /* The tiles must account for every item. If they ever do not, the arithmetic
      says so on the page rather than leaving a reader to add them up. */
@@ -426,16 +451,49 @@ function render(){
      floated to an arbitrary position among the P0s. The board carries P3 items
      and has done for a while. */
   const order={P0:0,P1:1,P2:2,P3:3};
-  const rows=items.filter(i=>filter==='ALL'||i.status===filter)
-                  .sort((a,b)=>order[a.sev]-order[b.sev]||a.id.localeCompare(b.id));
+  /* [R27-BOARD-LANE] Built from `allItems`, NOT the product-scoped `items`.
+     The headline tiles are product-only by design, but the LIST must still
+     render the CI lane under its own heading below — filtering here would have
+     made those rows disappear from the page altogether, which is deletion
+     wearing the costume of segregation. */
+  const shown=allItems.filter(i=>filter==='ALL'||i.status===filter)
+                   .sort((a,b)=>order[a.sev]-order[b.sev]||a.id.localeCompare(b.id));
 
-  document.getElementById('rows').innerHTML = rows.map(i=>`
+  /* [R27-BOARD-LANE-01, owner instruction 2026-08-17] THE CI LANE GETS ITS OWN
+     HEADING. Mixing "a ratchet baseline is stale" into the same list as "a buyer
+     is shown the wrong statutory threshold" reports gate maintenance as release
+     progress, which is exactly how two weeks went into CI while the product
+     backlog stood still. PRODUCT is listed FIRST and its count is the headline;
+     the CI lane follows under its own heading, stated as cost.
+
+     An item with NO lane is treated as PRODUCT, never CI: a missing marker must
+     not quietly move a product defect out of the number the owner reads. */
+  const isCi = (i) => i.lane === 'CI';
+  const product = shown.filter(i => !isCi(i));
+  const ci = shown.filter(isCi);
+
+  const rowHtml = (i) => `
     <tr>
       <td class="id">${esc(i.id)}</td>
       <td><span class="sev" style="color:var(${SEVC[i.sev]})">${i.sev}</span></td>
       <td><span class="pill" style="background:var(${COLOUR[i.status]||'--unknown'});color:#05070E">${esc(i.status)}</span></td>
       <td><strong>${esc(i.title)}</strong><div class="note">${esc(i.note||'')}</div></td>
-    </tr>`).join('');
+    </tr>`;
+
+  const heading = (label, list, extra) =>
+    list.length
+      ? `<tr><td colspan="4" style="padding:18px 10px 6px;border-bottom:2px solid var(--line)">
+           <strong style="font-size:15px;letter-spacing:.04em">${label} — ${list.length}</strong>
+           ${extra ? `<span class="note" style="display:block;margin-top:4px">${extra}</span>` : ''}
+         </td></tr>`
+      : '';
+
+  document.getElementById('rows').innerHTML =
+    heading('PRODUCT', product, 'What a customer can see. This is the release count.')
+    + product.map(rowHtml).join('')
+    + heading('CI, GATES AND TESTS', ci,
+        'Repo-maintenance items. These are COST, not release progress, and they are excluded from the product count above.')
+    + ci.map(rowHtml).join('');
 
   document.getElementById('legend').innerHTML =
     Object.entries(DATA.legend).map(([k,v])=>`<li><b>${k}</b>: ${esc(v)}</li>`).join('');
@@ -448,11 +506,18 @@ function render(){
      Portal tab was unviewable from the day it was added, while the JSON it
      serves was perfectly correct. Fetching the data proves the data; only
      loading the page proves the page. */
+  /* [R27-BOARD-LANE-02] The ARRAY was guarded here and the ELEMENT was not, so
+     the comment above fixed one direction of this defect and left the other
+     open — which is how it kept killing the page. Guarded like `movementEl`
+     below, which had it right all along. */
   const directives = Array.isArray(DATA.directives) ? DATA.directives : [];
-  document.getElementById('directives').innerHTML = directives.length
-    ? '<b>Standing directives</b><br>' +
-      directives.map(d=>`<b>${esc(d.id)}</b> ${esc(d.text)}`).join('<br>')
-    : '';
+  const directivesEl = document.getElementById('directives');
+  if (directivesEl) {
+    directivesEl.innerHTML = directives.length
+      ? '<b>Standing directives</b><br>' +
+        directives.map(d=>`<b>${esc(d.id)}</b> ${esc(d.text)}`).join('<br>')
+      : '';
+  }
   /* [R262-D-76] MOVEMENT, not just position.
    *
    * The stat tiles answer "where are we". They cannot answer "did anything
