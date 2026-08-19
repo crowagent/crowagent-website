@@ -604,7 +604,7 @@ const BOARDS = {
   website:  { file: 'issues.json',   label: 'Website',
               heading: 'Website transformation status' },
   platform: { file: 'platform.json', label: 'Platform & Portal',
-              heading: 'Release 2.7 status: platform and portal' },
+              heading: 'Release 2.7 and 2.7.1 status: platform and portal' },
   /* [R27-ARCH-01] A DOCUMENT board, not an issue list. The owner asked for the
      architecture review and the tenancy analysis to live at this address rather
      than in a separate file, so there is one status surface instead of two
@@ -770,7 +770,13 @@ async function load(){
 
 document.getElementById('boardtabs').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  board=b.dataset.b; location.hash=board; filter='all'; load();
+  /* [2026-08-19] `filter='all'` LOWERCASE EMPTIED THE BOARD ON EVERY TAB CLICK.
+     render() compares `filter==='ALL'`, so a lowercase value matched no status and
+     `shown` came back empty - the table rendered with zero rows and both section
+     headings suppressed, which reads as "the board lost my release". Landing on
+     #platform by URL worked, because the initial value on line 216 is 'ALL'; only
+     CLICKING a tab broke it. One character, and it hid 405 items. */
+  board=b.dataset.b; location.hash=board; filter='ALL'; load();
 });
 window.addEventListener('hashchange',()=>{
   const h=location.hash.replace('#','').split('/')[0];
