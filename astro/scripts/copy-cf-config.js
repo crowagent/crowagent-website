@@ -34,7 +34,28 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, '..', 'dist');
 const REPO_ROOT = path.join(__dirname, '..', '..');
 
-const FILES = ['_headers', '_redirects', 'robots.txt'];
+/*
+ * [2026-08-19] `llms.txt` / `llms-full.txt` ADDED, AND THEY WERE NOT MISSING BY
+ * OVERSIGHT IN THIS FILE SO MUCH AS ORPHANED BY THE MIGRATION.
+ *
+ * MEASURED, not inferred: the live robots-guard run for e588af4c failed with
+ * `https://crowagent.ai/llms.txt returned HTTP 404, expected 200`. Both files
+ * exist at the repo root and in the LEGACY `dist/`, and neither has ever been
+ * in `astro/dist` — so they stopped being served on 2026-08-05, the day the
+ * Cloudflare Pages deploy source moved from the flat-file root to this build.
+ * Nothing had edited them; the ground moved underneath them.
+ *
+ * This is the same defect class as the 44 sitemap URLs that all pointed at a
+ * 308 after that same migration, and it survived for the same reason: every
+ * gate that could see it reads `dist`, and a file absent from `dist` is absent
+ * from the gate's corpus too. Only a check against the LIVE origin could catch
+ * it, and that check is exactly what went red.
+ *
+ * They belong in this list rather than in `astro/public/` so that they sit
+ * beside `robots.txt`, which is the other AI-discoverability file and is
+ * already carried this way. One root source, one copy step, one place to look.
+ */
+const FILES = ['_headers', '_redirects', 'robots.txt', 'llms.txt', 'llms-full.txt'];
 
 /**
  * Immutable caching for Astro's content-hashed output. Appended rather than
@@ -199,6 +220,14 @@ const checks = [
   ['_headers', /^\/_assets\/\*$/m, 'the appended /_assets/* block'],
   ['_redirects', /^\/[^\s]+\s+\/[^\s]+\s+30\d/m, 'at least one redirect rule'],
   ['robots.txt', /^Sitemap:\s*https:\/\//m, 'the Sitemap line'],
+  // llms.txt is only worth serving if it still carries the two things that
+  // make it readable as llms.txt rather than as an arbitrary text file: the
+  // H1 the format opens with, and at least one absolute link into the site.
+  // A copied-but-empty file would 200 and satisfy the live guard while saying
+  // nothing, which is the failure mode this whole block exists to refuse.
+  ['llms.txt', /^#\s+\S/m, 'its H1 title line'],
+  ['llms.txt', /https:\/\/crowagent\.ai\//, 'at least one absolute crowagent.ai link'],
+  ['llms-full.txt', /^#\s+\S/m, 'its H1 title line'],
 ];
 
 const failures = [];
@@ -217,4 +246,10 @@ const rules = fs
   .split('\n')
   .filter((l) => l.trim() && !l.trim().startsWith('#')).length;
 
-console.log(`cf-config: _headers, _redirects (${rules} rules) and robots.txt copied into dist`);
+// Names every file actually copied, derived from FILES rather than retyped.
+// The hardcoded version of this line kept saying "_headers, _redirects and
+// robots.txt" after llms.txt joined the list, which is how a summary quietly
+// stops describing what it summarises.
+console.log(
+  `cf-config: ${FILES.join(', ')} copied into dist (${rules} redirect rules)`
+);
