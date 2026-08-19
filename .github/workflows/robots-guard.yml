@@ -1,18 +1,28 @@
 name: Robots guard — AI crawlers must stay allowed on crowagent.ai
 
-# NOTE (expected-to-fail-until-fixed): this guard WILL FAIL until the owner
-# disables Cloudflare's managed robots.txt in the dashboard. That is the point.
-# Cloudflare's "Block AI bots" / managed robots.txt feature prepends a
-# "Disallow: /" block (and a "BEGIN Cloudflare Managed content" marker) for AI
-# crawlers, overriding the repo robots.txt. A red run here is the visible
-# reminder to turn that feature off; once it is off, the guard goes green and
-# then acts as the anti-regression alarm if it is ever re-enabled.
+# [2026-08-18] THE "EXPECTED TO FAIL" NOTE BELOW IS NOW STALE - MEASURED, NOT
+# ASSUMED. Live `https://crowagent.ai/robots.txt` fetched today returns
+# `User-agent: * / Allow: /` with GPTBot and ChatGPT-User explicitly allowed, and
+# ZERO occurrences of "cloudflare" anywhere in the body. The owner has disabled
+# Cloudflare's managed robots.txt. So this guard is no longer a red reminder; it
+# is now doing the job its own note describes as the end state - an
+# anti-regression alarm if the feature is ever re-enabled.
+#
+# [RULE 0-G · owner instruction 2026-08-18: "you must fix all such billing
+# leakages"] CADENCE CUT: daily -> weekly. 7 runs/week -> 1. The thing it watches
+# is a Cloudflare DASHBOARD SETTING, which changes when a human changes it, not
+# on a daily cycle; and the `push` trigger below still fires on every change to
+# `main`. A daily poll of a setting nobody touches is spend without signal.
+#
+# ORIGINAL NOTE, kept for history: Cloudflare's "Block AI bots" / managed
+# robots.txt feature prepends a "Disallow: /" block (and a "BEGIN Cloudflare
+# Managed content" marker) for AI crawlers, overriding the repo robots.txt.
 
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '17 6 * * *'  # daily at 06:17 UTC
+    - cron: '17 6 * * 1'  # weekly, Monday 06:17 UTC. Was daily; see the note above.
   workflow_dispatch:
 
 # Single-flight per ref: a slow run must not overlap the next scheduled tick.

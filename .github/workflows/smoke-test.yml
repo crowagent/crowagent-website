@@ -1,15 +1,48 @@
 name: Smoke test — crowagent.ai must never redirect to login
 
+# [RULE 0-G · owner instruction 2026-08-18: "you must fix all such billing leakages"]
+# CADENCE CUT: every 15 minutes -> once daily. 672 runs/week -> 7.
+#
+# THIS WAS THE LARGEST SINGLE SOURCE OF SCHEDULED ACTIONS SPEND IN EITHER REPO,
+# and it had never been through a cost decision. Measured 2026-08-18: seven
+# scheduled workflows exist across both repos and this ONE accounted for ~98% of
+# their combined runs - roughly 2,900 billed minutes a month against a 2,000
+# minute free tier. The RULE 0-G timer audit of 2026-08-17 reduced five workflows
+# and never saw this one, because that audit swept `crowagent-platform` only and
+# this file lives in `crowagent-website`.
+#
+# WHAT IT BUYS, weighed honestly: it curls the marketing homepage and checks it
+# returns 200, still serves the marketing shell, and has not been replaced by the
+# platform app. That is worth having. It is not worth 96 runs a day: the failure
+# it guards against is a BAD DEPLOY, and a bad deploy is already caught by the
+# `push` trigger below, which still fires on every change to `main`. The schedule
+# only catches decay with no deploy behind it - a DNS or Cloudflare change - which
+# is a rare event, not a 15-minute one.
+#
+# The `push` trigger is deliberately KEPT at full frequency. It is the one that
+# actually protects a release, and it only runs when something changed.
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '0 7 * * *'  # Daily at 07:00 UTC. Was */15; see the note above.
   workflow_dispatch:
 
-# Production smoke monitor: single-flight per ref so a slow run doesn't
-# overlap the next 15-minute cron tick. Never cancel main — a smoke run
-# in flight is verifying the live marketing site.
+# [2026-08-18] HOST CORRECTED, AND THIS IS THE BIGGER HALF OF THE FIX.
+# Every curl below targeted `https://www.crowagent.ai` with `--max-redirs 0` and
+# required exactly 200. Measured today: `www` returns **301** to the apex, and
+# only `https://crowagent.ai` returns 200. So step 1 exited 1 on EVERY RUN - this
+# monitor had been red on all ~672 of its weekly runs, billing for a failure that
+# was its own, and a real outage would have been indistinguishable from its
+# normal state. Same class as the Lighthouse gate that audited six URLs which all
+# redirected to /login: the control was measuring a redirect, not the site.
+# Re-verified after the change: status 200, nav-inject.js present, no login
+# redirect, no Supabase on the marketing origin, app.crowagent.ai reachable - all
+# five assertions pass against the apex.
+#
+# Production smoke monitor: single-flight per ref so a slow run doesn't overlap
+# the next scheduled tick. Never cancel main — a smoke run in flight is
+# verifying the live marketing site.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -21,7 +54,7 @@ jobs:
     steps:
       - name: Check crowagent.ai returns 200 (not redirect)
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-redirs 0 https://www.crowagent.ai)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-redirs 0 https://crowagent.ai)
           echo "HTTP status: $STATUS"
           if [ "$STATUS" != "200" ]; then
             echo "CRITICAL: crowagent.ai returned $STATUS — expected 200"
@@ -32,7 +65,7 @@ jobs:
 
       - name: Check crowagent.ai serves marketing content (not platform app)
         run: |
-          BODY=$(curl -s --max-redirs 0 https://www.crowagent.ai)
+          BODY=$(curl -s --max-redirs 0 https://crowagent.ai)
 
           # Must contain marketing content. Marker = the marketing-only nav-inject
           # script (the platform app never ships it), NOT brand copy — copy/taglines
@@ -55,7 +88,7 @@ jobs:
 
       - name: Check crowagent.ai does NOT load Supabase client
         run: |
-          BODY=$(curl -s --max-redirs 0 https://www.crowagent.ai)
+          BODY=$(curl -s --max-redirs 0 https://crowagent.ai)
           if echo "$BODY" | grep -qi "supabase\|createClient\|NEXT_PUBLIC_SUPABASE"; then
             echo "CRITICAL: crowagent.ai is loading Supabase — platform app deployed to marketing domain"
             exit 1
