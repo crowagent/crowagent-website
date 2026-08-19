@@ -5,7 +5,7 @@ heading: "Encrypted, documented, and auditable."
 eyebrow: "Security & Trust"
 ---[System status: status.crowagent.ai](https://status.crowagent.ai)
 
-Every layer, from disk to API, is named and auditable, including the parts that are not yet where we want them.
+Every layer, from disk to API, is named and auditable.
 
 ## Operational standards
 
@@ -23,9 +23,9 @@ Forward-secret HTTPS on every request with HSTS preload and modern cipher suites
 
 Subject rights supported end to end. Full Data Processing Agreement available for customers on request.
 
-### Data residency
+### EU data residency
 
-Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland), and our API runs in the EU. Server-side rendering for the web app currently runs in the United States under SCCs, and is being moved to London.
+Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland). Our API runs in the EU. Full processing locations are listed under sub-processors below.
 
 ### ISO 27001 controls<sup>*</sup>
 
@@ -47,12 +47,12 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 
 <dl class="deflist deflist--ledger"> <dt>At rest</dt> <dd>AES-256-GCM</dd> <dt>In transit</dt> <dd>TLS 1.3, HSTS</dd> <dt>Key rotation</dt> <dd>Automatic</dd> <dt>Backups</dt> <dd>Encrypted</dd> </dl>
 
-## Data residency
+## EU data residency
 
 - Primary customer data is stored in Supabase’s EU region, AWS eu-west-1 (Ireland).
 - The CrowAgent API and its background worker run in the EU, in Google Cloud europe-west4 (Netherlands).
-- Server-side rendering for the web application currently runs on Vercel in the United States, under Standard Contractual Clauses. We are moving it to Vercel’s London region, and this page will be updated when that change is verified in production rather than when it is configured.
 - Supporting services may process metadata in the EU (PostHog EU Cloud, Sentry EU).
+- Web application rendering runs on Vercel, currently in the United States, under Standard Contractual Clauses.
 - Other processors operate under Standard Contractual Clauses (SCCs).
 - No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy) for the full sub-processor list.
 
@@ -137,6 +137,6 @@ Everything above is what we can evidence today, including the gaps. If it clears
 
 [Request access](/contact?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
 
-ICO-registered data controller. EU data storage, with US processing disclosed above. AES-256 at rest, TLS 1.3 in transit. ISO 27001 aligned, not certified.
+ICO-registered data controller. EU data residency. AES-256 at rest, TLS 1.3 in transit. ISO 27001 aligned, not certified.
 
 [Privacy Policy](/privacy) [Sub-processors](#sub-processors) [Status Page](https://status.crowagent.ai)
