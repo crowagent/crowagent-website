@@ -72,17 +72,17 @@ export const FOOTER = {
    * NOTHING TRUE WAS LOST, which is why this is a deletion and not a rewrite.
    * "ICO registered" is the same fact in its checkable form - registration with
    * the Information Commissioner is the public, verifiable act of a UK
-   * controller - and "UK & EU data residency" carries the location half. The
+   * controller - and "EU data residency" carries the location half. The
    * claim the company can actually evidence is still on the page; only the
    * assertion it cannot has gone.
    *
    * REVERSING THIS IS ONE LINE if the owner disagrees: put 'GDPR compliant'
-   * back between 'TLS 1.3 in transit' and 'UK & EU data residency'.
+   * back between 'TLS 1.3 in transit' and 'EU data residency'.
    */
   trustBadges: [
     'AES-256 at rest',
     'TLS 1.3 in transit',
-    'UK & EU data residency',
+    'EU data residency',
     'ISO 27001 controls*',
     'ICO registered',
   ] as string[],

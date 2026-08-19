@@ -23,7 +23,7 @@ faq:
   - question: "Does mytender.io find tenders for me?"
     answer: "mytender.io does not advertise its own daily discovery feed, though it has stated a partnership with a large UK public-sector tender portal. CrowMark tracks Contracts Finder and Find a Tender directly and refreshes the feed every morning at 06:00."
   - question: "Which is more private or secure?"
-    answer: "mytender.io highlights that it runs inside a Virtual Private Cloud to address confidentiality concerns. CrowMark uses standard cloud hosting with UK and EU data residency, AES-256 encryption at rest and TLS 1.3 in transit. Both are aimed at bid data that cannot go through general public AI tools."
+    answer: "mytender.io highlights that it runs inside a Virtual Private Cloud to address confidentiality concerns. CrowMark uses standard cloud hosting with EU data residency, AES-256 encryption at rest and TLS 1.3 in transit. Both are aimed at bid data that cannot go through general public AI tools."
   - question: "Can either tool stop the AI inventing figures?"
     answer: "CrowMark uses a deterministic figure-grounding gate: every £ and % in a draft must exist in an allowed-figure set computed from your own data, or the draft is rejected. We cannot verify an equivalent guarantee in mytender.io's public materials."
   - question: "Which suits an SME doing a few public-sector bids?"
@@ -50,7 +50,7 @@ faq:
 <tr><th scope="row">PPN 017 AI-use disclosure on every draft</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated publicly</td></tr>
 <tr><th scope="row">PPN 002 social value calculation (10% floor)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic</td><td>Not a dedicated calculator</td></tr>
 <tr><th scope="row">Post-award delivery evidence (Procurement Act 2023 s.52 / s.71)</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated</td></tr>
-<tr><th scope="row">Private-cloud (VPC) deployment</th><td>Standard cloud, UK and EU data residency</td><td><span class="cmp-yes">Yes</span>, Virtual Private Cloud</td></tr>
+<tr><th scope="row">Private-cloud (VPC) deployment</th><td>Standard cloud, EU data residency</td><td><span class="cmp-yes">Yes</span>, Virtual Private Cloud</td></tr>
 <tr><th scope="row">Content-tool integrations (SharePoint, Salesforce, Google Drive)</th><td>Focus is tender sources and exports</td><td><span class="cmp-yes">Yes</span></td></tr>
 <tr><th scope="row">Published price</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td><span class="cmp-no">No</span></td></tr>
 <tr><th scope="row">Starting price</th><td class="cmp-us">&pound;49/month</td><td>Not published (on request)</td></tr>
@@ -74,7 +74,7 @@ faq:
 </picture>
 <figcaption>The buyer-side social value requirement in CrowMark, shown as a drawn representation. The criteria, weightings and evidence requirements on screen are part of the drawing.</figcaption>
 </figure>
-<p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. On security, it uses UK and EU data residency, AES-256 encryption at rest and TLS 1.3 in transit.</p>
+<p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. On security, it uses EU data residency, AES-256 encryption at rest and TLS 1.3 in transit.</p>
 <p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
@@ -125,7 +125,7 @@ faq:
   </details>
   <details>
     <summary><h3>Which is more private or secure?</h3></summary>
-    <div class="cfaq-a"><p>mytender.io highlights that it runs inside a Virtual Private Cloud to address confidentiality concerns. CrowMark uses standard cloud hosting with UK and EU data residency, AES-256 encryption at rest and TLS 1.3 in transit. Both are aimed at bid data that cannot go through general public AI tools.</p></div>
+    <div class="cfaq-a"><p>mytender.io highlights that it runs inside a Virtual Private Cloud to address confidentiality concerns. CrowMark uses standard cloud hosting with EU data residency, AES-256 encryption at rest and TLS 1.3 in transit. Both are aimed at bid data that cannot go through general public AI tools.</p></div>
   </details>
   <details>
     <summary><h3>Can either tool stop the AI inventing figures?</h3></summary>
