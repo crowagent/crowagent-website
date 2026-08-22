@@ -1,8 +1,11 @@
-<!-- [R27-ARCH-01] COPY of crowagent-platform/tools/arch-visualizer/index.html, sha256:cf98168ab5570f5c.
+<!-- [R27-ARCH-01] COPY of crowagent-platform/tools/arch-visualizer/index.html, sha256:59a3b7599358133f.
      It lives here because the status server serves crowagent-website/status only.
      A copy that can drift is a defect, so status/check-architecture-copy.mjs compares
      the two and fails if they diverge. Edit the SOURCE, then re-copy.
-     [R27-ARCH-04 2026-08-16] Re-synced after the Release 2.7 revalidation. -->
+     [R27-ARCH-04 2026-08-16] Re-synced after the Release 2.7 revalidation.
+     [STAT-004 2026-08-22] Re-synced after the board cross-links were moved off the
+     .tab-btn class, which switchTab() clears. -->
+<!-- Contents re-measured against production 2026-08-19; prod commit 37173e87. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,16 +22,16 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         :root {
-            --bg-dark: #090d16;
-            --bg-card: #111827;
-            --bg-card-hover: #1f293d;
-            --bg-glass: rgba(17, 24, 39, 0.75);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --border-accent: rgba(99, 102, 241, 0.3);
+            --bg-dark: #070a13;
+            --bg-card: rgba(17, 24, 39, 0.75);
+            --bg-card-hover: rgba(31, 41, 61, 0.85);
+            --bg-glass: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.085);
+            --border-accent: rgba(99, 102, 241, 0.35);
             
             --primary: #6366f1;
             --primary-light: #818cf8;
-            --primary-glow: rgba(99, 102, 241, 0.25);
+            --primary-glow: rgba(99, 102, 241, 0.28);
             --secondary: #10b981;
             --secondary-light: #34d399;
             --accent: #8b5cf6;
@@ -36,9 +39,9 @@
             --danger: #ef4444;
             --cyan: #06b6d4;
             
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --text-dim: #6b7280;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
             
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-heading: 'Outfit', var(--font-sans);
@@ -55,13 +58,15 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: var(--font-sans);
-            line-height: 1.6;
+            font-size: 15px;
+            line-height: 1.65;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
             background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Top Header & Nav */
@@ -69,11 +74,12 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(9, 13, 22, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(7, 10, 19, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color);
             padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
         }
 
         .header-container {
@@ -82,6 +88,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 1.5rem;
         }
 
         .logo-group {
@@ -94,7 +101,7 @@
             width: 40px;
             height: 40px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -109,53 +116,57 @@
             font-size: 1.35rem;
             font-weight: 700;
             letter-spacing: -0.02em;
-            background: linear-gradient(to right, #fff, #9ca3af);
+            background: linear-gradient(to right, #fff, #cbd5e1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .logo-text p {
             font-size: 0.75rem;
-            color: var(--secondary);
+            color: var(--secondary-light);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
         }
 
         .nav-tabs {
             display: flex;
-            background: var(--bg-card);
+            background: rgba(15, 23, 42, 0.7);
             padding: 4px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             gap: 4px;
+            backdrop-filter: blur(12px);
         }
 
-        .tab-btn {
+        .tab-btn,
+        .board-tab {
             background: transparent;
             border: none;
             color: var(--text-muted);
             padding: 0.6rem 1.2rem;
             border-radius: 8px;
-            font-family: var(--font-sans);
+            font-family: var(--font-heading);
             font-weight: 600;
             font-size: 0.875rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .tab-btn:hover {
+        .tab-btn:hover,
+        .board-tab:hover {
             color: var(--text-main);
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.06);
         }
 
-        .tab-btn.active {
-            background: var(--primary);
+        .tab-btn.active,
+        .board-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             color: #fff;
-            box-shadow: 0 2px 10px var(--primary-glow);
+            box-shadow: 0 2px 12px var(--primary-glow);
         }
 
         .status-badge {
@@ -165,7 +176,7 @@
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.3);
             color: var(--secondary-light);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -233,6 +244,7 @@
             font-size: 1rem;
             max-width: 900px;
             margin-top: 0.5rem;
+            line-height: 1.6;
         }
 
         /* Grid layouts */
@@ -256,6 +268,8 @@
 
         @media (max-width: 1024px) {
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .header-container { flex-direction: column; align-items: flex-start; }
+            .nav-tabs { width: 100%; overflow-x: auto; }
         }
 
         /* Cards */
@@ -267,6 +281,8 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
         }
 
         .card:hover {
@@ -300,13 +316,14 @@
         .card-icon {
             width: 36px;
             height: 36px;
-            border-radius: 8px;
+            border-radius: 10px;
             background: rgba(99, 102, 241, 0.15);
             color: var(--primary-light);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
         }
 
         /* Metric Pill & Badges */
@@ -316,6 +333,7 @@
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .pill-indigo { background: rgba(99, 102, 241, 0.2); color: var(--primary-light); border: 1px solid rgba(99, 102, 241, 0.3); }
         .pill-emerald { background: rgba(16, 185, 129, 0.2); color: var(--secondary-light); border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -336,11 +354,12 @@
             border: 1px solid var(--border-color);
             border-radius: 14px;
             padding: 1.5rem;
+            backdrop-filter: blur(8px);
         }
 
         .arch-side.target {
             border-color: rgba(16, 185, 129, 0.4);
-            background: rgba(16, 185, 129, 0.03);
+            background: rgba(16, 185, 129, 0.04);
         }
 
         .side-title {
@@ -350,6 +369,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            font-family: var(--font-heading);
         }
 
         .feature-list {
@@ -365,6 +385,7 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            line-height: 1.5;
         }
 
         .feature-item strong {
@@ -379,12 +400,14 @@
 
         /* Diagram Containers */
         .diagram-wrapper {
-            background: #0d121f;
+            background: rgba(13, 18, 31, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 1.5rem;
             margin: 1.5rem 0;
             overflow-x: auto;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
         }
 
         .mermaid {
@@ -416,23 +439,25 @@
             gap: 1.5rem;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 1.25rem;
             position: relative;
             margin-left: 10px;
             transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
         }
 
         .journey-step:hover {
             border-color: var(--primary-light);
             transform: translateX(4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .step-num {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             color: #fff;
             font-weight: 700;
             display: flex;
@@ -441,7 +466,7 @@
             font-size: 0.9rem;
             flex-shrink: 0;
             z-index: 2;
-            box-shadow: 0 0 10px var(--primary-glow);
+            box-shadow: 0 0 12px var(--primary-glow);
         }
 
         .step-content h4 {
@@ -449,11 +474,13 @@
             color: #fff;
             margin-bottom: 0.3rem;
             font-family: var(--font-heading);
+            font-weight: 600;
         }
 
         .step-content p {
             font-size: 0.875rem;
             color: var(--text-muted);
+            line-height: 1.55;
         }
 
         .step-tech {
@@ -469,7 +496,7 @@
             background: rgba(255, 255, 255, 0.06);
             color: var(--primary-light);
             padding: 2px 8px;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -480,6 +507,8 @@
             background: var(--bg-card);
             border-radius: 16px;
             border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
         }
 
         table.benchmark-table {
@@ -496,6 +525,7 @@
             font-weight: 600;
             border-bottom: 1px solid var(--border-color);
             white-space: nowrap;
+            letter-spacing: 0.04em;
         }
 
         table.benchmark-table th.crowmark-col {
@@ -508,6 +538,7 @@
             padding: 1rem 1.25rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             color: var(--text-main);
+            line-height: 1.5;
         }
 
         table.benchmark-table td.crowmark-col {
@@ -540,15 +571,17 @@
             background: rgba(6, 182, 212, 0.1);
             padding: 2px 6px;
             border-radius: 4px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
         }
 
         /* Recommendation Box */
         .rec-box {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.06));
+            border: 1px solid rgba(99, 102, 241, 0.35);
             border-radius: 14px;
             padding: 1.5rem;
             margin-top: 1rem;
+            backdrop-filter: blur(8px);
         }
 
         .rec-title {
@@ -559,18 +592,18 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 0.75rem;
+            font-family: var(--font-heading);
         }
 
-        /* Measured-fact box, the neutral counterpart to .rec-box, so a reader
-           can tell at a glance whether they are reading an observation or an
-           opinion. Same geometry as .rec-box; deliberately colourless. */
+        /* Measured-fact box */
         .fact-box {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.035);
             border: 1px solid var(--border-color);
             border-left: 3px solid var(--cyan);
             border-radius: 14px;
             padding: 1.5rem;
             margin-top: 1rem;
+            backdrop-filter: blur(8px);
         }
 
         .fact-title {
@@ -581,10 +614,10 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 0.75rem;
+            font-family: var(--font-heading);
         }
 
-        /* Band label that opens a run of sections, so FACT and RECOMMENDATION
-           blocks are separable without reading the prose. */
+        /* Band label */
         .band-label {
             display: inline-flex;
             align-items: center;
@@ -646,35 +679,64 @@
   <code>RELEASE-2.7-DEFECT-REGISTER.md</code>, <code>docs/decisions/PRICING-LOCK-2026-08.md</code>,
   and the board at <code>http://localhost:8099/#platform</code>.
   Where this page disagrees with those, <em>this page is wrong</em>.
+  <br>
+  <strong>Re-measured against PRODUCTION on 2026-08-19</strong>, adding a fourth mark:
+  <span style="background:rgba(148,163,184,.28);padding:1px 6px;border-radius:4px">UNVERIFIED</span>
+  &mdash; named explicitly wherever a claim was carried forward without being re-measured, rather than
+  restated as though it had been. Production is commit <code>37173e87</code>; see
+  &ldquo;What Production Says Today&rdquo; on the Architecture tab. The claims re-checked this round were
+  read off live surfaces &mdash; HTTP responses, the Vercel deployment record, the production database
+  &mdash; never off a document.
+  <br>
+  <strong>One qualification to the sentence above, found by doing exactly that.</strong> The trackers are
+  authoritative for DECISIONS and INTENT. They were measurably stale on 2026-08-19 for the STATE OF
+  PRODUCTION: six rows say <code>PROD PENDING</code> for migrations that are applied, one of them citing a
+  live verification that no longer holds. <strong>For &ldquo;what is deployed&rdquo;, the live surface
+  outranks every document on this list, including this one.</strong> That is not a defect in the trackers so
+  much as the nature of a record: it states what was true when written, and only a re-reading can tell you
+  whether that is still now.
   </span>
 </div>
 
     <!-- Header -->
     <header>
-        <div class="header-container">
-            <div class="logo-group">
-                <div class="logo-icon">C</div>
-                <div class="logo-text">
-                    <h1>CrowAgent Platform Architecture Review</h1>
-                    <p>Flagship: CrowMark Bid & Tender Intelligence</p>
+        <div class="header-container" style="flex-direction:column;align-items:stretch;gap:1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap">
+                <div class="logo-group">
+                    <div class="logo-icon">C</div>
+                    <div class="logo-text">
+                        <h1>CrowAgent Platform Architecture Review</h1>
+                        <p>Flagship: CrowMark Bid & Tender Intelligence</p>
+                    </div>
+                </div>
+
+                <!-- Top-level Board Switcher (matches status dashboard tabs) -->
+                <div class="nav-tabs" style="background:rgba(12,17,29,0.85);border-color:rgba(255,255,255,0.12)">
+                    <a href="/#website" class="board-tab" style="text-decoration:none">Website</a>
+                    <a href="/#platform" class="board-tab" style="text-decoration:none">Platform &amp; Portal</a>
+                    <a href="/#tenancy" class="board-tab" style="text-decoration:none">Tenancy &amp; Isolation</a>
+                    <a href="/architecture-review.html" class="board-tab active" style="text-decoration:none">Architecture Review</a>
+                </div>
+
+                <div class="status-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Revalidated 2026-08-16 &middot; re-measured against production 2026-08-19</span>
                 </div>
             </div>
-            
-            <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('arch-tab')">
-                    <span>🏗️</span> Architecture & AI Deep-Dive
-                </button>
-                <button class="tab-btn" onclick="switchTab('benchmark-tab')">
-                    <span>📊</span> CrowMark Capability & Top 5 Rating
-                </button>
-                <button class="tab-btn" onclick="switchTab('pricing-tab')">
-                    <span>💷</span> Pricing Decision & Four-Surface Parity
-                </button>
-            </div>
 
-            <div class="status-badge">
-                <span class="pulse-dot"></span>
-                <span>Revalidated for Release 2.7 &middot; 2026-08-16</span>
+            <!-- In-page Section Sub-Tabs -->
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem;flex-wrap:wrap;gap:0.75rem">
+                <div class="nav-tabs">
+                    <button class="tab-btn active" onclick="switchTab('arch-tab')">
+                        <span>🏗️</span> Architecture &amp; AI Deep-Dive
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('benchmark-tab')">
+                        <span>📊</span> CrowMark Capability &amp; Top 5 Rating
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('pricing-tab')">
+                        <span>💷</span> Pricing Decision &amp; Four-Surface Parity
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -750,6 +812,10 @@
                         <li class="feature-item">
                             <span style="color:var(--warning)">!</span>
                             <div><strong>Retained engines, one confirmed and one overstated.</strong> The PPN 006 Carbon Reduction Plan engine is real and inside CrowMark (<span class="code-path">api/app/services/crowmark_carbon_plan.py</span>), with the mandatory Scope-3 categories fenced as a frozen set at import. The &ldquo;Cyber Essentials due-diligence verifier&rdquo; is <strong>one of four consistency checks</strong> with the states <span class="code-path">consistent / unverifiable / discrepancy</span>, explicitly not a judgement. Calling it a verifier overstates it.</div>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">&#10003;</span>
+                            <div><strong>Compute geography, added 2026-08-19 because this panel never stated it.</strong> Web functions execute in <span class="code-path">lhr1</span> (London) as of the <span class="code-path">37173e87</span> deploy &mdash; measured live, 6 of 6 function invocations across 3 routes, and corroborated by the Vercel deployment record. They executed in <span class="code-path">iad1</span> (Washington DC) until that deploy. Storage is EU (Supabase, <span class="code-path">eu-west-1</span> Ireland) and the API is EU (Railway, <span class="code-path">europe-west4</span> Amsterdam, <strong>not re-measured today</strong>). <strong>The published <span class="code-path">/residency</span> page still names <span class="code-path">iad1</span> and discloses a US transfer</strong>, so it is now stale in the over-disclosing direction. See the revalidation panel below.</div>
                         </li>
                     </ul>
                 </div>
@@ -1228,10 +1294,12 @@
                         2026-08-16 measured, each with a denominator.
                     </p>
                     <ul class="feature-list">
-                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Two writers of one policy, and it carries the live P0.</strong> 11 of 17 production entitlement pairs disagree; the FastAPI public pricing endpoint contradicts the pricing lock on every axis; 42 of 142 shared tokens disagree between TypeScript and CSS.</li>
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Two writers of one policy, and it carries the live P0.</strong> 11 of 17 production entitlement pairs disagree; <s style="opacity:.6">the FastAPI public pricing endpoint contradicts the pricing lock on every axis</s> <span class="pill pill-emerald" style="font-size:.75rem">CLOSED, re-measured live 2026-08-19</span>; 42 of 142 shared tokens disagree between TypeScript and CSS.
+                            <br><span style="color:var(--text-muted);font-size:.85rem">The pricing clause is struck rather than deleted because it was true when written. The endpoint now returns <span class="code-path">source: "stripe"</span> and Starter 49 / Pro 149 / Portfolio <span class="code-path">contact_sales</span>. See the revalidation panel below. <strong>The entitlement and token denominators were NOT re-measured on 2026-08-19</strong> and are carried forward from 2026-08-16 unchanged.</span></li>
                         <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>A control that reaches nothing.</strong> 21 of 32 guard SCRIPTS are invoked by no workflow, six of them red today. Notably <strong>0 of 42 vitest guards are vacuous</strong>, so the hypothesis was right about the class and wrong about the layer.</li>
                         <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>A rule whose premise died.</strong> 6 of 16 bare-hex lint exemptions cover no live violation; 7 of 39 brand-lint carve-outs name a file that does not exist.</li>
-                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Failure indistinguishable from success.</strong> 51 TypeScript and 52 Python catch arms both discard the error and return an empty value. Confirmed live: MFA soft-lock and enterprise domain restriction both fail OPEN, silently.</li>
+                        <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>Failure indistinguishable from success.</strong> 51 TypeScript and 52 Python catch arms both discard the error and return an empty value. <s style="opacity:.6">Confirmed live: MFA soft-lock and enterprise domain restriction both fail OPEN, silently.</s> <span class="pill pill-emerald" style="font-size:.75rem">BOTH NAMED INSTANCES CLOSED, re-read 2026-08-19</span>
+                            <br><span style="color:var(--text-muted);font-size:.85rem">Both now fail CLOSED and log. <strong>The 51 and 52 counts were not re-measured</strong>, so the class is not closed &mdash; only the two instances this card named. A fixed exemplar is not a fixed population.</span></li>
                         <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>A text scanner that cannot tell prose from code.</strong> 46 of 60 scanners use a comment stripper the repository itself documents as a false-green generator, and keeps exported only so guards can prove they beat it.</li>
                         <li class="feature-item"><span style="color:var(--warning)">!</span> <strong>A CI gate that reads 2,881 files and cannot fail.</strong> <code>npm run lint</code> has no <code>--max-warnings</code>, so 58 warnings exit 0, including 47 on the rule carrying three named architectural ratchets.</li>
                     </ul>
@@ -1243,13 +1311,271 @@
                     <span>🚀</span> Release 2.7 recommendations, in the order the audit ranked them
                 </div>
                 <ol style="margin-left: 1.25rem; color: var(--text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                    <li><strong>Fix the FastAPI public pricing endpoint.</strong> Delete the fallback, select by <code>lookup_key</code>, honour <code>publish: never</code>, and return 503 rather than a price on failure. Then widen the price-lock parity guard to <code>api/**</code> and assert the SERVED payload, not only the forbidden literals. <em>Live, unauthenticated, contradicts a locked commercial decision.</em></li>
+                    <li><span class="pill pill-emerald" style="font-size:.75rem">CLOSED &middot; verified live 2026-08-19 20:31 UTC</span> <strong>Fix the FastAPI public pricing endpoint.</strong> Delete the fallback, select by <code>lookup_key</code>, honour <code>publish: never</code>, and return 503 rather than a price on failure. Then widen the price-lock parity guard to <code>api/**</code> and assert the SERVED payload, not only the forbidden literals. <em>Live, unauthenticated, contradicts a locked commercial decision.</em>
+                        <br><span style="color:var(--text-main);font-size:.9rem">The served payload now reads <span class="code-path">source: "stripe"</span>, Starter 49, Pro 149, Portfolio <span class="code-path">{ pricing: "contact_sales", sales_only: true }</span>. No 399, no 549, no Solo / Team / Agency, no &ldquo;Unlimited users&rdquo;. <strong>The guard half of this recommendation was NOT verified</strong> &mdash; whether the parity guard now scans <code>api/**</code> and asserts the served payload is UNVERIFIED here, and it is the half that stops the defect returning.</span></li>
                     <li><strong>Resolve entitlement once per request.</strong> One route calls a <code>product_subscriptions</code>-first resolver and then a <code>product_context</code>-only guard, so whichever source is stale decides. Do it before the first customer is provisioned by invite or admin grant, because every non-Stripe path creates the drift by construction.</li>
-                    <li><strong>Make the two fail-open auth reads fail closed, and log.</strong> The correct pattern already exists one layer up in the same file.</li>
+                    <li><span class="pill pill-emerald" style="font-size:.75rem">CLOSED &middot; source re-read 2026-08-19</span> <strong>Make the two fail-open auth reads fail closed, and log.</strong> The correct pattern already exists one layer up in the same file.
+                        <br><span style="color:var(--text-main);font-size:.9rem"><span class="code-path">isMfaSoftLocked</span> now returns a three-state <span class="code-path">"locked" | "clear" | "unknown"</span> and logs on both the query-error and the throw path; <span class="code-path">softLockDenial</span> denies on <span class="code-path">"unknown"</span> as well as <span class="code-path">"locked"</span>, so <strong>returning <span class="code-path">null</span> is the only way a caller admits anyone</strong> &mdash; the shape matters more than the fix, because a boolean had no way to say &ldquo;I could not tell&rdquo;. <span class="code-path">resolveSsoConnection</span> returns <span class="code-path">null</span> and logs at <span class="code-path">log.error</span> on both the organisation lookup and the connection lookup. <span class="code-path">web/src/shared/lib/auth/mfa-attempt.ts:107-186</span>, <span class="code-path">web/app/api/auth/sso/_lib/connection.ts:25-70</span>.</span></li>
                     <li><strong>Wire or delete the 21 unreachable guard scripts</strong>, starting with the six that are red. One has already accumulated a new regression while unobserved.</li>
                     <li><strong>Wire the Schedule 1 threshold to a captured buyer class</strong> rather than to an assumed one, and capture the class. See the Correctness section: the constant is now read, but nothing populates the field it branches on.</li>
                     <li><strong>Codemod the 46 broken comment strippers</strong> onto the shared module. It is the only way to learn which of those green results were green because the reader deleted the code.</li>
                 </ol>
+                <p style="color:var(--text-muted);font-size:.85rem;margin-top:1rem;border-top:1px solid rgba(255,255,255,.08);padding-top:.75rem">
+                    <strong>Recommendations 2, 4, 5 and 6 were NOT re-measured on 2026-08-19.</strong> They are neither confirmed
+                    open nor confirmed closed, and nothing in this revalidation should be read as either. Their denominators
+                    &mdash; 11 of 17 entitlement pairs, 21 of 32 guard scripts with 6 red, 46 of 60 comment strippers &mdash;
+                    are as at 2026-08-16. Recommendations 1 and 3 were closed against a LIVE surface, which is the only reason
+                    this page is willing to move them.
+                </p>
+            </div>
+
+            <!-- ══════════════════ REVALIDATION 2026-08-19 ══════════════════ -->
+
+            <div class="section-header" style="margin-top: 3.5rem;">
+                <div class="section-tag">Revalidation &middot; measured 2026-08-19, 20:31&ndash;20:35 UTC</div>
+                <h2 class="section-title">What Production Says Today, And Where This Page Was Overtaken</h2>
+                <p class="section-desc">
+                    Production moved to commit <span class="code-path">37173e87</span> on 2026-08-19 (Railway and Vercel both
+                    live), carrying 25 commits of R2.7 / R2.7.1 work. Four things this page asserted are no longer true, one
+                    thing it never mentioned turned out to matter more than most of what it did, and one correction runs the
+                    OPPOSITE way from the rest &mdash; a disclosure that was right when written and is now stale. Every row below
+                    was read off a live surface, never off a tracker. <strong>Nothing here is deleted; the superseded claim stays
+                    beside its replacement</strong>, because a page that silently drops what it got wrong teaches the reader to
+                    trust the next wrong thing.
+                </p>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#34d399">
+                <div class="fact-title"><span>&#9989;</span> 1. The endpoint that was this page&rsquo;s #1 recommendation now serves the locked ladder</div>
+                <p style="color:var(--text-muted)">
+                    <span class="code-path">GET https://crowagent-platform-production.up.railway.app/api/v1/pricing/public</span>
+                    &mdash; unauthenticated, 2026-08-19 20:31 UTC, HTTP 200.
+                </p>
+                <p style="color:var(--text-main);margin-top:.5rem">
+                    <span class="code-path">source: "stripe"</span> &middot; CrowMark Starter 49 / 44 &middot; CrowMark Pro 149 / 134 &middot;
+                    CrowMark Portfolio <span class="code-path">{ pricing: "contact_sales", sales_only: true }</span>
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>All four defects the section at the foot of the Pricing tab named are absent from the served payload:</strong>
+                    no <strong>&pound;399</strong>, no <strong>&pound;549</strong> (the figure marked <span class="code-path">publish: never</span>,
+                    which was the trap in the recovered-Stripe branch), no <strong>Solo / Team / Agency</strong> vocabulary, and no
+                    <strong>&ldquo;Unlimited users&rdquo;</strong>. The <span class="code-path">source</span> field reads
+                    <span class="code-path">"stripe"</span> rather than <span class="code-path">"fallback"</span>, so the branch that
+                    published the retired ladder is not the branch being taken. Both public pricing endpoints now agree with each
+                    other and with the lock: the Next.js one at
+                    <span class="code-path">https://app.crowagent.ai/api/public/pricing</span>, re-fetched in the same minute,
+                    returns 49 / 529, 149 / 1609, and Portfolio <span class="code-path">contact_sales</span>.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>What is NOT established.</strong> This is a measurement of the SERVED PAYLOAD, not of the code path.
+                    Whether <span class="code-path">_FALLBACK_PRICING</span> was deleted or merely stopped being reached, whether
+                    selection is now by <span class="code-path">lookup_key</span>, and whether the price-lock parity guard was
+                    widened to <span class="code-path">api/**</span> with a positive assertion, are <strong>UNVERIFIED</strong>.
+                    That distinction is the whole lesson of the original finding: a correct value today and a guard that would
+                    catch tomorrow&rsquo;s wrong one are different properties, and only the first was measured.
+                </p>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#34d399;margin-top:1.25rem">
+                <div class="fact-title"><span>&#9989;</span> 2. Both fail-open auth reads now fail closed, and the fix changed the TYPE, not just the branch</div>
+                <p style="color:var(--text-muted)">
+                    Source re-read 2026-08-19 at <span class="code-path">web/src/shared/lib/auth/mfa-attempt.ts:107-186</span> and
+                    <span class="code-path">web/app/api/auth/sso/_lib/connection.ts:25-70</span>.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>The MFA soft-lock returns a three-state, and that is the load-bearing part.</strong>
+                    <span class="code-path">isMfaSoftLocked</span> now yields
+                    <span class="code-path">"locked" | "clear" | "unknown"</span> and logs on BOTH failure paths &mdash; the query
+                    error and the throw from <span class="code-path">createSupabaseAdminClient()</span>, the latter being the
+                    configuration state (a missing or rotated service-role key) that used to disable the control permanently and
+                    invisibly. <span class="code-path">softLockDenial</span> then denies on <span class="code-path">"unknown"</span>
+                    as well as on <span class="code-path">"locked"</span>, so <strong>the only value that admits a caller is
+                    <span class="code-path">null</span></strong>.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    A boolean had no way to express &ldquo;I could not tell&rdquo;, so <em>every</em> read of it had to guess, and the
+                    cheap guess was <span class="code-path">false</span>. Widening the type is what makes fail-open unrepresentable
+                    rather than merely unchosen at this call site &mdash; the difference between fixing an instance and removing
+                    the way the instance was reachable.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>The enterprise domain restriction</strong> is the simpler half:
+                    <span class="code-path">resolveSsoConnection</span> returns <span class="code-path">null</span> and logs at
+                    <span class="code-path">log.error</span> with an operation name and context on both error paths
+                    (<span class="code-path">auth.sso.resolve.org</span> and
+                    <span class="code-path">auth.sso.resolve.connection</span>). A <span class="code-path">null</span> return
+                    denies, so an unreadable connection no longer reads as &ldquo;no restriction configured&rdquo;.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>The class is NOT closed.</strong> This page counted 51 TypeScript and 52 Python catch arms that
+                    discard the error and return an empty value. Those counts were not re-run. Two named instances are fixed;
+                    <strong>the population is UNVERIFIED</strong>, and a fixed exemplar has never been evidence about a population.
+                </p>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#fbbf24;margin-top:1.25rem">
+                <div class="fact-title"><span>&#9888;</span> 3. The residency disclosure was corrected today, and the deploy that shipped beside it made the correction stale</div>
+                <p style="color:var(--text-muted)">
+                    This page never discussed data residency, which is the first thing to record: <strong>a whole class of
+                    customer-visible claim sat outside its scope</strong> while it counted catch arms. The gap was found
+                    elsewhere and closed on 2026-08-17 as <span class="code-path">R27-RESIDENCY-01</span>: the marketing and legal
+                    surfaces claimed UK hosting &ldquo;at every layer, from disk to API&rdquo;, and both legal pages carried
+                    &ldquo;region being confirmed&rdquo; for Vercel and Railway. Measured rather than inherited, the Vercel
+                    function region was <span class="code-path">iad1</span> (Washington DC), so server-side route handlers
+                    &mdash; form submissions, authenticated session data &mdash; executed in the United States and no page said
+                    so. The copy was corrected across 7 locations to disclose the transfer.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>Then the region moved.</strong> Commit <span class="code-path">6232565c</span>, in the same
+                    <span class="code-path">37173e87</span> deploy, found that
+                    <span class="code-path">regions: ["lhr1"]</span> had been sitting in <span class="code-path">web/vercel.json</span>
+                    since 17 August doing nothing, because the project&rsquo;s Root Directory is the repo root and Vercel was
+                    reading a different file. Moving the key to the file Vercel actually reads took effect on deploy.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Measured 2026-08-19 20:33&ndash;20:35 UTC, by the same method the original finding used</strong>
+                    &mdash; the second <span class="code-path">::</span> segment of <span class="code-path">X-Vercel-Id</span>,
+                    every request <span class="code-path">x-vercel-cache: MISS</span> so they are real invocations rather than
+                    edge hits:
+                </p>
+                <p style="color:var(--text-main);margin-top:.4rem">
+                    <span class="code-path">/login</span>, <span class="code-path">/api/health</span> and
+                    <span class="code-path">/api/public/pricing</span> all return
+                    <span class="code-path">lhr1::lhr1::&hellip;</span> &mdash; <strong>6 of 6 function invocations across 3
+                    routes now execute in London.</strong> Static routes (<span class="code-path">/</span>,
+                    <span class="code-path">/dashboard</span>, <span class="code-path">/crowmark</span>,
+                    <span class="code-path">/settings</span>) return the two-segment edge-only form and say nothing about compute.
+                    Corroborated independently by Vercel&rsquo;s own deployment record for the live production deployment
+                    (<span class="code-path">dpl_q8eCtZFxxXiMsZnVUBYvuYfuC6b3</span>, commit
+                    <span class="code-path">37173e87</span>, <span class="code-path">READY</span>), which reports
+                    <span class="code-path">"regions": ["lhr1"]</span>. The header and the control plane agree.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>So the live disclosure is now wrong in the OPPOSITE direction, and that is the finding.</strong>
+                    <span class="code-path">https://app.crowagent.ai/residency</span>, fetched 2026-08-19, still publishes
+                    <span class="code-path">iad1</span> / &ldquo;Washington DC, USA&rdquo; as the function region and describes
+                    London as the <em>edge</em> that merely performs routing, and section 3 still relies on the SCCs and the UK
+                    IDTA for a transfer to the United States. That was accurate on 17 August. It stopped being accurate roughly
+                    two days later, in a deploy that shipped alongside it.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Both errors have the same shape and it is not carelessness.</strong> The first published a UK claim
+                    that the infrastructure did not support; the second publishes a US disclosure the infrastructure no longer
+                    requires. Both are a copy statement about an infrastructure fact with <em>nothing that re-reads the fact</em>.
+                    Over-disclosure is the safer failure and is still a failure: a residency page is read by buyers making a
+                    procurement decision, and one that names the wrong country loses deals it should win, then costs its own
+                    credibility when the discrepancy is noticed. <strong>The durable fix is not another copy edit. It is a check
+                    that reads <span class="code-path">X-Vercel-Id</span> and the deployment record and fails when the published
+                    region disagrees</strong> &mdash; the same &ldquo;measure the thing, not the record of it&rdquo; that this
+                    page applies to prices.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>UNVERIFIED:</strong> whether all 7 corrected locations still say <span class="code-path">iad1</span>.
+                    Only <span class="code-path">/residency</span> was fetched. The Railway API region
+                    (<span class="code-path">europe-west4-drams3a</span>, Amsterdam &mdash; EU, not UK) was <strong>not</strong>
+                    re-measured today and is carried from the 2026-08-17 reading; it is unaffected by the Vercel change and its
+                    disclosure is presumed still correct, but presumed is not measured.
+                </p>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#f87171;margin-top:1.25rem">
+                <div class="fact-title"><span>&#128721;</span> 4. Six tracker rows say PROD PENDING. All six are applied to production, and the database proves it by effect</div>
+                <p style="color:var(--text-muted)">
+                    Checked against the live production database <span class="code-path">gujtuecjzfiqsdnzgyvo</span> on
+                    2026-08-19. The trackers this page names as authoritative are wrong here, and in the direction that matters:
+                    <strong>they under-claim</strong>, describing work as owner-gated and awaiting a deploy step that has already
+                    happened.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>Present in <span class="code-path">supabase_migrations.schema_migrations</span> on PROD:</strong>
+                    <span class="code-path">r27_gdpr_01_cascade_answer_marks</span>,
+                    <span class="code-path">r27_gdpr_03_erasure_propagates_to_derived_chunks</span>,
+                    <span class="code-path">r27_gdpr_04_converge_erasure_exclusion_registry</span>,
+                    <span class="code-path">r27_sec10_prohibition_policies_become_restrictive</span>,
+                    the three <span class="code-path">r27_db01_*</span> hygiene migrations, and
+                    <span class="code-path">r27_ev07_supplier_bid_cost_capture</span>.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>A migration ledger row is a record, so it was not trusted on its own.</strong> Each was confirmed by
+                    the state it was supposed to produce:
+                </p>
+                <ul class="feature-list" style="margin-top:.5rem">
+                    <li class="feature-item"><span class="feature-icon">&#10003;</span> <strong>R27-GDPR-04</strong> &mdash; the row says the DB registry held <strong>12</strong> rows against Python&rsquo;s <strong>33</strong>. <span class="code-path">select count(*) from public.gdpr_erasure_exclusions</span> returns <strong>33</strong>. Converged.</li>
+                    <li class="feature-item"><span class="feature-icon">&#10003;</span> <strong>R27-GDPR-03</strong> &mdash; the row says <span class="code-path">atomic_delete_user</span> never mentioned <span class="code-path">content_chunks</span>, leaving a deleted CV&rsquo;s indexed chunk retrievable and citable. The deployed function definition now contains it.</li>
+                    <li class="feature-item"><span class="feature-icon">&#10003;</span> <strong>R27-GDPR-01</strong> &mdash; <span class="code-path">atomic_delete_user</span> now references <span class="code-path">answer_marks</span>.</li>
+                    <li class="feature-item"><span class="feature-icon">&#10003;</span> <strong>R27-SEC-10</strong> &mdash; the row says 22 permissive no-op &ldquo;prohibition&rdquo; policies were recreated as <strong>32 RESTRICTIVE</strong>. <span class="code-path">pg_policies</span> on prod: <strong>493 PERMISSIVE, 32 RESTRICTIVE</strong>. Exactly the count claimed.</li>
+                    <li class="feature-item"><span class="feature-icon">&#10003;</span> <strong>R262-EV-07</strong> &mdash; the row states the two tables are staging-only and that it &ldquo;verified live that 0 of the 2 exist on prod&rdquo;. Both <span class="code-path">crowmark_bid_rate_cards</span> and <span class="code-path">crowmark_bid_effort_entries</span> exist on prod today.</li>
+                </ul>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>Why this matters more than a stale cell.</strong> These are UK GDPR Article 17 erasure paths and RLS
+                    prohibitions. A tracker saying PROD PENDING invites exactly two wrong acts: someone re-applies a migration
+                    that has already run, or someone reports a live erasure gap to the owner as an open legal exposure when it is
+                    closed. The R262-EV-07 row is the sharpest instance, because it does not merely omit the update &mdash;
+                    <strong>it cites a live verification (&ldquo;0 of the 2 exist on prod&rdquo;) that is no longer true.</strong>
+                    A measurement with a date attached decays; a measurement quoted without one reads as permanent, which is how a
+                    true reading becomes a false claim without anyone editing it.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>This page does not correct the trackers</strong> &mdash; they are edited in
+                    <span class="code-path">crowagent-platform</span>, not here. The disagreement is recorded so that the header
+                    note above (&ldquo;where this page disagrees with the trackers, this page is wrong&rdquo;) is not applied
+                    blindly: <strong>on these six rows the trackers are the stale surface and the database is the truth.</strong>
+                </p>
+            </div>
+
+            <div class="fact-box" style="border-left-color:#fbbf24;margin-top:1.25rem">
+                <div class="fact-title"><span>&#9888;</span> 5. A live Sentry 422 on the AI assistant, root-caused and fixed &mdash; and NOT in production</div>
+                <p style="color:var(--text-muted)">
+                    <span class="code-path">Error: AI Railway returned 422 &middot; POST /api/ai-assistant</span>, reported from
+                    Sentry 2026-08-19 20:59 BST. The BFF at
+                    <span class="code-path">web/app/api/ai-assistant/route.ts</span> validated exactly one thing, that
+                    <span class="code-path">messages</span> is a non-empty array, then forwarded the payload verbatim. The
+                    upstream FastAPI route <span class="code-path">/api/v1/ai/chat</span>
+                    (<span class="code-path">api/app/routers/ai.py</span>) enforces <strong>four bounds the BFF had never been
+                    told about</strong>: <span class="code-path">messages</span> max length 50,
+                    <span class="code-path">role</span> matching <span class="code-path">^(user|assistant)$</span>,
+                    <span class="code-path">content</span> 1 to 8,000 characters, and
+                    <span class="code-path">context</span> max 8,000.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>This is the same defect class as the pricing endpoint, one layer in.</strong> Two writers of one
+                    contract, in two languages, with nothing that makes them agree &mdash; and the boundary between TypeScript
+                    and Python is again where the guard coverage stops. A long enough conversation, or one pasted document, and
+                    the user got an error the front end could not explain.
+                </p>
+                <p style="color:var(--text-main);margin-top:.75rem">
+                    <strong>Its status must be stated precisely, because &ldquo;fixed&rdquo; is doing work it has not earned.</strong>
+                    The fix is commit <span class="code-path">7221588b</span>, which is <strong>local and unpushed</strong>.
+                    <span class="code-path">origin/main</span> is <span class="code-path">37173e87</span>, and the working tree is
+                    <strong>5 commits ahead of it</strong>. <span class="code-path">POST /api/ai-assistant</span> fetched
+                    unauthenticated returns <strong>403</strong>, so the defective path is reachable only with a session and was
+                    not exercised end to end from here.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Production is still serving the 422.</strong> Fixed-in-tree and fixed-in-production are different
+                    claims about different systems, and this page has been wrong before by collapsing them. The other four
+                    unpushed commits (<span class="code-path">c3fabece</span> CA-022 checkbox targets,
+                    <span class="code-path">c392ba53</span> and <span class="code-path">97d73892</span> currency-label i18n and
+                    its guard, <span class="code-path">5f21385f</span> chat-connector producers) are likewise not live.
+                </p>
+            </div>
+
+            <div class="fact-box" style="margin-top:1.25rem">
+                <div class="fact-title"><span>&#128204;</span> Deployment state, so every claim above has a commit to hang on</div>
+                <p style="color:var(--text-muted)">
+                    <strong>Production = <span class="code-path">37173e87</span></strong>, on both surfaces: Vercel deployment
+                    <span class="code-path">dpl_q8eCtZFxxXiMsZnVUBYvuYfuC6b3</span> is <span class="code-path">READY</span> on
+                    <span class="code-path">app.crowagent.ai</span> with <span class="code-path">target: production</span>, and
+                    the Railway API answers on its production host. <span class="code-path">origin/main</span> is the same
+                    commit, so the 18 commits this repository&rsquo;s notes described as held back locally <strong>have been
+                    pushed</strong>. The deploy carried 25 commits of R2.7 / R2.7.1 work.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    <strong>Reported but not verified here:</strong> that all 69 CrowMark QA audit findings are closed and that
+                    the UI/UX audit is largely closed. Individual CA-numbered commits are visible in the deployed range
+                    (CA-005, CA-006, CA-008, CA-009, CA-022, CA-027, CA-040, CA-047 among them), which evidences <em>work</em>,
+                    not <em>completeness</em>. <strong>No denominator was re-counted, so 69 of 69 is UNVERIFIED on this page.</strong>
+                </p>
             </div>
 
             <!-- ══════════════════ R2.7 CORRECTNESS ══════════════════ -->
@@ -3560,16 +3886,28 @@
             <div class="section-header" style="margin-top:3rem">
                 <div class="band-label band-fact"><span>&#128269;</span> Fact &middot; new in Release 2.7</div>
                 <div class="section-tag">Section 9 &middot; measured live 2026-08-16</div>
-                <h2 class="section-title">There Are Two Public Pricing Endpoints. One Was Fixed. The Other Publishes &pound;399</h2>
+                <h2 class="section-title">There Are Two Public Pricing Endpoints. One Was Fixed. The Other Published &pound;399 <span class="pill pill-emerald" style="font-size:.8rem;vertical-align:middle">CLOSED 2026-08-19</span></h2>
                 <p class="section-desc">
                     This is the finding that most changes the picture, and it is the reason a revalidation is worth more than an
                     appended update. The whole of Section 2 was written about ONE public pricing endpoint. Fixing it was treated
                     as closing the class. It was not.
                 </p>
+                <p class="section-desc" style="border-left:3px solid #34d399;padding-left:1rem">
+                    <strong>Status as at 2026-08-19, 20:31 UTC.</strong> The Railway endpoint now returns
+                    <span class="code-path">source: "stripe"</span> with Starter 49, Pro 149 and Portfolio
+                    <span class="code-path">contact_sales</span> / <span class="code-path">sales_only: true</span>. No
+                    <strong>&pound;399</strong>, no <strong>&pound;549</strong>, no Solo / Team / Agency, no &ldquo;Unlimited
+                    users&rdquo;. <strong>The heading&rsquo;s tense is the only thing changed below; every word of the finding is
+                    retained.</strong> It was true when written, it is the reason the endpoint was fixed, and deleting it would
+                    leave a document that looks as though it never made the claim &mdash; and, worse, never explained why no
+                    guard caught it. <strong>The diagnosis outlives the defect.</strong> What is closed is the served value.
+                    Whether the guard was widened to <span class="code-path">api/**</span> with a positive assertion, which is
+                    the part that stops it recurring, is <strong>UNVERIFIED</strong>.
+                </p>
             </div>
 
             <div class="fact-box" style="border-left-color:#f87171">
-                <div class="fact-title"><span>&#128721;</span> Both fetched on 2026-08-16, unauthenticated, within a second of each other</div>
+                <div class="fact-title"><span>&#128721;</span> Both fetched on 2026-08-16, unauthenticated, within a second of each other <span class="pill pill-amber" style="font-size:.75rem">HISTORICAL &mdash; superseded 2026-08-19, retained</span></div>
                 <p style="color:var(--text-main)">
                     <span class="code-path">https://app.crowagent.ai/api/public/pricing</span>
                 </p>
@@ -3645,6 +3983,19 @@
                         recorded owner decision, which is a reputational and consumer-protection exposure rather than a billing
                         one.
                     </p>
+                    <p style="color:var(--text-muted);margin-top:.75rem;border-top:1px solid rgba(255,255,255,.08);padding-top:.6rem">
+                        <strong>Which of these three landed, checked 2026-08-19.</strong> The <strong>outcome</strong> of steps 1
+                        and 2 is confirmed from the served payload: <span class="code-path">source</span> reads
+                        <span class="code-path">"stripe"</span> rather than <span class="code-path">"fallback"</span>, and the
+                        published top tier is <span class="code-path">contact_sales</span> rather than the
+                        <span class="code-path">publish: never</span> &pound;549 that a naive Stripe recovery would have selected
+                        &mdash; so selection is no longer &ldquo;first monthly price on the product&rdquo;. Whether that was
+                        achieved by <span class="code-path">lookup_key</span> specifically, and whether
+                        <span class="code-path">_FALLBACK_PRICING</span> was deleted or merely bypassed, is
+                        <strong>UNVERIFIED</strong>: a payload cannot distinguish a deleted branch from an untaken one.
+                        <strong>Step 3 is UNVERIFIED entirely.</strong> It is also the only one of the three that protects the
+                        future, so it is the one worth confirming.
+                    </p>
                 </div>
             </div>
 
@@ -3670,6 +4021,22 @@
                     sharper half: <strong>a decision is not implemented until every surface that can answer the question has been
                     counted</strong>, and a guard that scans one language of a two-language platform has not counted them.
                 </p>
+                <p style="color:var(--text-main);margin-top:1rem;border-top:1px solid rgba(255,255,255,.08);padding-top:.75rem">
+                    <strong>Addendum, 2026-08-19.</strong> The endpoint is fixed and both public surfaces now agree with the lock.
+                    But the class the paragraph above names &mdash; two writers of one contract across the TypeScript / Python
+                    boundary, with no guard spanning it &mdash; <strong>produced a second live production defect three days
+                    later</strong>, in a different subsystem: the AI assistant BFF forwarded a payload violating four FastAPI
+                    bounds it had never been told about, and users met a 422. Same seam, same absence of a cross-language check,
+                    a fortnight apart.
+                </p>
+                <p style="color:var(--text-muted);margin-top:.75rem">
+                    That is the strongest available evidence that <strong>fixing the instance did not fix the class</strong>. The
+                    recommendation to widen the parity guard to <span class="code-path">api/**</span> was written about prices;
+                    the recurrence says the missing thing is more general than a price guard, and that until a contract between
+                    the two languages is checked by something, this seam will keep producing live defects that no gate sees
+                    first. <strong>Counting the surfaces was the right lesson and it was scoped too narrowly:</strong> it is not
+                    only every surface that can answer a pricing question, it is every contract with a writer on each side.
+                </p>
             </div>
 
         </div>
@@ -3678,6 +4045,14 @@
     <script>
         // Tab switching logic
         function switchTab(tabId) {
+            /* [STAT-004] Clears only the IN-PAGE content tabs.
+               The four board cross-links above carry `.board-tab`, NOT `.tab-btn`,
+               precisely so this line cannot reach them. When they shared a class,
+               opening any content tab permanently stripped the "you are here"
+               highlight from the Architecture Review board tab, because this
+               querySelectorAll matched the navigation as well as the tabs it owns.
+               The two classes share every style rule, so they look identical and
+               cannot drift apart; only the JS ownership differs. */
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
