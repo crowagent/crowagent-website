@@ -97,7 +97,7 @@ Aligned, not yet certified
 
 ## AI data handling
 
-AI inference runs through server-side API calls only. Customer-facing drafting uses Google Gemini; heavier reasoning and analysis use Anthropic's Claude. Both are data sub-processors under signed DPAs. The boundaries below describe exactly what crosses to a model provider.
+AI inference runs through server-side API calls only. Customer-facing drafting uses Google Gemini. Heavier reasoning and analysis use Anthropic's Claude. Both are data sub-processors under signed DPAs. The boundaries below describe exactly what crosses to a model provider.
 
 <dl class="deflist"> <dt>What is sent</dt> <dd> <ul> <li>Prompt context for the active task.</li> <li>Public reference text where required.</li> <li>Server-side API calls only.</li> </ul> </dd> <dt>What is NOT sent</dt> <dd> <ul> <li>Customer data for training.</li> <li>Bulk exports or full org datasets.</li> <li>Authentication tokens or PII.</li> </ul> </dd> <dt>Inference &amp; retention</dt> <dd> <ul> <li>CrowAgent-brokered infrastructure.</li> <li>Provider zero-retention terms.</li> <li>Inputs not retained by the model.</li> </ul> </dd> </dl>
 
@@ -133,7 +133,7 @@ CrowAgent targets 99.5% monthly uptime, with independent public status monitorin
 
 ## Finished your review?
 
-Everything above is what we can evidence today, including the gaps. If it clears your bar, the next step is access to a live workspace; if it does not, tell us which control is missing and we will say plainly whether it is on the roadmap.
+Everything above is what we can evidence today, including the gaps. If it clears your bar, the next step is access to a live workspace. If it does not, tell us which control is missing and we will say plainly whether it is on the roadmap.
 
 [Request access](/contact?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
 

@@ -2,12 +2,12 @@
 title: "CrowMark vs mytender.io: an honest UK bid software comparison"
 description: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
 ogDescription: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
-articleDescription: "CrowMark publishes pricing from £49/month and adds figure-grounding and PPN 002 maths; mytender.io is a UK AI tender-writing platform that does not publish a price. A sourced, balanced comparison."
+articleDescription: "CrowMark publishes pricing from £49/month and adds figure-grounding and PPN 002 maths. mytender.io is a UK AI tender-writing platform that does not publish a price. A sourced, balanced comparison."
 publishDate: 2026-07-26
 updatedDate: 2026-07-26
 competitor: "mytender.io"
 eyebrow: "Honest comparison"
-heroDescription: "Two UK-built tools for public-sector bidding. One publishes its pricing and grounds every figure; the other is a private-cloud drafting platform. Every competitor fact is sourced."
+heroDescription: "Two UK-built tools for public-sector bidding. One publishes its pricing and grounds every figure. The other is a private-cloud drafting platform. Every competitor fact is sourced."
 ogImage: "/Assets/og/crowmark.png?v=20260730"
 ogImageAlt: "CrowMark vs mytender.io comparison"
 ctaHeadline: "SEE THE PRICE."
@@ -15,9 +15,9 @@ ctaSubLine1: "Published pricing from £49/month."
 ctaSubLine2: "Live, paid, and in daily use on real bids."
 faq:
   - question: "Is CrowMark or mytender.io cheaper?"
-    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, with access offered by request rather than self-serve signup. mytender.io does not publish a price; its tiers are shown on request or in the account dashboard, so a like-for-like number comparison is not possible from public information."
+    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, with access offered by request rather than self-serve signup. mytender.io does not publish a price. Its tiers are shown on request or in the account dashboard, so a like-for-like number comparison is not possible from public information."
   - question: "Does mytender.io publish its pricing?"
-    answer: "No. mytender.io does not list public prices; it directs prospects to a demo or the account dashboard and offers a one-month refundable period after commencement. On this page we mark its price as Not published."
+    answer: "No. mytender.io does not list public prices. It directs prospects to a demo or the account dashboard and offers a one-month refundable period after commencement. On this page we mark its price as Not published."
   - question: "Is mytender.io a UK company?"
     answer: "Yes. mytender.io is a University of Southampton startup founded by Samuel Aaron, Jamie Horsnell and Nicolas Dickreuter, with pre-seed investment led by Fuel Ventures. CrowMark is also UK-built, from CrowAgent Ltd."
   - question: "Does mytender.io find tenders for me?"
@@ -44,7 +44,7 @@ faq:
 </thead>
 <tbody>
 <tr><th scope="row">Category</th><td class="cmp-us">UK bid and tender management suite</td><td>UK AI tender-writing platform</td></tr>
-<tr><th scope="row">UK tender discovery (Contracts Finder + Find a Tender)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, refreshed daily at 06:00</td><td>No own feed stated; partnered with a UK tender portal</td></tr>
+<tr><th scope="row">UK tender discovery (Contracts Finder + Find a Tender)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, refreshed daily at 06:00</td><td>No own feed stated. Partnered with a UK tender portal</td></tr>
 <tr><th scope="row">Drafting grounded in your own past bids</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Yes, retrieval over your content library</td></tr>
 <tr><th scope="row">Figure-grounding (AI blocked from inventing a number)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic gate</td><td>Not stated publicly</td></tr>
 <tr><th scope="row">PPN 017 AI-use disclosure on every draft</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated publicly</td></tr>
@@ -70,7 +70,7 @@ faq:
 <picture>
 <source type="image/avif" srcset="/Assets/shots/figma-v2/buy-1-requirement-builder-light.avif?v=20260805a">
 <source type="image/webp" srcset="/Assets/shots/figma-v2/buy-1-requirement-builder-light.webp?v=20260805a">
-<img src="/Assets/shots/figma-v2/buy-1-requirement-builder-light.png?v=20260805a" width="2880" height="1800" loading="lazy" decoding="async" alt="The CrowMark social value requirement builder for a buying authority, a draft requirement on a &pound;4,250,000 contract closing 7 Jun 2026. Four figures head the page: a social value weighting of 20 per cent, noted on screen as above the PPN 002 minimum of 10 per cent; five criteria published, each with its own evidence requirement; a total weight of 100 per cent, split quality 50, price 30 and social value 20; and 24 responses received from 24 invited suppliers. An award criteria table lists local employment, apprenticeships and skills, SME and VCSE spend, carbon reduction and supported employment, each with its TOMs reference, its weighting and the evidence a supplier must supply. Preview supplier view and Publish requirement sit at the top right." />
+<img src="/Assets/shots/figma-v2/buy-1-requirement-builder-light.png?v=20260805a" width="2880" height="1800" loading="lazy" decoding="async" alt="The CrowMark social value requirement builder for a buying authority, a draft requirement on a &pound;4,250,000 contract closing 7 Jun 2026. Four figures head the page. A social value weighting of 20 per cent, noted on screen as above the PPN 002 minimum of 10 per cent. Five criteria published, each with its own evidence requirement. A total weight of 100 per cent, split quality 50, price 30 and social value 20. And 24 responses received from 24 invited suppliers. An award criteria table lists local employment, apprenticeships and skills, SME and VCSE spend, carbon reduction and supported employment, each with its TOMs reference, its weighting and the evidence a supplier must supply. Preview supplier view and Publish requirement sit at the top right." />
 </picture>
 <figcaption>The buyer-side social value requirement in CrowMark, shown as a drawn representation. The criteria, weightings and evidence requirements on screen are part of the drawing.</figcaption>
 </figure>
@@ -78,7 +78,7 @@ faq:
 <p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
-<p>The pricing models are different in kind, not just in number. CrowMark states &pound;49 and &pound;149 per month in public, on a page anyone can read without a demo. mytender.io keeps its tiers behind a demo or the dashboard. Both of us open an account through a conversation, but only one of us makes you have it before you know the price. If knowing the cost up front is part of how you evaluate software, CrowMark gives you that immediately; if you prefer to see a tailored quote after a walkthrough, mytender.io's model fits that.</p>
+<p>The pricing models are different in kind, not just in number. CrowMark states &pound;49 and &pound;149 per month in public, on a page anyone can read without a demo. mytender.io keeps its tiers behind a demo or the dashboard. Both of us open an account through a conversation, but only one of us makes you have it before you know the price. If knowing the cost up front is part of how you evaluate software, CrowMark gives you that immediately. If you prefer to see a tailored quote after a walkthrough, mytender.io's model fits that.</p>
 
 <h2 id="which-should-you-choose">Which should you choose?</h2>
 <div class="cmp-choose">
@@ -109,11 +109,11 @@ faq:
 <div class="cfaq">
   <details>
     <summary><h3>Is CrowMark or mytender.io cheaper?</h3></summary>
-    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, with access offered by request rather than self-serve signup. mytender.io does not publish a price; its tiers are shown on request or in the account dashboard, so a like-for-like number comparison is not possible from public information.</p></div>
+    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, with access offered by request rather than self-serve signup. mytender.io does not publish a price. Its tiers are shown on request or in the account dashboard, so a like-for-like number comparison is not possible from public information.</p></div>
   </details>
   <details>
     <summary><h3>Does mytender.io publish its pricing?</h3></summary>
-    <div class="cfaq-a"><p>No. mytender.io does not list public prices; it directs prospects to a demo or the account dashboard and offers a one-month refundable period after commencement. On this page we mark its price as Not published.</p></div>
+    <div class="cfaq-a"><p>No. mytender.io does not list public prices. It directs prospects to a demo or the account dashboard and offers a one-month refundable period after commencement. On this page we mark its price as Not published.</p></div>
   </details>
   <details>
     <summary><h3>Is mytender.io a UK company?</h3></summary>

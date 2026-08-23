@@ -56,7 +56,7 @@ A tender pack can run to dozens of documents, but a first read should extract si
 - **The award criteria and weightings.** How the marks split between price, quality and social value. This tells you where to spend your effort.
 - **The mandatory, pass or fail requirements.** Minimum standards, certifications and any exclusion questions. Miss one and the quality of your writing will not matter.
 - **The response format.** Word or character limits, required attachments, and the exact question set. Answer in the structure the buyer gives you.
-- **The clarification process.** How and by when you can ask questions. Good bidders use it; the answers are usually shared with all bidders.
+- **The clarification process.** How and by when you can ask questions. Good bidders use it. The answers are usually shared with all bidders.
 
 Map the award criteria to a simple response plan before you draft. If quality is 60 percent of the score, price 30 and social value 10, your time should broadly follow those proportions. Bidders lose winnable contracts by writing at length about the things they enjoy and skimming the things that carry the marks.
 
@@ -68,7 +68,7 @@ A **Selection Questionnaire (SQ)** is a pre-qualification stage. It is largely p
 
 An **Invitation to Tender (ITT)** is the scored bid itself. Here your responses to quality questions, your price, and your social value offer are evaluated and marked. This is where the competition is genuinely won and where your writing quality matters.
 
-In a multi-stage competition the SQ comes first and only shortlisted suppliers are invited to submit an ITT. In a single-stage open procedure there is no separate SQ; the selection and award questions arrive together in one submission. Always check which shape a given procurement uses, because it changes how you plan your time.
+In a multi-stage competition the SQ comes first and only shortlisted suppliers are invited to submit an ITT. In a single-stage open procedure there is no separate SQ. The selection and award questions arrive together in one submission. Always check which shape a given procurement uses, because it changes how you plan your time.
 
 ## The bid or no-bid decision
 
@@ -82,7 +82,7 @@ Before committing, score the opportunity honestly against a handful of questions
 - **Value.** Is the margin and strategic value worth the cost of bidding, including your time?
 - **Fit against the requirement.** Honestly, does your record answer what is being asked, or are you making up the numbers for someone else's competition?
 
-If the honest answer to several of these is weak, walk away and put that effort into an opportunity you can win. A no-bid is not a failure; it is a decision that protects your team's time for the bids you are genuinely suited to.
+If the honest answer to several of these is weak, walk away and put that effort into an opportunity you can win. A no-bid is not a failure. It is a decision that protects your team's time for the bids you are genuinely suited to.
 
 ## Social value and PPN 002
 
@@ -102,7 +102,7 @@ The bids that get rejected early tend to share the same avoidable errors:
 4. **Weak or generic social value.** Treating a 10 percent scored section as an afterthought and losing marks a competitor banks.
 5. **Missing a mandatory pass or fail requirement.** An expired certificate or an unanswered exclusion question ends a strong bid before evaluation.
 6. **No evidence.** Claims without specific examples, named projects or numbers read as assertions and score low.
-7. **Leaving submission to the last hour.** Portal upload problems are common; submit with time to spare, because a missed deadline is an automatic rejection.
+7. **Leaving submission to the last hour.** Portal upload problems are common. Submit with time to spare, because a missed deadline is an automatic rejection.
 
 Every one of these is within your control. Fixing them does not require a bigger team, only a more disciplined process.
 

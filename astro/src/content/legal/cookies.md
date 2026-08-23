@@ -1,6 +1,6 @@
 ---
 title: "Cookie Policy | CrowAgent"
-description: "How CrowAgent uses cookies. This website sets none; the signed-in CrowMark platform sets the items listed here, with the reason and lifetime for each."
+description: "How CrowAgent uses cookies. This website sets none. The signed-in CrowMark platform sets the items listed here, with the reason and lifetime for each."
 heading: "Cookie Policy."
 lastUpdated: "2026-08-03"
 ---Full statutory disclosure for CrowAgent Ltd. UK GDPR and PECR aligned transparency.
@@ -15,7 +15,7 @@ We follow the Privacy and Electronic Communications Regulations (PECR) for stora
 
 ## 2. Every cookie we use
 
-**This website, crowagent.ai, sets nothing.** No cookies, no local storage, no session storage, and no requests to anyone else. There is no consent banner on it because there is nothing to ask you about, and no analytics because none is installed. You can confirm all of that yourself in about ten seconds; the [cookie preferences](/cookie-preferences) page shows you how.
+**This website, crowagent.ai, sets nothing.** No cookies, no local storage, no session storage, and no requests to anyone else. There is no consent banner on it because there is nothing to ask you about, and no analytics because none is installed. You can confirm all of that yourself in about ten seconds. The [cookie preferences](/cookie-preferences) page shows you how.
 
 The table below is the **CrowMark platform**, the signed-in application you reach at a separate address. Items marked **Consent-gated** are not set unless you agree in the platform's own consent banner. Where a row names no expiry, the item lasts for the browser session and is gone when you close it.
 
@@ -25,7 +25,7 @@ On a narrow screen, this table scrolls sideways.
 
 ## 3. The three categories we use
 
-We group cookies into three plain-English categories so you can choose what you are comfortable with. On this website all three are empty; the descriptions below are what each one means inside the platform.
+We group cookies into three plain-English categories so you can choose what you are comfortable with. On this website all three are empty. The descriptions below are what each one means inside the platform.
 
 - **Strictly necessary:** Always on. Keep you signed in, remember a trusted device, protect against bots, and remember your consent choice. The platform would not work without them. This website sets none of them, because it has no sign-in and no session.
 - **Analytics:** Optional and off by default. Helps us understand which pages are used and where people get stuck. Hosted on PostHog EU cloud, inside the platform only. There is no analytics script of any kind on this website.

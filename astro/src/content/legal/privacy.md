@@ -8,7 +8,7 @@ lastUpdated: "2026-05-17"
 
 ## What this policy covers
 
-CrowAgent Ltd is the data controller for personal data processed through the platform. These are the foundations; the full detail follows below.
+CrowAgent Ltd is the data controller for personal data processed through the platform. These are the foundations. The full detail follows below.
 
 ### ICO Registered Controller
 
@@ -52,7 +52,7 @@ We may collect and process the following data about you:
 - **Sustainability data:** Activity and energy-consumption figures submitted through legacy reporting features, available to existing customers only. This is essential for the CrowAgent platform.
 - **Social Value data:** Procurement descriptions, National TOMs selections, and submissions you enter for PPN 002 scoring and CrowMark narrative generation.
 - **Usage data:** Details of your visits to our site including, but not limited to, traffic data, location data, weblogs and other communication data, API call counts, feature usage events, timestamps, and subscription plan.
-- **Billing data:** Stripe customer ID and subscription status. We do not store raw card numbers; these are handled directly by Stripe.
+- **Billing data:** Stripe customer ID and subscription status. We do not store raw card numbers. These are handled directly by Stripe.
 - **Technical data:** IP address, browser type, and error telemetry (collected by Sentry).
 - **Analytics data:** Page views and feature interaction events (collected by PostHog with your consent).
 
@@ -129,7 +129,7 @@ Supabase EU Railway EU Vercel Edge Cloudflare Edge Stripe US/EU PostHog EU Sentr
 **Integrations you connect:** You control which third-party services you link, and you can disconnect any of them at any time from your settings.
 
 - **Accounting ledger (legacy, existing customers only):** If you link Xero or QuickBooks Online, we access only the invoice, contact, and payment-status data you authorise, on a read-only basis, to power debtor analytics. We never write back to your ledger and never move money. A Sage connector is in development and not yet live.
-- **Single sign-on:** You can sign in with a Microsoft (Entra ID) or Google account. We receive only the identity profile needed to authenticate you (name, email, and a stable account identifier); we do not read your mailbox, files, or directory through sign-in.
+- **Single sign-on:** You can sign in with a Microsoft (Entra ID) or Google account. We receive only the identity profile needed to authenticate you (name, email, and a stable account identifier). We do not read your mailbox, files, or directory through sign-in.
 - **Security posture (legacy, existing customers only):** Read-only Microsoft 365 and Google Workspace posture connectors are in development. Once available they will read only the security-configuration signals you authorise (such as MFA coverage, secure score, and device-compliance status) to pre-fill security-certification evidence. They request read-only scopes only and never change a setting in your tenant. Until then, you upload that evidence yourself.
 
 ## International data transfers
@@ -158,7 +158,7 @@ The compliance inputs you enter for the task, such as procurement descriptions, 
 
 How it is used
 
-The inputs are processed only to generate your draft output, which is returned to you. You review and edit every output before use; AI drafts are advisory and are not a final compliance decision.
+The inputs are processed only to generate your draft output, which is returned to you. You review and edit every output before use. AI drafts are advisory and are not a final compliance decision.
 
 Anthropic acts as a data processor on our behalf under our agreement with them. Where data is transferred outside the UK, we rely on the transfer safeguards set out in the "International data transfers" section above.
 

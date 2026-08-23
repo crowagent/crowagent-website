@@ -2,7 +2,7 @@
 title: "CrowMark vs AutogenAI: an honest UK bid software comparison"
 description: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine that quotes on request. Every figure sourced."
 ogDescription: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine that quotes on request. Every figure sourced."
-articleDescription: "CrowMark is an SME bid suite with published pricing from £49/month; AutogenAI is an enterprise engine that does not publish a price. A sourced, balanced comparison for UK bidding teams."
+articleDescription: "CrowMark is an SME bid suite with published pricing from £49/month. AutogenAI is an enterprise engine that does not publish a price. A sourced, balanced comparison for UK bidding teams."
 publishDate: 2026-07-26
 updatedDate: 2026-07-26
 competitor: "AutogenAI"
@@ -15,13 +15,13 @@ ctaSubLine1: "Published pricing from £49/month."
 ctaSubLine2: "Live, paid, and in daily use on real bids."
 faq:
   - question: "Is CrowMark or AutogenAI cheaper?"
-    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information."
+    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price. It is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information."
   - question: "Does AutogenAI publish its pricing?"
     answer: "No. AutogenAI lists no public price and quotes enterprise customers on request. Figures that circulate online are third-party estimates, not vendor-published rates."
   - question: "Which is better for a small supplier or SME?"
     answer: "CrowMark is built for UK SMEs and public-sector suppliers, with published plans from £49 per month. AutogenAI is built for enterprise bid teams of five or more, so it tends to be more than a small supplier needs."
   - question: "Does AutogenAI find tenders for me?"
-    answer: "AutogenAI has no built-in UK tender discovery feed; you bring your own pipeline. CrowMark tracks Contracts Finder and Find a Tender and refreshes the feed every morning at 06:00."
+    answer: "AutogenAI has no built-in UK tender discovery feed. You bring your own pipeline. CrowMark tracks Contracts Finder and Find a Tender and refreshes the feed every morning at 06:00."
   - question: "Can either tool stop the AI inventing figures?"
     answer: "CrowMark uses a deterministic figure-grounding gate: every £ and % in a draft has to exist in an allowed-figure set computed from your own data, or the draft is rejected. We cannot verify an equivalent guarantee in AutogenAI's public materials."
   - question: "Is AutogenAI a bigger company than CrowAgent?"
@@ -44,7 +44,7 @@ faq:
 </thead>
 <tbody>
 <tr><th scope="row">Category</th><td class="cmp-us">UK bid and tender management suite</td><td>Enterprise AI bid-writing engine</td></tr>
-<tr><th scope="row">UK tender discovery (Contracts Finder + Find a Tender)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, refreshed daily at 06:00</td><td><span class="cmp-no">Not built in</span>; bring your own pipeline</td></tr>
+<tr><th scope="row">UK tender discovery (Contracts Finder + Find a Tender)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, refreshed daily at 06:00</td><td><span class="cmp-no">Not built in</span>. Bring your own pipeline</td></tr>
 <tr><th scope="row">Drafting grounded in your own past bids</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Yes, retrieval over your content library</td></tr>
 <tr><th scope="row">Figure-grounding (AI blocked from inventing a number)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic gate</td><td>Not stated publicly</td></tr>
 <tr><th scope="row">PPN 017 AI-use disclosure on every draft</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated publicly</td></tr>
@@ -58,7 +58,7 @@ faq:
 </div>
 
 <h2 id="what-is-autogenai">What is AutogenAI?</h2>
-<p>AutogenAI is an AI bid-writing engine that generates and reviews proposal content using retrieval over a content library the customer builds from its own past bids. Independent listings describe it as pitched at enterprise bid teams of five or more, sector-agnostic, with an automated compliance review and stated alignment to the Procurement Act 2023. It does not include a UK tender discovery feed; customers bring their own pipeline.</p>
+<p>AutogenAI is an AI bid-writing engine that generates and reviews proposal content using retrieval over a content library the customer builds from its own past bids. Independent listings describe it as pitched at enterprise bid teams of five or more, sector-agnostic, with an automated compliance review and stated alignment to the Procurement Act 2023. It does not include a UK tender discovery feed. Customers bring their own pipeline.</p>
 <p>AutogenAI is a well-funded, enterprise-scale company. It raised a $39.5m Series B in December 2023, led by Salesforce Ventures and Spark Capital, taking total investment to $65.3m at the time. If you run a large, multi-sector bid team and want a mature engine with a big content library, that scale is a genuine strength, and it is one CrowMark does not match today.</p>
 <p>AutogenAI does not publish a price. Its pricing is enterprise, quoted on request, so any specific figure you see quoted elsewhere is a third-party estimate rather than a vendor rate. On this page we mark it as Not published.</p>
 
@@ -101,13 +101,13 @@ faq:
 </div>
 
 <h2 id="where-crowmark-loses">Where CrowMark loses honestly</h2>
-<p>A balanced comparison has to concede the gaps. AutogenAI is a larger, better-funded company with a longer track record and an engine built for high-volume, multi-sector enterprise bidding. If you need that breadth, dedicated account management at enterprise scale, or a content engine tuned across many industries, AutogenAI is the more established option, and CrowMark, as a newer SME product, is not trying to be that. CrowMark is deliberately narrow: UK public-sector suppliers, grounded answers, social value and delivery evidence. The two are not mutually exclusive; some teams run an enterprise engine for the largest proposals and CrowMark for UK tender discovery, social-value scoring and post-award evidence.</p>
+<p>A balanced comparison has to concede the gaps. AutogenAI is a larger, better-funded company with a longer track record and an engine built for high-volume, multi-sector enterprise bidding. If you need that breadth, dedicated account management at enterprise scale, or a content engine tuned across many industries, AutogenAI is the more established option, and CrowMark, as a newer SME product, is not trying to be that. CrowMark is deliberately narrow: UK public-sector suppliers, grounded answers, social value and delivery evidence. The two are not mutually exclusive. Some teams run an enterprise engine for the largest proposals and CrowMark for UK tender discovery, social-value scoring and post-award evidence.</p>
 
 <h2 id="faq">Frequently asked questions</h2>
 <div class="cfaq">
   <details>
     <summary><h3>Is CrowMark or AutogenAI cheaper?</h3></summary>
-    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information.</p></div>
+    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price. It is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information.</p></div>
   </details>
   <details>
     <summary><h3>Does AutogenAI publish its pricing?</h3></summary>
@@ -119,7 +119,7 @@ faq:
   </details>
   <details>
     <summary><h3>Does AutogenAI find tenders for me?</h3></summary>
-    <div class="cfaq-a"><p>AutogenAI has no built-in UK tender discovery feed; you bring your own pipeline. CrowMark tracks Contracts Finder and Find a Tender and refreshes the feed every morning at 06:00.</p></div>
+    <div class="cfaq-a"><p>AutogenAI has no built-in UK tender discovery feed. You bring your own pipeline. CrowMark tracks Contracts Finder and Find a Tender and refreshes the feed every morning at 06:00.</p></div>
   </details>
   <details>
     <summary><h3>Can either tool stop the AI inventing figures?</h3></summary>

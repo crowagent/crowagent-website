@@ -210,7 +210,7 @@ CrowMark carries a curated catalogue of 19 social value measures, aligned to Nat
 
 ### AI narrative generation
 
-Once you have selected your measures and entered your quantities, CrowMark generates a draft social value narrative using server-side AI. The narrative is structured around each mission, references specific measures and quantities, and is written in the formal tone expected by public sector evaluators. The language model never computes the figures: any generated prose containing a £ or % that the computed figures do not support is rejected rather than shown. You review, edit, and approve before anything is exported. The AI handles the first draft; your subject matter expertise handles the final polish.
+Once you have selected your measures and entered your quantities, CrowMark generates a draft social value narrative using server-side AI. The narrative is structured around each mission, references specific measures and quantities, and is written in the formal tone expected by public sector evaluators. The language model never computes the figures: any generated prose containing a £ or % that the computed figures do not support is rejected rather than shown. You review, edit, and approve before anything is exported. The AI handles the first draft. Your subject matter expertise handles the final polish.
 
 ### Evidence tracker
 
@@ -230,7 +230,7 @@ The workflow runs end to end in a single sitting: contract profile in, missions 
 - Cabinet Office, PPN 06/20: Taking account of social value in the award of central government contracts. The previous Social Value Model, referred to above for history and transition only: [gov.uk](https://www.gov.uk/government/publications/procurement-policy-note-0620-taking-account-of-social-value-in-the-award-of-central-government-contracts)
 - Cabinet Office, Procurement Policy Notes (collection): [gov.uk/government/collections/procurement-policy-notes](https://www.gov.uk/government/collections/procurement-policy-notes)
 
-Last reviewed: 2 August 2026, against the PPN 002 Social Value Model on gov.uk. Mission and outcome names, model award criteria and reporting metrics are taken from that document. Any monetary figures shown in the worked example above are illustrative placeholders and are not National TOMs proxy values; take proxy values from the National TOMs edition your buyer names.
+Last reviewed: 2 August 2026, against the PPN 002 Social Value Model on gov.uk. Mission and outcome names, model award criteria and reporting metrics are taken from that document. Any monetary figures shown in the worked example above are illustrative placeholders and are not National TOMs proxy values. Take proxy values from the National TOMs edition your buyer names.
 
 ---
 

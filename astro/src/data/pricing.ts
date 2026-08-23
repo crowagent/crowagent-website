@@ -367,7 +367,7 @@ export const PRICING_FAQS: Faq[] = [
        the array header. Asking is free, but the trial it names two sentences
        earlier does collect a card at Stripe checkout before it starts. */
     answer:
-      'CrowMark is a paid product and there is no free plan. A 14-day evaluation trial is available on request, and you can run the free Tender Compliance Matrix at any time with no account. Access is offered by request rather than self-serve signup. A card is required to start; it is held securely by Stripe and we never store it.',
+      'CrowMark is a paid product and there is no free plan. A 14-day evaluation trial is available on request, and you can run the free Tender Compliance Matrix at any time with no account. Access is offered by request rather than self-serve signup. A card is required to start. It is held securely by Stripe and we never store it.',
   },
   {
     /* WAS "How does the 14-day trial work?", answered with "full access to the
@@ -461,7 +461,7 @@ export const PRICING_FAQS: Faq[] = [
   {
     question: 'Why is there no price for the buyer side?',
     answer:
-      'A buyer engagement is scoped to the organisation rather than sold by seat, so a single self-serve number would be misleading. It is billed by invoice or purchase order on annual terms, and AI usage is fair use scoped in the contract rather than a published monthly credit allowance. Supplier pricing is published because that side can be published honestly; where it cannot, we say so rather than guess.',
+      'A buyer engagement is scoped to the organisation rather than sold by seat, so a single self-serve number would be misleading. It is billed by invoice or purchase order on annual terms, and AI usage is fair use scoped in the contract rather than a published monthly credit allowance. Supplier pricing is published because that side can be published honestly. Where it cannot, we say so rather than guess.',
   },
   {
     question: 'How are AI credits counted?',
@@ -509,7 +509,7 @@ export const PRICING_FAQS: Faq[] = [
   {
     question: 'What happens when my AI credits run out?',
     answer:
-      'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. Two things restore it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over; purchased top-up credits do. Everything we calculate rather than generate keeps working either way, and a generation that fails is not charged.',
+      'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. Two things restore it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over. Purchased top-up credits do. Everything we calculate rather than generate keeps working either way, and a generation that fails is not charged.',
   },
   {
     question: 'What payment methods do you accept?',

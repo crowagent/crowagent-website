@@ -65,7 +65,7 @@ export const KEY_FACTS = [
        facts list, and "every plan starts with a trial" was never a price. The
        trial is published where a reader looks for it, on /pricing and /faq. */
     detail:
-      'From £49/month (Starter). Pro is £149/month; Portfolio is contact sales. Access is offered by request, so book a demo rather than signing up.',
+      'From £49/month (Starter). Pro is £149/month. Portfolio is contact sales. Access is offered by request, so book a demo rather than signing up.',
   },
   {
     term: 'The differentiator',

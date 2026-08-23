@@ -104,7 +104,7 @@ If the tender falls under PPN 06/21 (central government contracts over 5 million
 ## Sources
 
 - [Procurement Policy Note 06/21: Taking account of Carbon Reduction Plans in the procurement of major government contracts](https://www.gov.uk/government/publications/procurement-policy-note-0621-taking-account-of-carbon-reduction-plans-in-the-procurement-of-major-government-contracts), Cabinet Office, gov.uk. The policy note and its technical standard, which is where the four required components and the five mandatory Scope 3 categories are set out.
-- [Government conversion factors for company reporting of greenhouse gas emissions](https://www.gov.uk/government/collections/government-conversion-factors-for-company-reporting), DESNZ, gov.uk. Published annually; use the set for the year you are reporting, not the latest one.
+- [Government conversion factors for company reporting of greenhouse gas emissions](https://www.gov.uk/government/collections/government-conversion-factors-for-company-reporting), DESNZ, gov.uk. Published annually. Use the set for the year you are reporting, not the latest one.
 - [Climate Change Act 2008](https://www.legislation.gov.uk/ukpga/2008/27/contents), legislation.gov.uk. As amended in 2019, this is where the 2050 net zero target itself comes from.
 - [Procurement Act 2023](https://www.legislation.gov.uk/ukpga/2023/54/contents), legislation.gov.uk. The regime the selection stage now sits inside.
 

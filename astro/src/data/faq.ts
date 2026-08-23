@@ -56,7 +56,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // node, so the market scoping was in the structured data twice.
         question: 'What is CrowAgent?',
         answer:
-          'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award. Its product, CrowMark, drafts every answer from your own submitted bids and checks the figures in code rather than generating them. It serves both sides of a procurement. CrowMark for Suppliers answers tenders, RFPs, RFIs, PQQs and SQs from bids you have already written. CrowMark for Buyers builds and publishes requirements, then locates the evidence for each one across the responses received; it never scores, because the evaluation panel scores. Both work in the public sector and the private sector.',
+          'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award. Its product, CrowMark, drafts every answer from your own submitted bids and checks the figures in code rather than generating them. It serves both sides of a procurement. CrowMark for Suppliers answers tenders, RFPs, RFIs, PQQs and SQs from bids you have already written. CrowMark for Buyers builds and publishes requirements, then locates the evidence for each one across the responses received. It never scores, because the evaluation panel scores. Both work in the public sector and the private sector.',
       },
       // ── A-54, 2026-08-04: THE 14-DAY TRIAL IS GONE FROM THIS FILE ──────────
       // Both entries below asserted a published 14-day free trial with no card
@@ -253,7 +253,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // before it can bill anyone.
         question: 'What happens when my AI credits run out?',
         answer:
-          'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over; purchased top-up credits do.',
+          'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over. Purchased top-up credits do.',
         link: { label: 'See the credit prices', href: '/pricing#ai-credits' },
       },
       {

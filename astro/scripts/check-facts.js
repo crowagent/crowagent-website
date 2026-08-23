@@ -210,7 +210,7 @@ const RULES = [
     pattern: /—/g,
     message: 'an em-dash in user-facing text',
     why:
-      'PLATFORM-CHARTER.md standing constraints: no em-dashes in user-facing text. Use a comma, a semicolon or two sentences. The rule has been binding since the charter was written and nothing enforced it, so 16 reached the built pages, three of them inside visually-hidden spans where only a screen-reader user would ever meet them. IT LIVES HERE because the hard part is knowing what is PUBLISHED, and this file already blanks comments before scanning: an em-dash in a code comment is not user-facing and must not fail a build. The EN dash is deliberately NOT matched, because it is the aria-hidden not-included marker in the pricing table, which is typography rather than prose.',
+      'PLATFORM-CHARTER.md standing constraints: no em-dashes in user-facing text. Use a comma or two sentences. NOT a semicolon: RULE 0-S bans that in prose too. The rule has been binding since the charter was written and nothing enforced it, so 16 reached the built pages, three of them inside visually-hidden spans where only a screen-reader user would ever meet them. IT LIVES HERE because the hard part is knowing what is PUBLISHED, and this file already blanks comments before scanning: an em-dash in a code comment is not user-facing and must not fail a build. The EN dash is deliberately NOT matched, because it is the aria-hidden not-included marker in the pricing table, which is typography rather than prose.',
   },
 ];
 

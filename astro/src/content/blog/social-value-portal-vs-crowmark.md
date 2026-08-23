@@ -34,7 +34,7 @@ SVP offers a platform that covers the full social value lifecycle: bid planning,
 
 **Where SVP may not fit:**
 
-- **Pricing:** SVP is enterprise-priced. Social Value Portal does not publish its pricing; it is quoted on request, and cost scales with the number of contracts and the level of support required. For a large Tier 1 contractor managing dozens of public sector contracts, this is a reasonable cost of doing business. For an SME bidding on a handful of contracts per year, it can be prohibitive.
+- **Pricing:** SVP is enterprise-priced. Social Value Portal does not publish its pricing. It is quoted on request, and cost scales with the number of contracts and the level of support required. For a large Tier 1 contractor managing dozens of public sector contracts, this is a reasonable cost of doing business. For an SME bidding on a handful of contracts per year, it can be prohibitive.
 - **Complexity:** The platform is feature-rich, which means a steeper learning curve for smaller teams without dedicated social value staff.
 - **Onboarding time:** Enterprise platforms typically require onboarding sessions, training, and configuration. This is appropriate for large organisations but can delay smaller suppliers who need to respond to a tender quickly.
 
@@ -62,7 +62,7 @@ CrowMark covers the core PPN 002 workflow: contract profiling, deterministic mis
 
 The following comparison covers the key decision factors for suppliers evaluating the two platforms:
 
-- **Annual cost:** SVP does not publish pricing (enterprise, quote on request). CrowMark Starter is £529 per year (£49/month); Pro is £1,609 per year (£149/month).
+- **Annual cost:** SVP does not publish pricing (enterprise, quote on request). CrowMark Starter is £529 per year (£49/month). Pro is £1,609 per year (£149/month).
 - **Target user:** SVP targets large enterprises and Tier 1 contractors. CrowMark targets SMEs and mid-market suppliers.
 - **TOMs framework:** Both platforms support the TOMs framework. CrowMark uses National TOMs 2023-24 proxy values stored in its database.
 - **PPN support:** Both support PPN 002. CrowMark also supports PPN 06/20 for procurements that commenced before PPN 002 became mandatory on 1 October 2025.
@@ -93,7 +93,7 @@ Whether you use SVP, CrowMark, or another approach entirely, the important thing
 
 ### Build your PPN 002 social value plan in one sitting
 
-Contract profiling, TOMs measure selection, AI narrative drafting, and evidence tracking. Starter is £49 a month for 1 user, Pro £149 for 5. Access is offered by request, so book a demo; starting access needs a card, held securely by Stripe and never stored by us.
+Contract profiling, TOMs measure selection, AI narrative drafting, and evidence tracking. Starter is £49 a month for 1 user, Pro £149 for 5. Access is offered by request, so book a demo. Starting access needs a card, held securely by Stripe and never stored by us.
 
 [Request access](/contact?enquiry=limited-access#contact-form)
 

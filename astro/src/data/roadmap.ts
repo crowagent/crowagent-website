@@ -62,7 +62,7 @@ export const PHASES: Phase[] = [
       },
       {
         title: 'CrowMark for Buyers',
-        body: 'Build and publish requirements against a deterministic social value rubric, then locate the evidence for each one across every response received, quoted verbatim or dropped. CrowMark organises; your evaluation panel scores.',
+        body: 'Build and publish requirements against a deterministic social value rubric, then locate the evidence for each one across every response received, quoted verbatim or dropped. CrowMark organises. Your evaluation panel scores.',
         href: '/crowmark-buyers',
       },
     ],
@@ -150,7 +150,7 @@ export const AI_LIVE: { heading: string; body: string; link?: { label: string; h
   },
   {
     heading: 'Two models, two jobs',
-    body: "Customer-facing drafting (CrowMark bid narratives) runs on Google Gemini. Heavier reasoning and analysis tasks run on Anthropic's Claude. Both are used as data sub-processors under signed DPAs; your prompts are not used to train their foundation models. The full list is on the",
+    body: "Customer-facing drafting (CrowMark bid narratives) runs on Google Gemini. Heavier reasoning and analysis tasks run on Anthropic's Claude. Both are used as data sub-processors under signed DPAs. Your prompts are not used to train their foundation models. The full list is on the",
     link: { label: 'privacy page', href: '/privacy' },
   },
   {
@@ -159,7 +159,7 @@ export const AI_LIVE: { heading: string; body: string; link?: { label: string; h
   },
   {
     heading: 'A human signs every output',
-    body: 'Under Article 22 UK GDPR, CrowAgent makes no solely-automated decision with legal effect about anyone. AI drafts are advisory. You review, edit and approve before a single word reaches a bid, a report or a buyer. The model proposes; you decide.',
+    body: 'Under Article 22 UK GDPR, CrowAgent makes no solely-automated decision with legal effect about anyone. AI drafts are advisory. You review, edit and approve before a single word reaches a bid, a report or a buyer. The model proposes. You decide.',
   },
 ];
 
@@ -202,7 +202,7 @@ export const METHOD: { n: string; heading: string; body: string }[] = [
   {
     n: '04',
     heading: 'Where the edge sits',
-    body: 'CrowAgent does not try to out-feature every bid-writing tool on the market; the edge is grounded, statute-cited accuracy.',
+    body: 'CrowAgent does not try to out-feature every bid-writing tool on the market. The edge is grounded, statute-cited accuracy.',
   },
 ];
 

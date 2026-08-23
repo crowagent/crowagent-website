@@ -134,7 +134,7 @@ export const SUPPLIER_SCREENS: Slide[] = [
   {
     src: shot('sup-2-tender-questions'),
     ...DESKTOP,
-    alt: 'The CrowMark tender questions screen. A tender is broken into its scored questions, each with a category, a word limit, a weighting and a draft action. A banner states the grounding boundary: answers are grounded only in your own answer library, the published requirement and your confirmed commitments; every figure comes from computed commitments and is never invented; and a named human approves every answer before it is submitted.',
+    alt: 'The CrowMark tender questions screen. A tender is broken into its scored questions, each with a category, a word limit, a weighting and a draft action. A banner states the grounding boundary. Answers are grounded only in your own answer library, the published requirement and your confirmed commitments. Every figure comes from computed commitments and is never invented. And a named human approves every answer before it is submitted.',
     caption: 'Award questions with their weightings, above a drafter told where every figure has to come from',
   },
   {
@@ -184,13 +184,13 @@ export const BUYER_SCREENS: Slide[] = [
     src: shot('buy-2-response-review'),
     ...DESKTOP,
     /* The buyer-side refusal, quoted. Same reason as sup-3. */
-    alt: 'The CrowMark response review screen, one criterion against one response. A banner states: CrowMark locates the passage that answers this criterion and shows you where it came from; it does not score, rank or recommend; the band is yours to set. A panel quotes the supplier verbatim and cites it to a section and page of the response document. On the right, four bands are offered under the note that there are no half marks and no rounding, with an audit line naming the evaluator.',
+    alt: 'The CrowMark response review screen, one criterion against one response. A banner states that CrowMark locates the passage that answers this criterion and shows you where it came from. It does not score, rank or recommend. The band is yours to set. A panel quotes the supplier verbatim and cites it to a section and page of the response document. On the right, four bands are offered under the note that there are no half marks and no rounding, with an audit line naming the evaluator.',
     caption: 'The passage that answers the criterion, located and cited, with the band left to a named evaluator',
   },
   {
     src: shot('buy-3-evaluation'),
     ...DESKTOP,
-    alt: 'The CrowMark evaluation grid, banding suppliers against criteria. Every cell is a band rather than a number, under a legend reading four bands, no half marks and no rounding. A panel below flags where two evaluators disagreed by more than one band. The closing statement reads: CrowMark located the passage behind each one; it did not set, rank or recommend any band.',
+    alt: 'The CrowMark evaluation grid, banding suppliers against criteria. Every cell is a band rather than a number, under a legend reading four bands, no half marks and no rounding. A panel below flags where two evaluators disagreed by more than one band. The closing statement reads that CrowMark located the passage behind each one. It did not set, rank or recommend any band.',
     caption: 'Four bands, no half marks and no rounding, with every disagreement sent to moderation',
   },
   {
@@ -208,7 +208,7 @@ export const BUYER_SCREENS: Slide[] = [
   {
     src: shot('buy-6-reports-audit'),
     ...TABLET,
-    alt: 'The CrowMark reports and audit trail at tablet width. Four figures summarise the trail, with a seven-year retention marker and an export action, above a table listing each action with the person who took it and a timestamp. The closing line reads: every band carries the evaluator who set it and the time they set it; nothing in this trail was written by the model.',
+    alt: 'The CrowMark reports and audit trail at tablet width. Four figures summarise the trail, with a seven-year retention marker and an export action, above a table listing each action with the person who took it and a timestamp. The closing line reads that every band carries the evaluator who set it and the time they set it. Nothing in this trail was written by the model.',
     caption: 'Every band, every change and every export, against the person and the moment it happened',
   },
   {

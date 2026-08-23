@@ -2,7 +2,7 @@
 title: "CrowMark vs CleanTender: an honest UK bid software comparison"
 description: "CrowMark against CleanTender: a sector-agnostic bid suite versus a soft-FM specialist. Both publish prices, so the question is scope."
 ogDescription: "CrowMark against CleanTender: a sector-agnostic bid suite versus a soft-FM specialist. Both publish prices, so the question is scope."
-articleDescription: "CleanTender is a soft-FM specialist with Pro at £99/month; CrowMark is a sector-agnostic bid suite from £49/month with figure-grounding and PPN 002 maths. A sourced, balanced comparison."
+articleDescription: "CleanTender is a soft-FM specialist with Pro at £99/month. CrowMark is a sector-agnostic bid suite from £49/month with figure-grounding and PPN 002 maths. A sourced, balanced comparison."
 publishDate: 2026-07-26
 updatedDate: 2026-07-26
 competitor: "CleanTender"
@@ -53,7 +53,7 @@ faq:
 <tr><th scope="row">PPN 002 social value (10% floor)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic calculation</td><td>Included as a TOMs / Social Value SQ section</td></tr>
 <tr><th scope="row">Post-award delivery evidence (Procurement Act 2023 s.52 / s.71)</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated</td></tr>
 <tr><th scope="row">Published price</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td><span class="cmp-yes">Yes</span></td></tr>
-<tr><th scope="row">Starting price</th><td class="cmp-us">&pound;49/month (Starter)</td><td>Free tier; Pro &pound;99/month or &pound;990/year</td></tr>
+<tr><th scope="row">Starting price</th><td class="cmp-us">&pound;49/month (Starter)</td><td>Free tier, Pro &pound;99/month or &pound;990/year</td></tr>
 <tr><th scope="row">Best for</th><td class="cmp-us">UK suppliers bidding across sectors</td><td>UK soft-FM SMEs doing 4 to 12 bids a year</td></tr>
 </tbody>
 </table>
@@ -143,9 +143,9 @@ faq:
 <h2 id="sources">Sources</h2>
 <div class="cmp-sources">
 <ol>
-<li>CleanTender pricing (free tier; Pro &pound;99/month or &pound;990/year), curated soft-FM feed, 0 to 100 qualification scan in under 30 seconds, Selection Questionnaire sections and sector vocabulary, Compliance Vault, and target of 4 to 12 bids a year. CleanTender, "7 Best AI Tender Software for UK Contracts (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-tender-software" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-tender-software</a></li>
+<li>CleanTender pricing (free tier, Pro &pound;99/month or &pound;990/year), curated soft-FM feed, 0 to 100 qualification scan in under 30 seconds, Selection Questionnaire sections and sector vocabulary, Compliance Vault, and target of 4 to 12 bids a year. CleanTender, "7 Best AI Tender Software for UK Contracts (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-tender-software" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-tender-software</a></li>
 <li>CleanTender soft-FM scope and free contract-directory access. CleanTender, "AI Bid Management Software: Best UK Options (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-bid-management-software-uk" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-bid-management-software-uk</a></li>
-<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 002 and Procurement Act 2023 s.52 / s.71; bid-fit marking noted as in development, not released (first party). CrowAgent, <a href="/crowmark">CrowMark product page</a>.</li>
+<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 002 and Procurement Act 2023 s.52 / s.71. Bid-fit marking noted as in development, not released (first party). CrowAgent, <a href="/crowmark">CrowMark product page</a>.</li>
 <li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing?product=mark">Pricing</a>.</li>
 </ol>
 </div>
