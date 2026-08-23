@@ -1,10 +1,10 @@
 /* ============================================================================
-   COMMAND PALETTE — the Cmd-K / Ctrl-K search, behind one export.
+   COMMAND PALETTE: the Cmd-K / Ctrl-K search, behind one export.
    ============================================================================
 
    THIS CODE HAS NOT CHANGED. It moved out of CommandPalette.astro's <script>
    on 2026-08-04 under ADR 0010, unedited. At 3,572 B it was the largest of the
-   four scripts Astro was inlining into all 44 documents — 157 KB of build on
+   four scripts Astro was inlining into all 44 documents, 157 KB of build on
    its own, for a panel bound to a keystroke most readers never press.
 
    That is the SECOND time this component has paid for being inlined. Its
@@ -14,8 +14,8 @@
    budget. The index moved; the code that reads it did not, and stayed
    duplicated for another day. Both halves are external now.
 
-   The accessibility reasoning — combobox with listbox, aria-activedescendant
-   rather than moving focus, the three distinct empty states — is in the
+   The accessibility reasoning (combobox with listbox, aria-activedescendant
+   rather than moving focus, the three distinct empty states) is in the
    frontmatter of CommandPalette.astro, with the markup it describes.
    ============================================================================ */
 
@@ -45,7 +45,7 @@ export function initCommandPalette(): void {
    * THE INDEX IS FETCHED, ONCE, THE FIRST TIME THE PALETTE OPENS.
    *
    * It used to be a <script type="application/json"> beside this one, which
-   * meant an identical 7.1 KB in all 44 documents — 313 KB of build, paid in
+   * meant an identical 7.1 KB in all 44 documents, 313 KB of build, paid in
    * critical HTML by every reader on every page whether or not they ever
    * pressed ⌘K, and one of the two things holding /crowmark over the 100 KB
    * per-route budget in scripts/check-budgets.js. See search-index.json.ts.
@@ -263,8 +263,8 @@ export function initCommandPalette(): void {
   root.querySelector('[data-cmdk-scrim]')?.addEventListener('click', close);
 
   /*
-   * The focus trap. Only the input is focusable inside the dialog — options
-   * are driven by aria-activedescendant — so the trap reduces to keeping Tab
+   * The focus trap. Only the input is focusable inside the dialog (options
+   * are driven by aria-activedescendant), so the trap reduces to keeping Tab
    * on the input. Simpler than a general trap, and it cannot be escaped into
    * the page behind, which would be WCAG 2.4.3 and 2.1.2 trouble.
    */

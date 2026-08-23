@@ -1,15 +1,15 @@
 /**
- * pricing.ts — the numbers on /pricing, in one place.
+ * pricing.ts: the numbers on /pricing, in one place.
  *
  * EVERY FIGURE BELOW IS DERIVED FROM THE PLATFORM, NOT AUTHORED HERE. The
  * defect this file exists to prevent is recorded in the platform itself
  * (`credit-allowances.ts` header): "the same per-tier number was restated in the
- * Stripe catalogue copy, the marketing site, PLAN_LIMITS, and a downgrade guard
- * — and they disagreed." The marketing site was one of the four that disagreed.
+ * Stripe catalogue copy, the marketing site, PLAN_LIMITS, and a downgrade guard,
+ * and they disagreed." The marketing site was one of the four that disagreed.
  *
  * Sources, so a future reader can re-check rather than trust:
  *
- *   seats    LOCKED BY OWNER DECISION 2026-08-09 —
+ *   seats    LOCKED BY OWNER DECISION 2026-08-09,
  *            crowagent-platform/docs/decisions/PRICING-LOCK-2026-08.md
  *            free 1 · trial14 1 · starter 1 · pro 5 · portfolio 10.
  *            Portfolio is NO LONGER unlimited: `null` meant one subscription
@@ -18,7 +18,7 @@
  *            The canonical declaration is moving to
  *            crowagent-platform/packages/pricing/catalogue.ts; the older
  *            seat-limits.ts is being deleted as a competing declaration.
- *            THIS CITATION WAS STALE AND SAID 3 / 10 / unlimited — which is the
+ *            THIS CITATION WAS STALE AND SAID 3 / 10 / unlimited, which is the
  *            precise figure this whole lock exists to correct.
  *
  *   credits  crowagent-platform/web/src/shared/lib/credit-allowances.ts
@@ -27,7 +27,7 @@
  *            CrowMark is metered on, and it is the answer to OA-05.
  *
  *   prices   Stripe (live mode) and src/data/crowmark.ts. £49 and £149, NOT
- *            £99 — specs/architecture/DEPLOYMENT-AND-RELEASE.md §3.2 records
+ *            £99. Specs/architecture/DEPLOYMENT-AND-RELEASE.md §3.2 records
  *            "£99/mo" as a non-existent price removed from the OG card on
  *            2026-07-30. Portfolio's £549 list price is deliberately Stripe-only
  *            for post-demo checkout and must not appear here (owner decision
@@ -51,7 +51,7 @@
  * pricing page in place. It was RETIRED on 2026-08-05 rather than re-pointed at
  * this file, and the reason is the row directly above.
  *
- * Stripe holds an ACTIVE, LIST-PRICED Portfolio pair — crowagent_crowmark_
+ * Stripe holds an ACTIVE, LIST-PRICED Portfolio pair, crowagent_crowmark_
  * portfolio_monthly at 54900 pence and _annual at 592900, verified against live
  * mode on 2026-08-05. The Portfolio card publishes no price at all, because an
  * owner decision says it must not. So the default behaviour of any Stripe-to-page
@@ -379,7 +379,7 @@ export const PRICING_FAQS: Faq[] = [
 
        A-174, 2026-08-05: THE QUESTION RETURNS, and the reasoning above is why
        it can. A-54's objection was to an offer nobody intended to honour, not
-       to trials as such — and the owner has since asked twice for a trial WITH
+       to trials as such, and the owner has since asked twice for a trial WITH
        LIMITS, then asked directly why it was not back. The entry below states
        the limits rather than promising "full access", which is the difference
        between the claim A-54 removed and this one. It is deliberately the

@@ -1,6 +1,6 @@
 ---
 /**
- * Nav.astro — the sitewide primary navigation.
+ * Nav.astro: the sitewide primary navigation.
  *
  * Renders from `src/data/nav.ts`. Fixed header, one dropdown per entry in
  * NAV.menus, mobile accordion menu, search affordance, Sign in + Request access
@@ -66,7 +66,7 @@ function sectionActive(routes: readonly string[]): boolean {
  * Both breakpoints render from this, so the desktop panel and the mobile
  * accordion cannot disagree about what is in a menu. Resources is exposed in
  * the mobile menu exactly as Products is, because both come out of this one
- * loop rather than out of two hand-written blocks — which is how the two lists
+ * loop rather than out of two hand-written blocks, which is how the two lists
  * drifted apart the last time.
  */
 const menus = NAV.menus.map((menu) => ({
@@ -218,7 +218,7 @@ const menus = NAV.menus.map((menu) => ({
   Not one line of it changed. It moved on 2026-08-04 under ADR 0010 because of
   where Astro put it, not because of what it did: a hoisted component script
   that compiles to one small chunk is INLINED into the document, so this block
-  was written into all 44 documents identically — and with three others like
+  was written into all 44 documents identically, and with three others like
   it, 8,958 B a document and 384.9 KB of build that nothing could cache.
 
   It is now booted once from src/scripts/shell.ts, the single entry
@@ -226,14 +226,14 @@ const menus = NAV.menus.map((menu) => ({
   every route shares.
 
   A <script> ADDED BACK TO THIS FILE WOULD UNDO THAT, silently, and it would
-  not be obvious in review — it would look like a component minding its own
+  not be obvious in review. It would look like a component minding its own
   business. scripts/check-budgets.js fails the build if the same inline script
   body reappears across routes, so the guard is a gate rather than this note.
 */}
 
 <style is:global>
   /* ══════════════════════════════════════════════════════════════════════════
-     THE NAV'S INK — every interactive colour in the header, stated ONCE.
+     THE NAV'S INK: every interactive colour in the header, stated ONCE.
      ══════════════════════════════════════════════════════════════════════════
 
      WHAT WAS WRONG, MEASURED ON :8095 BEFORE THIS BLOCK EXISTED. Hovering the
@@ -248,7 +248,7 @@ const menus = NAV.menus.map((menu) => ({
      themselves: `.ca-nav-links > a:hover` picked --c-interactive,
      `.ca-dropdown-trigger:hover` picked --c-teal, and the dropdown rows painted
      `color: var(--c-text)` at rest so they were already at full white and had
-     nowhere to go. The reference build on :8092 does none of that — it holds
+     nowhere to go. The reference build on :8092 does none of that. It holds
      rgba(232,240,250,0.72) at rest and goes to rgb(255,255,255) on hover, on
      every link including the ones inside the panel. A brightness lift, no hue
      change, one behaviour.
@@ -260,7 +260,7 @@ const menus = NAV.menus.map((menu) => ({
 
      WHY is:global, WHICH IS THE ONE THING THAT NEEDS DEFENDING HERE. The
      dropdown rows are rendered by NavDropdown.astro, so Astro stamps them with
-     that component's scope id, not this one's — a scoped rule written here
+     that component's scope id, not this one's. A scoped rule written here
      would reach the top-level links and stop at the panel, which is precisely
      the half-a-nav fork this block exists to end. Every selector is anchored on
      `.ca-nav` or `.ca-mob-menu`, both of which exist only in this component, so
@@ -268,7 +268,7 @@ const menus = NAV.menus.map((menu) => ({
 
      SPECIFICITY IS DELIBERATE AND THE ORDER MATTERS. The shared selector list
      sits inside :where(), which contributes nothing, so the rest state is
-     (0,0,0), and the current-page and lit states are each exactly (0,1,0) —
+     (0,0,0), and the current-page and lit states are each exactly (0,1,0),
      equal, decided by source order. Lit is written last, so hovering the link
      for the page you are already on still lifts it. That is not an accident of
      the cascade; it is the one ordering that makes hover mean the same thing
@@ -276,7 +276,7 @@ const menus = NAV.menus.map((menu) => ({
 
      Longhand transition properties, never the shorthand, for the reason
      motion.css records: the shorthand also resets transition-delay and
-     transition-behavior. Only `color` is transitioned — nothing here moves —
+     transition-behavior. Only `color` is transitioned (nothing here moves),
      and tokens.css already collapses --dur-fast to 0.01ms under
      prefers-reduced-motion, so this needs no media query of its own.
 
@@ -287,8 +287,8 @@ const menus = NAV.menus.map((menu) => ({
      values, so it is the same ring rather than a fifth one. The footer still has
      the gap."
 
-     Both scopes are gone now — the focus ring on 2026-08-04 and the transition
-     floor with O-52 the same day — so the footer has neither gap. NOTHING IN
+     Both scopes are gone now (the focus ring on 2026-08-04 and the transition
+     floor with O-52 the same day), so the footer has neither gap. NOTHING IN
      THIS FILE CHANGED WITH EITHER, and that is the property worth stating rather
      than the fix: the rules above are Astro scoped styles, which are unlayered
      and outrank every cascade layer, so a widened floor at `:where()` zero
@@ -307,8 +307,8 @@ const menus = NAV.menus.map((menu) => ({
     color: var(--c-text-sub);
     /* DECORATION IS OWNED HERE TOO, and it was not until 2026-08-04. Three
        later rules in this file each set `text-decoration: none` on one of the
-       three link classes below — .ca-nav-links > a, .ca-mob-toplink and
-       .ca-mob-sublink — which is the same three-rules-for-one-decision shape
+       three link classes below (.ca-nav-links > a, .ca-mob-toplink and
+       .ca-mob-sublink), which is the same three-rules-for-one-decision shape
        this block was written to end for colour, sitting one property along.
        It stopped mattering the moment the current-page state started drawing a
        rule: those three won on specificity and the rule never painted. So the
@@ -332,7 +332,7 @@ const menus = NAV.menus.map((menu) => ({
   }
 
   /* WHERE YOU ARE is a state and it persists; hover is a lift and it does not.
-     Two different jobs, so two different treatments — and one treatment each,
+     Two different jobs, so two different treatments, and one treatment each,
      not the cyan-for-links / teal-for-the-trigger split this replaces.
 
      ── AMENDED 2026-08-04, AND THE AMENDMENT IS THE POINT OF THE V6 PASS ─────
@@ -340,7 +340,7 @@ const menus = NAV.menus.map((menu) => ({
      This rule used to separate the two jobs BY HUE: current page took
      --c-interactive, which was cyan, and hover took --c-text, which is white.
      V6 moves --c-interactive to white. Read literally, that makes the two rules
-     paint the same colour and the "where you are" state DISAPPEARS — a real
+     paint the same colour and the "where you are" state DISAPPEARS. A real
      collision, found by reading this block rather than by looking at a
      screenshot, and it would have shipped silently because both rules still
      resolve to a valid token.
@@ -349,7 +349,7 @@ const menus = NAV.menus.map((menu) => ({
      that white stops being only type and becomes a MATERIAL: white rules, white
      fills, white edges. So the current page keeps the interactive value and
      gains a white RULE under it, which persists; hover raises the ink and draws
-     nothing. Two jobs, two treatments, one hue — which is a stronger separation
+     nothing. Two jobs, two treatments, one hue, which is a stronger separation
      than the old one, because a reader could always have missed a cyan/white
      difference and cannot miss a line that is either there or not.
 
@@ -397,7 +397,7 @@ const menus = NAV.menus.map((menu) => ({
   }
 
   /* THE FOCUS RING FOR THE CHROME. motion.css states the site's ring once, for
-     everything <main> contains, and the header is not inside <main> — so before
+     everything <main> contains, and the header is not inside <main>, so before
      this every link and button up here fell back to the user agent's, which on
      a dark translucent bar is close to invisible. Same three values as every
      other definition on the site, so this is the same ring. */
@@ -412,7 +412,7 @@ const menus = NAV.menus.map((menu) => ({
    *
    * MEASURED DEFECT, found on 2026-08-04 while shooting the new Resources
    * panel. The mega-menu declares `backdrop-filter: var(--blur-glass)` and an
-   * 82% background, and its computed style says `blur(16px) saturate(1.6)` — it
+   * 82% background, and its computed style says `blur(16px) saturate(1.6)`. It
    * was drawing NO BLUR AT ALL. The homepage h1 read straight through the open
    * menu, which is the one outcome the comment on `.ca-mega` in
    * NavDropdown.astro names as genuinely bad.
@@ -429,7 +429,7 @@ const menus = NAV.menus.map((menu) => ({
    * root is created by the element that CARRIES the property. The pseudo-
    * element is the backdrop root for itself alone, `.ca-nav` goes back to being
    * an ordinary box, and the panel inside it filters the page. The bar looks
-   * identical — same fill, same filter, same stacking — which is the point.
+   * identical (same fill, same filter, same stacking), which is the point.
    *
    * z-index: -1 is safe rather than lucky: this element is `position: sticky`
    * with `z-index: 100`, so it establishes a stacking context and the pseudo-
@@ -504,8 +504,8 @@ const menus = NAV.menus.map((menu) => ({
        they did not. A min-block-size is the requirement stated directly, and it
        holds at every size the clamp can produce.
        These links measured 39.1px. At 834 and 390 the nav is already fully
-       compliant — the hamburger is 44x44 and none of the 16 mobile-menu
-       elements is under — so this rule only ever changes the pointer viewports,
+       compliant (the hamburger is 44x44 and none of the 16 mobile-menu
+       elements is under), so this rule only ever changes the pointer viewports,
        which is where the shortfall was. Verified by injection before landing:
        the column width is byte-identical and nothing visible moves, because the
        row is 44px tall already on account of the dropdown triggers beside it. */
@@ -534,12 +534,12 @@ const menus = NAV.menus.map((menu) => ({
    * WHAT WENT: `background`, `border`, `cursor` and a `:hover` that brightened
    * the hairline to --c-border-glow. All four are what `control` in the class
    * list now says, and the hover rule was the one real rule-1 violation left in
-   * the source — the shared treatment written out by hand, which is the only
+   * the source. The shared treatment written out by hand, which is the only
    * reason it looked like a decision rather than a copy.
    *
    * WHAT STAYED, AND WHY IT IS NOT A FORK: geometry. controls.css owns the wash,
    * the hairline, the ink and the response, and deliberately owns no size, for
-   * the reason styles/labels.css records — a shared recipe that also set padding
+   * the reason styles/labels.css records. A shared recipe that also set padding
    * would have shrunk `.art__pill` from 36px to 27.8px as a side effect of making
    * things consistent. So the radius, the padding, the flex row and the
    * --btn-h-sm floor are still stated here, on the one control that has to clear
@@ -549,7 +549,7 @@ const menus = NAV.menus.map((menu) => ({
    * CHECKED RATHER THAN ASSUMED. The nav ink block above sets this trigger to
    * --c-text-sub at rest and --c-text on `:hover, :focus-visible`, both inside
    * `:where()`, which contributes zero specificity. `.control` is (0,1,0) and
-   * `.control:hover` is (0,2,0), so controls.css now wins both states — and both
+   * `.control:hover` is (0,2,0), so controls.css now wins both states, and both
    * of its values are the same two tokens the nav was already naming. What the
    * nav still owns alone is `:focus-visible`, which controls.css does not touch:
    * styles/motion.css draws the ring for the whole document and a second
@@ -605,7 +605,7 @@ const menus = NAV.menus.map((menu) => ({
      in place: logo 133 + links 443 + actions 385 + gaps and padding puts the
      row at 1039px inside 1024, a 15px horizontal overflow of the whole
      document. The badge is 48px of that, it is aria-hidden, and it is a hint
-     about a keyboard shortcut — the least useful thing on the narrowest screens
+     about a keyboard shortcut. The least useful thing on the narrowest screens
      and the only thing in the row that is not a control. The button keeps its
      icon and its accessible name ("Search (Ctrl K)"), and Ctrl/Cmd-K keeps
      working, so nothing is lost but the reminder. */
@@ -658,7 +658,7 @@ const menus = NAV.menus.map((menu) => ({
      A second dropdown is roughly 115px of trigger and gap, and the row was
      already close: measured, the desktop nav needs 1039px of width and it was
      being asked to fit from 901px up. That is a horizontal overflow of the
-     DOCUMENT, not just the header — the whole page scrolls sideways — across
+     DOCUMENT, not just the header (the whole page scrolls sideways) across
      every width from 901 to 1040.
      The honest fix is to stop pretending the row fits. It switches to the
      mobile menu at 1024px, which is a laptop width rather than an arbitrary
@@ -684,7 +684,7 @@ const menus = NAV.menus.map((menu) => ({
    *
    * WHAT THE LIVE SITE DOES, MEASURED RATHER THAN ASSUMED. On
    * https://crowagent.ai at 390 and 360 the header renders exactly three
-   * controls — the logo, "Search (Ctrl K)", and "Open navigation menu" — and the
+   * controls (the logo, "Search (Ctrl K)", and "Open navigation menu"), and the
    * search button is a 40 x 40 square at both widths. Its stylesheet is explicit
    * about the split: `nav .nav-links`, `.nav-cta` and `.nav-login` are all
    * `display: none !important` below 1024px, and the search trigger is

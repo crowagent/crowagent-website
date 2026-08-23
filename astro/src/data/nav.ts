@@ -1,5 +1,5 @@
 /**
- * nav.ts — the primary navigation link tree, as typed data.
+ * nav.ts: the primary navigation link tree, as typed data.
  *
  * ONE TREE, NOT TWO. Until 2026-08-04 this file held the desktop mega-menu and
  * the mobile accordion as two separate lists, and they had already drifted: the
@@ -8,7 +8,7 @@
  * /tools/. Same two destinations, two labels, two hrefs, and nothing in the
  * build could see the difference because both resolved. That drift was
  * inherited from js/nav-inject.js and preserved here verbatim on the grounds
- * that hrefs must not be "corrected" — which was the right instinct for a URL
+ * that hrefs must not be "corrected", which was the right instinct for a URL
  * and the wrong one for a duplicate. A URL is a promise to the outside world.
  * A second copy of the menu is not; it is just a second place to forget.
  *
@@ -36,8 +36,8 @@
  *               Glossary
  *   Top level   Pricing · Blog · FAQ · About
  *
- * PRICING CAME OUT OF THE DROPDOWN. It was in both places — a top-level nav
- * item AND a Products row — so the header offered the same destination twice,
+ * PRICING CAME OUT OF THE DROPDOWN. It was in both places (a top-level nav
+ * item AND a Products row), so the header offered the same destination twice,
  * a couple of centimetres apart. The top-level item is the one that stays.
  *
  * ── OTHER STRUCTURAL DECISIONS CARRIED FORWARD ──────────────────────────────

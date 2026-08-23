@@ -1,5 +1,5 @@
 /**
- * footer.ts — the sitewide footer, as typed data.
+ * footer.ts: the sitewide footer, as typed data.
  *
  * Every label and href is extracted verbatim from the legacy injector,
  * `js/nav-inject.js` (FOOTER_HTML, ~line 444-639), which is the single
@@ -12,12 +12,12 @@
  *   - Product column mirrors the merged desktop nav Products menu, in the
  *     same order (2026-07-29 footer/nav alignment fix).
  *   - Four link columns + Legal split out as its own column (not absorbed
- *     into Company) — reverses an older "exactly 4 columns" acceptance
+ *     into Company). Reverses an older "exactly 4 columns" acceptance
  *     criterion once it produced a 12-item Company column (2026-07-30).
  *   - Copyright + legal-entity line is a required Companies Act 2006 §82 /
  *     ICO disclosure; the brand copy phrase in the header comment of
  *     nav-inject.js ("Sustainability•Intelligence") is a *stale* CLAUDE.md
- *     reference from a retired strapline — the live FOOTER_HTML does not
+ *     reference from a retired strapline. The live FOOTER_HTML does not
  *     emit it, so it is correctly absent here too.
  */
 
@@ -110,7 +110,7 @@ export const FOOTER = {
       'CrowAgent serves both sides of a procurement, public sector and private. Suppliers answer tenders, RFPs, PQQs and SQs from bids already written. Buyers publish requirements and find the evidence.',
     /**
      * Static initial state. On the legacy site this is refined by a live
-     * status-monitor fetch in scripts.js — that polling is a separate,
+     * status-monitor fetch in scripts.js. That polling is a separate,
      * out-of-scope feature; this component renders the same honest default
      * it starts with before any fetch resolves.
      */

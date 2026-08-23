@@ -1,5 +1,5 @@
 /* ============================================================================
-   MAGNETIC — a control leans towards the pointer, and it can never eat a press.
+   MAGNETIC: a control leans towards the pointer, and it can never eat a press.
    ============================================================================
 
    Owner instruction, 2026-08-03: an audit found interactions that were present
@@ -40,7 +40,7 @@
       A browser does not synthesise a `click` when the element moves between
       press and release. The submit handler was simply never reached. That was
       reproduced with synthetic events, where the magnet is still animating
-      during the press, and a human holding the mouse still should settle it —
+      during the press, and a human holding the mouse still should settle it,
       so how often it hit a real user was never established. It does not need
       to be. An animated control on the conversion path that CAN eat a press is
       a defect whether or not it has been seen, and the fix is four lines:
@@ -141,7 +141,7 @@ function attach(el: HTMLElement): void {
    *
    * `pointercancel` matters as much as `pointerup`. A press that turns into a
    * scroll or is taken over by the browser fires cancel and never up, and
-   * without this the control would stay frozen for the rest of the visit —
+   * without this the control would stay frozen for the rest of the visit,
    * which is a silent, permanent loss of the effect rather than a visible bug,
    * so it would not have been found. */
   el.addEventListener('pointerdown', () => {

@@ -1,5 +1,5 @@
 /* ============================================================================
-   SHELL — the one client entry every route carries.
+   SHELL: the one client entry every route carries.
    ============================================================================
 
    ── WHY THIS FILE EXISTS ────────────────────────────────────────────────────
@@ -7,12 +7,12 @@
    Astro inlines a hoisted component `<script>` straight into the document
    whenever it compiles to a single chunk with no imports and under Vite's
    `assetsInlineLimit`, which is 4,096 bytes by default. Four scripts on this
-   site qualified — the header, the dropdown, the command palette and the
-   magnet — and every one of them belongs to `layouts/Base.astro`, so every one
+   site qualified (the header, the dropdown, the command palette and the
+   magnet), and every one of them belongs to `layouts/Base.astro`, so every one
    of them was written into all 44 documents.
 
    MEASURED ON THE 2026-08-04 BUILD, not estimated: 8,958 B a document, and
-   8,958 x 44 = 394,152 B — 384.9 KB — of build that was byte-for-byte
+   8,958 x 44 = 394,152 B (384.9 KB) of build that was byte-for-byte
    identical and that no browser could cache, because bytes inside an HTML
    document are not a cacheable resource. A reader moving between two pages
    downloaded the same command palette twice.
@@ -35,7 +35,7 @@
    light, `src/pages/index.astro` imports it directly, and it stays a second
    entry on that one route. Adding it here would put an IntersectionObserver on
    43 routes that do not ask for one, and it would let /crowmark and
-   /crowmark-buyers delete their duplicated inline view triggers — which is a
+   /crowmark-buyers delete their duplicated inline view triggers, which is a
    MOTION decision with a visual consequence on every route, not a payload one.
    It is named in ADR 0010 as the next thing to look at and is deliberately not
    done here.
@@ -49,7 +49,7 @@
    before, so the change is a no-op for anyone reading a stack trace.
 
    Astro emits this as a deferred module, so the DOM is parsed before any of it
-   runs — exactly as it was when the four were separate hoisted scripts. Every
+   runs, exactly as it was when the four were separate hoisted scripts. Every
    `getElementById` below was already relying on that.
    ============================================================================ */
 import { initNav } from './nav';

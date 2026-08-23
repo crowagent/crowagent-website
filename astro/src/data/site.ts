@@ -1,5 +1,5 @@
 /**
- * site.ts — global identity/SEO constants for the Astro rebuild.
+ * site.ts: global identity/SEO constants for the Astro rebuild.
  *
  * Values are taken from `migration/data/site.ts` and
  * `migration/data/structured-data.ts` (prepared by an earlier extraction
@@ -7,7 +7,7 @@
  * `index.html` JSON-LD block. See `migration/CONTENT-MODEL.md` for the full
  * writeup of inconsistencies found across the legacy tree.
  *
- * IMPORTANT — identity correction (2026-08-01): the legacy `index.html`'s
+ * IMPORTANT: identity correction (2026-08-01): the legacy `index.html`'s
  * own static Organization JSON-LD carried a `contactPoint` of
  * `crowagent.platform@gmail.com` / "Crow Agent". That is a cross-project
  * copy/paste defect (those are the `crowagent-platform` repo's identity
@@ -27,8 +27,8 @@ export const SITE = {
   /**
    * The Organization JSON-LD node, emitted on every page by Seo.astro as
    * the first entry in the @graph. Modelled on the injected fallback
-   * (`js/nav-inject.js` ORGANIZATION_FALLBACK_INJECTED) — the shape that
-   * actually renders on the majority of legacy pages — with the
+   * (`js/nav-inject.js` ORGANIZATION_FALLBACK_INJECTED) (the shape that
+   * actually renders on the majority of legacy pages) with the
    * corrected support email above.
    *
    * MARKET SCOPE CORRECTED (2026-08-04, A-50). `description` read "CrowAgent
@@ -39,7 +39,7 @@ export const SITE = {
    * below is index.astro's corrected description verbatim rather than a third
    * phrasing: one word out, nothing else touched. The same sentence was also
    * shipping as the footer tagline and as the first /faq answer, and both are
-   * corrected identically — fixing only the instance you were shown is how
+   * corrected identically. Fixing only the instance you were shown is how
    * OA-33 survived its own sweep.
    */
   organizationSchema: {

@@ -1,5 +1,5 @@
 /* ============================================================================
-   NAV — the header's own client behaviour: the mobile menu dialogue and the
+   NAV: the header's own client behaviour: the mobile menu dialogue and the
    mobile accordions.
    ============================================================================
 
@@ -7,7 +7,7 @@
    2026-08-04 under ADR 0010 and not a line of it was rewritten on the way. The
    move is a PAYLOAD decision, not a behaviour one: Astro inlines a hoisted
    component script into the document whenever it compiles to a single chunk
-   under 4 KB, so this block — identical byte for byte — was being written into
+   under 4 KB, so this block (identical byte for byte) was being written into
    all 44 documents. Four such blocks came to 8,958 B a document and 384.9 KB
    of build, none of which any browser could cache, because bytes inside an
    HTML document are not a cacheable resource.
@@ -92,7 +92,7 @@ function initMobileMenu() {
 /*
  * Every accordion in the mobile menu, not one named one. This loop already
  * worked for N panels before there were N of them, which is why Resources
- * needed no handler of its own — the only thing that had to change was the
+ * needed no handler of its own. The only thing that had to change was the
  * markup it walks, and that now comes out of a map over NAV.menus.
  */
 function initMobileAccordions() {

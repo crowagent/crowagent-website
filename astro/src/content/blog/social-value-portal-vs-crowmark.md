@@ -22,7 +22,7 @@ For suppliers, this means two things: you need to commit to specific, measurable
 
 The Social Value Portal (SVP) is the longest-established platform in the UK social value market. It was founded in 2014 and has become the default platform used by many large contracting authorities, including several NHS trusts, local authorities, and central government departments.
 
-SVP offers a comprehensive platform that covers the full social value lifecycle: bid planning, TOMs measure selection, narrative development, commitment tracking, and evidence reporting. It integrates directly with some procurement systems, and many contracting authorities require suppliers to submit their social value commitments through SVP as part of the tender process.
+SVP offers a platform that covers the full social value lifecycle: bid planning, TOMs measure selection, narrative development, commitment tracking, and evidence reporting. It integrates directly with some procurement systems, and many contracting authorities require suppliers to submit their social value commitments through SVP as part of the tender process.
 
 **Where SVP excels:**
 

@@ -1,5 +1,5 @@
 /**
- * roadmap.ts — the phases, the AI notes and the prioritisation method behind
+ * roadmap.ts: the phases, the AI notes and the prioritisation method behind
  * /roadmap.
  *
  * ── THE ONE RULE THIS FILE ENCODES ──────────────────────────────────────────

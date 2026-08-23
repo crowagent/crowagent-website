@@ -1,5 +1,5 @@
 /* ============================================================================
-   MOTION — one trigger, and it can only ever ADD light.
+   MOTION: one trigger, and it can only ever ADD light.
    ============================================================================
 
    Implements the `Motion — Homepage` board in Figma `wJ9DK6ByFUN6rWe0CpCVPU`,
@@ -13,8 +13,8 @@
 
    WHAT THIS REPLACES, AND WHY IT IS SO MUCH SMALLER
    -------------------------------------------------
-   The previous version of this file carried four primitives — reveal, parallax,
-   counter, magnetic — behind a `[data-motion]` attribute, a shared observer and
+   The previous version of this file carried four primitives (reveal, parallax,
+   counter, magnetic) behind a `[data-motion]` attribute, a shared observer and
    a 2600ms failsafe timer. Not one line of it was ever imported by any page on
    the site. It was written against the legacy `sv-reveal` design, in which
    content started at `opacity: 0` and depended on an IntersectionObserver
@@ -24,7 +24,7 @@
    The failsafe timer was the right answer to the wrong shape. If content only
    ever starts CORRECT, there is nothing to fail safe to: the page is already
    there. So the reveal, parallax and counter primitives are gone rather than
-   ported. `counter` in particular is a hazard on this page — MarketShape.astro
+   ported. `counter` in particular is a hazard on this page, MarketShape.astro
    forbids a count-up on its statutory figures by name, because the legacy build
    animated them from zero on scroll, which is the same hide-then-reveal
    pattern under a different name.
@@ -39,7 +39,7 @@
    Worth stating, because "make every section play continuously" sounds like a
    scheduling problem and would be one in any design where JavaScript drives the
    frames. Here the attribute is a SWITCH, not a clock: it says the section is
-   on screen, and CSS owns everything about what happens next — the cadence, the
+   on screen, and CSS owns everything about what happens next. The cadence, the
    rest between passes, and whether a given animation repeats at all. The whole
    retiming to a shared beat, cycle and easing set happened in tokens.css and in
    seven @keyframes blocks. Not one line of TypeScript was involved, and that is
@@ -96,7 +96,7 @@ function light(el: HTMLElement): void {
 }
 
 /* ============================================================================
-   THE CURSOR LIGHT — the second half of lever 01, and the only thing on this
+   THE CURSOR LIGHT: the second half of lever 01, and the only thing on this
    page that JavaScript is allowed to be responsible for.
    ============================================================================
 
@@ -216,8 +216,8 @@ export function initMotion(): void {
             if (!entry.isIntersecting) continue;
             light(entry.target as HTMLElement);
             // Unobserve, and it means something different now that the sections
-            // loop. It is no longer what stops a section repeating — CSS
-            // decides that — it is what stops a section RESTARTING. Leaving the
+            // loop. It is no longer what stops a section repeating (CSS
+            // decides that) it is what stops a section RESTARTING. Leaving the
             // observer attached and toggling the attribute would reset every
             // animation in that section to frame zero each time it re-entered
             // the viewport, so a reader scrolling up and down would re-trigger

@@ -1,5 +1,5 @@
 /* ============================================================================
-   TABS — one switcher mechanism for the whole site, and one source of truth
+   TABS: one switcher mechanism for the whole site, and one source of truth
    for which panel is showing.
    ============================================================================
 
@@ -57,14 +57,14 @@
    concludes the page is broken rather than that the choice does not exist.
 
    The reference build carries a `data-no-billing-toggle` attribute on its buyer
-   panel that nothing anywhere reads — a hook somebody left for a behaviour that
+   panel that nothing anywhere reads. A hook somebody left for a behaviour that
    was never written. The behaviour is wanted now, so it is written here, once,
    in the file that already owns which panel is showing. A second script on
    /pricing watching the same state would be a second answer to the same
    question, and the two would disagree the first time either was edited.
 
    The attribute goes on the CONTROL rather than on the panel, so the page says
-   what it means — "this switch belongs to the supplier plans" — instead of
+   what it means ("this switch belongs to the supplier plans") instead of
    leaving a reader to infer it from an exclusion listed on something else.
 
    HIDING IS REAL, NOT VISUAL. `hidden` takes the element out of the tab order
@@ -173,9 +173,9 @@ function setUp(group: HTMLElement): void {
 
   /*
    * The panel-specific controls THIS group governs. Searched across the whole
-   * document, because such a control is not inside the panel it belongs to —
-   * /pricing's billing switch sits beside the tabs in the sticky bar, above
-   * both panels — and claimed only when EVERY id it names is one of this
+   * document, because such a control is not inside the panel it belongs to
+   * (/pricing's billing switch sits beside the tabs in the sticky bar, above
+   * both panels), and claimed only when EVERY id it names is one of this
    * group's panels. A second switcher elsewhere on the page therefore cannot
    * reach it, and an attribute naming an id nothing renders is ignored rather
    * than silently hiding a control forever.
@@ -221,7 +221,7 @@ function setUp(group: HTMLElement): void {
     /* NO FOCUS RESCUE HERE, AND THAT WAS MEASURED RATHER THAN ASSUMED. Hiding
        the element the caret sits in normally drops focus to <body>, so a rescue
        looked necessary. The only route that can reach it is a hash change
-       arriving with focus already on the control — Back, or a pasted URL — and
+       arriving with focus already on the control (Back, or a pasted URL), and
        fragment navigation blurs the active element itself, after the
        `hashchange` listener has run. Focusing the newly selected tab from here
        was tried and the caret still ended on <body>: same outcome, one branch
@@ -307,7 +307,7 @@ function setUp(group: HTMLElement): void {
    * the autoplay block already treats ArrowLeft/ArrowRight as a reader's
    * choice and stops the loop for good. Dispatching the key gets all four
    * behaviours by construction, so the buttons and the keyboard cannot drift
-   * apart — and a second control for one piece of state that behaves subtly
+   * apart, and a second control for one piece of state that behaves subtly
    * differently from the first is worse than no second control.
    *
    * IT IS ALSO WHAT KEEPS THE JS BUDGET. Written out longhand, this block plus
@@ -319,7 +319,7 @@ function setUp(group: HTMLElement): void {
    * own size once it crosses a packaging boundary.
    *
    * REVEALED ONLY HERE. The wrapper ships `hidden`, so the arrows exist for a
-   * reader whose module ran and for nobody else — the same contract the pause
+   * reader whose module ran and for nobody else. The same contract the pause
    * control is under, and the reason neither can become a dead control.
    */
   if (stepWrap) {
@@ -355,8 +355,8 @@ function setUp(group: HTMLElement): void {
     true,
   );
 
-  /* A hash arriving from anywhere else — the browser's Back button, a pasted
-     URL, a link in the footer — selects the panel it names. */
+  /* A hash arriving from anywhere else (the browser's Back button, a pasted
+     URL, a link in the footer) selects the panel it names. */
   window.addEventListener('hashchange', () => {
     const hit = panelFor(decodeURIComponent(window.location.hash.slice(1)));
     if (hit) select(hit.panel.id, false);

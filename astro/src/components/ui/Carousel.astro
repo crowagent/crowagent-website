@@ -1,6 +1,6 @@
 ---
 /**
- * Carousel — the product showcase, restored.
+ * Carousel: the product showcase, restored.
  *
  * Owner instruction, 2026-08-03: the showcase carousel that shipped on the live
  * product pages before 26 July is absent from the rebuild, and it should come
@@ -16,8 +16,8 @@
  * The legacy version ran a `requestAnimationFrame` loop for the entire life of
  * the page. Every frame it added a delta to a counter, compared it against a
  * 5200ms interval, wrote a `stroke-dashoffset` on each of the dot rings, and
- * advanced when the counter overflowed. Two clocks — the rAF counter and the
- * reader's sense of the animation — kept in step by arithmetic that had to be
+ * advanced when the counter overflowed. Two clocks (the rAF counter and the
+ * reader's sense of the animation) kept in step by arithmetic that had to be
  * right every frame.
  *
  * Here the ring is a CSS animation whose duration IS the interval, and the
@@ -37,7 +37,7 @@
  *
  *   REDUCED MOTION IS STRUCTURAL. The animation is declared inside
  *   `prefers-reduced-motion: no-preference`. A reader who asked for stillness
- *   gets no ring, and therefore no `animationend`, and therefore no autoplay —
+ *   gets no ring, and therefore no `animationend`, and therefore no autoplay,
  *   from the same declaration, rather than from a second code path that can
  *   drift from the first. The controls still work; nothing moves on its own.
  *
@@ -52,7 +52,7 @@
  * this reuses the observer the site already has instead of adding a fifth.
  *
  * The honest limit: `data-lit` is set once and never unset, so scrolling PAST a
- * carousel does not re-pause it. What it does buy is the half that matters —
+ * carousel does not re-pause it. What it does buy is the half that matters,
  * a reader arriving at the section sees slide 1, not slide 4.
  *
  * NO REVEAL. Slide 1 carries `is-active` in the markup and its caption is
@@ -90,8 +90,8 @@
  *
  * ── SLIDES OF DIFFERENT SHAPES, ON ONE STAGE ────────────────────────────────
  *
- * The sixteen screens are drawn at three device sizes — 1440x900 desktop,
- * 1024x768 tablet, 390x844 mobile — so a set now spans aspect ratios from 1.60
+ * The sixteen screens are drawn at three device sizes (1440x900 desktop,
+ * 1024x768 tablet, 390x844 mobile), so a set now spans aspect ratios from 1.60
  * down to 0.46. A single fixed frame with `object-fit: cover` would crop a
  * different amount off every one of them, and what it crops off a picture of an
  * interface is the interface. See `.pcar__screen` below for how each slide is
@@ -100,7 +100,7 @@
 export interface Slide {
   /**
    * The PNG path under /Assets, with its cache-busting query. AVIF and WebP
-   * siblings are derived from it — see `sources()` below. copy-assets.js fails
+   * siblings are derived from it. See `sources()` below. copy-assets.js fails
    * the build if any of the three does not exist, which is what makes deriving
    * them safe rather than hopeful.
    */
@@ -127,8 +127,8 @@ interface Props {
    * "slide 1 is on screen as soon as the section is". That reasoning was never
    * checked against where the section actually sits. Measured on :8095,
    * 2026-08-04: the first slide's document offset is 5,905px at 1440 and 8,596px
-   * at 390 on /crowmark, and 7,726px / 10,659px on /crowmark-buyers — six to ten
-   * screens down — and it was the largest single asset on both routes. So it was
+   * at 390 on /crowmark, and 7,726px / 10,659px on /crowmark-buyers (six to ten
+   * screens down), and it was the largest single asset on both routes. So it was
    * being fetched at the highest priority the loader has, in competition with
    * the LCP element of a page the reader had not begun to scroll.
    *
@@ -197,7 +197,7 @@ const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
  * RESOLUTION. Measured on the build at :8095: /crowmark fetched 548,979 B of
  * images at a 390 viewport, byte-identical to 1440, and /crowmark-buyers
  * 509,624 B likewise. `sup-1-discover` is 2880x1800 on disk and paints into 348
- * CSS px on a phone — 8.3x linear, about 69x the pixels.
+ * CSS px on a phone, 8.3x linear, about 69x the pixels.
  *
  * The ladder and the `sizes` below are the same mechanism `PostImage.astro`
  * already runs for the blog heroes, which is why /blog falls from 107,444 B at
@@ -230,7 +230,7 @@ const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
  * is EXTENDING that tier. `scripts/check-budgets.js` records, beside the
  * `wholeBuild` budget, that the WebP tier of these sixteen screens is larger
  * than the PNG tier on all 16 of 16 files and is "the first place to look when
- * this budget next binds" — and it bound: a WebP ladder took the build from
+ * this budget next binds", and it bound: a WebP ladder took the build from
  * 12,541 KB to 17,831 KB against a 14,336 KB budget, 55% of the growth being
  * WebP nobody would fetch.
  */
@@ -257,7 +257,7 @@ const avifSrcset = (s: Slide) =>
  * its true proportions, full stage height, centred, with the stage colour
  * either side. Tablet screens (4/3) land at 83% of the stage width and phone
  * screens (390/844) at 29%, which reads as a device standing on a stage rather
- * than as a picture that failed to fill its box — so an inset slide gets a
+ * than as a picture that failed to fill its box, so an inset slide gets a
  * hairline and a radius of its own, and a full-bleed one does not, because on a
  * full-bleed slide that ring would sit a pixel inside the frame's own border
  * and read as a double line.
@@ -284,13 +284,13 @@ const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0
  * The three constants below are `--gutter`'s own `clamp(20px, 5vw, 48px)` read
  * back out: the 5vw arm gives 100vw - 10vw, the 20px floor gives 100vw - 40px,
  * and the 2px in both is the frame's two 1px borders. They are stated as
- * measurements because that is what makes them falsifiable — re-measure and
+ * measurements because that is what makes them falsifiable. Re-measure and
  * they either still hold or this comment is wrong.
  *
  * A SLIDE IS NOT THE STAGE. `.pcar__screen` is `height: 100%` with the slide's
  * own aspect-ratio, so its width is `stage * (ratio / STAGE_RATIO)`, capped at
  * the stage by `max-width: 100%`. Desktop screens come out at 1.0 of the stage,
- * tablet at 0.833 and phone at 0.289 — which is where the numbers in the
+ * tablet at 0.833 and phone at 0.289, which is where the numbers in the
  * `.pcar__screen` note above come from. Deriving the fraction from each slide's
  * own ratio, rather than writing three classes, keeps this component ignorant of
  * the list of device sizes, which is the call site's business.
@@ -342,8 +342,8 @@ const sizesFor = (s: Slide) => {
  * ── ONE SLIDE IS NOT A CAROUSEL, AND FROM 2026-08-07 IT NO LONGER SAYS IT IS ──
  *
  * THE FACT, MEASURED ON THE BUILT HOMEPAGE. Every one of the five product
- * panels on `/` renders this component with exactly ONE slide — the switching a
- * reader does there belongs to the outer TabSwitcher, not to this component —
+ * panels on `/` renders this component with exactly ONE slide (the switching a
+ * reader does there belongs to the outer TabSwitcher, not to this component),
  * while `/crowmark` and `/crowmark-buyers` pass several. So the same component
  * ships in two genuinely different states and only one of them is a carousel.
  *
@@ -404,7 +404,7 @@ const isCarousel = slides.length > 1;
                 <source type="image/webp" srcset={variant(s.src, 'webp', null)} />
                 {/* The PNG is the fallback for a browser that reads neither
                     modern format, and it stays at the master resolution with no
-                    srcset of its own — there are no PNG rungs on disk, and
+                    srcset of its own. There are no PNG rungs on disk, and
                     PostImage.astro's JPEG fallback works the same way.
 
                     EAGER ONLY WHEN THE CALLER SAYS SO. See the `priority` prop:
@@ -542,7 +542,7 @@ const isCarousel = slides.length > 1;
     max-width: var(--measure-mid);
     margin-inline: auto;
     /* A-81. At a 320px viewport the caption inside this carousel measured
-       338.3px wide, left -9.2, right 329.2 — 18px wider than the viewport,
+       338.3px wide, left -9.2, right 329.2, 18px wider than the viewport,
        centred, so the document scrolled sideways by 9px on /crowmark and
        /crowmark-buyers. That is WCAG 1.4.10 (Reflow), which states 320px.
        CLIP, NOT HIDDEN, and the distinction is the whole reason this is safe:
@@ -551,7 +551,7 @@ const isCarousel = slides.length > 1;
        leaves the carousel's own slide mechanism alone. `hidden` would do all
        three.
        Measured: 9px -> 0 at 320 on both routes, and 0 -> 0 at 390, 834 and
-       1440 — so nothing changes at any width a reader was already served.
+       1440, so nothing changes at any width a reader was already served.
        max-width: 100% was tried first and did NOT fix it; the caption is not
        overflowing this box's WIDTH, it is painting outside it. */
     overflow-x: clip;
@@ -574,7 +574,7 @@ const isCarousel = slides.length > 1;
     /* ── AN EDGE, 2026-08-07 ────────────────────────────────────────────────
      *
      * Owner: "some cards bottom lines are not visible". This frame declared no
-     * border at all — only a radius and a floor fill — so its outline existed
+     * border at all (only a radius and a floor fill), so its outline existed
      * solely where the light screenshot inside it happened to contrast with
      * the page. Along the bottom, under the shot, floor met panel and the edge
      * simply stopped.
@@ -606,8 +606,8 @@ const isCarousel = slides.length > 1;
      * somebody outlined.
      *
      * WHY IT IS WRITTEN HERE RATHER THAN BY TAKING THE CLASS. This frame is
-     * deliberately NOT a `.surface` — see the block directly above, "a device
-     * frame holds a screen edge to edge. It is a window, not a container" — and
+     * deliberately NOT a `.surface`. See the block directly above, "a device
+     * frame holds a screen edge to edge. It is a window, not a container", and
      * `surface--edge` arrives with a card's radius, fill, hover and sheen
      * attached to its siblings. The EDGE itself is still central: the gradient
      * is --grad-hairline, the one token, so the two cannot drift.
@@ -618,8 +618,8 @@ const isCarousel = slides.length > 1;
      * here would let the hairline read across the whole frame, which is exactly
      * the defect measured on `.in__chip` in Integrations.astro, where a 10%
      * face let a border ramp through and put text at 4.03:1. Nothing here is
-     * over text in any case — the screenshot is painted inside the padding box
-     * and the ring is outside it — but the construction is the one that failed
+     * over text in any case (the screenshot is painted inside the padding box
+     * and the ring is outside it), but the construction is the one that failed
      * and it is worth saying which half makes it safe.
      *
      * `overflow: hidden` clips children at the PADDING box, so the 1px ring
@@ -659,7 +659,7 @@ const isCarousel = slides.length > 1;
   /* ── THE THREE LIGHTS ──────────────────────────────────────────────────────
    *
    * Owner, 2026-08-05: "noticed carasouls has 3 dots but hardly visible hence
-   * improve with colors dots". They were `background: var(--c-border)` — the
+   * improve with colors dots". They were `background: var(--c-border)`, the
    * BORDER colour, white at 12% alpha, used as a FILL, on a --c-raised bar.
    * Measured, that is 1.37:1 against the bar behind them, which is why three
    * dots read as three smudges. They are now about 5:1.
@@ -708,7 +708,7 @@ const isCarousel = slides.length > 1;
   /* ── The stage ───────────────────────────────────────────────────────────
    *
    * A FIXED ASPECT RATIO, so the frame reserves its height before the image
-   * arrives and the page cannot shift under the reader — and, just as
+   * arrives and the page cannot shift under the reader, and, just as
    * importantly, so it cannot shift when the carousel advances itself every
    * 5.2 seconds. 16/10 because the drawn desktop screens are 1440x900, which is
    * 16/10 exactly. See STAGE_RATIO in the frontmatter.
@@ -716,7 +716,7 @@ const isCarousel = slides.length > 1;
    * `contain` AND NOT `cover`, WHICH IS THE OPPOSITE OF THE LEGACY SHEET, and
    * the reason is what these images are. `cover` on a mixed set crops a
    * different amount off every slide, and what it crops off a picture of an
-   * interface is the interface — on the opportunities feed at 2.00 in a 16:10
+   * interface is the interface, on the opportunities feed at 2.00 in a 16:10
    * frame it takes 10% off each side, which is exactly where the relevance
    * score sits. A marketing image can lose its edges; a picture of a product
    * loses the thing it was drawn to show.
@@ -724,7 +724,7 @@ const isCarousel = slides.length > 1;
    * This used to hold the whole answer, because the set was chosen to one ratio
    * and the note here said so: "a slide at 0.95 would show real bars, and the
    * answer then is a better capture rather than a crop". The set is no longer
-   * one ratio — it runs 1.60, 1.33 and 0.46 — so the answer moved down one
+   * one ratio (it runs 1.60, 1.33 and 0.46), so the answer moved down one
    * level, to `.pcar__screen`. */
   .pcar__viewport {
     position: relative;
@@ -757,7 +757,7 @@ const isCarousel = slides.length > 1;
    * device size its true shape from a single rule: the stage sets the height,
    * the ratio sets the width, and nothing is cropped or stretched at any size.
    * The ratio arrives as an inline custom property because it is data about
-   * that one picture — writing a class per device size would mean this
+   * that one picture. Writing a class per device size would mean this
    * component knowing the list of device sizes, which is the call site's
    * business and not its own. */
   .pcar__screen {
@@ -793,7 +793,7 @@ const isCarousel = slides.length > 1;
    * WRITTEN HERE RATHER THAN TAKEN FROM A TOKEN, and check-design-system rule 7
    * permits exactly this: a gradient at the point of use passes if every colour
    * in it resolves from a var(). The rule was amended on 2026-08-03 for the
-   * reason this glare runs into — a knob token bakes its fallbacks in where it
+   * reason this glare runs into. A knob token bakes its fallbacks in where it
    * is DECLARED, so a shared gradient cannot take a per-element angle.
    *
    * The two existing tokens are both the wrong shape rather than the wrong
@@ -893,7 +893,7 @@ const isCarousel = slides.length > 1;
   /* ── A-12: THE CAPTION CENTRES ON THE FRAME ──────────────────────────────
    *
    * Measured at 1440 on /crowmark and /crowmark-buyers: the frame's centre sits
-   * at 720px and the caption's at 548px — 172px out. It was not a margin to
+   * at 720px and the caption's at 548px, 172px out. It was not a margin to
    * nudge, it was the row's construction. Four flex items in the order prev,
    * caption, tabs, next put THREE control clusters on one side of the caption
    * and one on the other, so the only width left for it was the 490px the
@@ -908,7 +908,7 @@ const isCarousel = slides.length > 1;
    *
    * IT IS THE COMPOSITION THE NARROW BREAKPOINT ALREADY USED. Below 40rem the
    * arrows are hidden and the caption has taken its own line since this file was
-   * written — see that block at the foot. Desktop was the odd one out, drawing
+   * written. See that block at the foot. Desktop was the odd one out, drawing
    * the same three objects in a shape that only worked while the caption was
    * short.
    *
@@ -934,7 +934,7 @@ const isCarousel = slides.length > 1;
   }
   /* `justify-self: center`, and it is not belt and braces. The caption spans all
      three tracks, and a spanning item contributes to the size of every track it
-     spans — so at 390, where the caption wraps to three lines, the middle track
+     spans, so at 390, where the caption wraps to three lines, the middle track
      came out wider than the dots and the row sat 23px left of centre while the
      two 1fr tracks were still perfectly equal. Measured on /crowmark at 390
      before this line. The dots centre in their own track now, whatever the
@@ -954,7 +954,7 @@ const isCarousel = slides.length > 1;
     /* A flex item's default `min-width: auto` is its longest unbreakable word,
        which is why this had to be said out loud: without it the caption refuses
        to shrink below its widest word and pushes the dot row off the end of the
-       page. Measured at 390px on /crowmark-buyers before this line existed —
+       page. Measured at 390px on /crowmark-buyers before this line existed,
        the document scrolled 402px wide inside a 390px viewport. */
     min-width: 0;
     margin: 0;
@@ -982,7 +982,7 @@ const isCarousel = slides.length > 1;
      The wash, the hairline and the hover are `.control` in styles/controls.css
      (A-52). TWO THINGS WENT WITH THEM. The 1.5px lift, because an arrow is
      pressed repeatedly and a control that rises slides the target out from
-     under the finger aiming at it — and because that transform still applied
+     under the finger aiming at it, and because that transform still applied
      under prefers-reduced-motion, where collapsing --dur removes the animation
      and leaves the displacement. And the focus ring, which was the only one on
      the site drawn at 2px/2px rather than the sitewide 3px/3px in
@@ -995,7 +995,7 @@ const isCarousel = slides.length > 1;
     padding: 0;
     border-radius: var(--radius-pill);
     /* Full ink rather than `.control`'s sub default. The glyph IS the control
-       here — there is no label beside it — so it carries the whole of SC 1.4.11
+       here (there is no label beside it), so it carries the whole of SC 1.4.11
        on its own. */
     --ctl-ink: var(--c-text);
   }
@@ -1080,7 +1080,7 @@ const isCarousel = slides.length > 1;
    *
    * `data-lit` gates it, so a carousel that has not been scrolled to yet is
    * still on slide 1 when the reader arrives. That attribute is set by the
-   * shared view trigger the product pages already run — no new observer.
+   * shared view trigger the product pages already run, no new observer.
    *
    * INSIDE no-preference ON PURPOSE. No animation means no `animationend`,
    * which means no autoplay, from this one declaration rather than from a
@@ -1132,7 +1132,7 @@ const isCarousel = slides.length > 1;
 
   /* Not an entrance: it starts at the ring's own resting dash offset and draws
      it in. check-motion rule 2 reads `opacity` and `transform`, and this is
-     neither, which is correct rather than lucky — nothing here appears, a
+     neither, which is correct rather than lucky. Nothing here appears, a
      measure fills. */
   @keyframes pcar-ring {
     from {
@@ -1160,7 +1160,7 @@ const isCarousel = slides.length > 1;
 
        THE TWO DECLARATIONS THAT USED TO DO THIS ARE GONE, NOT MOVED. They were
        `flex-wrap: wrap` and `flex: 1 0 100%`, and A-12 made the driven foot a
-       grid at every width — which puts the caption on its own row here as a
+       grid at every width, which puts the caption on its own row here as a
        property of the layout rather than as a narrow-viewport special case. A
        flex declaration on a grid container is inert, so leaving them would have
        left two lines that read as the thing keeping this working while doing
@@ -1219,7 +1219,7 @@ const isCarousel = slides.length > 1;
    * It never sets a timer, never writes a transform, and never measures
    * anything. It flips `is-active`, `aria-hidden` and `aria-selected`, writes
    * the caption, and announces. Flipping `aria-selected` is also what restarts
-   * the ring, because the animation rule only matches the selected tab — so
+   * the ring, because the animation rule only matches the selected tab, so
    * the progress indicator resets itself and cannot drift from the slide.
    */
   interface Car {

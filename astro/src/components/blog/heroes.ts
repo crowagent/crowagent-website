@@ -1,5 +1,5 @@
 /**
- * heroes.ts — the picture each blog post carries, and the accent its category
+ * heroes.ts: the picture each blog post carries, and the accent its category
  * is drawn in.
  *
  * WHY THIS IS A MODULE AND NOT FRONTMATTER. The pictures live in
@@ -7,8 +7,8 @@
  * plus a JPEG fallback, written by `scripts/build-blog-photos.mjs` and nothing
  * else. Their provenance and licence are recorded in `blog/PHOTO-CREDITS.md`.
  * What never existed was anything in the Astro build that REFERENCED them,
- * which is why `scripts/copy-assets.js` — which copies by reachability, not
- * wholesale — never copied one into `dist/`. The pictures were licensed,
+ * which is why `scripts/copy-assets.js` (which copies by reachability, not
+ * wholesale) never copied one into `dist/`. The pictures were licensed,
  * resized, laddered, credited and then left on the floor.
  *
  * ── THERE IS NO `credit` FIELD, AND THERE IS NO `kind` FIELD ────────────────
@@ -42,7 +42,7 @@
 export interface Hero {
   /**
    * Basename under /Assets/blog-photos, no extension. The ladder is derived.
-   * The name describes the PICTURE, not the post — filenames named after
+   * The name describes the PICTURE, not the post. Filenames named after
    * whichever article first used them are how one photograph ended up as the
    * hero of three unrelated posts. See the note in blog/PHOTO-CREDITS.md.
    */
@@ -69,7 +69,7 @@ export const HEROES: Record<string, Hero> = {
     alt: 'Three colleagues around a meeting table reviewing printed documents and a laptop',
   },
   /*
-   * REPLACED 2026-08-04. Was `regulatory-updates-2026` — ring binders and loose
+   * REPLACED 2026-08-04. Was `regulatory-updates-2026`, ring binders and loose
    * papers on a meeting-room table, which is a photograph of any office at all.
    * A guide to what changed in the procurement rules is better served by the
    * building the rules come out of.
@@ -79,7 +79,7 @@ export const HEROES: Record<string, Hero> = {
     alt: 'The colonnaded stone facade and royal coat of arms of a Whitehall government building against a clear blue sky',
   },
   /*
-   * REPLACED 2026-08-04. Was `social-value-portal-vs-crowmark` — two iMacs on a
+   * REPLACED 2026-08-04. Was `social-value-portal-vs-crowmark`, two iMacs on a
    * designer's desk, one of them unmistakably running a design tool, which is a
    * wrong-subject photograph on a piece comparing two social value reporting
    * platforms.
@@ -101,8 +101,8 @@ export const HEROES: Record<string, Hero> = {
    * and a register of eight entries in which six are full-colour photographs
    * and two are abstract bar graphics reads as two of them failing to load.
    *
-   * The artwork and its generator are untouched — `npm run build:og` still
-   * renders them — so this is reversible by putting the two `file` values back.
+   * The artwork and its generator are untouched (`npm run build:og` still
+   * renders them), so this is reversible by putting the two `file` values back.
    */
   'frameworks-and-dps-explained': {
     file: 'office-files-on-shelves',
@@ -135,7 +135,7 @@ export function heroFor(slug: string): Hero {
 }
 
 /**
- * CATEGORY ACCENT — read this before changing it.
+ * CATEGORY ACCENT: read this before changing it.
  *
  * B1 tints each category label. The palette rule in specs/DESIGN-DECISIONS.md
  * section 3 reserves teal for verified, violet/orchid for refused or flagged

@@ -1,5 +1,5 @@
 /**
- * crowmark-screens.ts — the sixteen drawn CrowMark product screens, as data.
+ * crowmark-screens.ts: the sixteen drawn CrowMark product screens, as data.
  *
  * Eight supplier and eight buyer, drawn in Figma on 2026-08-03 and approved by
  * the owner the same day. The full node table, the token research they were
@@ -12,7 +12,7 @@
  *
  * /crowmark and /crowmark-buyers each show one of these sets, and the two pages
  * are separately maintained. Alt text and captions on this site are governed by
- * rules that are easy to break one page at a time — see below — so the sixteen
+ * rules that are easy to break one page at a time (see below), so the sixteen
  * strings that have to obey them live in one file where they can be read
  * against each other, rather than eight in each page where they cannot.
  *
@@ -32,8 +32,8 @@
  *
  * 3  NO WIN RATES, EVER, AND NO PROBABILITY OF AWARD. CrowMark is framed as fit
  *    and coverage. Two of these screens put that refusal on the interface
- *    itself — the supplier fit score says in so many words that it "is not a
- *    probability of award, and CrowMark does not produce one" — and those
+ *    itself (the supplier fit score says in so many words that it "is not a
+ *    probability of award, and CrowMark does not produce one"), and those
  *    sentences are quoted rather than paraphrased, because a paraphrase of a
  *    refusal is a weaker refusal.
  *
@@ -41,7 +41,7 @@
  *
  * Each set runs largest device first: four desktop screens, then two tablet,
  * then two phone. That is not a size preference, it is what keeps the frame
- * useful — the stage in Carousel.astro is 16/10, the desktop screens fill it
+ * useful. The stage in Carousel.astro is 16/10, the desktop screens fill it
  * exactly, and a reader who arrives on slide 1 should see the screen that
  * carries the argument rather than a phone standing in the middle of a stage.
  * Within the desktop four, the order is the order the work happens in.

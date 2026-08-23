@@ -17,8 +17,8 @@ const blog = defineCollection({
      * `<title>` is composed as `${title} | CrowAgent`, so a headline of 50
      * characters ships a 61-character title and Google truncates it around 60.
      * Measured 2026-08-04: eight of the eight blog posts were over, the longest
-     * at 78, and what the truncation ate was the descriptive clause — the part
-     * that says what the article is about — while the brand suffix survived.
+     * at 78, and what the truncation ate was the descriptive clause (the part
+     * that says what the article is about), while the brand suffix survived.
      *
      * SHORTENING THE HEADLINE WAS THE WRONG FIX AND IS WHY THIS FIELD EXISTS. A
      * page headline and a search-result line are different objects with
@@ -51,7 +51,7 @@ const blog = defineCollection({
 });
 
 /**
- * /compare/* — honest, sourced CrowMark-vs-competitor pages.
+ * /compare/*: honest, sourced CrowMark-vs-competitor pages.
  *
  * og:title/twitter:title equal the bare `title` (no " | CrowAgent" suffix)
  * on every legacy compare page, so the page derives them from `title`
@@ -82,7 +82,7 @@ const compare = defineCollection({
 });
 
 /**
- * /sectors/* — CrowMark-for-a-sector landing pages.
+ * /sectors/*, CrowMark-for-a-sector landing pages.
  *
  * Only the four sectors with a real page on disk (construction, education,
  * facilities, highways) are modelled as content; the other five cards on
@@ -149,7 +149,7 @@ const glossary = defineCollection({
     sidebarBody: z.string(),
     sidebarHref: z.string(),
     sidebarCta: z.string(),
-    /** The sidebar's second card body — constant kicker/title ("Full product" / "CrowMark"), variable body. */
+    /** The sidebar's second card body: constant kicker/title ("Full product" / "CrowMark"), variable body. */
     productCardBody: z.string(),
     readMoreHref: z.string(),
     readMoreLabel: z.string(),
@@ -160,7 +160,7 @@ const glossary = defineCollection({
 });
 
 /**
- * /privacy, /terms, /cookies, /security — the legal documents.
+ * /privacy, /terms, /cookies, /security: the legal documents.
  *
  * These were NOT retyped. `scripts/convert-legal.js` converts them from the
  * legacy HTML deterministically and refuses to write a file unless the visible

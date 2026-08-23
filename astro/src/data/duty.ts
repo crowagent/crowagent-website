@@ -1,5 +1,5 @@
 /**
- * duty.ts — the three statutory figures the hero proof card is drawn from, and
+ * duty.ts: the three statutory figures the hero proof card is drawn from, and
  * the citation that makes each one checkable.
  *
  * ── WHY THIS FILE EXISTS ────────────────────────────────────────────────────
@@ -9,7 +9,7 @@
  * the same section numbers, the same thresholds, the same commencement dates.
  * Two copies of a legal reference is not a duplication of styling, it is a
  * duplication of the only kind of statement on this site that can be checked
- * against a published instrument — and the copy nobody edits is the one that
+ * against a published instrument, and the copy nobody edits is the one that
  * goes stale after a commencement order.
  *
  * The same argument integrations.ts makes about a connector, one file over: a
@@ -23,7 +23,7 @@
  * and the Cabinet Office set, and neither page is entitled to a different one.
  *
  * NOT SHARED: the LABEL. The two pages address opposite ends of the same
- * transaction and the label is where that shows — the supplier reads "KPIs
+ * transaction and the label is where that shows. The supplier reads "KPIs
  * minimum" as a count in a contract handed to them, the authority reads "KPIs
  * you must publish" as an obligation of its own. Same duty, two duty-holders,
  * and flattening that into one wording would put the authority's obligation on
@@ -39,7 +39,7 @@
  * ── THE ONE RULE ────────────────────────────────────────────────────────────
  *
  * s.52 SETS AND PUBLISHES. s.71 ASSESSES AND PUBLISHES. They are two duties,
- * twelve months apart, and they must never be merged into one sentence — that is
+ * twelve months apart, and they must never be merged into one sentence. That is
  * the single most common way either page could become wrong, and the gap section
  * on /crowmark exists to draw the twelve months between them.
  *
@@ -55,7 +55,7 @@ export interface DutyRow {
   /**
    * The instrument, the qualifying condition and the commencement date. Fixed
    * in length by the instrument it names, which is why the card balances it
-   * rather than trimming it — see styles/duty-card.css.
+   * rather than trimming it. See styles/duty-card.css.
    */
   cite: string;
   /** Supplied by the page. The audience-facing half. */
@@ -63,7 +63,7 @@ export interface DutyRow {
 }
 
 /**
- * SECTION 52 — key performance indicators.
+ * SECTION 52: key performance indicators.
  *
  * Above £5m estimated value, the contracting authority sets and publishes at
  * least three KPIs. Section 52 stops there; the duty to ASSESS against them is
@@ -75,7 +75,7 @@ export const S52: DutyRow = {
 };
 
 /**
- * SECTION 71 — assessment against those indicators.
+ * SECTION 71: assessment against those indicators.
  *
  * At least once every twelve months, and on termination, the authority assesses
  * performance against the s.52 indicators and publishes that assessment. This is
@@ -88,7 +88,7 @@ export const S71: DutyRow = {
 };
 
 /**
- * PPN 002 — the minimum social value weighting at award.
+ * PPN 002: the minimum social value weighting at award.
  *
  * Ten per cent is a FLOOR on the evaluation weighting, not a score and not a
  * prediction: the remaining weighting is the authority's to set. The bar on the

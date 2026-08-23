@@ -1,5 +1,5 @@
 /* ============================================================================
-   NAV DROPDOWN — one initialiser, every dropdown in the header.
+   NAV DROPDOWN: one initialiser, every dropdown in the header.
    ============================================================================
 
    IT MOVED HERE UNEDITED, AND THEN IT WAS EDITED ONCE. The code came out of
@@ -12,7 +12,7 @@
    document and cached in none of them.
 
    The frontmatter comment in NavDropdown.astro is still where the DESIGN of
-   this is argued — why it is a disclosure and not an ARIA menu, why the
+   this is argued, why it is a disclosure and not an ARIA menu, why the
    pointer affordance is gated to devices that can hover, why every close path
    is the way it is. That reasoning belongs with the markup it describes. The
    morph is argued in two halves, each beside the thing it owns: the MECHANISM
@@ -51,7 +51,7 @@ function initDropdown(dropdown: HTMLElement) {
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-   * THE MORPH — A-95, 2026-08-05, owner approved.
+   * THE MORPH: A-95, 2026-08-05, owner approved.
    *
    * The panel used to appear and disappear. Now, when the reader travels from
    * one menu to the next, the incoming panel starts at the OUTGOING panel's
@@ -66,7 +66,7 @@ function initDropdown(dropdown: HTMLElement) {
    * So TODAY THIS IS A HEIGHT MORPH AND NOTHING ELSE, and saying otherwise
    * would be the kind of claim this repository keeps catching. Both panels are
    * one column of `minmax(320px, 1fr)` inside 20px of padding and a 1px border,
-   * and an absolutely positioned box with no width shrinks to fit — which for
+   * and an absolutely positioned box with no width shrinks to fit, which for
    * both menus is the 320px column floor plus 42px of chrome, identically.
    * Width is still animated because `--mega-cols` exists: the component takes
    * as many columns as a menu declares, so the first two-column menu makes the
@@ -76,7 +76,7 @@ function initDropdown(dropdown: HTMLElement) {
    * WIDTH HAS A KNOWN LIMIT WHEN IT DOES BECOME REAL. Constraining the width of
    * the grid also constrains its column, so a panel morphing between two
    * DIFFERENT widths will rewrap its descriptions as it travels. Height does
-   * not do this — a grid row keeps its content height and overflows, which is
+   * not do this. A grid row keeps its content height and overflows, which is
    * why `.ca-mega` clips. The fix at that point is an inner wrapper held at the
    * panel's natural width with the outer box as the clip, and it is not built
    * today because it would be markup carrying a case that does not exist.
@@ -88,7 +88,7 @@ function initDropdown(dropdown: HTMLElement) {
    * pointer path hands it over for free: moving from one trigger to the next
    * fires mouseleave on the first, which starts its 160ms delayed close, and
    * mouseenter on the second, which opens immediately. The old panel is
-   * therefore still on screen and still measurable — and if it is itself
+   * therefore still on screen and still measurable, and if it is itself
    * mid-morph, its rect is where it VISUALLY is, which is the box a reader's
    * eye is actually travelling from.
    *
@@ -111,7 +111,7 @@ function initDropdown(dropdown: HTMLElement) {
    * token rather than by a media query of its own. That is not enough on
    * its own: it would leave this code still measuring two boxes and still
    * writing inline width and height on every open, to no visible end. So the
-   * preference is read HERE too and the whole block is skipped — no
+   * preference is read HERE too and the whole block is skipped, no
    * measurement, no inline size, nothing but show and hide.
    *
    * READ LIVE, ON EVERY OPEN, unlike `canHover` below. The difference is real:
@@ -159,8 +159,8 @@ function initDropdown(dropdown: HTMLElement) {
 
        CONTROL, 2026-08-05, this line deleted from the built bundle and nothing
        else: `panel.getAnimations()` returned NONE, the panel rendered at 412.52
-       in the same task instead of at the outgoing 320.31, and — because no
-       transition ever ended — the inline size was never handed back. With the
+       in the same task instead of at the outgoing 320.31, and (because no
+       transition ever ended) the inline size was never handed back. With the
        line in place the same probe reports one CSSTransition on height,
        320.312px to 412.516px over 180ms, and a bare `--mega-cols` style
        attribute once it settles. */
@@ -178,7 +178,7 @@ function initDropdown(dropdown: HTMLElement) {
      THIS IS NOT THE ONLY THING THAT CLEARS IT, and it must not be. A transition
      that never starts never ends: two menus of identical size write identical
      numbers, no property changes, and nothing fires here. That is why closing
-     clears too — the inline size can outlive one travel and cannot outlive the
+     clears too. The inline size can outlive one travel and cannot outlive the
      menu being shut. It is also harmless while it lasts, being by construction
      the size the panel would have taken anyway. */
   panel.addEventListener('transitionend', (e) => {
@@ -243,7 +243,7 @@ function initDropdown(dropdown: HTMLElement) {
   /*
    * KEYBOARD, INSIDE THE PANEL. Arrow keys move between links and WRAP, Home
    * and End jump to the ends, Escape closes and hands focus back to the
-   * trigger — the return is what stops a keyboard reader being dropped at the
+   * trigger. The return is what stops a keyboard reader being dropped at the
    * top of the document.
    *
    * Tab is deliberately not intercepted. This is a disclosure, not a modal:

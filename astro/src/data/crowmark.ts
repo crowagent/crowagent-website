@@ -1,9 +1,9 @@
 /**
- * crowmark.ts — the content of /crowmark as data.
+ * crowmark.ts: the content of /crowmark as data.
  *
  * The FAQ array here feeds BOTH the visible accordion and the FAQPage JSON-LD.
  * The legacy page happened to keep its 8 visible pairs in step with its schema,
- * but only by hand — and /faq, which did the same thing, had drifted to 9 schema
+ * but only by hand, and /faq, which did the same thing, had drifted to 9 schema
  * entries against 14 visible with the whole Security category missing. One
  * source removes the possibility rather than relying on it not happening again.
  *
@@ -15,8 +15,8 @@
  *   away: competitors in this category advertise win rates, and declining to is
  *   the differentiator. Do not soften, shorten or "improve" either sentence.
  *
- * The PPN 002 answer is the best-cited on the site — February 2025, mandatory
- * 1 October 2025, 10% minimum, five missions M1-M5, eight policy outcomes — and
+ * The PPN 002 answer is the best-cited on the site (February 2025, mandatory
+ * 1 October 2025, 10% minimum, five missions M1-M5, eight policy outcomes), and
  * it carries the "not a full National TOMs implementation" hedge that
  * /crowmark-buyers is missing (OA-15).
  */
@@ -219,9 +219,9 @@ export const FAQS: Faq[] = [
     /* A-51, owner decision 2026-08-04: QUALIFY THIS NOW.
      *
      * It read: "Yes. Every capability described on this page is live in the
-     * product today." That is the strongest claim in the JSON-LD graph — this
+     * product today." That is the strongest claim in the JSON-LD graph (this
      * array feeds faqPage(), so the sentence was being published as structured
-     * data for a search engine to quote back — and the site cannot evidence it.
+     * data for a search engine to quote back), and the site cannot evidence it.
      *
      * The site's own principle forbids stating what it cannot evidence, and it
      * is the principle the win-rate refusal rests on. A universal claim over an
@@ -233,7 +233,7 @@ export const FAQS: Faq[] = [
      * itself in one sentence. No accuracy figures, and no win rates.
      *
      * OPEN FOR THE OWNER: a per-capability live-versus-planned split cannot be
-     * derived from this repository — nothing in it records which grid items are
+     * derived from this repository. Nothing in it records which grid items are
      * shipped. If any capability in the "What CrowMark does today" grid is in
      * fact not yet released, it belongs on /roadmap in the future tense, and
      * that is a product fact only the owner holds. */

@@ -1,5 +1,5 @@
 /**
- * share.ts — the copy-to-clipboard control on a blog post's share row.
+ * share.ts: the copy-to-clipboard control on a blog post's share row.
  *
  * ── WHY THIS IS A MODULE AND NOT A `<script>` IN ShareRow.astro ─────────────
  *

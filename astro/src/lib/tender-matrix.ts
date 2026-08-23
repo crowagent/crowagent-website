@@ -19,7 +19,7 @@
  * not at the module.
  */
 /**
- * tender-matrix.ts — the tender compliance matrix rule engine, as pure functions.
+ * tender-matrix.ts: the tender compliance matrix rule engine, as pure functions.
  *
  * WHY THIS IS A LIBRARY AND NOT A SCRIPT INSIDE THE PAGE. Same argument as
  * the PPN 002 calculator library, one object along: the page renders, the library decides. A

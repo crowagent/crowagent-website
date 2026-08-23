@@ -1,5 +1,5 @@
 /**
- * route-url.ts — the absolute URL of a route, derived in ONE place.
+ * route-url.ts: the absolute URL of a route, derived in ONE place.
  *
  * ── WHY THIS FILE EXISTS ────────────────────────────────────────────────────
  *
@@ -47,7 +47,7 @@
  *
  * Astro emits `src/pages/404.astro` as a flat `dist/404.html`, not as
  * `404/index.html`. That is a rule of the framework, not a choice of this site,
- * and it makes `/404` the served form and `/404/` the 308 — the opposite
+ * and it makes `/404` the served form and `/404/` the 308. The opposite
  * direction from every other route, measured above. Adding a slash there would
  * point the page at a redirect, so the flat-file route keeps its bare form.
  *

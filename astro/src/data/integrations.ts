@@ -1,5 +1,5 @@
 /**
- * integrations.ts — what CrowMark actually connects to, and the evidence for
+ * integrations.ts: what CrowMark actually connects to, and the evidence for
  * each line.
  *
  * ── WHY THIS FILE EXISTS RATHER THAN LIVING IN THE PAGE ─────────────────────
@@ -30,7 +30,7 @@
  * homepage chips and that "the next person to touch that component should
  * import SOURCES from here and delete its local array". That was done on
  * 2026-08-04, and the reason it had to be done is worth keeping, because a
- * duplicate list does not fail loudly — it drifts.
+ * duplicate list does not fail loudly, it drifts.
  *
  * Measured at the moment the copies were merged, they had ALREADY drifted, in
  * exactly the way that matters here. The homepage said "Confluence"; this file
@@ -38,7 +38,7 @@
  * Business". It said "Entra ID SSO"; this file said "Microsoft Entra ID". Those
  * are not stylistic differences. Confluence Cloud and Confluence Data Center are
  * different products with different connection models, and personal OneDrive is
- * not supported at all — the note on that entry says so. Two lists meant the
+ * not supported at all. The note on that entry says so. Two lists meant the
  * site named the same three connectors two different ways on two pages, and
  * nothing could see it.
  *
@@ -69,7 +69,7 @@
  * CORPORATE symbol, Google Workspace drew the Google "G", and the Teams, Okta and
  * Ping Identity files were generations their vendors have retired. Each was
  * re-checked against the vendor's own brand channel that day and not one can be
- * corrected from an official source at the size this design needs — Okta
+ * corrected from an official source at the size this design needs, Okta
  * publishes no colour symbol, Ping publishes no downloadable asset at all,
  * Microsoft's current product icons are behind a licence, and Google publishes no
  * standalone Workspace glyph. The evidence for each is quoted in the record.
@@ -77,12 +77,12 @@
  * So they show no mark and are identified BY NAME, which is what they already
  * were: every chip and every row prints `name` in text beside the icon slot, so
  * nothing a reader can use has been lost. Microsoft's own guidance names this as
- * the sanctioned alternative in as many words — a third party may write that its
+ * the sanctioned alternative in as many words. A third party may write that its
  * product works with Microsoft Teams and may not draw the Teams icon.
  *
  * THE RULE IS "THE VENDOR'S CURRENT MARK FOR THE NAMED PRODUCT, OR NONE", AND IT
- * IS APPLIED BY ITS OWN TERMS. Two marks that are also served without a licence —
- * Microsoft Entra ID and Google Drive — are the vendor's correct current artwork,
+ * IS APPLIED BY ITS OWN TERMS. Two marks that are also served without a licence
+ * (Microsoft Entra ID and Google Drive) are the vendor's correct current artwork,
  * so the accuracy rule does not reach them and they stay. Their permission
  * question is unchanged and is still open item 1 for the owner. Mixing the two
  * questions would make the withdrawal look like a legal opinion, and it is not
@@ -106,7 +106,7 @@ export interface Connector {
    * UNDEFINED IS A VALID AND SOMETIMES CORRECT ANSWER. Both components render a
    * neutral token-coloured dot in the full icon slot when this is absent, and
    * that is deliberately not a placeholder to be filled in at the first
-   * opportunity — it is what an unobtainable mark is supposed to look like. An
+   * opportunity. It is what an unobtainable mark is supposed to look like. An
    * invented, traced or icon-pack mark is a fabricated brand asset.
    *
    * Every value here must appear in Assets/brand/integrations/LOGO-PROVENANCE.md.
@@ -131,7 +131,7 @@ export interface Connector {
  * no callers in the first place.
  */
 
-/* ── DOCUMENT SOURCES — read, never written ──────────────────────────────────
+/* ── DOCUMENT SOURCES: read, never written ──────────────────────────────────
  *
  *   SharePoint   api/app/services/content_sources.py:953  scopes=("Sites.Read.All",)
  *   OneDrive     content_sources.py:1006                  scopes=("Files.Read.All",)
@@ -143,7 +143,7 @@ export interface Connector {
  */
 
 /* No mark. This used to draw the Microsoft CORPORATE symbol, which says "a
-   Microsoft product" — true, and not what a logo slot is for. SharePoint's own
+   Microsoft product", true, and not what a logo slot is for. SharePoint's own
    mark is three teal circles and OneDrive's is a blue cloud; neither is
    obtainable outside the licensed channel, so both products are named in text
    and the slot holds the neutral dot. Withdrawal 1 and 2 in LOGO-PROVENANCE.md. */
@@ -167,7 +167,7 @@ const ONEDRIVE: Connector = {
  * connects to the Cloud REST API with a user-issued API token. The homepage used
  * to print the bare family name; this is the product.
  *
- * The mark was missing entirely until 2026-08-04 — this entry carried no `logo`,
+ * The mark was missing entirely until 2026-08-04. This entry carried no `logo`,
  * so both surfaces drew the neutral dot beside a name that has a perfectly
  * obtainable official mark. It is now Atlassian's own current Confluence icon,
  * unmodified, served under the permission Atlassian publishes for exactly this
@@ -190,7 +190,7 @@ const CONFLUENCE: Connector = {
 
 export const SOURCES: Connector[] = [SHAREPOINT, ONEDRIVE, CONFLUENCE];
 
-/* ── IDENTITY — sign-in only. Nothing is written back to a directory ─────────
+/* ── IDENTITY: sign-in only. Nothing is written back to a directory ─────────
  *
  * The Service Provider is provider-agnostic SAML 2.0, built on @node-saml/node-saml:
  *   web/app/api/auth/sso/_lib/saml-config.ts:9  "provider-agnostic SAML 2.0
@@ -220,7 +220,7 @@ const ENTRA: Connector = {
   note: 'Configured the same way as every other provider, with no Entra-specific path in the code.',
   /* No mark. WITHDRAWN 2026-08-04 BY OWNER DECISION ON A-37, and this one was
      the last Microsoft mark still served. It was the vendor's correct current
-     artwork, which is exactly why it survived the earlier withdrawals — and
+     artwork, which is exactly why it survived the earlier withdrawals, and
      correct artwork is not the same thing as licensed artwork. A Microsoft
      licence is generally required, the symbol and logotype must be used
      together where we used the symbol alone, and this file comes from a pack
@@ -248,7 +248,7 @@ const PING: Connector = {
   scope: 'SAML 2.0, sign-in only',
   note: 'Same three fields. Signed assertions are required and unsigned ones are rejected.',
   /* No mark. The white "Ping" knocked out of a red square is the pre-2023 mark,
-     and Ping publishes no downloadable brand asset at all — the only current
+     and Ping publishes no downloadable brand asset at all. The only current
      colour file it serves is the horizontal lockup in its own site chrome, whose
      square cannot be extracted without deconstructing the lockup. Withdrawal 6. */
 };
@@ -267,7 +267,7 @@ const ANY_SAML: Connector = {
 
 export const IDENTITY: Connector[] = [OKTA, ENTRA, GOOGLE_WORKSPACE, PING, ONELOGIN, ANY_SAML];
 
-/* ── OUTBOUND — these WRITE, and they are never listed under a read-only claim ─
+/* ── OUTBOUND: these WRITE, and they are never listed under a read-only claim ─
  *
  *   Slack         web/lib/connectors/providers.ts:103
  *                 ["chat:write", "chat:write.public", "channels:read"]. Posts via
@@ -320,7 +320,7 @@ export const OUTBOUND: Connector[] = [
 ];
 
 /**
- * THE HOMEPAGE CHIP GRID — the same six objects, not six matching copies.
+ * THE HOMEPAGE CHIP GRID: the same six objects, not six matching copies.
  *
  * Three read-only document sources and the three identity providers a UK
  * enterprise buyer is most likely to run. It is a SELECTION from the two arrays
@@ -349,7 +349,7 @@ export const OUTBOUND: Connector[] = [
  * WHY THE DISTINCTION IS WORTH THIS MANY WORDS. Withholding the chip was the
  * right call and it is unchanged; only the justification was wrong. A data file
  * that states something untrue about the codebase is read as ground truth by
- * whoever comes next, and acted on — this is directive W8, no
+ * whoever comes next, and acted on. This is directive W8, no
  * justification-by-assertion, and O-39 is the case that produced it.
  *
  * Make is genuinely unbuilt; there is no router for it. Six is the length the
@@ -369,7 +369,7 @@ export const HOME_CHIPS: Connector[] = [
 ];
 
 /**
- * AUTOMATION RULES — trigger, condition, action.
+ * AUTOMATION RULES: trigger, condition, action.
  *
  * api/app/services/workflow_engine.py is the catalogue and
  * api/app/services/workflow_executor.py runs it. The UI is the five-step wizard

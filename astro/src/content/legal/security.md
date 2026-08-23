@@ -25,7 +25,7 @@ Subject rights supported end to end. Full Data Processing Agreement available fo
 
 ### EU data residency
 
-Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland). Our API runs in the EU. Full processing locations are listed under sub-processors below.
+Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland). Our API runs in the EU and the web application runs in the UK. Full processing locations are listed under sub-processors below.
 
 ### ISO 27001 controls<sup>*</sup>
 
@@ -52,7 +52,7 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 - Primary customer data is stored in Supabase’s EU region, AWS eu-west-1 (Ireland).
 - The CrowAgent API and its background worker run in the EU, in Google Cloud europe-west4 (Netherlands).
 - Supporting services may process metadata in the EU (PostHog EU Cloud, Sentry EU).
-- Web application rendering runs on Vercel, currently in the United States, under Standard Contractual Clauses.
+- Web application rendering runs on Vercel in London (lhr1).
 - Other processors operate under Standard Contractual Clauses (SCCs).
 - No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy) for the full sub-processor list.
 

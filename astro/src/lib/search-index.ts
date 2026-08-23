@@ -52,7 +52,7 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
   /*
    * EVERY dropdown, not just the products one. `NAV.productDropdown` became
    * `NAV.menus` on 2026-08-04 when a second dropdown (Resources) was added, and
-   * this consumer was not moved with it — `NAV.productDropdown` read undefined
+   * this consumer was not moved with it, `NAV.productDropdown` read undefined
    * and `buildSearchIndex()` threw on `.columns` during static generation,
    * emptying dist/ for every route. Iterating the whole list is also the
    * behaviour this file's own header asks for: the index is derived from what

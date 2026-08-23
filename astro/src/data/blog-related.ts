@@ -1,5 +1,5 @@
 /**
- * blog-related.ts — which post each post points at from its "Related articles" rail.
+ * blog-related.ts, which post each post points at from its "Related articles" rail.
  *
  * NOT AN EDITORIAL JUDGEMENT MADE HERE. Every list below is read straight off
  * the corresponding legacy page in `blog/*.html`, in the order the legacy rail

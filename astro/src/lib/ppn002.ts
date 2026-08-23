@@ -1,5 +1,5 @@
 /**
- * ppn002.ts — the five PPN 002 government missions, and nothing else.
+ * ppn002.ts: the five PPN 002 government missions, and nothing else.
  *
  * THAT IS ALL THIS FILE IS NOW, as of 2026-08-05 (A-101, owner: "delete and
  * remove all"). It used to hold the PPN 002 floor arithmetic as well. The owner

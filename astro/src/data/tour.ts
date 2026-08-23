@@ -27,7 +27,7 @@
  * ProductScreens is desktop-only, because it sits beside a paragraph and a
  * quote and a phone standing in that frame would be a picture of a phone rather
  * than a picture of the work. This section has no such column, so it can carry
- * the tablet and phone drawings — and they say something the desktop set
+ * the tablet and phone drawings, and they say something the desktop set
  * cannot: the duty with a date on it is remembered on the device the person
  * actually has. The stage below uses `object-fit: contain`, so a 4:3 tablet and
  * a portrait phone sit centred in the 16:10 frame with the floor around them
@@ -67,7 +67,7 @@ const pick = (stem: string): Slide => {
  * on them are carried on a phone. Both sides, in the order the work happens.
  *
  * NOT NINE. Eleven screens are unused and six are shown, because a sweep the
- * reader watches once has to end before it repeats — six at seven seconds is
+ * reader watches once has to end before it repeats, six at seven seconds is
  * forty-two, and nine would be over a minute of loop for a section that is not
  * the argument, only the picture of it.
  */

@@ -1,5 +1,5 @@
 /**
- * faq.ts — every question on /faq, as data.
+ * faq.ts: every question on /faq, as data.
  *
  * WHY THIS IS DATA AND NOT MARKUP. The legacy page hand-wrote the accordions in
  * HTML and hand-wrote a separate FAQPage JSON-LD block beside them. They drifted,
@@ -12,7 +12,7 @@
  *   order differs between the two ....... yes (positions 6 and 7 swapped)
  *
  * So 36% of the page was invisible to structured-data consumers, and the entire
- * Security category — the most trust-critical block on the page — was absent
+ * Security category (the most trust-critical block on the page) was absent
  * from it. That is a real SEO defect and it was nobody's mistake in particular;
  * it is what having two sources guarantees over time.
  *
@@ -167,7 +167,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // promise. terms.md section 2 already reads: "An evaluation trial may
         // be granted on request. Where one is granted it is time limited and
         // usage limited, and its limits are stated to you when access is
-        // given." That clause was never removed by A-54 — only the marketing
+        // given." That clause was never removed by A-54, only the marketing
         // claim was. This entry makes those limits public instead of leaving
         // them to be "stated when access is given", which is what the owner
         // asked for twice: a trial WITH limits.
@@ -293,5 +293,5 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
 ];
 
-/** Flattened, in document order — the single source for the FAQPage JSON-LD. */
+/** Flattened, in document order: the single source for the FAQPage JSON-LD. */
 export const FAQ_ALL: FaqEntry[] = FAQ_CATEGORIES.flatMap((c) => c.entries);
