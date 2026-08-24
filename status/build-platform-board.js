@@ -667,8 +667,30 @@ if (fs.existsSync(TRACKER)) {
      * PRIOR findings, so scanning the whole row would date a closure by whichever
      * historical date happened to appear last. The status cell is where a verdict
      * carries its own date ("FIXED 2026-08-18 - ..."), which is the one date that
-     * means "this row moved". */
-    const statusDate = /\b(20\d\d-\d\d-\d\d)\b/.exec(cells[3] || '');
+     * means "this row moved".
+     *
+     * [R27-BOARD-MOVED-02 2026-08-24] IT READ THE WRONG COLUMN, SO THE FIX ABOVE
+     * NEVER WORKED, AND THE DEFECT IT DESCRIBES CAME BACK.
+     *
+     * `cells` is `line.split('|').slice(1, -1)`, which DROPS the empty strings
+     * either side of a markdown row. So the columns are id=0, title=1, STATUS=2,
+     * notes=3, and this line read `cells[3]`. Two failures at once, in opposite
+     * directions:
+     *
+     *   a THREE column row (id, title, status), which is most of the tracker,
+     *     read `undefined` and got `changed: null`. Measured on 2026-08-24: 412
+     *     of 761 items, 54%, carried no change date at all.
+     *   a FOUR column row read the NOTES cell, which is precisely the "evidence
+     *     prose" the paragraph above forbids, so those dates were being taken
+     *     from whichever historical date the evidence happened to mention.
+     *
+     * The destructuring three lines below already names it: `const [id, task,
+     * status] = cells`. The reader and the writer of the same array disagreed
+     * about its shape, and the comment asserting the correct RULE sat directly
+     * on top of the code breaking it. Proved by measurement, not by reading:
+     * before this change the board printed "no items changed state" on a day
+     * eight rows were closed in that very file. */
+    const statusDate = /\b(20\d\d-\d\d-\d\d)\b/.exec(status || '');
 
     issues.push({
       id,
