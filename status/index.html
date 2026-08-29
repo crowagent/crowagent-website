@@ -27,33 +27,69 @@
        Deliberately ugly: an unrecognised status is a bug in one of these two
        files and should look like one rather than blending in. */
     --unknown:#FF00FF;
+
+    /* [R28-BOARD-NAV-01] TINTS AND SURFACES, declared here because a token has to
+       be declared somewhere and this is the one place allowed to hold a literal.
+       They were previously written inline at the point of use, which is the same
+       defect as any other hardcoded value: change once could not propagate. */
+    --warn-tint:rgba(255,0,255,.09);
+    --notice-tint:rgba(255,180,84,.09);
+    --card2:rgba(255,255,255,.075);
+    --paper:#fff;
+
+    /* Standard spacing for the body gutter. The full-bleed document frame has to
+       cancel exactly this value, and a second copy of it written as a magic -20px
+       is how a full-bleed row drifts out of alignment with the page. */
+    --gutter:20px;
+    --measure:1180px;
   }
   *{box-sizing:border-box}
+  /* [R28-BOARD-NAV-01] `hidden` DID NOT HIDE, and that is not a quirk, it is how
+     the cascade works. The attribute is honoured by a user agent rule of
+     specificity (0,1,0), so ANY class rule that sets `display` beats it. `.bar`,
+     `.controls` and `.deploy` all set `display:flex`, so `el.hidden = true` on
+     #stats or #filters left a flex container on the page: zero height, but its
+     margins still spacing the layout. Measured, not assumed - #filters reported
+     hidden true and height 0 while still contributing its 20px bottom margin
+     between the navigation and the first heading.
+     The important flag is deliberate here and is the standard remedy: the whole
+     point of the attribute is that it outranks presentational display. */
+  [hidden]{display:none !important}
   body{margin:0;background:var(--bg);color:var(--text);
        font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-       padding:32px 20px 80px}
-  .wrap{max-width:1180px;margin:0 auto}
+       padding:32px var(--gutter) 80px}
+  .wrap{max-width:var(--measure);margin:0 auto}
+
   /* [R27-ARCH-03] The architecture review is a 164KB document with its own layout.
      Inside the 1180px wrapper it rendered in a column narrower than it was
-     designed for, which made a full review look like a preview. This breaks it
-     out to the full viewport width: the negative margin cancels the wrapper's
-     centring rather than fighting it with !important.
-     Height is the viewport minus the chrome above it, so the document scrolls in
-     its own frame instead of the page scrolling a short window. */
+     designed for, which made a full review look like a preview, so it breaks out
+     to the full width of the page.
+
+     [R28-BOARD-NAV-01] IT USED TO BREAK OUT WITH `width:100vw`, AND THAT MADE THE
+     WHOLE PAGE SCROLL SIDEWAYS. `100vw` counts the vertical scrollbar; the body's
+     content box does not. Measured on the live board: scrollWidth 1273 against
+     clientWidth 1265, so every reader of the review got eight pixels of horizontal
+     scroll on a page that has nothing to the right. Viewport units cannot see the
+     scrollbar, so the breakout no longer uses them: the wrapper's own cap is
+     lifted for a framed view and the three chrome rows above stay centred at the
+     normal measure. The frame then fills the body content box exactly. */
   .docframe{
-    width:100vw;
-    margin-left:calc(50% - 50vw);
+    width:100%;
     height:calc(100vh - 150px);
     min-height:520px;
     border:0;
     border-top:1px solid var(--line);
     border-bottom:1px solid var(--line);
-    background:#fff;
+    background:var(--paper);
     display:block;
   }
   /* Full-bleed also means the body's own side padding must not reappear as a
-     white gutter, so the frame row clears it. */
-  .docframe-row{margin:0 -20px}
+     white gutter, so the frame row cancels exactly one gutter each side. */
+  .docframe-row{margin-left:calc(-1 * var(--gutter));margin-right:calc(-1 * var(--gutter))}
+  body.fullbleed .wrap{max-width:none}
+  body.fullbleed .wrap > h1,
+  body.fullbleed .wrap > .sub,
+  body.fullbleed .wrap > .boardnav{max-width:var(--measure);margin-left:auto;margin-right:auto}
   h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
   .sub{color:var(--sub);margin:0 0 28px}
   .bar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
@@ -66,7 +102,7 @@
          border-radius:100px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;
          min-height:40px}
   button[aria-pressed="true"]{background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:700}
-  button:focus-visible{outline:3px solid #5EC8F0;outline-offset:2px}
+  button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--built);outline-offset:2px}
   table{width:100%;border-collapse:collapse;margin-top:8px}
   th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   th{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub);font-weight:600}
@@ -85,13 +121,33 @@
   .movement{margin:14px 0 0;color:var(--text);font-size:14px}
   /* Deliberately hard to miss. This only appears when the page and issues.json
      disagree about what a status is, which is a bug rather than a state. */
-  .warn{border:2px solid var(--unknown);background:rgba(255,0,255,.09);
+  .warn{border:2px solid var(--unknown);background:var(--warn-tint);
         border-radius:10px;padding:12px 14px;margin:0 0 16px;font-size:14px}
   .warn[hidden]{display:none}
+  /* The generator's own notices are a NOTICE, not a fault, so amber not magenta.
+     Both colours came from literals written inline on the element; they are
+     tokens now, like everything else. */
+  .warn.notice{border-color:var(--wip);background:var(--notice-tint)}
+  /* [R28-BOARD-NAV-01] THE CARD TRANSFORM IS SCOPED TO THE ISSUE TABLE, and it
+     used to be scoped to nothing. The three selectors were bare `thead`, `tr` and
+     `td`, so on any screen under 760px they matched EVERY table on the page: both
+     tables the deploy panel builds, and every table inside an injected
+     architecture document. Measured in a real 381px viewport rather than reasoned
+     about - the CI document's first table reported `thead` display none with `tr`
+     and `td` display block, so a five column comparison of what each workflow
+     costs and whether it gates anything became a stack of unlabelled values, and
+     the table still scrolled sideways because its min-width survived.
+     A pattern that turns rows into cards only works when the reader can infer the
+     field from the value, which is true of "P0" and "OPEN" in the issue list and
+     false of a column of numbers. Document tables scroll inside .tblwrap instead,
+     keeping their headers. */
   @media (max-width:760px){
-    thead{display:none}
-    tr{display:block;border-bottom:1px solid var(--line);padding:12px 0}
-    td{display:block;border:0;padding:2px 0}
+    #issuetable thead{display:none}
+    #issuetable tr{display:block;border-bottom:1px solid var(--line);padding:12px 0}
+    #issuetable td{display:block;border:0;padding:2px 0}
+    /* The deploy panel's generated tables keep their headers and scroll. */
+    .deploy .scroll{overflow-x:auto}
+    .deploy .scroll table{min-width:460px}
   }
 
   /* [2026-08-09] THE DEPLOY PANEL.
@@ -117,17 +173,404 @@
   .deploy .foot{color:var(--sub);font-size:13px;margin:10px 0 0}
   .deploy .foot b{color:var(--text)}
 
-  #boardtabs button{
-    padding:7px 14px;border:1px solid #2a3350;border-radius:8px;
-    background:#141a2e;color:#c8d2ea;cursor:pointer;font:inherit;font-size:14px;
+  /* ════════════════════════════════════════════════════════════════════════
+     [R28-BOARD-NAV-01] NAVIGATION. Two levels, ONE visual language.
+
+     WHAT WAS WRONG, measured on the live board rather than reasoned about.
+
+     1. THE BOARD TABS CARRIED THEIR OWN PALETTE. `#boardtabs button` declared
+        four hex literals (#2a3350, #141a2e, #c8d2ea, #1d6fe0) that appear
+        nowhere in :root, so the top level of the navigation was a blue that
+        belongs to no token and the selected tab looked nothing like the
+        selected filter button six rows below it, which is teal. Two visual
+        languages for one idea, and a RULE 0-C breach sitting in the most
+        looked-at control on the surface. Deleted, not re-tokenised: the shared
+        `button` rule plus `aria-pressed` already says "selected" correctly.
+
+     2. THE SUB-VIEW SWITCHER HAD NO SELECTED STATE AT ALL. renderDocView wrote
+        `class="on"` onto the active button, and the ONLY rule for `.on` was
+        `#boardtabs button.on`, which cannot match a button inside #docbody.
+        Verified by reading the computed style of all four: identical background,
+        identical colour, identical weight, on every view. The reader could not
+        tell which of the four architecture documents they were looking at. That
+        is the owner's "no indication of where you are", exactly.
+
+     3. THE NAVIGATION WAS AT THE BOTTOM OF THE FIRST SCREEN. On the platform
+        board the tabs sat below a warning banner, eight stat tiles and the
+        movement line, about 480px down. The control that changes what the page
+        IS came after a page of what the page SAYS. It now sits directly under
+        the heading, before any data.
+
+     4. THE FOUR ARCHITECTURE VIEWS WERE FOUR BARE WORDS. You could not tell what
+        any of them contained without landing on it. Each switch item now carries
+        a one line description, so all four are legible at once. ════════════ */
+
+  .boardnav{margin:0 0 22px;padding:0 0 18px;border-bottom:1px solid var(--line)}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px}
+  .tabs button{border-radius:100px}
+
+  /* The second level. Cards rather than pills: a label alone did not say what
+     the view held, and the reader had to open all four to find out. */
+  .subnav{margin:16px 0 0}
+  .subnav .crumb{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;
+                 margin:0 0 10px;color:var(--sub);font-size:13px}
+  .subnav .crumb b{color:var(--text);font-weight:600}
+  .subnav .crumb .sep{opacity:.55}
+  .subnav .views{display:grid;gap:8px;
+                 grid-template-columns:repeat(auto-fit,minmax(212px,1fr))}
+  .subnav .views button{display:block;width:100%;text-align:left;border-radius:12px;
+                        padding:11px 14px;min-height:auto;line-height:1.35}
+  .subnav .views button strong{display:block;font-size:14px;font-weight:600}
+  .subnav .views button span{display:block;font-size:12px;color:var(--sub);
+                             margin-top:2px}
+  .subnav .views button[aria-pressed="true"]{background:var(--teal);color:var(--bg);
+                                             border-color:var(--teal)}
+  .subnav .views button[aria-pressed="true"] strong{font-weight:700}
+  .subnav .views button[aria-pressed="true"] span{color:var(--bg);opacity:.78}
+  .subnav .views button:hover{border-color:var(--sub)}
+  .subnav .views button[aria-pressed="true"]:hover{border-color:var(--teal)}
+  .subnav .aside{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+                 margin:10px 0 0;font-size:13px;color:var(--sub)}
+  .subnav .aside a{color:var(--built)}
+  .subnav[hidden]{display:none}
+
+  /* ════════════════════════════════════════════════════════════════════════
+     [R28-BOARD-DOCCSS-01] THE DOCUMENT STYLESHEET. ONE COPY, HERE.
+
+     The four architecture documents were written on four different days and each
+     brought its own stylesheet. All three injected ones redeclared the SAME
+     `#docbody h2`, `.n`, `p`, `li`, `code` and `.lede` rules verbatim, and two of
+     them redeclared `.pill`, `.note` and `.kpi` as well, with `.ci-tbl` and
+     `.at-tbl` being the identical table under two names. Duplicated CSS is the
+     duplicated-token defect wearing different clothes: a change to the document
+     type scale needed four edits, and the fourth was always going to be missed.
+
+     IT WAS NOT MERELY UNTIDY, IT LEAKED. The document rules were written
+     UNSCOPED, so `.bar` in architecture-ci-estate.html matched the board's own
+     `#stats` element and painted a 26px bordered empty strip above the tabs on
+     every visit to that view. Measured, not guessed: computed borderTopWidth on
+     #stats was 0.667px while the CI view was showing and 0 on the framed view,
+     which is the same board element changing appearance because of which
+     document happened to be injected. Everything below is scoped under #docbody
+     and the document files now carry only what is genuinely theirs.
+
+     COLOUR. Nothing below is a literal. Documents consume these tokens and never
+     declare their own, which is what makes a change here propagate to all four.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  #docbody{max-width:1040px}
+  #docbody h2{font-size:23px;line-height:1.25;letter-spacing:-.01em;margin:44px 0 6px;
+              padding-top:22px;border-top:1px solid var(--line);scroll-margin-top:18px}
+  #docbody h2:first-of-type{border-top:0;padding-top:0;margin-top:16px}
+  #docbody h2 .n{color:var(--sub);font-weight:400;font-size:15px;letter-spacing:.09em;
+                 display:block;text-transform:uppercase;margin-bottom:3px}
+  #docbody h3{font-size:16px;margin:24px 0 4px;color:var(--text)}
+  #docbody h4{font-size:14px;margin:16px 0 4px;color:var(--text)}
+  #docbody p{margin:9px 0}
+  #docbody li{margin:6px 0}
+  #docbody a{color:var(--built)}
+  #docbody code{font-family:ui-monospace,monospace;font-size:.87em;background:var(--card);
+                border:1px solid var(--line);border-radius:5px;padding:1px 5px;
+                overflow-wrap:anywhere}
+  #docbody .lede{font-size:17.5px;line-height:1.5;color:var(--text)}
+  #docbody .src{color:var(--sub);font-size:12.5px;margin-top:5px}
+  #docbody .src a{color:var(--sub)}
+  #docbody .muted{color:var(--sub)}
+
+  /* The document header. Every document opens with the same three parts, so the
+     four stop looking like four unrelated pages. It carries NO h1: the board
+     heading above is the page's only h1, and architecture-tenancy.html used to
+     inject a second one, which is two h1 elements in one document. */
+  #docbody .dochead{margin:4px 0 6px}
+  #docbody .dochead .kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+                            color:var(--sub);font-weight:600;margin:0 0 4px}
+  #docbody .dochead .title{font-size:27px;line-height:1.2;letter-spacing:-.02em;
+                           margin:0 0 6px;font-weight:700}
+  #docbody .dochead .dated{color:var(--sub);font-size:13px;margin:8px 0 0}
+
+  /* ── ON THIS PAGE. A long document had no way to see its own shape or jump
+        within it. The links are plain anchors and carry NO board hash, because
+        index.html intercepts them and scrolls without touching the hash: a raw
+        `#section-3` would otherwise overwrite the board route and drop the
+        reader back on the website board. ── */
+  #docbody .toc{border:1px solid var(--line);background:var(--card);border-radius:12px;
+                padding:6px 16px 14px;margin:20px 0 8px}
+  #docbody .toc > summary{cursor:pointer;padding:11px 0;font-size:12px;
+                          letter-spacing:.11em;text-transform:uppercase;color:var(--sub);
+                          font-weight:600;list-style:none;min-height:44px;
+                          display:flex;align-items:center;gap:9px}
+  #docbody .toc > summary::-webkit-details-marker{display:none}
+  #docbody .toc > summary::before{content:"+";color:var(--teal);font-weight:700;font-size:16px;
+                                  line-height:1;width:11px}
+  #docbody .toc[open] > summary::before{content:"\2013"}
+  #docbody .toc ol{margin:2px 0 0;padding:0;list-style:none;counter-reset:toc;
+                   display:grid;gap:2px;grid-template-columns:repeat(auto-fit,minmax(268px,1fr))}
+  #docbody .toc li{margin:0;counter-increment:toc}
+  #docbody .toc a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;
+                  color:var(--text);font-size:14px;line-height:1.35;min-height:44px}
+  #docbody .toc a::before{content:counter(toc) ".";color:var(--sub);font-size:12px;
+                          font-variant-numeric:tabular-nums;margin-right:8px}
+  #docbody .toc a:hover{background:var(--card2);color:var(--text)}
+
+  /* ── Tables. ONE table style. `.ci-tbl` and `.at-tbl` were the same rules under
+        two names in two files; both are now `.doc-tbl` here. Any table wider
+        than the column scrolls inside `.tblwrap`, never the page. ── */
+  #docbody .tblwrap{overflow-x:auto;margin:12px 0 4px;
+                    border:1px solid var(--line);border-radius:10px}
+  #docbody .doc-tbl{width:100%;border-collapse:collapse;margin:0;font-size:13.5px;
+                    min-width:560px}
+  #docbody .doc-tbl th{text-align:left;font-weight:600;color:var(--sub);font-size:11.5px;
+                       text-transform:uppercase;letter-spacing:.07em;padding:9px 11px;
+                       border-bottom:1px solid var(--line);white-space:nowrap;
+                       background:var(--card)}
+  #docbody .doc-tbl td{padding:9px 11px;border-bottom:1px solid var(--line);
+                       vertical-align:top}
+  #docbody .doc-tbl tr:last-child td{border-bottom:0}
+  #docbody .doc-tbl td.num,#docbody .doc-tbl th.num{text-align:right;
+                       font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ── Pills. Scoped, so they never collide with the board's own status pill. ── */
+  #docbody .pill{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+                 text-transform:uppercase;padding:2px 8px;border-radius:99px;color:var(--bg);
+                 white-space:nowrap;background:var(--hold)}
+  #docbody .p-keep,#docbody .p-live,#docbody .p-good{background:var(--fixed)}
+  #docbody .p-move,#docbody .p-warn{background:var(--wip)}
+  #docbody .p-drop,#docbody .p-dead,#docbody .p-bad{background:var(--open)}
+  #docbody .p-new,#docbody .p-info{background:var(--built)}
+  #docbody .p-free,#docbody .p-none{background:var(--hold)}
+
+  /* ── Callouts. Named `.callout`, NOT `.note`: the board's own `.note` is the
+        grey sub-line under an issue title, and two files defined `.note` as a
+        bordered card, so the same class name meant two different things on one
+        page. ── */
+  #docbody .callout{background:var(--card);border:1px solid var(--line);
+                    border-left:3px solid var(--wip);border-radius:0 10px 10px 0;
+                    padding:12px 15px;margin:16px 0}
+  #docbody .callout.bad{border-left-color:var(--open)}
+  #docbody .callout.good{border-left-color:var(--fixed)}
+  #docbody .callout.fix{border-left-color:var(--built)}
+  #docbody .callout > :first-child{margin-top:0}
+  #docbody .callout > :last-child{margin-bottom:0}
+
+  /* ── Number tiles ── */
+  #docbody .kpi{display:grid;gap:10px;margin:18px 0;
+                grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
+  #docbody .kpi div{background:var(--card);border:1px solid var(--line);
+                    border-radius:10px;padding:12px 14px}
+  #docbody .kpi b{display:block;font-size:25px;line-height:1.1;
+                  font-variant-numeric:tabular-nums}
+  #docbody .kpi span{display:block;font-size:12px;color:var(--sub);margin-top:3px}
+
+  /* ── Numbered steps ── */
+  #docbody .step{display:flex;gap:13px;margin:16px 0;align-items:flex-start}
+  #docbody .step .num{flex:0 0 34px;height:34px;border-radius:50%;background:var(--card);
+                      border:1px solid var(--line);display:flex;align-items:center;
+                      justify-content:center;font-weight:700;font-size:14px;color:var(--text)}
+  #docbody .step .body{flex:1}
+  #docbody .step .body b{display:block;margin-bottom:2px}
+  #docbody .step .body span{color:var(--sub);font-size:13px}
+
+  /* ── Answer strip and verdict boxes ── */
+  #docbody .qgrid{display:grid;gap:12px;margin:20px 0 6px;
+                  grid-template-columns:repeat(auto-fit,minmax(224px,1fr))}
+  #docbody .q{border:1px solid var(--line);background:var(--card);border-radius:12px;
+              padding:14px 16px;border-top:3px solid var(--line)}
+  #docbody .q.a{border-top-color:var(--fixed)}
+  #docbody .q.b{border-top-color:var(--open)}
+  #docbody .q.c{border-top-color:var(--wip)}
+  #docbody .q.d{border-top-color:var(--teal)}
+  #docbody .q h4{margin:0 0 6px;font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+                 color:var(--sub);font-weight:600}
+  #docbody .q p{margin:0;font-size:14.5px;line-height:1.45}
+  #docbody .verdict{border:1px solid var(--line);border-left:4px solid var(--teal);
+                    background:var(--card);border-radius:12px;padding:16px 18px;margin:16px 0}
+  #docbody .verdict.risk{border-left-color:var(--open)}
+  #docbody .verdict.warn{border-left-color:var(--wip)}
+  #docbody .verdict h3{margin-top:0}
+
+  /* ── Cards ── */
+  #docbody .cards{display:grid;gap:12px;margin:14px 0 4px;
+                  grid-template-columns:repeat(auto-fit,minmax(268px,1fr))}
+  #docbody .card{border:1px solid var(--line);border-left:4px solid var(--open);
+                 background:var(--card);border-radius:12px;padding:14px 16px}
+  #docbody .card.ok{border-left-color:var(--fixed)}
+  #docbody .card.warn{border-left-color:var(--wip)}
+  #docbody .card h4{margin:0 0 6px;font-size:15px;color:var(--text)}
+  #docbody .card p{margin:0 0 8px;font-size:14px;color:var(--sub)}
+  #docbody .card .no{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+                     color:var(--open);font-weight:700;display:block;margin-bottom:4px}
+  #docbody .card details{margin:0;border:0;background:none}
+  #docbody .card details > summary{padding:6px 0;min-height:34px}
+  #docbody .card .dbody{padding:2px 0 0;border-top:0;font-size:13.5px}
+
+  /* ── Disclosures. The long justification lives here rather than in the way. ── */
+  #docbody details{border:1px solid var(--line);border-radius:10px;background:var(--card);
+                   margin:10px 0}
+  #docbody details > summary{cursor:pointer;padding:11px 14px;font-size:13.5px;
+                             color:var(--sub);list-style:none;min-height:44px;
+                             display:flex;gap:9px;align-items:center}
+  #docbody details > summary::-webkit-details-marker{display:none}
+  #docbody details > summary::before{content:"+";color:var(--teal);font-weight:700;
+                                     font-size:15px;line-height:1;width:11px}
+  #docbody details[open] > summary::before{content:"\2013"}
+  #docbody details > summary:hover{color:var(--text)}
+  #docbody details > summary:focus-visible{outline:3px solid var(--built);outline-offset:-3px;
+                                           border-radius:10px}
+  #docbody .dbody{padding:4px 16px 16px;border-top:1px solid var(--line);font-size:14.5px}
+  #docbody .dbody > :first-child{margin-top:10px}
+
+  /* ── Figures and the diagram key ── */
+  #docbody figure{margin:14px 0 6px}
+  #docbody .fig{width:100%;height:auto;display:block;
+                background:var(--card);border:1px solid var(--line);border-radius:12px}
+  #docbody figcaption{color:var(--sub);font-size:13px;margin-top:8px}
+  #docbody .keys{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 0;
+                 color:var(--sub);font-size:12px}
+  #docbody .keys i{display:inline-block;width:22px;height:0;border-top:3px solid var(--line);
+                   vertical-align:middle;margin-right:6px;font-style:normal}
+  #docbody .keys .k-ok i{border-top-color:var(--fixed)}
+  #docbody .keys .k-warn i{border-top-color:var(--wip)}
+  #docbody .keys .k-bad i{border-top-color:var(--open)}
+  #docbody .keys .k-aim i{border-top-color:var(--teal)}
+  #docbody .keys .k-dead i{border-top-color:var(--hold);border-top-style:dashed}
+
+  /* ── SVG token bindings. Diagrams set colour through CLASSES, never through a
+        fill or stroke attribute, so every one resolves to a token above and a
+        palette change reaches the diagrams too. ── */
+  #docbody svg text{fill:var(--sub);font-size:12px;
+                    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  #docbody svg .hd{fill:var(--text);font-size:13.5px;font-weight:700}
+  #docbody svg .hdmute{fill:var(--hold);font-size:13.5px;font-weight:700}
+  #docbody svg .sm{font-size:11px}
+  #docbody svg .xs{font-size:10px}
+  #docbody svg .cap{font-size:10.5px;letter-spacing:.11em;fill:var(--sub)}
+  #docbody svg .big{font-size:30px;font-weight:800;fill:var(--open)}
+  #docbody svg .big2{font-size:26px;font-weight:800;fill:var(--text)}
+  #docbody svg .num{font-variant-numeric:tabular-nums;font-weight:700;fill:var(--text)}
+  #docbody svg .lbl-bad{fill:var(--open);font-size:11px;font-weight:700;letter-spacing:.05em}
+  #docbody svg .lbl-ok{fill:var(--fixed);font-size:11px;font-weight:700;letter-spacing:.05em}
+  #docbody svg .lbl-warn{fill:var(--wip);font-size:11px;font-weight:700;letter-spacing:.05em}
+  #docbody svg .lbl-aim{fill:var(--teal);font-size:11px;font-weight:700;letter-spacing:.05em}
+  #docbody svg .lbl-info{fill:var(--built);font-size:11px;font-weight:700;letter-spacing:.05em}
+  #docbody svg .r{fill:var(--card);stroke:var(--line);stroke-width:1}
+  #docbody svg .r-ok{fill:var(--fixed);fill-opacity:.10;stroke:var(--fixed);stroke-width:1.2}
+  #docbody svg .r-warn{fill:var(--wip);fill-opacity:.10;stroke:var(--wip);stroke-width:1.2}
+  #docbody svg .r-bad{fill:var(--open);fill-opacity:.10;stroke:var(--open);stroke-width:1.2}
+  #docbody svg .r-aim{fill:var(--teal);fill-opacity:.12;stroke:var(--teal);stroke-width:1.4}
+  #docbody svg .r-info{fill:var(--built);fill-opacity:.10;stroke:var(--built);stroke-width:1.2}
+  #docbody svg .r-ghost{fill:none;stroke:var(--hold);stroke-width:1;stroke-dasharray:5 4}
+  #docbody svg .chip{fill:var(--card);stroke:var(--line);stroke-width:1}
+  #docbody svg .e{stroke:var(--line);stroke-width:1.6;fill:none}
+  #docbody svg .e-ok{stroke:var(--fixed);stroke-width:1.8;fill:none}
+  #docbody svg .e-warn{stroke:var(--wip);stroke-width:1.8;fill:none}
+  #docbody svg .e-bad{stroke:var(--open);stroke-width:1.8;fill:none;stroke-dasharray:6 5}
+  #docbody svg .e-aim{stroke:var(--teal);stroke-width:1.8;fill:none}
+  #docbody svg .e-info{stroke:var(--built);stroke-width:1.8;fill:none}
+  #docbody svg .e-ghost{stroke:var(--hold);stroke-width:1.3;fill:none;stroke-dasharray:5 5}
+  #docbody svg .mh{fill:var(--line)}
+  #docbody svg .mh-ok{fill:var(--fixed)}
+  #docbody svg .mh-warn{fill:var(--wip)}
+  #docbody svg .mh-bad{fill:var(--open)}
+  #docbody svg .mh-aim{fill:var(--teal)}
+  #docbody svg .mh-info{fill:var(--built)}
+  #docbody svg .mh-ghost{fill:var(--hold)}
+
+  /* ════════════════════════════════════════════════════════════════════════
+     THE STATE SWITCH, and why the URL holds its state rather than the DOM.
+
+     index.html polls an ISSUE board every 20 seconds; a document board is not
+     polled precisely because re-injecting the fragment would wipe whatever the
+     reader had selected. State therefore lives in the URL, as the third hash
+     segment: `#architecture/tenancy/gap`, `#architecture/target/next`.
+
+     [R27-ARCH-07] THE FIRST VERSION USED `:target` AND DID NOT WORK. The
+     reasoning was sound and the premise was false: :target state does live in
+     the URL, but the fragment is INJECTED BY JAVASCRIPT AFTER the browser has
+     already resolved the fragment identifier, so the anchor never becomes the
+     target. Measured on the live board: `#architecture/tenancy/gap` left every
+     pane at its default with all four anchors present in the DOM.
+
+     So the state is published as `data-state` on #docbody by applyDocState(),
+     and everything below reads it. A document declares its OWN default with
+     `data-default` on the `.panes` container, which applyDocState applies when
+     the hash carries no third segment. That removed the default-state CSS block
+     each document used to carry, and is why adding a pane to a document needs no
+     edit here beyond one line in the list below.
+
+     ADDING A STATE NAME IS A ONE LINE EDIT, HERE. No `:has()` is used. ═══════ */
+  #docbody .statepick{margin:18px 0 0}
+  #docbody .seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px;padding:0;list-style:none}
+  #docbody .seg a{display:inline-flex;flex-direction:column;justify-content:center;
+                  background:var(--card);border:1px solid var(--line);color:var(--text);
+                  text-decoration:none;border-radius:12px;padding:10px 16px;font-size:14px;
+                  cursor:pointer;min-height:52px;min-width:44px;line-height:1.25}
+  #docbody .seg a span{display:block;font-size:11px;letter-spacing:.09em;
+                       text-transform:uppercase;color:var(--sub);margin-bottom:2px}
+  #docbody .seg a:hover{border-color:var(--sub)}
+  #docbody .pane{display:none}
+
+  #docbody[data-state="have"] .pane[data-p="have"],
+  #docbody[data-state="gap"]  .pane[data-p="gap"],
+  #docbody[data-state="aim"]  .pane[data-p="aim"],
+  #docbody[data-state="silo"] .pane[data-p="silo"],
+  #docbody[data-state="now"]  .pane[data-p="now"],
+  #docbody[data-state="next"] .pane[data-p="next"]{display:block}
+
+  #docbody[data-state="have"] .seg a[href$="/have"],
+  #docbody[data-state="gap"]  .seg a[href$="/gap"],
+  #docbody[data-state="aim"]  .seg a[href$="/aim"],
+  #docbody[data-state="silo"] .seg a[href$="/silo"],
+  #docbody[data-state="now"]  .seg a[href$="/now"],
+  #docbody[data-state="next"] .seg a[href$="/next"]{
+    background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:700}
+  #docbody[data-state="have"] .seg a[href$="/have"] span,
+  #docbody[data-state="gap"]  .seg a[href$="/gap"] span,
+  #docbody[data-state="aim"]  .seg a[href$="/aim"] span,
+  #docbody[data-state="silo"] .seg a[href$="/silo"] span,
+  #docbody[data-state="now"]  .seg a[href$="/now"] span,
+  #docbody[data-state="next"] .seg a[href$="/next"] span{color:var(--bg);opacity:.75}
+
+  /* The anchors a state link scrolls to. Zero height so they add no space. */
+  #docbody .tnanchor{display:block;height:0;overflow:hidden;scroll-margin-top:16px}
+
+  @media (max-width:760px){
+    #docbody h2{font-size:20px}
+    #docbody .dochead .title{font-size:23px}
+    #docbody .lede{font-size:16.5px}
+    .subnav .views{grid-template-columns:1fr}
+    #docbody .toc ol{grid-template-columns:1fr}
   }
-  #boardtabs button.on{background:#1d6fe0;border-color:#1d6fe0;color:#fff;font-weight:600}
+  @media (prefers-reduced-motion: reduce){
+    #docbody *{transition:none !important;animation:none !important}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1 id="boardheading">Website transformation status</h1>
-  <p class="sub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
+  <!-- [R28-BOARD-NAV-01] The standfirst FOLLOWS THE SELECTION, like the heading
+       above it. It read "Every issue the owner reported, plus everything the audit
+       found" on all three boards, including the derived R2.8 board, where nobody
+       reported those items and no audit found them, and the architecture board,
+       which carries no issues at all. A subtitle that describes a different page
+       is worse than none, because a reader trusts it. Copy per board lives in the
+       BOARDS registry beside the heading, so the two cannot drift apart. -->
+  <p class="sub" id="boardsub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
+
+  <!-- [R28-BOARD-NAV-01] NAVIGATION SITS HERE, ABOVE THE DATA, and it used to sit
+       below it. On the platform board the tabs were roughly 480px down, after a
+       warning banner, eight stat tiles and the movement line, so the control that
+       decides WHICH board you are reading came after most of the board. Both
+       levels now live in one landmark: the board tabs, then, on a document board,
+       the view switcher and the breadcrumb.
+       #docswitch IS PERMANENT CHROME NOW rather than markup injected into
+       #docbody. It used to be rebuilt inside the document on every view change,
+       which is why it inherited whatever CSS the injected document happened to
+       carry and why its click handler had to be re-bound each time. -->
+  <nav class="boardnav" aria-label="Status boards">
+    <div class="tabs" id="boardtabs"></div>
+    <div class="subnav" id="docswitch" hidden></div>
+  </nav>
 
   <div class="warn" id="warn" hidden></div>
   <!-- Things the GENERATOR could not read, plus the write-back queue: board
@@ -136,11 +579,10 @@
        rendered NOWHERE, so a generator that "reports rather than silently
        drops" was in fact dropping silently as far as any reader was concerned.
        A record of a thing is not the thing. -->
-  <div class="warn" id="unreadable" hidden style="border-color:var(--wip);background:rgba(255,180,84,.09)"></div>
+  <div class="warn notice" id="unreadable" hidden></div>
   <div class="bar" id="stats"></div>
   <!-- [R262-D-76] Movement line: what CHANGED, beside what merely IS. -->
   <p class="movement" id="movement"></p>
-  <div id="boardtabs" style="display:flex;gap:8px;margin:0 0 14px"></div>
   <p id="srcnote" style="margin:0 0 14px;font-size:13px;opacity:.75"></p>
   <!-- [2026-08-09] Phases and the deploy budget for the SELECTED board. Both
        boards supply `deploy`; each states its own truth, because the marketing
@@ -153,7 +595,14 @@
        issue boards, so nothing shifts for them. -->
   <section id="docbody" hidden></section>
 
-  <table>
+  <!-- [R28-BOARD-DOCTABLE-LEAK-01] `id` is LOAD BEARING, not decoration. This
+       table used to be reached as `document.querySelector('table')`, which is
+       POSITIONAL: it matches the first table in the DOM. `#docbody` above holds
+       injected document content, and the architecture documents contain tables
+       of their own, so on a view switch the selector matched a DOCUMENT table,
+       hid that, and LEFT THE ISSUE LIST ON SCREEN over a prose page. Identify
+       the element you mean. -->
+  <table id="issuetable">
     <thead><tr><th>ID</th><th>Sev</th><th>Status</th><th>Issue</th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
@@ -380,7 +829,9 @@ function render(){
         html += '<p class="head" style="margin-top:18px;font-size:17px">' +
           '<b>' + esc(pb.done) + ' of ' + esc(pb.totalRaised) + ' done (' + pct + '%).</b> ' +
           esc(pb.remaining) + ' left.</p>' +
-          '<table><thead><tr>' +
+          /* Wrapped so a narrow screen scrolls THIS table rather than the page,
+             and so it keeps its header row. See the media query note. */
+          '<div class="scroll"><table><thead><tr>' +
             '<th>Phase</th>' +
             '<th>Left</th>' +
             '<th>Not started</th>' +
@@ -392,7 +843,7 @@ function render(){
              * outcomes, one needs an M365 Global Admin consent. None is a ruling anyone can
              * simply take, so calling them pending decisions reads as escalation-by-default. */
             '<th>Needs you (a decision or an action)</th>' +
-          '</tr></thead><tbody>' + row(3) + row(4) + '</tbody></table>' +
+          '</tr></thead><tbody>' + row(3) + row(4) + '</tbody></table></div>' +
           '<p class="foot"><b>How to read this.</b> &ldquo;Left&rdquo; is the other three columns added ' +
           'together. <b>Only the &ldquo;Not started&rdquo; column is work still to be written</b> &mdash; ' +
           '&ldquo;Written, waiting&rdquo; is finished code that the certification run has not yet ' +
@@ -406,7 +857,7 @@ function render(){
           'wrong answer, because that count leaves out the middle two columns.</p>';
       }
       if (phases.length) {
-        html += '<table><thead><tr><th>Phase</th><th>Items</th><th>State</th></tr></thead><tbody>' +
+        html += '<div class="scroll"><table><thead><tr><th>Phase</th><th>Items</th><th>State</th></tr></thead><tbody>' +
           phases.map(p =>
             '<tr><td><strong>' + esc(p.phase) + '</strong> &mdash; ' + esc(p.name || '') + '</td>' +
             /* null items renders as an em dash, never as 0: a closed phase has no
@@ -414,11 +865,11 @@ function render(){
                must not look the same as "none". */
             '<td>' + esc(p.items === null || p.items === undefined ? '—' : p.items) + '</td>' +
             '<td><span class="pill" style="background:var(' +
-              (p.state === 'SHIPPED' ? '--fixed' : '--open') + ');color:#05070E">' + esc(p.state || '') + '</span>' +
+              (p.state === 'SHIPPED' ? '--fixed' : '--open') + ');color:var(--bg)">' + esc(p.state || '') + '</span>' +
             (p.sha ? ' <span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--sub)">' +
               esc(p.sha) + (p.shipped ? ' · ' + esc(p.shipped) : '') + '</span>' : '') +
             '</td></tr>').join('') +
-          '</tbody></table>';
+          '</tbody></table></div>';
       }
       if (viol.length) {
         html += '<p class="foot"><b>' + viol.length + ' deploy' + (viol.length === 1 ? '' : 's') +
@@ -476,7 +927,7 @@ function render(){
     <tr>
       <td class="id">${esc(i.id)}</td>
       <td><span class="sev" style="color:var(${SEVC[i.sev]})">${i.sev}</span></td>
-      <td><span class="pill" style="background:var(${COLOUR[i.status]||'--unknown'});color:#05070E">${esc(i.status)}</span></td>
+      <td><span class="pill" style="background:var(${COLOUR[i.status]||'--unknown'});color:var(--bg)">${esc(i.status)}</span></td>
       <td><strong>${esc(i.title)}</strong><div class="note">${esc(i.note||'')}</div></td>
     </tr>`;
 
@@ -589,8 +1040,9 @@ document.getElementById('filters').addEventListener('click',e=>{
  *
  * THEY ARE NOT THE SAME KIND OF THING and the difference matters before
  * trusting either. `issues.json` is AUTHORED - nothing else owns those items.
- * `platform.json` is DERIVED by status/build-platform-board.js from
- * RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md, which are what
+ * `platform.json` is DERIVED by status/build-platform-board.js from the
+ * RELEASE-<version>-TRACKER.md and RELEASE-<version>-DEFECT-REGISTER.md of
+ * whichever release is highest on disk, which are what
  * a release is actually certified against. So the platform page can be stale by
  * one generator run, and when it disagrees with those documents THEY WIN. A
  * second hand-kept copy was deliberately not created: two files restating one
@@ -602,9 +1054,15 @@ document.getElementById('filters').addEventListener('click',e=>{
  */
 const BOARDS = {
   website:  { file: 'issues.json',   label: 'Website',
-              heading: 'Website transformation status' },
+              heading: 'Website transformation status',
+              blurb: 'Every issue the owner reported, plus everything the audit found. Authored by hand, and nothing is marked done without evidence.' },
+  /* [R28-BOARD-RELEASE-PROVENANCE-01] No release number here. The heading is
+     rewritten from `DATA.release` on load, because a hardcoded one goes stale
+     the day a release opens and then reports the wrong one for weeks. This
+     string is only what shows before the first fetch lands. */
   platform: { file: 'platform.json', label: 'Platform & Portal',
-              heading: 'Release 2.7 and 2.7.1 status: platform and portal' },
+              heading: 'Platform and portal release status',
+              blurb: 'Derived from the release tracker and defect register, never kept by hand. Those documents win any disagreement with this page.' },
   /* [R27-ARCH-01] A DOCUMENT board, not an issue list. The owner asked for the
      architecture review and the tenancy analysis to live at this address rather
      than in a separate file, so there is one status surface instead of two
@@ -613,14 +1071,50 @@ const BOARDS = {
   architecture: {
     label: 'Architecture & Tenancy',
     heading: 'Architecture and tenancy: how the two products are supplied',
+    blurb: 'Four documents about how this is built and where it should go. Pick one below, they are described so you can choose without opening all four.',
     /* Two views behind one tab. The architecture review is the 164KB document
        from tools/arch-visualizer, which carries its OWN stylesheet plus Chart.js
        and Mermaid; injecting it inline would collide with this page's CSS, so it
        is framed and keeps working exactly as authored. The tenancy analysis is a
        fragment written against this page's own styles, so it is injected. */
     views: [
-      { id: 'review',  label: 'Architecture review',   frame: 'architecture-review.html' },
-      { id: 'tenancy', label: 'Tenancy and isolation', doc:   'architecture-tenancy.html' },
+      /* [R28-BOARD-NAV-01] Each view carries a `blurb`, and it is not decoration.
+         The switcher was four bare words, so the only way to learn what any of
+         them held was to open it, which is the owner's "no way to see the four
+         without first landing on one". `stale` puts a dated notice above a
+         document this board cannot itself keep current. */
+      { id: 'target',  label: 'Target architecture',
+        blurb: 'Diagrams: what runs today, what to build, and the coupling numbers behind it',
+        doc:   'architecture-target-state.html' },
+      { id: 'tenancy', label: 'Tenancy and isolation',
+        blurb: 'Can a customer have its own database, and should it. Written against the code',
+        doc:   'architecture-tenancy.html' },
+      { id: 'ci',      label: 'CI and scheduled work',
+        blurb: 'Every job we run, what it costs, and what it gates. Measured, not estimated',
+        doc:   'architecture-ci-estate.html' },
+      /* [R28-ARCH-REVIEW-RETIRED-01] THE ARCHITECTURE REVIEW VIEW WAS REMOVED
+         2026-08-29 on owner instruction, after the owner reported the page as
+         reading "very odd".
+
+         It was not a styling fault. `architecture-review.html` is a 311KB
+         HAND-AUTHORED document titled "revalidated for Release 2.7,
+         2026-08-16". It carries its own complete design system, so it always
+         read as a different website inside a frame, and no board styling can
+         fix that without rewriting it. `tools/arch-visualizer/` holds only a
+         server and an instructions file, so it is NOT generated by a pipeline
+         and "regenerate it" was never a button.
+
+         The deciding reason is content, not appearance: it is an R2.7 record
+         that CONTRADICTS the current and target diagrams built on 2026-08-29
+         from measured production numbers, and it predates the decision to
+         separate the internal portal. TWO ARCHITECTURE DOCUMENTS THAT DISAGREE
+         ARE WORSE THAN ONE.
+
+         NOTHING WAS DELETED. `status/architecture-review.html` and
+         `crowagent-platform/tools/arch-visualizer/index.html` both remain on
+         disk and the file still serves at its own URL. The board simply stops
+         OFFERING it beside three views that are current. Restoring it is one
+         entry in this array. */
     ],
   },
 };
@@ -628,8 +1122,13 @@ let board = ((location.hash.replace('#','').split('/')[0]) in BOARDS)
   ? location.hash.replace('#','').split('/')[0] : 'website';
 
 function renderTabs(){
+  /* [R28-BOARD-NAV-01] `aria-pressed`, NOT a bespoke `.on` class. The class was
+     styled by exactly one rule, `#boardtabs button.on`, which is why the same
+     class on the view switcher below styled nothing at all and left the reader
+     with no selected state. One attribute, one rule, both levels. It also states
+     the selection to a screen reader, which a class never did. */
   document.getElementById('boardtabs').innerHTML = Object.entries(BOARDS).map(([k,v]) =>
-    '<button data-b="'+k+'"'+(k===board?' class="on"':'')+'>'+esc(v.label)+'</button>').join('');
+    '<button data-b="'+k+'" aria-pressed="'+(k===board)+'">'+esc(v.label)+'</button>').join('');
   /* [R27-ARCH-02] The heading follows the SELECTION. It read "Website
      transformation status" on every board, including the platform board the owner
      uses most, so the page named the wrong subject while displaying the right
@@ -638,10 +1137,18 @@ function renderTabs(){
      there is one writer rather than three call sites.
      The document title follows too, so a browser tab and a bookmark say which
      board they point at. */
-  const h = BOARDS[board].heading || BOARDS[board].label;
+  /* [R28-BOARD-RELEASE-PROVENANCE-01] Name the release the DATA carries,
+     never a constant compiled into the view. */
+  const h = (board === 'platform' && DATA && DATA.release)
+    ? 'Release ' + DATA.release + ' status: platform and portal'
+    : (BOARDS[board].heading || BOARDS[board].label);
   const el = document.getElementById('boardheading');
   if (el) el.textContent = h;
   document.title = 'CrowAgent: ' + h;
+  /* [R28-BOARD-NAV-01] The standfirst follows the selection too. See the comment
+     on #boardsub in the markup: it described the website board on every board. */
+  const subEl = document.getElementById('boardsub');
+  if (subEl && BOARDS[board].blurb) subEl.textContent = BOARDS[board].blurb;
 }
 
 /* [R27-ARCH-01] The detail switch. A document board can carry several views; the
@@ -669,32 +1176,87 @@ function applyDocState(){
   const host = document.getElementById('docbody');
   if (!host) return;
   const state = (location.hash.replace('#','').split('/')[2] || '').trim();
-  if (state) host.setAttribute('data-state', state);
+  /* [R28-BOARD-DOCCSS-01] A DOCUMENT DECLARES ITS OWN DEFAULT, and this applies
+     it when the hash carries no third segment. Each document used to carry a
+     block of CSS whose only job was "before the reader has chosen anything, show
+     pane one and light button one", restated for every pane and every button. It
+     was a second copy of a fact the markup already knew, and it had to be kept in
+     step with the pane list by hand. The container now says `data-default="have"`
+     once, and every rule in the shared stylesheet keys off data-state alone. */
+  const panes = host.querySelector('[data-default]');
+  const fallback = panes ? (panes.getAttribute('data-default') || '').trim() : '';
+  const chosen = state || fallback;
+  if (chosen) host.setAttribute('data-state', chosen);
   else host.removeAttribute('data-state');
+
+  /* The anchor a state link points at exists only after injection, which is why
+     the browser could not scroll to it when it resolved the fragment. Do it here,
+     where the element is real. Nothing happens when there is no such anchor, so a
+     document with panes but no anchors is unaffected. */
+  if (state) {
+    const target = host.querySelector('[id="' + (board + '/' + docView + '/' + state).replace(/"/g,'') + '"]');
+    if (target && typeof target.scrollIntoView === 'function') target.scrollIntoView({block:'start'});
+  }
+}
+
+/* [R28-BOARD-NAV-01] THE SWITCHER IS RENDERED INTO PERMANENT CHROME, and it is
+   the whole second level of navigation: a breadcrumb saying where you are, four
+   described choices so you can see what the others hold without opening them,
+   and, for a framed document, the link out and the notice that it is not
+   maintained. */
+function renderDocSwitch(spec, active){
+  const el = document.getElementById('docswitch');
+  if (!el) return;
+  const view = spec.views.find(v => v.id === active) || spec.views[0];
+  const crumb =
+    '<p class="crumb"><span>Status</span><span class="sep">&rsaquo;</span>' +
+    '<span>' + esc(spec.label) + '</span><span class="sep">&rsaquo;</span>' +
+    '<b>' + esc(view.label) + '</b>' +
+    '<span class="sep">&middot;</span><span>' + esc(view.blurb || '') + '</span></p>';
+  const views = '<div class="views">' + spec.views.map(v =>
+    '<button data-v="' + esc(v.id) + '" aria-pressed="' + (v.id === active) + '">' +
+    '<strong>' + esc(v.label) + '</strong>' +
+    (v.blurb ? '<span>' + esc(v.blurb) + '</span>' : '') +
+    '</button>').join('') + '</div>';
+  /* An embedded frame can never give a 164KB document the whole window, so the
+     link out is not decoration. It was previously an unstyled anchor and rendered
+     in the browser's default link blue, measured as rgb(0,0,238) against a page
+     that has no other blue: a colour nothing declared, on the one control that
+     leaves the page. */
+  const aside = view.frame
+    ? '<p class="aside"><a href="' + esc(view.frame) + '" target="_blank" rel="noopener">' +
+      'Open this document full page &rarr;</a></p>'
+    : '';
+  el.innerHTML = crumb + views + aside;
+  el.hidden = false;
 }
 
 async function renderDocView(spec, host){
   const active = currentView(spec);
   docView = active;
-  const sw = spec.views.map(v =>
-    '<button data-v="' + v.id + '"' + (v.id === active ? ' class="on"' : '') + '>' +
-    esc(v.label) + '</button>').join('');
+  renderDocSwitch(spec, active);
   const view = spec.views.find(v => v.id === active);
+  /* [R28-BOARD-NAV-01] Full bleed is a property of THIS VIEW, not of the board,
+     so it is set and cleared on every view change rather than once on load. */
+  document.body.classList.toggle('fullbleed', !!view.frame);
+
+  /* A document this board cannot keep current says so, in the board's own chrome,
+     rather than being quietly served as though it were the answer. The notice is
+     written here and not in the document because the document is framed: editing
+     a 164KB generated file to add a banner is how a generated file stops being
+     regenerable. */
+  const staleNotice = view.stale
+    ? '<div class="callout bad" style="margin:0 0 14px"><b>This document is a record, not the current answer.</b> ' +
+      esc(view.stale) + '</div>'
+    : '';
 
   if (view.frame) {
     /* Framed, not injected: it brings its own stylesheet and two CDN libraries.
        Height is generous because the document is long and a scrollbar inside a
        scrollbar is worse than a tall frame. */
     /* The switch keeps the wrapper's width; only the frame breaks out. A
-       full-bleed row of buttons would put the controls miles from the text.
-       The "Open full page" link is not decoration: an embedded frame can never
-       give a 164KB document the whole window, and a reader who wants to study it
-       should not have to hunt for the file. */
-    host.innerHTML =
-      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw +
-      '<a href="' + esc(view.frame) + '" target="_blank" rel="noopener" ' +
-      'style="margin-left:auto;align-self:center;font-size:13px">Open full page</a>' +
-      '</div>' +
+       full-bleed row of buttons would put the controls miles from the text. */
+    host.innerHTML = staleNotice +
       '<div class="docframe-row">' +
       '<iframe class="docframe" src="' + esc(view.frame) + '" title="' + esc(view.label) + '"></iframe>' +
       '</div>';
@@ -709,17 +1271,14 @@ async function renderDocView(spec, host){
          to the wrong file. */
       body = '<p>Could not load ' + esc(view.doc) + ': ' + esc(err.message) + '</p>';
     }
-    host.innerHTML =
-      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw + '</div>' + body;
+    host.innerHTML = staleNotice + body;
   }
-
-  const swEl = document.getElementById('docswitch');
-  if (swEl) swEl.addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    docView = b.dataset.v;
-    location.hash = board + '/' + docView;
-    renderDocView(spec, host);
-  });
+  /* The state a document publishes must be re-applied after every injection, not
+     only on the first one. Switching view replaces #docbody wholesale, so a
+     document's declared default would otherwise never be set on a switch and its
+     panes would all be hidden. Verified by switching in and out of the tenancy
+     view rather than by reading this function. */
+  applyDocState();
 }
 
 async function load(){
@@ -730,25 +1289,47 @@ async function load(){
   const spec = BOARDS[board];
   if (spec.views) {
     renderTabs();
-    for (const id of ['filters','deploy','summary','movement','srcnote','legend']) {
+    /* [R28-BOARD-NAV-01] `stats` AND `legendbox` WERE MISSING FROM THIS LIST, and
+       a reader could see it. `#stats` is the issue tile bar: on a document board
+       it stayed in the DOM with no tiles in it, which is an empty row of nothing
+       between the heading and the text, and it was the element the CI document's
+       unscoped `.bar` rule painted a bordered strip onto. `#legendbox` is worse:
+       only the `<ul id="legend">` inside it was hidden, so every architecture
+       document ended with "What the statuses mean" over an empty list, then
+       "BUILT is not FIXED", then a freshness line about a file this board does not
+       poll. Issue-board chrome under a prose page, on all four views. Verified in
+       the browser, where legendbox.hidden read false on the CI view. */
+    for (const id of ['filters','deploy','summary','movement','srcnote','legend',
+                      'stats','legendbox','warn','unreadable']) {
       const el = document.getElementById(id); if (el) el.hidden = true;
     }
-    document.querySelector('table').hidden = true;
+    document.getElementById('issuetable').hidden = true;
     const host = document.getElementById('docbody');
     host.hidden = false;
     await renderDocView(spec, host);
-    applyDocState();
     return;
   }
+  /* Leaving a document board: the switcher, the full-bleed breakout and any
+     document state all belong to it and none of them may survive the exit. */
+  const swEl = document.getElementById('docswitch');
+  if (swEl) { swEl.innerHTML = ''; swEl.hidden = true; }
+  document.body.classList.remove('fullbleed');
+  document.getElementById('docbody').removeAttribute('data-state');
   /* An issue board: restore what the document branch hid. `deploy` is NOT in this
      list on purpose. render() owns its visibility and re-decides every load, so
      unhiding it here would show an empty panel for a frame before render() hid it
      again. */
-  for (const id of ['filters','summary','movement','srcnote','legend']) {
+  for (const id of ['filters','summary','movement','srcnote','legend',
+                    'stats','legendbox']) {
     const el = document.getElementById(id); if (el) el.hidden = false;
   }
-  document.querySelector('table').hidden = false;
+  /* `warn` and `unreadable` are NOT restored here. render() owns them and decides
+     every load whether there is anything to warn about; unhiding them here would
+     flash an empty magenta box before render() hid it again. Same reasoning as
+     `deploy` below. */
+  document.getElementById('issuetable').hidden = false;
   document.getElementById('docbody').hidden = true;
+  document.getElementById('docbody').innerHTML = '';
 
   const file = spec.file;
   try{
@@ -758,7 +1339,7 @@ async function load(){
     /* The derived board says so on its face. A reader must never mistake a
        generated view for the record it was generated from. */
     document.getElementById('srcnote').textContent = board==='platform'
-      ? 'DERIVED from the R2.6.2 tracker and defect register. Re-run status/build-platform-board.js after editing either; those documents win any disagreement.'
+      ? 'DERIVED from the R' + (DATA.release || '?') + ' tracker and defect register. Re-run status/build-platform-board.js after editing either. Those documents win any disagreement.'
       : '';
   }catch(err){
     renderTabs();
@@ -778,11 +1359,80 @@ document.getElementById('boardtabs').addEventListener('click',e=>{
      CLICKING a tab broke it. One character, and it hid 405 items. */
   board=b.dataset.b; location.hash=board; filter='ALL'; load();
 });
+/* [R28-BOARD-NAV-01] BOUND ONCE, on chrome that outlives the document. It used to
+   be re-bound inside renderDocView every time a view rendered, which was only safe
+   because the element was destroyed and rebuilt each time. The element is now
+   permanent, so binding it there would stack a listener per switch. */
+document.getElementById('docswitch').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const spec = BOARDS[board];
+  if (!spec || !spec.views) return;
+  /* WRITE THE HASH AND NOTHING ELSE. `docView` is deliberately NOT set here: the
+     hashchange handler re-renders only when the wanted view differs from the
+     rendered one, so setting it first would make them agree before the handler
+     ran and the click would move the URL without moving the page, which is the
+     very defect being fixed. One writer, one route. */
+  location.hash = board + '/' + b.dataset.v;
+});
+
 window.addEventListener('hashchange',()=>{
-  const h=location.hash.replace('#','').split('/')[0];
+  const parts = location.hash.replace('#','').split('/');
+  const h = parts[0];
   if(h in BOARDS && h!==board){ board=h; load(); return; }
-  /* Same board: no reload, but a document's internal state may have moved. */
+
+  /* [R28-BOARD-VIEWHASH-01] A CHANGED VIEW USED TO CHANGE NOTHING BUT THE URL.
+     This branch only called applyDocState(), so a hash move WITHIN a document
+     board never re-rendered the document. Measured on the live board rather than
+     reasoned about: from #architecture/ci, setting the hash to tenancy, then
+     target, then review, left the injected content byte for byte identical each
+     time, seven h2 elements and eight tables throughout, while the address bar
+     read a different document. That broke three things at once. A shared deep
+     link only worked if the reader arrived cold, because on a warm page it was a
+     hash move. The browser BACK and FORWARD buttons moved the URL and not the
+     page, so the history of a four-document board was a lie. And typing a view
+     into the address bar of an open board did nothing at all.
+     Only the click handler rendered, so the URL was a record of navigation rather
+     than the thing that drove it. It drives it now. */
+  const spec = BOARDS[board];
+  if (spec && spec.views) {
+    const wanted = currentView(spec);
+    if (wanted !== docView) {
+      renderDocView(spec, document.getElementById('docbody'));
+      return;
+    }
+  }
+  /* Same board and same view: a document's internal state may still have moved. */
   applyDocState();
+});
+
+/* [R28-BOARD-DOCNAV-01] IN-DOCUMENT JUMPS MUST NOT TOUCH THE HASH.
+   A long document needs a contents list, and the only pure-HTML way to jump
+   within a page is an anchor, which writes the hash. This page's hash IS the
+   route: `#section-3` would set the board to "section-3", match no board, and
+   drop the reader back on the website board with the document gone. So a link
+   whose hash does not begin with a known board id is treated as an in-document
+   jump: the default is prevented, the hash is left alone, and the target is
+   scrolled to. Links that ARE routes, like the state links written as
+   `#architecture/tenancy/gap`, fall through to the browser untouched. */
+document.getElementById('docbody').addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const raw = a.getAttribute('href').slice(1);
+  if (!raw) return;
+  if (raw.split('/')[0] in BOARDS) return;      // a route, not a jump
+  const target = document.getElementById(raw);
+  if (!target) return;                          // a dead link stays visibly dead
+  e.preventDefault();
+  /* NO `behavior: 'smooth'`, AND THAT IS A MEASUREMENT RATHER THAN A PREFERENCE.
+     The first version animated the jump and fell back to an instant one only for
+     a reader who asks for reduced motion. Tested on the live board: with
+     `behavior: 'smooth'` the page did not move at all, scrollY 0 after 1.6
+     seconds, while the identical call without it landed at 4,273 immediately, and
+     `prefers-reduced-motion` did not match, so the fallback never ran. A contents
+     list that looks wired and goes nowhere is exactly the class of defect this
+     board keeps recording. An instant jump always arrives, and it is also the
+     behaviour a plain anchor would have had. */
+  target.scrollIntoView({ block: 'start' });
 });
 
 load();

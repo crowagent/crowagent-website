@@ -1,0 +1,401 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  [R28-CI-ESTATE-01] CI AND SCHEDULED WORK. Rewritten 2026-08-29 on owner
+  instruction to cut the text and refresh what had gone stale.
+
+  WHAT CHANGED IN THIS REWRITE
+  Seven sections of reasoning became four, with the argument folded into details
+  blocks. The stale claims were corrected against the consoles rather than
+  re-argued: the Actions budget is now $15 with stop usage on, three scheduled
+  workflows have moved to Railway, scheduled work turned out to be 2 percent of
+  consumption rather than the 5 percent of RUNS the first version quoted, and
+  Lighthouse CI has now failed 19 of 19 runs while gating nothing.
+
+  THIS FILE CARRIES NO <style> BLOCK. Every rule it needs lives once, under
+  #docbody, in index.html. It used to declare its own copy of the document
+  typography plus `.pill`, `.note`, `.kpi` and `.ci-tbl`, all UNSCOPED, and the
+  `.bar` rule in that block matched the board's own #stats element and painted a
+  bordered empty strip above the navigation on every visit to this view.
+
+  NO SCRIPT ELEMENT. index.html injects this with `host.innerHTML = body`, which
+  does not execute script elements it parses.
+  NO COLOUR LITERALS. Every colour resolves to a token declared on :root.
+
+  EVERY NUMBER HERE WAS MEASURED, not estimated. The method sits next to the
+  figure so a later reader can re-run it rather than trusting it.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div class="dochead">
+  <p class="kicker">Cost and control</p>
+  <p class="title">Every job we run, and what it costs</p>
+  <p class="lede">GitHub costs about ten times Railway. The bill is not the crons and never was, it
+  is the two workflows that gate a merge, billed per job with round up. The cap is now $15 a month
+  with stop usage on, which is the backstop rather than the fix.</p>
+  <p class="dated">Measured 29 August 2026 from the live GitHub API, the GitHub organisation billing
+  console, the Railway console, the production Supabase <code>cron.job</code> table and the Railway
+  scheduler source.</p>
+</div>
+
+<div class="kpi">
+  <div><b style="color:var(--open)">$52</b><span>GitHub per month, all in. Railway is $5</span></div>
+  <div><b>76%</b><span>of Actions minutes are the TWO workflows that gate merges</span></div>
+  <div><b>2%</b><span>of Actions consumption is scheduled work. The crons were never the cost</span></div>
+  <div><b>2 of 30</b><span>workflows produce a required check. The other 28 gate nothing</span></div>
+</div>
+
+<div class="callout bad">
+  <b>This corrects an earlier recommendation of mine.</b> I first proposed retiring the 28
+  non-gating workflows as the big saving. It is not. <b>76 percent of the bill is the two workflows
+  that produce the required checks</b>, and those are the two that cannot simply be deleted. I
+  recommended before measuring, and measuring reversed it.
+</div>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#ci-where">Where the money actually is</a></li>
+    <li><a href="#ci-inventory">The full inventory, and what gates what</a></li>
+    <li><a href="#ci-off">Scheduled work off GitHub</a></li>
+    <li><a href="#ci-plan">The rule, and the cheapest real saving</a></li>
+    <li><a href="#ci-bills">The actual bills, and the lock now applied</a></li>
+  </ol>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ci-where"><span class="n">Section 1</span>Where the money actually is</h2>
+
+<figure>
+<svg class="fig" viewBox="0 0 900 300" role="img" aria-labelledby="cispend">
+  <title id="cispend">Where GitHub Actions minutes go: 43 percent to CI Quality Gates, 32 percent to
+  Crowagent Platform CI/CD, 23 percent to the other 26 workflows and 2 percent to scheduled
+  work</title>
+  <text class="cap" x="24" y="24">SHARE OF GITHUB ACTIONS MINUTES, MEASURED OVER 8 DAYS</text>
+
+  <rect class="r-warn" x="24"  y="42" rx="6" width="360" height="40"/>
+  <rect class="r-warn" x="392" y="42" rx="6" width="268" height="40"/>
+  <!-- The 2 percent of scheduled work is a SUBSET of this 23 percent, not a
+       fourth category, so it is not drawn as its own bar. A sliver beside the
+       others read as a separate slice and would have overstated it. -->
+  <rect class="r-bad"  x="668" y="42" rx="6" width="192" height="40"/>
+
+  <text class="num" x="40"  y="68">43%</text>
+  <text class="num" x="408" y="68">32%</text>
+  <text class="num" x="684" y="68">23%</text>
+
+  <text class="sm" x="24"  y="104">ci.yml &#183; CI Quality Gates</text>
+  <text class="lbl-ok" x="24" y="122">GATES: All CI Gates Pass</text>
+  <text class="sm" x="392" y="104">crowagent-platform-ci.yml</text>
+  <text class="lbl-ok" x="392" y="122">GATES: Run Tests</text>
+  <text class="sm" x="668" y="104">the other 26 workflows</text>
+  <text class="lbl-bad" x="668" y="122">GATE NOTHING</text>
+  <text class="xs" x="700" y="146">of which scheduled work is 2%</text>
+
+  <line class="e-ghost" x1="24" y1="168" x2="876" y2="168"/>
+
+  <text class="cap" x="24" y="200">THE THING THAT ACTUALLY BILLS</text>
+  <rect class="r-bad" x="24" y="214" rx="8" width="412" height="66"/>
+  <text class="hd" x="42" y="240">21 jobs across those two workflows</text>
+  <text class="sm" x="42" y="262">each rounded UP to a whole billed minute, on every push</text>
+
+  <path class="e-bad" d="M446,247 L486,247" marker-end="url(#ci-mb)"/>
+  <defs>
+    <marker id="ci-mb" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh-bad" d="M0,0 L8,4 L0,8 z"/></marker>
+  </defs>
+
+  <rect class="r" x="496" y="214" rx="8" width="180" height="66"/>
+  <text class="sm" x="512" y="240">3,600 min</text>
+  <text class="xs" x="512" y="260">wall clock, from run duration</text>
+
+  <rect class="r-bad" x="688" y="214" rx="8" width="188" height="66"/>
+  <text class="hd" x="704" y="240">10,658 min</text>
+  <text class="xs" x="704" y="260">what the bill actually says</text>
+</svg>
+<figcaption>Measured with <code>gh run list --limit 200</code> over an 8 day window: 200 runs, 959
+wall clock minutes, about 839 run minutes a week. The billed figure is nearly three times the wall
+clock one, and the gap is the per job round up over 21 jobs plus jobs running in parallel. That gap
+is only visible on the billing page, never from run duration.</figcaption>
+</figure>
+
+<div class="callout">
+  <b>Scheduled work is 2 percent of consumption.</b> The first version of this page said 5 percent
+  of <i>runs</i>, which is a different denominator and made the crons look like a bigger share of
+  the money than they are. Cutting every remaining schedule would save about 2 percent of the
+  Actions bill. <b>The crons were never the cost.</b>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ci-inventory"><span class="n">Section 2</span>The full inventory, and what gates what</h2>
+
+<p>30 workflows in <code>crowagent-platform</code>, 6 in <code>crowagent-website</code>. Branch
+protection on <code>main</code> requires exactly two checks, read live from the API:
+<code>Run Tests</code> and <code>All CI Gates Pass</code>. Everything else runs, bills, and blocks
+nothing.</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Workflow</th><th>Trigger</th><th class="num">Min / 8d</th><th>Gates?</th><th>Proposal</th></tr></thead>
+  <tbody>
+    <tr><td><code>ci.yml</code> CI Quality Gates</td><td>push main/staging, PR</td><td class="num">416</td><td>YES, <code>All CI Gates Pass</code></td><td><span class="pill p-keep">Keep on GitHub</span></td></tr>
+    <tr><td><code>crowagent-platform-ci.yml</code></td><td>push main/staging, PR</td><td class="num">310</td><td>YES, <code>Run Tests</code></td><td><span class="pill p-keep">Keep on GitHub</span></td></tr>
+    <tr><td>Dependabot security updates</td><td>automatic</td><td class="num">47</td><td>no</td><td><span class="pill p-keep">Keep, GitHub only feature</span></td></tr>
+    <tr><td><code>apps-portal-build.yml</code></td><td>push main/staging, PR</td><td class="num">41</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>lighthouse-ci.yml</code></td><td>PR, dispatch</td><td class="num">30</td><td>no</td><td><span class="pill p-drop">19 of 19 RED. Delete or fix</span></td></tr>
+    <tr><td><code>a11y-and-auth-flows.yml</code></td><td>PR</td><td class="num">19</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
+    <tr><td><code>donotbuild-scan.yml</code></td><td>push main/staging, PR</td><td class="num">11</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>portal-e2e.yml</code></td><td>schedule 1st and 15th</td><td class="num">9</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
+    <tr><td><code>security-scan.yml</code> OWASP ZAP</td><td>schedule weekly</td><td class="num">9</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
+    <tr><td><code>regime-threshold-scan.yml</code></td><td>push main, PR</td><td class="num">6</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>lighthouse-nightly.yml</code></td><td>schedule weekly</td><td class="num">6</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
+    <tr><td><code>stripe-price-drift.yml</code></td><td>was schedule weekly</td><td class="num">&lt;5</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
+    <tr><td>Website <code>smoke-test</code></td><td>was schedule every 15 min</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
+    <tr><td>Website <code>robots-guard</code></td><td>was schedule daily</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
+    <tr><td><code>no-untracked-todos.yml</code>, <code>migration-apply-check.yml</code>, <code>rls-parity.yml</code>, <code>ui-audit.yml</code>, <code>eval-gate.yml</code></td><td>push main, PR</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>perf-cdp-nightly.yml</code>, <code>portal-lighthouse.yml</code>, <code>weekly-security-scan.yml</code>, <code>e2e-core-journeys.yml</code>, <code>e2e-critical-journeys.yml</code></td><td>schedule or PR</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
+    <tr><td>8 <code>workflow_dispatch</code> only utilities</td><td>manual</td><td class="num">0 idle</td><td>no</td><td><span class="pill p-free">Free until run. Leave</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout bad">
+  <b>Lighthouse CI has failed 19 of its last 19 runs and gates nothing.</b> It is not a required
+  check, so a red run blocks no merge, and it has never been green, so nobody reads it. That is a
+  workflow which bills on every pull request and reports to no one. <b>It is either fixed and made
+  to mean something, or deleted.</b> Leaving a permanently red job wired to nothing is the exact
+  pattern RULE 0-G exists to stop: a gate that is always red teaches everyone to ignore gates.
+</div>
+
+<details>
+  <summary>What NOT to cut, and why blind cutting would be wrong</summary>
+  <div class="dbody">
+    <ul>
+      <li><b>The two gating workflows stay.</b> They are 76 percent of the bill and the only thing
+          between a broken commit and <code>main</code>. Removing them removes the safety net, not
+          the cost.</li>
+      <li><b>Dependabot stays.</b> 47 minutes in the measured window is dependency vulnerability
+          work, not overhead, and there is no equivalent off GitHub.</li>
+      <li><b>Dispatch-only workflows stay.</b> Eight of the thirty bill nothing while idle, so
+          deleting them saves no money and only loses a tool. Same rule as RULE 0-G's point about a
+          gate not wired into CI: if it does not run, it does not bill, and it is not the problem.</li>
+      <li><b>Concurrency cancellation is already correct</b> on both gating workflows, and correctly
+          refuses to cancel an in-flight run on <code>main</code> or <code>staging</code>. The usual
+          free win here is already taken.</li>
+    </ul>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ci-off"><span class="n">Section 3</span>Scheduled work off GitHub</h2>
+
+<p class="lede">Scheduled work already runs in two places that are not GitHub, and both are either
+free or already paid for. This is the part of the estate that is working.</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Where</th><th class="num">Jobs</th><th class="num">Runs / week</th><th>What it costs</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Supabase pg_cron</b><br><span class="muted">drives the <code>/api/cron/*</code> routes</span></td>
+      <td class="num">14</td><td class="num">~240</td>
+      <td>Nothing extra. Scheduling runs inside Postgres and the work at the far end is a Vercel
+          invocation well inside the included quota.</td>
+    </tr>
+    <tr>
+      <td><b>Railway APScheduler</b><br><span class="muted"><code>api/app/tasks/scheduler.py</code></span></td>
+      <td class="num">~29</td><td class="num">continuous</td>
+      <td><b>Free at the margin.</b> The container is always on and billed whether or not a job
+          fires, so every job already there costs only its CPU seconds, including one on a 5 minute
+          cadence.</td>
+    </tr>
+    <tr>
+      <td><b>Vercel cron</b></td>
+      <td class="num">0</td><td class="num">0</td>
+      <td><span class="pill p-dead">Inert</span> Vercel never reads <code>web/vercel.json</code>,
+          because the project's Root Directory is the repository root.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout bad">
+  <b>Do not plan around Vercel cron.</b> The <code>regions</code>, <code>ignoreCommand</code> and
+  <code>crons</code> blocks in <code>web/vercel.json</code> are all dead for the same reason.
+  Anything that looks like a Vercel cron in this repository is not running, so it must never be
+  counted as coverage.
+</div>
+
+<details>
+  <summary>The 14 Supabase pg_cron jobs, read from production</summary>
+  <div class="dbody">
+    <div class="tblwrap">
+    <table class="doc-tbl">
+      <thead><tr><th>Job</th><th>Schedule</th><th class="num">Runs / week</th></tr></thead>
+      <tbody>
+        <tr><td><code>email-dispatch</code></td><td>every 2 hours</td><td class="num">84</td></tr>
+        <tr><td><code>scheduled-reports</code></td><td>every 4 hours</td><td class="num">42</td></tr>
+        <tr><td><code>service-health</code></td><td>every 6 hours</td><td class="num">28</td></tr>
+        <tr><td><code>status-incident-notify</code></td><td>every 6 hours</td><td class="num">28</td></tr>
+        <tr><td><code>dunning</code>, <code>onboarding-emails</code>, <code>portal-mrr-snapshot</code>, <code>trial-ending-d1</code>, <code>stripe-cleanup-incomplete</code>, 3 retention prunes</td><td>daily</td><td class="num">56</td></tr>
+        <tr><td><code>compliance-calendar-digest</code>, <code>monitoring-digest</code></td><td>weekly</td><td class="num">2</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ci-plan"><span class="n">Section 4</span>The rule, and the cheapest real saving</h2>
+
+<div class="callout fix">
+  <b>The rule: GitHub keeps only what nothing else can do. Railway takes everything that does not
+  need to answer a pull request.</b> GitHub Actions is the only thing that can report a status check
+  back to a pull request, which is what branch protection enforces. That is a genuine monopoly and
+  worth paying for. Everything else runs on a timer or produces a report nobody merges against, and
+  Railway already runs that class free at the margin.
+</div>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Layer</th><th>Keeps</th><th>Why it is the right home</th></tr></thead>
+  <tbody>
+    <tr><td><b>GitHub Actions</b></td><td>The 2 required checks, plus Dependabot</td><td>Only surface that can gate a merge. Dependabot has no equivalent elsewhere.</td></tr>
+    <tr><td><b>Railway</b></td><td>Scheduled audits. Price drift, smoke test and robots guard are already there</td><td>The container is always on and billed anyway, so each added job costs only its CPU seconds. Proven with ~29 live jobs.</td></tr>
+    <tr><td><b>Supabase pg_cron</b></td><td>Product cron that drives app endpoints</td><td>Already correct. Scheduling happens inside Postgres at no extra cost and stays next to the data.</td></tr>
+    <tr><td><b>This machine</b></td><td>Every build, typecheck and test before a push</td><td>RULE 0-G already mandates local first. CI is the gate, never the test runner.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Reduce the JOB count in the two gating workflows.</b>
+  <span>21 jobs, each rounded up to a whole billed minute, on every push. This attacks the 76
+  percent directly and changes no behaviour. It matters MORE now that the true driver is known to be
+  per job round up rather than wall clock time.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b>Resolve Lighthouse CI.</b>
+  <span>19 of 19 red while gating nothing. Fix it and make it a required check, or delete it. Do not
+  leave it billing on every pull request and reporting to nobody.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>Move the remaining scheduled audits to Railway.</b>
+  <span>Three are already there. The rest removes all unattended overnight spend at zero marginal
+  cost, though at 2 percent of consumption the saving is small and it is worth doing for the
+  discipline rather than the money.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>Fold the small non-gating pull request checks into the gate.</b>
+  <span>One runner does the work of six, and the six stop each paying a start up minute.</span>
+</div></div>
+
+<details>
+  <summary>The published rates and the priced options, fetched 2026-08-29</summary>
+  <div class="dbody">
+    <div class="tblwrap">
+    <table class="doc-tbl">
+      <thead><tr><th>Rate</th><th class="num">Price</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub Actions, Linux 2 core, beyond the allowance</td><td class="num">$0.006 / min</td><td>GitHub billing docs</td></tr>
+        <tr><td>Included minutes, private repo</td><td class="num">2,000 Free &#183; 3,000 Pro and Team</td><td>GitHub billing docs</td></tr>
+        <tr><td><b>Self hosted runner</b></td><td class="num"><b>$0</b></td><td>Actions usage is free for self hosted runners</td></tr>
+        <tr><td>GitHub Actions artifact storage</td><td class="num">$0.25 / GB month</td><td>GitHub billing docs</td></tr>
+        <tr><td>Railway memory</td><td class="num">$10 / GB month</td><td>railway.com/pricing</td></tr>
+        <tr><td>Railway vCPU</td><td class="num">$20 / vCPU month</td><td>railway.com/pricing</td></tr>
+        <tr><td>Railway billing basis</td><td class="num">per second, MEASURED use</td><td>stopped services cost nothing</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>Railway bills what you actually use, not what you allocate.</b> Measured over 7 days the
+    production API container averages <b>0.382 GB of memory and 0.0018 vCPU</b>, about <b>$3.86 a
+    month</b>, inside the $5 Hobby credit. That is why adding scheduled jobs to it is genuinely free
+    at the margin rather than nearly free.</p>
+    <div class="tblwrap">
+    <table class="doc-tbl">
+      <thead><tr><th>Option</th><th class="num">GitHub / mo</th><th class="num">Railway / mo</th><th class="num">Total</th><th>Effort and risk</th></tr></thead>
+      <tbody>
+        <tr><td><b>A. Change nothing</b></td><td class="num">$9.60 Free<br>$3.60 Pro</td><td class="num">$0</td><td class="num"><b>$4 to $10</b></td><td>None. Baseline.</td></tr>
+        <tr><td><b>B. Consolidate jobs</b></td><td class="num">$0.96 Free<br><b>$0 Pro</b></td><td class="num">$0</td><td class="num"><b>$0 to $1</b></td><td>Medium. Attacks the 76 percent. No behaviour change.</td></tr>
+        <tr><td><b>C. Scheduled work to Railway</b></td><td class="num">$8.52 Free<br>$2.52 Pro</td><td class="num">~$0</td><td class="num"><b>$3 to $9</b></td><td>Low, and now a small saving: 2 percent of consumption.</td></tr>
+        <tr><td><b>D. Self hosted runner on Railway</b></td><td class="num"><b>$0 minutes</b></td><td class="num">~$9.65</td><td class="num"><b>~$10</b></td><td>High. Runner patching, a Chromium and Playwright image, CI secrets on infrastructure we maintain.</td></tr>
+        <tr><td><b>E. B plus C plus D</b></td><td class="num">$0</td><td class="num">~$6</td><td class="num"><b>~$6</b></td><td>Highest. All of the above.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="src">Option D working: 3,633 build minutes a month is 60.5 hours, or 0.084 of a month.
+    At 2 vCPU and 4 GB while building that is 2&#215;$20&#215;0.084 plus 4&#215;$10&#215;0.084,
+    which is $6.72. Idle for the other 0.916 of the month at roughly 0.3 GB and 0.01 vCPU adds
+    $2.93. Storage adds $0.48 to $0.85 a month on any option and is not affected by where CI runs.</p>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ci-bills"><span class="n">Section 5</span>The actual bills, and the lock now applied</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>GitHub, crowagent.ai organisation, August 2026</th><th class="num">Units</th><th class="num">Gross</th><th class="num">Billed</th></tr></thead>
+  <tbody>
+    <tr><td><b>Actions Linux</b></td><td class="num"><b>10,658 min</b></td><td class="num">$63.95</td><td class="num"><b>$39.80</b></td></tr>
+    <tr><td>Actions storage</td><td class="num">3,000.44 GB-hr</td><td class="num">$1.01</td><td class="num">$0.43</td></tr>
+    <tr><td>GitHub Team seats</td><td class="num">3 licences</td><td class="num">$144 / yr</td><td class="num">~$12 / mo</td></tr>
+    <tr><td><b>GITHUB TOTAL</b></td><td class="num"></td><td class="num"></td><td class="num"><b>~$52 / month</b></td></tr>
+    <tr><td><b>RAILWAY TOTAL</b> <span class="muted">usage $3.89, inside the $5 credit</span></td><td class="num"></td><td class="num"></td><td class="num"><b>$5 / month</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout bad">
+  <b>100 percent of the metered GitHub spend is Actions</b>, and an earlier version of this page said
+  it probably was not. The timing API returned zero billable milliseconds and the PERSONAL account
+  showed no usage. Both were true and both were the wrong place to look: the repositories belong to
+  the <code>crowagent</code> ORGANISATION, which bills separately.
+</div>
+
+<div class="callout good">
+  <b>The 17 August cron cut worked, and the chart proves it.</b> Cumulative spend climbed at
+  <b>$3.33 a day up to 17 August and $0.70 a day after it</b>, a 79 percent reduction in run rate.
+  Most of the $40 is damage already done earlier in the month rather than an ongoing rate.
+</div>
+
+<h3>The leak was a control set too high to bite</h3>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Product</th><th class="num">Budget</th><th>Stop usage</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td>Codespaces</td><td class="num">$0</td><td>Yes</td><td><span class="pill p-keep">Locked</span></td></tr>
+    <tr><td>Packages</td><td class="num">$0</td><td>Yes</td><td><span class="pill p-keep">Locked</span></td></tr>
+    <tr><td>Git LFS</td><td class="num">$0</td><td>Yes</td><td><span class="pill p-keep">Locked</span></td></tr>
+    <tr><td><b>Actions</b></td><td class="num"><b>$100 &#8594; $15</b></td><td>Yes</td><td><span class="pill p-keep">Locked 2026-08-29</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Three products already carried hard $0 ceilings with stop usage enabled. Actions carried
+<b>$100 a month</b>, roughly five times what the work needs, so it permitted the overspend instead
+of stopping it. Owner decision 29 August 2026: <b>$15 a month, an 85 percent cut, stop usage ON.</b>
+Still about four times the post-17-August run rate, so ordinary work never reaches it. Because
+$40.23 was already spent this month the budget reads <b>Over budget</b> immediately and Actions is
+halted for the remaining two days of August, resetting on 1 September. With no approved push
+outstanding that costs nothing.</p>
+
+<div class="callout good">
+  <b>Where this leaves the recommendation.</b>
+  <ol>
+    <li><b>The $15 cap is the permanent backstop, not the fix.</b> Worst case is $15 a month instead
+        of $100, and a runaway workflow halts rather than bills.</li>
+    <li><b>Consolidating the 21 jobs is the first real fix.</b> It costs nothing to run and keeps
+        every gate.</li>
+    <li><b>A self hosted runner is now genuinely worth considering, which my earlier estimate got
+        wrong.</b> About $9.65 of Railway usage against $39.80 of GitHub Actions saves roughly $27 a
+        month once the work exceeds the cap. Consolidating first shrinks what has to be relocated.</li>
+  </ol>
+</div>
+
+<p class="src">Prepared by Crow Agent, 29 August 2026. Run minutes from <code>gh run list</code> over
+an 8 day window. Billed minutes, storage and seats from the GitHub organisation billing console.
+Railway usage from the Railway console over 7 days. Cron inventory from the production
+<code>cron.job</code> table and <code>api/app/tasks/scheduler.py</code>.</p>

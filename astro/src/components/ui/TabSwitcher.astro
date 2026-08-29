@@ -438,6 +438,13 @@ const offSelectors = tabs
     overflow-x: auto;
     /* A full-width scrollbar under a 56px control would be most of its height. */
     scrollbar-width: thin;
+    /* AND THE SWIPE STOPS AT THE TROUGH. Added 2026-08-29 with the centring in
+       scripts/tabs.ts: on a phone the five homepage pills hide 266px of
+       themselves, so a reader now genuinely swipes this control, and without
+       this a swipe that reaches either end chains into the page and walks the
+       showcase off screen under their thumb. Nothing to pay for on /pricing,
+       where two pills never overflow and no scroll ever starts. */
+    overscroll-behavior-inline: contain;
     gap: 4px;
     max-width: 100%;
     padding: 6px;
@@ -496,6 +503,66 @@ const offSelectors = tabs
   @media (prefers-reduced-motion: reduce) {
     .tabsw__tab {
       transition: none;
+    }
+  }
+
+  /* ── THE ENDS FADE ON A PHONE, 2026-08-29 ─────────────────────────────────
+   *
+   * Owner report from an iPhone 16 Pro Max: the homepage tab strip "overflows
+   * the viewport, clipping the first and last tabs". It was never overflowing
+   * the PAGE (measured 390 and 430, `documentElement.scrollWidth` equals
+   * `innerWidth` at both), it was overflowing ITSELF, which is what the scroll
+   * container above is for. What was missing was any sign of it: five pills at
+   * 572px inside a 306px trough, cut off square through a letter at each end.
+   *
+   * The larger half of that report is fixed in scripts/tabs.ts, which now keeps
+   * the SELECTED pill inside the trough. This is the smaller half. A hard slice
+   * through a glyph reads as a rendering fault and a fade reads as a row that
+   * continues, which is the argument Integrations.astro's `--in-fade` already
+   * makes for the connector band, in the same words, for the same reason.
+   *
+   * `:not(:focus-within)` IS LOAD-BEARING AND IS NOT TIDINESS. The note on
+   * `overflow-x` above works out that the focus ring survives the scrollport by
+   * exactly 0px: the ring is 3px at an offset of 3, the trough's padding is 6.
+   * A mask would therefore fade the ring on whichever pill is at an end, and
+   * the last tab lands flush against the right edge whenever it is selected. So
+   * the fade lifts the moment focus enters the group, and a keyboard reader
+   * never meets it.
+   *
+   * SCOPED TO THE STEPPERED CALL SITE, which is the homepage showcase and
+   * nothing else. /pricing has two pills, never overflows, and would gain a
+   * fade over the two closed ends of a trough that has nothing to continue
+   * into. Same reasoning as the `:has(.tabsw-step)` wrap rule above.
+   */
+  @media (max-width: 767px) {
+    /* THE TROUGH GROWS ITS OWN INLINE PADDING TO THE WIDTH OF THE FADE, and
+       that is what keeps the fade off the pills that matter. A scroll container
+       counts its end padding in `scrollWidth`, so at either limit of the scroll
+       the outermost pill comes to rest a full fade-width inside the edge rather
+       than flush against it. Without this the LAST tab, which is flush at
+       maximum scroll whenever it is the selected one, had its own right-hand
+       cap dissolved by the ramp: the fade would have been eating the one pill a
+       reader most needs to see. */
+    .tabsw-auto:has(.tabsw-step) .tabsw {
+      --tabsw-fade: clamp(16px, 5vw, 32px);
+      padding-inline: var(--tabsw-fade);
+    }
+
+    .tabsw-auto:has(.tabsw-step) .tabsw:not(:focus-within) {
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        rgb(0 0 0) var(--tabsw-fade),
+        rgb(0 0 0) calc(100% - var(--tabsw-fade)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0,
+        rgb(0 0 0) var(--tabsw-fade),
+        rgb(0 0 0) calc(100% - var(--tabsw-fade)),
+        transparent 100%
+      );
     }
   }
 </style>

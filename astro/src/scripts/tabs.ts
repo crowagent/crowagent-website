@@ -196,6 +196,49 @@ function setUp(group: HTMLElement): void {
   const stepWrap = group.parentElement?.querySelector<HTMLElement>('[data-tabs-steppers]') ?? null;
   const counterEl = stepWrap?.querySelector<HTMLElement>('[data-tabs-counter]') ?? null;
 
+  /*
+   * ── KEEP THE SELECTED TAB INSIDE THE TROUGH ────────────────────────────────
+   *
+   * `.tabsw` scrolls sideways once the labels outrun the width, which is the
+   * homepage showcase on any phone: measured on the built page at 390 the five
+   * pills are 572px inside a 306px trough, so 266px of the control is off its
+   * own edge. Nothing ever scrolled it, so after two autoplay ticks the pill
+   * carrying `aria-selected` was outside the visible run and a reader saw a
+   * segmented control with NOTHING selected in it while the counter under it
+   * read "3 of 5". The owner reported exactly that from an iPhone 16 Pro Max.
+   *
+   * THE STRIP IS SCROLLED, NOT THE TAB. `Element.scrollIntoView` walks every
+   * scrollable ancestor, so it would drag the PAGE to the showcase on load and
+   * again on every autoplay tick. Writing `scrollLeft` on the trough itself can
+   * only ever move the trough.
+   *
+   * SMOOTH ONLY WHERE MOTION IS WELCOME, read at call time rather than cached,
+   * so turning the preference on stops the easing without a reload. Under
+   * `reduce` the strip still moves, it simply arrives.
+   *
+   * RECTS AND `clientLeft`, NOT `offsetLeft`, AND THAT WAS MEASURED RATHER THAN
+   * PREFERRED. `offsetLeft` is counted from the nearest POSITIONED ancestor,
+   * and the trough is `position: static`: read off the built page at 390, all
+   * five tabs report their offset from `.ps__showcase` instead, so every figure
+   * carried a constant 41px of the panel's own padding. The first tab clamped
+   * to zero and hid it; the middle three were quietly scrolled 41px too far.
+   * The difference of two rects plus `clientLeft` is the distance from the
+   * trough's own padding edge whatever is positioned above it.
+   */
+  const keepTabInView = (tab: HTMLElement): void => {
+    const room = group.scrollWidth - group.clientWidth;
+    if (room <= 0) return;
+    const from = group.getBoundingClientRect().left + group.clientLeft;
+    const box = tab.getBoundingClientRect();
+    /* Both terms are read in the same frame, so a scroll still easing towards
+       its last target cancels out of the sum rather than compounding. */
+    const delta = box.left - from - (group.clientWidth - box.width) / 2;
+    const left = Math.max(0, Math.min(group.scrollLeft + delta, room));
+    if (Math.abs(left - group.scrollLeft) < 1) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    group.scrollTo({ left, behavior: still ? 'auto' : 'smooth' });
+  };
+
   /** Show one panel and mark its tab. The only place either state is written. */
   const select = (id: string, moveFocus: boolean): void => {
     for (const { tab, panel } of pairs) {
@@ -212,6 +255,7 @@ function setUp(group: HTMLElement): void {
          ARIA tabs pattern. Arrow keys move within it. */
       tab.tabIndex = on ? 0 : -1;
       panel.hidden = !on;
+      if (on) keepTabInView(tab);
       if (on && moveFocus) tab.focus();
     }
     /* `hidden` and nothing else. It is the one attribute that removes an element

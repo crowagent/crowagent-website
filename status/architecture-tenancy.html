@@ -1,223 +1,51 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  [R27-ARCH-05] TENANCY AND ISOLATION, rebuilt as a visual document.
+
+  THIS FILE USED TO OPEN WITH 238 LINES OF CSS AND NOW OPENS WITH TWELVE.
+  Everything removed was either an exact duplicate of the same rules in
+  architecture-ci-estate.html and architecture-target-state.html, or a default
+  state block that the markup now declares for itself with `data-default`. The
+  shared document stylesheet lives once, under #docbody, in index.html, and only
+  the rules genuinely unique to this document remain below.
+
+  WHY THIS FILE CONTAINS NO SCRIPT ELEMENT.
+  index.html injects this fragment with `host.innerHTML = body`. innerHTML does
+  NOT execute script elements it parses, so any behaviour written as a script here
+  would be dead code that looks alive. Every interaction is CSS only: the state
+  switch is links that set the third hash segment, which index.html publishes as
+  `data-state` on #docbody, plus native details/summary for the disclosures. That
+  also keeps the page working under a strict CSP with no inline handlers and no
+  external library, which is what a diagram on a security page should be able to
+  claim about itself.
+
+  COLOUR. Every value resolves to a variable declared by the board's own :root.
+  No hex literal appears in this file, including inside the SVG, where fills are
+  set through classes rather than presentation attributes so they inherit from the
+  same token set.
+
+  THE VISUAL LANGUAGE, used consistently across all five diagrams:
+    teal    a control that works, or the thing to aim for
+    amber   a control that exists but is not carrying the load
+    red     nothing is there
+    dashed  a path that is drawn but does not run
+
+  Note on teal: the board declares --fixed and --teal as the SAME hex, so a
+  diagram cannot separate "works" from "to aim for" by colour and the key below
+  does not pretend otherwise. They never appear in one diagram anyway. Caught by
+  looking at the rendered page, not by reading the stylesheet.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
 <style>
-  /* ═══════════════════════════════════════════════════════════════════════
-     [R27-ARCH-05] TENANCY AND ISOLATION, rebuilt as a visual document.
+  /* Only what is unique to this document. Everything else is inherited from the
+     shared #docbody stylesheet in index.html. */
 
-     WHY THIS FILE CONTAINS NO SCRIPT ELEMENT.
-     index.html injects this fragment with `host.innerHTML = body`. innerHTML
-     does NOT execute script elements it parses, so any behaviour written as a
-     script here would be dead code that looks alive. Every interaction below is
-     therefore CSS only: hidden radio inputs plus `:checked ~` sibling selectors
-     for the state switch, and native details/summary for the disclosures.
-     That also keeps the page working under a strict CSP with no inline handlers
-     and no external library, which is what a diagram on a security page should
-     be able to claim about itself.
+  /* The wide comparison tables in this document are plain `table` elements rather
+     than `.doc-tbl`, and they need a floor so the columns do not collapse. They
+     scroll inside `.tblwrap`, never taking the page sideways with them. */
+  #docbody .tblwrap table{min-width:620px}
 
-     COLOUR. Every value here resolves to a variable declared by the board's
-     own :root. No hex literal appears in this file, including inside the SVG,
-     where fills are set through classes rather than presentation attributes so
-     they inherit from the same token set.
-
-     THE VISUAL LANGUAGE, used consistently across all five diagrams:
-       teal    a control that works, or the thing to aim for
-       amber   a control that exists but is not carrying the load
-       red     nothing is there
-       dashed  a path that is drawn but does not run
-
-     Note on teal: the board declares --fixed and --teal as the SAME hex, so a
-     diagram cannot separate "works" from "to aim for" by colour and the key
-     below does not pretend otherwise. They never appear in one diagram anyway.
-     Caught by looking at the rendered page, not by reading the stylesheet.
-     ═══════════════════════════════════════════════════════════════════════ */
-
-  #docbody{max-width:1040px}
-  #docbody h2{font-size:23px;line-height:1.25;letter-spacing:-.01em;margin:44px 0 6px;
-               padding-top:22px;border-top:1px solid var(--line)}
-  #docbody h2:first-of-type{border-top:0;padding-top:0;margin-top:16px}
-  #docbody h3{font-size:16px;margin:24px 0 4px;color:var(--text)}
-  #docbody h2 .n{color:var(--sub);font-weight:400;font-size:15px;letter-spacing:.09em;
-                 display:block;text-transform:uppercase;margin-bottom:3px}
-  #docbody p{margin:9px 0}
-  #docbody li{margin:6px 0}
-  #docbody code{font-family:ui-monospace,monospace;font-size:.87em;background:var(--card);
-                border:1px solid var(--line);border-radius:5px;padding:1px 5px;
-                overflow-wrap:anywhere}
-  #docbody a{color:var(--built)}
-  #docbody .lede{font-size:17.5px;line-height:1.5;color:var(--text)}
-  #docbody .src{color:var(--sub);font-size:12.5px;margin-top:5px}
-  #docbody .src a{color:var(--sub)}
-  #docbody .tblwrap{overflow-x:auto;margin:10px 0 4px}
-  #docbody table{min-width:620px}
-  #docbody .verdict{border:1px solid var(--line);border-left:4px solid var(--teal);
-                    background:var(--card);border-radius:12px;padding:16px 18px;margin:16px 0}
-  #docbody .verdict.risk{border-left-color:var(--open)}
-  #docbody .verdict.note{border-left-color:var(--wip)}
-  #docbody .verdict h3{margin-top:0}
-
-  /* ── The four-question answer strip. The owner must be able to read this and
-        stop, so it sits above every diagram and carries no evidence at all. ── */
-  #docbody .qgrid{display:grid;gap:12px;margin:20px 0 6px;
-                  grid-template-columns:repeat(auto-fit,minmax(224px,1fr))}
-  #docbody .q{border:1px solid var(--line);background:var(--card);border-radius:12px;
-              padding:14px 16px;border-top:3px solid var(--line)}
-  #docbody .q.a{border-top-color:var(--fixed)}
-  #docbody .q.b{border-top-color:var(--open)}
-  #docbody .q.c{border-top-color:var(--wip)}
-  #docbody .q.d{border-top-color:var(--teal)}
-  #docbody .q h4{margin:0 0 6px;font-size:11px;letter-spacing:.11em;text-transform:uppercase;
-                 color:var(--sub);font-weight:600}
-  #docbody .q p{margin:0;font-size:14.5px;line-height:1.45}
-
-  /* ── THE STATE SWITCH, and why the URL holds its state rather than the DOM.
-
-        index.html runs `setInterval(load, 20000)`. For a document board, load()
-        re-fetches this file and replaces `#docbody.innerHTML` wholesale. Any
-        state held in the DOM is therefore destroyed every twenty seconds. That
-        is measured, not assumed: a radio selected on this page reverted to its
-        default between two reads taken twenty seconds apart, so a radio-driven
-        switch would be a control that works until the reader stops to think.
-
-        [R27-ARCH-07] THE FIRST VERSION USED `:target` AND DID NOT WORK. The
-        reasoning was sound and the premise was false: :target state does live in
-        the URL, but this fragment is INJECTED BY JAVASCRIPT AFTER the browser has
-        already resolved the fragment identifier, so the anchor never becomes the
-        target. Measured on the live board, not reasoned: loading
-        `#architecture/tenancy/gap` left every pane at its default with all four
-        anchors present in the DOM.
-
-        So state now comes from `data-state` on `#docbody`, which index.html sets
-        from the third hash segment on injection and on hashchange. The URL still
-        carries it, so deep links and reload still work; only the mechanism that
-        reads it has changed.
-
-        The hash form is `#architecture/tenancy/<state>`. index.html parses
-        segment 0 as the board and segment 1 as the view, so the third segment
-        does not disturb routing.
-
-        No `:has()` is used. The default state is plain CSS and a chosen state
-        overrides it by specificity. ── */
-  #docbody .statepick{margin:18px 0 0}
-  #docbody .tnanchor{display:block;height:0;overflow:hidden;scroll-margin-top:16px}
-  #docbody .seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px;padding:0}
-  #docbody .seg a{display:inline-flex;flex-direction:column;justify-content:center;
-                  background:var(--card);border:1px solid var(--line);color:var(--text);
-                  text-decoration:none;
-                  border-radius:12px;padding:10px 16px;font-size:14px;cursor:pointer;
-                  min-height:52px;min-width:44px;line-height:1.25}
-  #docbody .seg a span{display:block;font-size:11px;letter-spacing:.09em;
-                       text-transform:uppercase;color:var(--sub);margin-bottom:2px}
-  #docbody .seg a:hover{border-color:var(--sub)}
-  #docbody .seg a:focus-visible{outline:3px solid var(--built);outline-offset:2px}
-
-  /* Default, before the reader has chosen anything: state 1. */
-  #docbody .pane{display:none}
-  #docbody .pane[data-p="have"]{display:block}
-  #docbody .seg a[href$="/have"]{background:var(--teal);color:var(--bg);
-                                 border-color:var(--teal);font-weight:700}
-  #docbody .seg a[href$="/have"] span{color:var(--bg);opacity:.75}
-
-  /* A chosen state overrides the default in both places. */
-  #docbody[data-state="gap"] .panes .pane[data-p="have"],
-  #docbody[data-state="aim"] .panes .pane[data-p="have"],
-  #docbody[data-state="silo"] .panes .pane[data-p="have"]{display:none}
-  #docbody[data-state="gap"] .panes .pane[data-p="gap"],
-  #docbody[data-state="aim"] .panes .pane[data-p="aim"],
-  #docbody[data-state="silo"] .panes .pane[data-p="silo"]{display:block}
-
-  #docbody[data-state="gap"] .seg a[href$="/have"],
-  #docbody[data-state="aim"] .seg a[href$="/have"],
-  #docbody[data-state="silo"] .seg a[href$="/have"]{
-    background:var(--card);color:var(--text);border-color:var(--line);font-weight:400}
-  #docbody[data-state="gap"] .seg a[href$="/have"] span,
-  #docbody[data-state="aim"] .seg a[href$="/have"] span,
-  #docbody[data-state="silo"] .seg a[href$="/have"] span{
-    color:var(--sub);opacity:1}
-
-  #docbody[data-state="gap"] .seg a[href$="/gap"],
-  #docbody[data-state="aim"] .seg a[href$="/aim"],
-  #docbody[data-state="silo"] .seg a[href$="/silo"]{
-    background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:700}
-  #docbody[data-state="gap"] .seg a[href$="/gap"] span,
-  #docbody[data-state="aim"] .seg a[href$="/aim"] span,
-  #docbody[data-state="silo"] .seg a[href$="/silo"] span{
-    color:var(--bg);opacity:.75}
-
-  /* ── Figures ── */
-  #docbody figure{margin:14px 0 6px}
-  #docbody .fig{width:100%;height:auto;display:block;
-                background:var(--card);border:1px solid var(--line);border-radius:12px}
-  #docbody figcaption{color:var(--sub);font-size:13px;margin-top:8px}
-  #docbody .keys{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 0;
-                 color:var(--sub);font-size:12px}
-  #docbody .keys i{display:inline-block;width:22px;height:0;border-top:3px solid var(--line);
-                   vertical-align:middle;margin-right:6px;font-style:normal}
-  #docbody .keys .k-ok i{border-top-color:var(--fixed)}
-  #docbody .keys .k-warn i{border-top-color:var(--wip)}
-  #docbody .keys .k-bad i{border-top-color:var(--open)}
-  #docbody .keys .k-dead i{border-top-color:var(--hold);border-top-style:dashed}
-
-  /* ── SVG token bindings. Nothing below sets a colour that is not a variable. ── */
-  #docbody svg text{fill:var(--sub);font-size:12px;
-                    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-  #docbody svg .hd{fill:var(--text);font-size:13.5px;font-weight:700}
-  #docbody svg .hdmute{fill:var(--hold);font-size:13.5px;font-weight:700}
-  #docbody svg .sm{font-size:11px}
-  #docbody svg .cap{font-size:10.5px;letter-spacing:.11em;fill:var(--sub)}
-  #docbody svg .big{font-size:30px;font-weight:800;fill:var(--open)}
-  #docbody svg .big2{font-size:26px;font-weight:800;fill:var(--text)}
-  #docbody svg .lbl-bad{fill:var(--open);font-size:11px;font-weight:700;letter-spacing:.05em}
-  #docbody svg .lbl-ok{fill:var(--fixed);font-size:11px;font-weight:700;letter-spacing:.05em}
-  #docbody svg .lbl-warn{fill:var(--wip);font-size:11px;font-weight:700;letter-spacing:.05em}
-  #docbody svg .lbl-aim{fill:var(--teal);font-size:11px;font-weight:700;letter-spacing:.05em}
-  #docbody svg .r{fill:var(--card);stroke:var(--line);stroke-width:1}
-  #docbody svg .r-ok{fill:var(--fixed);fill-opacity:.10;stroke:var(--fixed);stroke-width:1.2}
-  #docbody svg .r-warn{fill:var(--wip);fill-opacity:.10;stroke:var(--wip);stroke-width:1.2}
-  #docbody svg .r-bad{fill:var(--open);fill-opacity:.10;stroke:var(--open);stroke-width:1.2}
-  #docbody svg .r-aim{fill:var(--teal);fill-opacity:.12;stroke:var(--teal);stroke-width:1.4}
-  #docbody svg .r-ghost{fill:none;stroke:var(--hold);stroke-width:1;stroke-dasharray:5 4}
-  #docbody svg .chip{fill:var(--card);stroke:var(--line);stroke-width:1}
-  #docbody svg .e{stroke:var(--line);stroke-width:1.6;fill:none}
-  #docbody svg .e-ok{stroke:var(--fixed);stroke-width:1.8;fill:none}
-  #docbody svg .e-warn{stroke:var(--wip);stroke-width:1.8;fill:none}
-  #docbody svg .e-bad{stroke:var(--open);stroke-width:1.8;fill:none;stroke-dasharray:6 5}
-  #docbody svg .e-aim{stroke:var(--teal);stroke-width:1.8;fill:none}
-  #docbody svg .e-ghost{stroke:var(--hold);stroke-width:1.3;fill:none;stroke-dasharray:5 5}
-  #docbody svg .mh{fill:var(--line)}
-  #docbody svg .mh-ok{fill:var(--fixed)}
-  #docbody svg .mh-warn{fill:var(--wip)}
-  #docbody svg .mh-bad{fill:var(--open)}
-  #docbody svg .mh-aim{fill:var(--teal)}
-  #docbody svg .mh-ghost{fill:var(--hold)}
-
-  /* ── Evidence disclosures. The research is all still here; it is folded. ── */
-  #docbody details{border:1px solid var(--line);border-radius:10px;background:var(--card);
-                   margin:10px 0}
-  #docbody details > summary{cursor:pointer;padding:11px 14px;font-size:13.5px;
-                             color:var(--sub);list-style:none;min-height:44px;
-                             display:flex;gap:9px;align-items:center}
-  #docbody details > summary::-webkit-details-marker{display:none}
-  #docbody details > summary::before{content:"+";color:var(--teal);font-weight:700;
-                                     font-size:15px;line-height:1;width:11px}
-  #docbody details[open] > summary::before{content:"\2013"}
-  #docbody details > summary:hover{color:var(--text)}
-  #docbody details > summary:focus-visible{outline:3px solid var(--built);outline-offset:-3px;
-                                           border-radius:10px}
-  #docbody .dbody{padding:4px 16px 16px;border-top:1px solid var(--line);font-size:14.5px}
-  #docbody .dbody > :first-child{margin-top:10px}
-
-  /* ── The blocker cards ── */
-  #docbody .cards{display:grid;gap:12px;margin:14px 0 4px;
-                  grid-template-columns:repeat(auto-fit,minmax(268px,1fr))}
-  #docbody .card{border:1px solid var(--line);border-left:4px solid var(--open);
-                 background:var(--card);border-radius:12px;padding:14px 16px}
-  #docbody .card h4{margin:0 0 6px;font-size:15px;color:var(--text)}
-  #docbody .card p{margin:0 0 8px;font-size:14px;color:var(--sub)}
-  #docbody .card .no{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
-                     color:var(--open);font-weight:700;display:block;margin-bottom:4px}
-  #docbody .card details{margin:0;border:0;background:none}
-  #docbody .card details > summary{padding:6px 0;min-height:34px}
-  #docbody .card .dbody{padding:2px 0 0;border-top:0;font-size:13.5px}
-
-  /* ── The pending competitor slot. Deliberately unlike a finished section. ── */
+  /* The pending competitor slot. Deliberately unlike a finished section. */
   #docbody .pending{border:2px dashed var(--wip);background:var(--card);border-radius:12px;
                     padding:16px 18px;margin:16px 0}
   #docbody .pending h3{margin-top:0}
@@ -225,24 +53,36 @@
   #docbody .pending .await{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
                            color:var(--wip);font-weight:700}
 
-  /* ── The G-Cloud answer box ── */
+  /* The G-Cloud answer box */
   #docbody .gcloud{border:1px solid var(--line);border-left:4px solid var(--built);
                    background:var(--card);border-radius:12px;padding:16px 18px;margin:14px 0}
   #docbody .gcloud blockquote{margin:10px 0 4px;padding:0 0 0 14px;
                               border-left:2px solid var(--line);font-size:15px;line-height:1.55}
   #docbody .wc{color:var(--sub);font-size:12.5px}
-
-  @media (prefers-reduced-motion: reduce){
-    #docbody *{transition:none !important;animation:none !important}
-  }
 </style>
 
-<h1 style="font-size:31px;margin:6px 0 4px;letter-spacing:-.02em">Tenancy and data isolation</h1>
-<p class="sub" style="margin-bottom:6px">
-  Can a public body or a large enterprise be given its own database, and should it be? Written
-  against the code on 16 August 2026. Every figure below is drawn from the working tree on that
-  date; the evidence for each is folded under the claim it supports.
-</p>
+<div class="dochead">
+  <p class="kicker">Data residency and isolation</p>
+  <p class="title">Tenancy and data isolation</p>
+  <p class="lede">Can a public body or a large enterprise be given its own database, and should it
+  be? The decision is recorded now, and only one value is reachable.</p>
+  <p class="dated">Written against the code on 16 August 2026, catalogue figures re-counted 18
+  August. Every figure is drawn from the working tree or from production on those dates, and the
+  evidence for each is folded under the claim it supports.</p>
+</div>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#tn-finding">The finding that decides it</a></li>
+    <li><a href="#tn-spine">What we have, the gap, and what to aim for</a></li>
+    <li><a href="#tn-sales">How we would answer a UK buyer today</a></li>
+    <li><a href="#tn-competitors">How competitors answer the same question</a></li>
+    <li><a href="#tn-decisions">What needs deciding, and by whom</a></li>
+    <li><a href="#tn-appendix">Platform capability, and what I could not establish</a></li>
+  </ol>
+</details>
+
 
 <div class="bar" style="margin:18px 0 6px">
   <div class="stat"><b>13</b><span>organisations</span></div>
@@ -281,7 +121,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">The finding that decides it</span>The decision is recorded now, and only one value is reachable</h2>
+<h2 id="tn-finding"><span class="n">The finding that decides it</span>The decision is recorded now, and only one value is reachable</h2>
 
 <p class="lede">
   The seam that chooses a tenant's database is read on every buyer request by seventeen non-test
@@ -417,7 +257,7 @@
 </details>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">The spine</span>What we have, what the gap is, what to aim for</h2>
+<h2 id="tn-spine"><span class="n">The spine</span>What we have, what the gap is, what to aim for</h2>
 
 <p>
   Four architectures, one control. The first three are the owner's three states. The fourth is the
@@ -441,7 +281,7 @@
     <a href="#architecture/tenancy/silo"><span>Not chosen</span>A database per tenant</a>
   </nav>
 
-  <div class="panes">
+  <div class="panes" data-default="have">
 
     <!-- ───────────────────────── STATE 1 ───────────────────────── -->
     <section class="pane" data-p="have" aria-label="What we have">
@@ -1220,7 +1060,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">The sales question</span>How we would answer a UK buyer today</h2>
+<h2 id="tn-sales"><span class="n">The sales question</span>How we would answer a UK buyer today</h2>
 
 <p>
   There is no single national security questionnaire. For cloud procurement the G-Cloud service
@@ -1329,7 +1169,7 @@
 </details>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">Not yet answered</span>How competitors answer the same question</h2>
+<h2 id="tn-competitors"><span class="n">Not yet answered</span>How competitors answer the same question</h2>
 
 <div class="pending">
   <p class="await">Being sourced separately &middot; this section is empty on purpose</p>
@@ -1388,7 +1228,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">Decisions</span>What needs deciding, and by whom</h2>
+<h2 id="tn-decisions"><span class="n">Decisions</span>What needs deciding, and by whom</h2>
 
 <div class="tblwrap">
 <table>
@@ -1433,7 +1273,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<h2><span class="n">Appendix</span>Platform capability, and what I could not establish</h2>
+<h2 id="tn-appendix"><span class="n">Appendix</span>Platform capability, and what I could not establish</h2>
 
 <details>
   <summary>What Supabase specifically offers, capability by capability</summary>

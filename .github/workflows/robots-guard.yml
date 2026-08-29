@@ -18,11 +18,29 @@ name: Robots guard — AI crawlers must stay allowed on crowagent.ai
 # robots.txt feature prepends a "Disallow: /" block (and a "BEGIN Cloudflare
 # Managed content" marker) for AI crawlers, overriding the repo robots.txt.
 
+# [R28-CRON-MIGRATION, owner instruction 2026-08-29: "you must move maximum things
+# to railway and keep very minimal in github ... must not compromise with quality"]
+#
+# THE `schedule:` TRIGGER IS GONE. It read `- cron: '17 6 * * 1'`. THE WORK DID NOT
+# STOP. Every assertion `scripts/verify-robots.mjs` makes now also runs inside the
+# always-on Railway API container as APScheduler job `robots_guard`, Monday 06:53
+# UTC, registered by `api/app/tasks/guard_jobs.py` in crowagent-platform and
+# implemented in `api/app/tasks/site_guards.py::run_robots_guard`.
+#
+# WHY: a weekly timer here bills a fresh ubuntu runner at the one minute minimum
+# for six HTTPS assertions. That container is already running and already paid for.
+#
+# WHERE A FAILURE SURFACES NOW: a `job_runs` row, a Sentry issue, an IMMEDIATE
+# branded email to hello@crowagent.ai, and the 00:30 UTC daily failure digest,
+# rather than a red square in the Actions tab.
+#
+# THE `push` TRIGGER STAYS. The thing this guard watches is a Cloudflare DASHBOARD
+# setting, so the schedule catches the change no commit causes, while the push
+# trigger catches a change to the repo file itself. Both are needed and the cheap
+# one is the push.
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '17 6 * * 1'  # weekly, Monday 06:17 UTC. Was daily; see the note above.
   workflow_dispatch:
 
 # Single-flight per ref: a slow run must not overlap the next scheduled tick.

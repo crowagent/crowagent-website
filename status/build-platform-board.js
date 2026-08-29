@@ -248,9 +248,22 @@ const issues = [];
 const unreadable = [];
 
 /* ── 1. DEFECTS ──────────────────────────────────────────────────────────── */
+/* [R28-BOARD-RELEASE-PROVENANCE-01 2026-08-29] The defect id shape is
+   DERIVED, not hardcoded to one release.
+
+   Both the heading parser below and the table-only guard further down were
+   written as the id shape of ONE release. R2.8 uses ids like
+   `R28-PORTAL-TRIAL-EXT-01`, so on this release the parser matched nothing
+   and the guard, whose own comment promises "it cannot silently pass",
+   matched nothing either and therefore never fired. All 8 rows of
+   RELEASE-2.8-DEFECT-REGISTER.md contributed ZERO to the board and nothing
+   said so. A guard scoped to a PATTERN instead of to the PROPERTY it claims
+   to defend is the defect it was built to catch. */
+const DEFECT_ID = String.raw`[A-Z][A-Z0-9]{1,9}(?:-[A-Z0-9]{1,14}){1,6}`;
+
 if (fs.existsSync(DEFECTS)) {
   const text = fs.readFileSync(DEFECTS, 'utf8');
-  const re = /^##\s+(R262-D-\d+)\s*(?:·\s*\*{0,2}(P\d)\*{0,2})?\s*·?\s*([^\n]*)$/gm;
+  const re = new RegExp(String.raw`^##\s+\*{0,2}(${DEFECT_ID})\*{0,2}\s*(?:·\s*\*{0,2}(P\d)\*{0,2})?\s*·?\s*([^\n]*)$`, 'gm');
   let m;
   while ((m = re.exec(text))) {
     const [, id, sev, rawTitle] = m;
@@ -392,7 +405,7 @@ if (fs.existsSync(DEFECTS)) {
          a follow-up section's, which had renamed R262-D-10 to "— the production
          evidence, and the defect underneath it" and demoted it P0 → P2. */
       sevExplicit: Boolean(sev),
-      src: 'R2.6.2 defect register',
+      src: `R${RELEASE.version} defect register`,
       sev: sev || 'P2',
       /* [R27-BOARD-LANE-01] The register carries UI/UX and product defects, so it
          defaults to PRODUCT; an explicit `[LANE:CI]` in a heading still wins. A
@@ -427,14 +440,14 @@ if (fs.existsSync(DEFECTS)) {
      not to those six ids. It cannot silently pass: any future table-only row
      lands in `unreadable`, which the board renders, and prints on stderr. */
   const tableIds = new Set();
-  const tableRe = /^\|\s*(R262-D-\d+)\s*\|/gm;
+  const tableRe = new RegExp(String.raw`^\|\s*\*{0,2}(${DEFECT_ID})\*{0,2}\s*\|`, 'gm');
   let t;
   while ((t = tableRe.exec(text))) tableIds.add(t[1]);
   const detailIds = new Set(issues.map((i) => i.id));
   const tableOnly = [...tableIds].filter((id) => !detailIds.has(id));
   if (tableOnly.length) {
     unreadable.push({
-      src: 'crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md',
+      src: `crowagent-platform/RELEASE-${RELEASE.version}-DEFECT-REGISTER.md`,
       why:
         `${tableOnly.length} id(s) appear in the register summary table but have no ` +
         `"## <id>" detail section, so they cannot be rendered: ${tableOnly.join(', ')}. ` +
@@ -694,7 +707,7 @@ if (fs.existsSync(TRACKER)) {
 
     issues.push({
       id,
-      src: section || 'R2.6.2 tracker',
+      src: section || `R${RELEASE.version} tracker`,
       sev: sevExplicit ? sevMatch[1].toUpperCase() : sevInferred,
       sevExplicit,
       lane,
@@ -706,7 +719,7 @@ if (fs.existsSync(TRACKER)) {
   }
 }
 
-if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 documents are where this expects them.');
+if (!issues.length) unreadable.push(`No items parsed. Check that the R${RELEASE.version} documents are where this expects them.`);
 
 /* [R262-D-90 2026-08-08] COLLAPSE REPEATED IDS — LAST OCCURRENCE WINS.
  *
@@ -741,9 +754,12 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
   // register entry for the same id — only a LATER REGISTER entry may. Without
   // this, R262-D-09 (register: 🟡 DIAGNOSED) was overridden to OPEN by a tracker
   // row, silently reversing a status the register had moved forward.
-  const REGISTER = 'R2.6.2 defect register';
+  const REGISTER = `R${RELEASE.version} defect register`;
   const byId = new Map();
   const superseded = [];
+  /* Same-document duplicates, and register-versus-tracker disagreements. */
+  const collisions = [];
+  const conflicts = [];
   for (const item of issues) {
     const prior = byId.get(item.id);
     if (!prior) { byId.set(item.id, item); continue; }
@@ -751,7 +767,25 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
     const keepPrior = prior.src === REGISTER && item.src !== REGISTER;
     const winner = keepPrior ? prior : item;
     const loser = keepPrior ? item : prior;
-    superseded.push(`${item.id}: ${loser.status}(${loser.src === REGISTER ? 'register' : 'tracker'}) → ${winner.status}`);
+    /* [R28-BOARD-DUP-FALSE-POSITIVE-01 2026-08-29] Classify the merge instead of
+       reporting every one of them as a possible id collision.
+
+       An id appearing ONCE in the register and ONCE in the tracker is the
+       DESIGNED shape: the register carries the root-cause analysis, the tracker
+       carries the verdict, and this merge joins them. Reporting that as
+       "duplicate row ids" made the board show 8 unreadable warnings the moment
+       the R2.8 register became parseable, which trains a reader to ignore the
+       one panel whose whole job is to say something was dropped.
+
+       Two things ARE worth reporting and are kept apart below:
+        - a COLLISION, two entries from the SAME document under one id, which is
+          how two agents filing unrelated findings actually looks, and
+        - a CONFLICT, the register and the tracker disagreeing about status,
+          where the merge silently discards one side's verdict. */
+    const line = `${item.id}: ${loser.status}(${loser.src === REGISTER ? 'register' : 'tracker'}) → ${winner.status}`;
+    superseded.push(line);
+    if (loser.src === winner.src) collisions.push(line);
+    else if (loser.status !== winner.status) conflicts.push(line);
     /* SEVERITY NEVER DROPS ON A MERGE. A follow-up section is usually written as
        `## R262-D-10 — the production evidence…` with no `· Pn ·` marker, so it
        parses at the P2 default. Taking the winner's severity blindly therefore
@@ -804,14 +838,26 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
      * `unreadable` renders on the page, so the collapse is now visible where the
      * consequence is. Deliberately NOT a throw: the blast radius is one row, and
      * killing the owner's only status surface would be the worse failure. */
-    unreadable.push({
-      src: 'duplicate row ids in the tracker/register sources',
-      why:
-        `${collapsed} repeated id entr${collapsed === 1 ? 'y was' : 'ies were'} collapsed by ` +
-        `last-mention-wins. If two UNRELATED findings were filed under one id, only one of ` +
-        `them is on this board. Renumber one of each pair in the source document: ` +
-        `${superseded.join(', ')}`,
-    });
+    if (collisions.length) {
+      unreadable.push({
+        src: 'duplicate row ids within a single source document',
+        why:
+          `${collisions.length} id(s) appear more than once in the SAME document and were ` +
+          `collapsed by last-mention-wins. If two UNRELATED findings were filed under one ` +
+          `id, only one of them is on this board. Renumber one of each pair: ` +
+          `${collisions.join(', ')}`,
+      });
+    }
+    if (conflicts.length) {
+      unreadable.push({
+        src: 'the register and the tracker disagree about status',
+        why:
+          `${conflicts.length} id(s) carry a DIFFERENT status in the defect register than in ` +
+          `the tracker. The merge kept one and discarded the other, so the board is showing ` +
+          `one document's verdict and not the other's. Reconcile them at source: ` +
+          `${conflicts.join(', ')}`,
+      });
+    }
     issues.length = 0;
     issues.push(...byId.values());
   }
@@ -1122,8 +1168,28 @@ function subjectIds(line) {
  * to a comfortable zero: "no data, so nothing is wrong" is the silent green this
  * release kept finding in its gates.
  */
+/* [R28-BOARD-DEPLOY-BUDGET-RELEASE-01 2026-08-29] The deploy budget is PER
+   RELEASE and is NOT inherited. RULE 0-R says so in as many words: R2.8 starts
+   at zero spent.
+
+   This read one un-suffixed `deploy-phase-boundaries.json` whose contents are
+   R2.6.2's, so on R2.8 the board reported "5 spent, 0 remaining" and named R2.7
+   phases. That is not a cosmetic staleness. It tells the owner the release has
+   no deploys left when it has spent none, which is the kind of wrong number a
+   release plan gets built on.
+
+   Resolution order: the release-specific file wins, the legacy file is a
+   fallback, and a fallback is NEVER shown as though it belonged to this
+   release. */
+function resolveBoundariesFile() {
+  const scoped = path.join(PLATFORM, 'scripts', `deploy-phase-boundaries-${RELEASE.version}.json`);
+  if (fs.existsSync(scoped)) return { file: scoped, scoped: true };
+  return { file: path.join(PLATFORM, 'scripts', 'deploy-phase-boundaries.json'), scoped: false };
+}
+
 function deployState() {
-  const boundariesFile = path.join(PLATFORM, 'scripts', 'deploy-phase-boundaries.json');
+  const resolved = resolveBoundariesFile();
+  const boundariesFile = resolved.file;
   const base = {
     scope: ['crowagent-platform-web', 'crowagent-portal'],
     notCounted: [
@@ -1131,7 +1197,7 @@ function deployState() {
       'Railway — staging AND production, unrestricted, never waits',
       'Supabase — staging AND production, unrestricted, never waits',
     ],
-    source: `crowagent-platform/scripts/deploy-phase-boundaries.json + docs/release-${RELEASE.version}/PHASE-ASSIGNMENT-*.md`,
+    source: `crowagent-platform/scripts/deploy-phase-boundaries-${RELEASE.version}.json + docs/release-${RELEASE.version}/PHASE-ASSIGNMENT-*.md`,
     authority:
       'DECLARED state, not a live read. Vercel is the authority on what production is running — ' +
       'never report deploy or phase state from a repository document or git log (owner rule 6). ' +
@@ -1152,6 +1218,28 @@ function deployState() {
     });
     console.error(`[board] WARNING: deploy budget unreadable — ${err.message}`);
     return { ...base, unavailable: `could not read ${boundariesFile}: ${err.message}` };
+  }
+
+  /* The file carries no release of its own, so an unscoped one is assumed to
+     belong to an EARLIER release. Say so rather than showing its spend as this
+     release's. A budget that resets is worse than useless when it is displayed
+     as already exhausted. */
+  const declaredRelease = typeof decl.release === 'string' ? decl.release : null;
+  if (!resolved.scoped && declaredRelease !== RELEASE.version) {
+    unreadable.push({
+      src: `crowagent-platform/scripts/deploy-phase-boundaries-${RELEASE.version}.json`,
+      why:
+        `No deploy budget has been declared for R${RELEASE.version}, so the panel below is the ` +
+        `PREVIOUS release's and its spend does NOT apply here. RULE 0-R: the budget resets per ` +
+        `release and is not inherited, so R${RELEASE.version} starts at zero spent. Declare this ` +
+        `release's boundaries in that file. Until then treat the numbers below as history.`,
+    });
+    console.error(`[board] WARNING: no deploy budget for R${RELEASE.version}; showing the previous release's, labelled`);
+    base.appliesToRelease = declaredRelease || 'an earlier release';
+    base.staleBudget = true;
+  } else {
+    base.appliesToRelease = RELEASE.version;
+    base.staleBudget = false;
   }
 
   /* Item counts per phase, from the GENERATED phase assignment. Newest by
@@ -1246,18 +1334,22 @@ const deploy = deployState();
 
 const board = {
   updated: new Date().toISOString(),
+  /* [R28-BOARD-RELEASE-PROVENANCE-01] The release the board actually read, so
+     the VIEW never has to hardcode one. index.html renders its heading and
+     its provenance line from this field. */
+  release: RELEASE.version,
   note:
-    'DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and ' +
-    'RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those ' +
+    `DERIVED, not authored. Generated from RELEASE-${RELEASE.version}-TRACKER.md and ` +
+    `RELEASE-${RELEASE.version}-DEFECT-REGISTER.md by status/build-platform-board.js. Those ` +
     'documents are what a release is certified against and they win every ' +
-    'disagreement; this view is stale by at most one run. Re-run the generator ' +
-    'after editing either document.',
+    'disagreement, and this view is stale by at most one run. Re-run the ' +
+    'generator after editing either document.',
   sources: [
-    'crowagent-platform/RELEASE-2.6.2-TRACKER.md',
-    'crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md',
+    `crowagent-platform/RELEASE-${RELEASE.version}-TRACKER.md`,
+    `crowagent-platform/RELEASE-${RELEASE.version}-DEFECT-REGISTER.md`,
     /* The deploy panel only. It does not contribute a single issue row. */
     'crowagent-platform/scripts/deploy-phase-boundaries.json',
-    'crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md',
+    `crowagent-platform/docs/release-${RELEASE.version}/PHASE-ASSIGNMENT-*.md`,
   ],
   /* [2026-08-10] PER-PHASE, PER-STATUS BREAKDOWN — read, never recomputed.
    *

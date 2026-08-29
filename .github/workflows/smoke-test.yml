@@ -21,11 +21,37 @@ name: Smoke test — crowagent.ai must never redirect to login
 #
 # The `push` trigger is deliberately KEPT at full frequency. It is the one that
 # actually protects a release, and it only runs when something changed.
+# [R28-CRON-MIGRATION, owner instruction 2026-08-29: "you must move maximum things
+# to railway and keep very minimal in github ... must not compromise with quality"]
+#
+# THE `schedule:` TRIGGER IS GONE. It read `- cron: '0 7 * * *'`. THE WORK DID NOT
+# STOP. All five assertions below now run inside the always-on Railway API
+# container as APScheduler job `marketing_smoke_check`, HOURLY at :49, registered
+# by `api/app/tasks/guard_jobs.py` in crowagent-platform and implemented in
+# `api/app/tasks/site_guards.py::run_marketing_smoke_check`.
+#
+# THIS IS A RESTORATION, NOT A CUT. Measured against the live GitHub API on
+# 2026-08-29: this workflow is in state `disabled_manually` and its last run of any
+# kind was 2026-04-17. The marketing site has had NO scheduled monitor for over
+# four months. Detection latency goes from "never" back to one hour.
+#
+# WHY NOT BACK TO EVERY 15 MINUTES: compute is free at the margin in that
+# container, but the alert channel is not. `alert_job_failure` sends through Brevo,
+# free tier only per the owner instruction of 2026-08-24, and that is 300 sends a
+# day. A sustained outage costs 24 sends a day at hourly and 96 at every 15
+# minutes, which is a third of the daily quota spent repeating one fact.
+#
+# WHERE A FAILURE SURFACES NOW: a `job_runs` row, a Sentry issue, an IMMEDIATE
+# branded email to hello@crowagent.ai, and the 00:30 UTC daily failure digest.
+# Here it was a red square in a tab nobody opened, which is how this monitor stayed
+# red on roughly 672 runs a week against the wrong host and nobody noticed.
+#
+# THE `push` TRIGGER STAYS, deliberately. It is the one that protects a release,
+# it only runs when something changed, and it is the check the Railway job cannot
+# make: the container tests the LIVE origin, not the commit about to become it.
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '0 7 * * *'  # Daily at 07:00 UTC. Was */15; see the note above.
   workflow_dispatch:
 
 # [2026-08-18] HOST CORRECTED, AND THIS IS THE BIGGER HALF OF THE FIX.

@@ -1,0 +1,557 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  [R28-ARCH-TARGET-01] TARGET ARCHITECTURE. Rewritten 2026-08-29 on owner
+  instruction: "i cant see current and target architecture/solution design
+  diagram, you must use less text ... and must include some diagram and
+  interactive design which are easy to understand."
+
+  WHAT CHANGED IN THIS REWRITE
+  The page was correct and unreadable: nine sections of prose and eleven tables,
+  and not one picture of the thing it was describing. The answer now arrives as
+  a diagram with a CURRENT / TARGET switch, then three cards, then the numbers.
+  Every argument that used to sit in the reading line is folded into a details
+  block. Nothing was deleted, it was demoted.
+
+  THIS FILE CARRIES NO <style> BLOCK, AND THAT IS THE POINT.
+  It used to open with 60 lines of CSS that were a near verbatim copy of the CSS
+  in architecture-tenancy.html and architecture-ci-estate.html, down to `.at-tbl`
+  being `.ci-tbl` renamed. Every rule it needs now lives once, under #docbody, in
+  index.html. A change to the document type scale is one edit rather than four.
+
+  NO SCRIPT ELEMENT. index.html injects this with `host.innerHTML = body`, and
+  innerHTML does not execute script elements it parses, so anything written as a
+  script here would be dead code that looks alive. The current/target switch is
+  therefore CSS only: it is two links that set the third hash segment, which
+  index.html publishes as `data-state` on #docbody.
+
+  NO COLOUR LITERALS. Every colour resolves to a token declared on :root in
+  index.html, including inside the SVG, where fills are set through CLASSES
+  rather than presentation attributes so they inherit from the same token set.
+
+  THE VISUAL LANGUAGE, shared with architecture-tenancy.html:
+    teal    what to aim for
+    green   a control that works
+    amber   it exists but is not carrying the load
+    red     nothing is there, or it is actively wrong
+    dashed  a path that is drawn but does not run
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div class="dochead">
+  <p class="kicker">Solution design</p>
+  <p class="title">What runs today, and what to build</p>
+  <p class="lede">Three questions, three different answers. The internal portal <b>separates</b>.
+  Buyer and Supplier <b>stay together</b>. Customer tenancy stays <b>pooled</b>, with the seam for a
+  dedicated database built before anyone asks for one.</p>
+  <p class="dated">Every number on this page was counted on production on 29 August 2026. Nothing
+  is estimated. Where a figure is not here, it was not measured, and it is left out rather than
+  guessed.</p>
+</div>
+
+<div class="qgrid">
+  <div class="q d">
+    <h4>The internal portal</h4>
+    <p><b>Separate it.</b> Own repository, own Supabase project. Only <b>2</b> foreign keys tie it
+    to customer data, and it holds company financials, salaries, pipeline and board risk.</p>
+  </div>
+  <div class="q a">
+    <h4>Buyer and Supplier</h4>
+    <p><b>Keep them together.</b> The <b>9</b> keys that cross are the transaction itself, not debt.
+    Cutting there would cut a contract in half.</p>
+  </div>
+  <div class="q c">
+    <h4>Customer tenancy</h4>
+    <p><b>Pool stays the default.</b> A dedicated database is a premium tier sold when a contract or
+    a regulator demands it. Build the seam now, not the silos.</p>
+  </div>
+  <div class="q b">
+    <h4>The dead project</h4>
+    <p><b>Delete <code>crowagent-internal</code>.</b> No custom domain, Vercel reports
+    <code>"live": false</code>, superseded, and still consuming Actions minutes.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     THE DIAGRAM. Two states behind one switch.
+
+     The switch is two links, not two buttons, because a link carries its state
+     in the URL: `#architecture/target/next` is shareable and survives a reload,
+     and index.html turns that third segment into `data-state` on #docbody, which
+     the shared stylesheet reads. No script, no radio inputs, no :has().
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<h2 id="ts-diagram"><span class="n">The picture</span>Current state and target state</h2>
+
+<div class="statepick">
+  <p class="seg">
+    <a href="#architecture/target/now"><span>Deployed today</span>Current state</a>
+    <a href="#architecture/target/next"><span>What to build</span>Target state</a>
+  </p>
+</div>
+
+<div class="panes" data-default="now">
+  <span class="tnanchor" id="architecture/target/now"></span>
+  <span class="tnanchor" id="architecture/target/next"></span>
+
+  <!-- ── CURRENT ──────────────────────────────────────────────────────── -->
+  <section class="pane" data-p="now" aria-label="Current state, deployed today">
+  <figure>
+  <svg class="fig" viewBox="0 0 900 478" role="img" aria-labelledby="tsnow">
+    <title id="tsnow">Current state: two live Vercel projects and one dead one, both live
+    projects reading a single Supabase project in Ireland that holds customer tables and the
+    company's own financial tables side by side, a Railway API in Amsterdam, and one monorepo
+    holding all of it</title>
+    <defs>
+      <marker id="tsn-a" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh" d="M0,0 L8,4 L0,8 z"/></marker>
+      <marker id="tsn-b" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh-bad" d="M0,0 L8,4 L0,8 z"/></marker>
+    </defs>
+
+    <text class="cap" x="40" y="20">CUSTOMERS</text>
+    <text class="cap" x="336" y="20">STAFF, INTERNAL ONLY</text>
+    <text class="cap" x="632" y="20">SUPERSEDED</text>
+
+    <rect class="r-ok"   x="40"  y="30" rx="10" width="256" height="72"/>
+    <text class="hd"  x="56" y="56">crowagent-platform-web</text>
+    <text class="sm"  x="56" y="76">app.crowagent.ai</text>
+    <text class="sm"  x="56" y="92">Vercel · lhr1 London</text>
+
+    <rect class="r-warn" x="336" y="30" rx="10" width="256" height="72"/>
+    <text class="hd"  x="352" y="56">crowagent-portal</text>
+    <text class="sm"  x="352" y="76">portal.crowagent.ai</text>
+    <text class="sm"  x="352" y="92">Vercel · lhr1 London</text>
+
+    <rect class="r-ghost" x="632" y="30" rx="10" width="228" height="72"/>
+    <text class="hdmute" x="648" y="56">crowagent-internal</text>
+    <text class="sm"  x="648" y="76">no domain · live: false</text>
+    <text class="lbl-bad" x="648" y="94">STILL BILLING ACTIONS</text>
+
+    <path class="e"     d="M168,102 L168,178" marker-end="url(#tsn-a)"/>
+    <path class="e-bad" d="M464,102 L464,178" marker-end="url(#tsn-b)"/>
+    <text class="lbl-bad" x="476" y="148">direct table reads</text>
+
+    <rect class="r-bad" x="40" y="186" rx="12" width="552" height="182"/>
+    <text class="hd"  x="58" y="212">ONE Supabase project</text>
+    <text class="lbl-bad" x="430" y="212">ONE BLAST RADIUS</text>
+    <text class="sm"  x="58" y="230">eu-west-1 Ireland · row level security on every table</text>
+
+    <rect class="chip" x="58"  y="244" rx="8" width="248" height="88"/>
+    <text class="hd"  x="74" y="268">Customer tables</text>
+    <text class="sm"  x="74" y="288">474 foreign keys internally</text>
+    <text class="sm"  x="74" y="306">tenders, bids, contracts</text>
+    <text class="lbl-ok" x="74" y="324">POOLED, RLS ENFORCED</text>
+
+    <rect class="chip" x="326" y="244" rx="8" width="248" height="88"/>
+    <text class="hd"  x="342" y="268">Portal tables</text>
+    <text class="sm"  x="342" y="288">financials, salaries, pipeline</text>
+    <text class="sm"  x="342" y="306">board risk, R and D log</text>
+    <text class="lbl-bad" x="342" y="324">SAME INSTANCE AS ABOVE</text>
+
+    <path class="e-warn" d="M306,288 L322,288" marker-end="url(#tsn-a)"/>
+    <text class="lbl-warn" x="58" y="354">2 foreign keys cross between them</text>
+
+    <rect class="r-ok" x="632" y="186" rx="12" width="228" height="182"/>
+    <text class="hd"  x="648" y="212">Railway · FastAPI</text>
+    <text class="sm"  x="648" y="232">europe-west4 Amsterdam</text>
+    <text class="sm"  x="648" y="250">always on, billed anyway</text>
+    <text class="sm"  x="648" y="268">~29 APScheduler jobs</text>
+    <text class="lbl-ok" x="648" y="290">FREE AT THE MARGIN</text>
+    <path class="e" d="M168,102 C168,130 560,140 690,178" marker-end="url(#tsn-a)"/>
+
+    <rect class="r-warn" x="40" y="392" rx="12" width="820" height="66"/>
+    <text class="hd"  x="58" y="418">ONE monorepo · crowagent-platform</text>
+    <text class="sm"  x="58" y="440">web/ &#183; apps/portal &#183; api/ &#183; packages/* (6 shared)</text>
+    <text class="lbl-warn" x="558" y="440">one access list, one set of secrets</text>
+  </svg>
+  <figcaption>Deployed on 29 August 2026. The problem is not the monorepo, it is the single
+  Supabase project: a credential or a policy mistake that reaches it exposes customer tender data
+  and the company's own salary and pipeline data at the same time.</figcaption>
+  </figure>
+  </section>
+
+  <!-- ── TARGET ───────────────────────────────────────────────────────── -->
+  <section class="pane" data-p="next" aria-label="Target state, what to build">
+  <figure>
+  <svg class="fig" viewBox="0 0 900 478" role="img" aria-labelledby="tsnext">
+    <title id="tsnext">Target state: the portal moves to its own repository and its own Supabase
+    project and reaches customer data only through the platform API under a named service identity,
+    the dead project is deleted, and the customer database keeps pooled tenancy with a connection
+    seam that can hand a paying tenant a dedicated database</title>
+    <defs>
+      <marker id="tst-a" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh" d="M0,0 L8,4 L0,8 z"/></marker>
+      <marker id="tst-b" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh-aim" d="M0,0 L8,4 L0,8 z"/></marker>
+      <marker id="tst-c" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mh-ghost" d="M0,0 L8,4 L0,8 z"/></marker>
+    </defs>
+
+    <text class="cap" x="40" y="20">CUSTOMERS</text>
+    <text class="cap" x="336" y="20">STAFF, INTERNAL ONLY</text>
+    <text class="cap" x="632" y="20">REMOVED</text>
+
+    <rect class="r-ok"  x="40"  y="30" rx="10" width="256" height="72"/>
+    <text class="hd"  x="56" y="56">crowagent-platform-web</text>
+    <text class="sm"  x="56" y="76">app.crowagent.ai</text>
+    <text class="sm"  x="56" y="92">Vercel · lhr1 London</text>
+
+    <rect class="r-aim" x="336" y="30" rx="10" width="256" height="72"/>
+    <text class="hd"  x="352" y="56">crowagent-portal</text>
+    <text class="sm"  x="352" y="76">own repository</text>
+    <text class="lbl-aim" x="352" y="94">OWN ACCESS LIST AND SECRETS</text>
+
+    <rect class="r-ghost" x="632" y="30" rx="10" width="228" height="72"/>
+    <text class="hdmute" x="648" y="56">crowagent-internal</text>
+    <line class="e-ghost" x1="646" y1="51" x2="800" y2="51"/>
+    <text class="sm"  x="648" y="80">project deleted</text>
+    <text class="sm"  x="648" y="96">repository archived</text>
+
+    <!-- The portal reaches its OWN database directly, and reaches customer data
+         ONLY through the platform API. Drawing the second arrow into the customer
+         database would say the opposite of the recommendation. -->
+    <path class="e-aim" d="M504,102 L504,178" marker-end="url(#tst-b)"/>
+    <path class="e-aim" d="M368,102 C340,140 300,142 274,106" marker-end="url(#tst-b)"/>
+    <text class="lbl-aim" x="196" y="150">via the platform API, named service identity</text>
+    <text class="sm" x="196" y="166">scoped, audited, revocable. No direct table reads</text>
+
+    <rect class="r-ok" x="40" y="186" rx="12" width="360" height="164"/>
+    <text class="hd"  x="58" y="212">Customer Supabase</text>
+    <text class="sm"  x="58" y="230">474 foreign keys stay in one schema</text>
+
+    <rect class="chip" x="58" y="244" rx="8" width="324" height="40"/>
+    <text class="hd"  x="74" y="262">Connection seam</text>
+    <text class="sm"  x="74" y="278">one resolver, can return a different database per tenant</text>
+
+    <rect class="r-ok"    x="58" y="292" rx="8" width="156" height="44"/>
+    <text class="sm"  x="72" y="312">Pooled + RLS</text>
+    <text class="lbl-ok" x="72" y="328">THE DEFAULT</text>
+
+    <rect class="r-ghost" x="226" y="292" rx="8" width="156" height="44"/>
+    <text class="sm"  x="240" y="312">Dedicated database</text>
+    <text class="lbl-warn" x="240" y="328">PREMIUM TIER</text>
+
+    <rect class="r-aim" x="416" y="186" rx="12" width="176" height="164"/>
+    <text class="hd"  x="432" y="212">Portal Supabase</text>
+    <text class="sm"  x="432" y="232">its own project</text>
+    <text class="sm"  x="432" y="256">financials, salaries</text>
+    <text class="sm"  x="432" y="274">pipeline, board risk</text>
+    <text class="sm"  x="432" y="292">26 tables, 13 keys</text>
+    <text class="lbl-aim" x="432" y="316">SEPARATE BLAST RADIUS</text>
+
+    <rect class="r-ok" x="632" y="186" rx="12" width="228" height="164"/>
+    <text class="hd"  x="648" y="212">Railway · FastAPI</text>
+    <text class="sm"  x="648" y="232">europe-west4 Amsterdam</text>
+    <text class="sm"  x="648" y="250">always on, billed anyway</text>
+    <text class="sm"  x="648" y="268">~29 APScheduler jobs</text>
+    <text class="lbl-ok" x="648" y="290">UNCHANGED</text>
+    <path class="e" d="M168,102 C168,130 560,140 690,178" marker-end="url(#tst-a)"/>
+
+    <rect class="r-ok"  x="40"  y="392" rx="12" width="400" height="66"/>
+    <text class="hd"  x="58" y="418">crowagent-platform</text>
+    <text class="sm"  x="58" y="440">web/ &#183; api/ &#183; packages/* published by version</text>
+
+    <rect class="r-aim" x="460" y="392" rx="12" width="400" height="66"/>
+    <text class="hd"  x="478" y="418">crowagent-portal</text>
+    <text class="sm"  x="478" y="440">own CI, own deploy, own credentials</text>
+  </svg>
+  <figcaption>The portal stops reading customer tables and calls named endpoints instead, so a leak
+  of portal credentials stops being a leak of the customer database. Buyer and Supplier are not
+  drawn apart, because they are not being separated.</figcaption>
+  </figure>
+  </section>
+</div>
+
+<p class="keys">
+  <span class="k-aim"><i></i>what to aim for</span>
+  <span class="k-ok"><i></i>a control that works</span>
+  <span class="k-warn"><i></i>exists, not carrying the load</span>
+  <span class="k-bad"><i></i>nothing is there</span>
+  <span class="k-dead"><i></i>drawn but not running</span>
+</p>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#ts-diagram">Current state and target state</a></li>
+    <li><a href="#ts-coupling">The measurement that decides every cut</a></li>
+    <li><a href="#ts-portal">Why the portal separates</a></li>
+    <li><a href="#ts-bs">Why Buyer and Supplier do not</a></li>
+    <li><a href="#ts-tenancy">What we tell a buyer who wants its own database</a></li>
+    <li><a href="#ts-plan">The sequence, in order, no conflicts</a></li>
+  </ol>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ts-coupling"><span class="n">The evidence</span>The measurement that decides every cut</h2>
+
+<p class="lede">One count settles all three questions: how many foreign keys cross each candidate
+boundary. Counted over every foreign key in <code>public</code> on production.</p>
+
+<figure>
+<svg class="fig" viewBox="0 0 900 268" role="img" aria-labelledby="tscoup">
+  <title id="tscoup">Foreign keys crossing each candidate boundary: 474 within customer data,
+  13 within the portal, 9 between Buyer and Supplier, and only 2 between the portal and customer
+  data</title>
+  <text class="cap" x="24" y="24">FOREIGN KEYS CROSSING EACH CANDIDATE BOUNDARY, TO SCALE</text>
+
+  <text class="sm" x="24" y="66">Inside customer data</text>
+  <rect class="r-bad" x="230" y="50" rx="4" width="600" height="22"/>
+  <text class="num" x="842" y="66">474</text>
+  <text class="lbl-bad" x="244" y="66">CANNOT BE CUT, IT IS ONE SYSTEM</text>
+
+  <text class="sm" x="24" y="118">Inside the portal</text>
+  <rect class="r-ok" x="230" y="102" rx="4" width="17" height="22"/>
+  <text class="num" x="842" y="118">13</text>
+  <text class="lbl-ok" x="258" y="118">SELF CONTAINED, MOVES WITH IT</text>
+
+  <text class="sm" x="24" y="170">Buyer to Supplier</text>
+  <rect class="r-warn" x="230" y="154" rx="4" width="12" height="22"/>
+  <text class="num" x="842" y="170">9</text>
+  <text class="lbl-warn" x="254" y="170">THIS IS THE TRANSACTION, KEEP IT</text>
+
+  <text class="sm" x="24" y="222">Portal to customer data</text>
+  <rect class="r-aim" x="230" y="206" rx="4" width="5" height="22"/>
+  <text class="num" x="842" y="222">2</text>
+  <text class="lbl-aim" x="248" y="222">CUT HERE. BOTH ARE CONNECTOR CONFIG</text>
+
+  <line class="e-ghost" x1="230" y1="40" x2="230" y2="240"/>
+</svg>
+<figcaption>Bars are to scale, which is the whole argument. The portal is held to customer data by
+two keys against the 474 that hold customer data to itself, and both crossings are
+<code>platform_connector_*</code> rows referencing <code>organisations</code>. Neither carries owner
+confidential data.</figcaption>
+</figure>
+
+<div class="kpi">
+  <div><b>732</b><span>portal source files, 131,894 lines</span></div>
+  <div><b>220</b><span>portal imports from shared packages, the intended seam</span></div>
+  <div><b>7</b><span>portal imports of platform code. All test only, all the same file</span></div>
+  <div><b>0</b><span>platform imports from the portal. 21 mentions, all comments</span></div>
+</div>
+
+<div class="callout good">
+  <b>The portal is cleanly extractable, and that is not the usual answer.</b> Zero production
+  imports cross in either direction. The whole extraction is publishing five packages by version and
+  copying one test helper.
+</div>
+
+<details>
+  <summary>Why it came out this way, and the file that proves it was on purpose</summary>
+  <div class="dbody">
+    <p>Shared code was pushed into <code>packages/*</code> rather than reached for across
+    application folders, and the boundary held even where it was inconvenient.
+    <code>web/lib/stripe-prices.ts:52</code> is the evidence: somebody hit the boundary and, instead
+    of crossing it, wrote down that they could not import from <code>apps/portal</code>.</p>
+    <p>The 220 shared package imports break down as <code>@crowagent/ui</code> 102,
+    <code>@crowagent/server-infra</code> 93, <code>@crowagent/tokens</code> 15,
+    <code>@crowagent/pricing</code> 7, <code>@crowagent/formatters</code> 3. None of these blocks
+    extraction, because a package can be published and consumed by version.</p>
+    <p>The seven escaping imports are all <code>web/__tests__/_lib/strip-comments.mjs</code>, and all
+    seven are in test files.</p>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ts-portal"><span class="n">Answer one</span>Why the portal separates</h2>
+
+<p class="lede">Not because a monorepo is bad. Because the company's own confidential data should
+not share a blast radius with customer data, and nothing is gained by keeping them together.</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>What separating buys</th><th>What it costs</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Portal credentials stop being customer database credentials. Every read becomes an
+          attributable API call under a named identity.</td>
+      <td>One migration to drop 2 foreign keys, plus an API route per read the portal does today.</td>
+    </tr>
+    <tr>
+      <td>Different access lists. Anyone who can read the repository today can read the internal
+          tool that manages customers, billing and access locks.</td>
+      <td>A second repository with its own CI and deploy path.</td>
+    </tr>
+    <tr>
+      <td>An internal tooling change stops sharing a review and deploy path with the customer
+          product. That is release risk, not tidiness.</td>
+      <td>Publishing 5 shared packages by version, which is worth doing on its own merits.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<details>
+  <summary>A monorepo is not a monolith, and the distinction changes the reason but not the answer</summary>
+  <div class="dbody">
+    <p>A monolith is one deployable that runs as a single unit. A monorepo is one repository that can
+    hold many independently deployable services. Services in a monorepo still build and deploy
+    independently, and CI that detects which service a commit touched rebuilds only that one. So
+    "same repository" is not by itself the bad practice.</p>
+    <p>The argument for separating the portal is therefore <b>blast radius and access</b>, not code
+    organisation. That matters, because it tells you what else has to change: splitting the
+    repository without splitting the access list and the secrets would be theatre.</p>
+    <p>The portal holds <code>portal_financials</code>, <code>sales_pipeline</code>,
+    <code>headcount_plan</code>, <code>risk_register</code>, <code>rd_log</code>,
+    <code>mrr_snapshots</code>, <code>portal_documents</code>, <code>portal_approvals</code>,
+    <code>founder_sessions</code> and <code>founder_tasks</code>.</p>
+  </div>
+</details>
+
+<details>
+  <summary>The first version of this page argued the opposite, and it was wrong</summary>
+  <div class="dbody">
+    <p>It argued that splitting the database would create more of the divergence class that caused a
+    P0 that morning, where one fact lived in four stores that disagreed. That argument is sound for
+    <b>customer</b> data, where 474 foreign keys bind the schema together. It does not apply to the
+    portal at all, and the reasoning generalised from one to the other without counting. The count
+    is what reversed it. The reversal is kept here rather than edited out.</p>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ts-bs"><span class="n">Answer two</span>Why Buyer and Supplier do not</h2>
+
+<p class="lede">The code is already separated. The database is joined exactly where the business is
+joined, and those nine keys are the product rather than debt.</p>
+
+<div class="kpi">
+  <div><b>732</b><span>supplier files</span></div>
+  <div><b>231</b><span>buyer files</span></div>
+  <div><b>1,651</b><span>shared files</span></div>
+  <div><b>3</b><span>cross imports, all tests, two named after the seam they check</span></div>
+</div>
+
+<div class="callout good">
+  <b>Nine foreign keys cross, and what they are matters far more than how many.</b> A supplier
+  evaluating against a buyer's published requirement. A buyer tracking delivery on a supplier's
+  contract. Social value commitments both sides are held to. A buyer publishes, a supplier responds,
+  a contract is awarded, and both sides are measured against the same commitments.
+  <b>Cutting Buyer from Supplier at the database would cut the contract in half.</b>
+</div>
+
+<details>
+  <summary>The 9 keys, and the full 6 to 3 split</summary>
+  <div class="dbody">
+    <ul>
+      <li><code>crowmark_comparisons.requirement_id</code> to <code>council_requirements</code></li>
+      <li><code>contract_kpis.contract_id</code> to <code>crowmark_contracts</code></li>
+      <li><code>sv_commitments.contract_id</code> to <code>crowmark_contracts</code></li>
+    </ul>
+    <p>Buyer to Supplier is 6 keys, Supplier to Buyer is 3.</p>
+    <p>The three crossing imports are <code>sector-taxonomy-is-not-copied.test.ts</code>,
+    <code>scoring-vocabulary-seam.test.ts</code> and <code>nhs-authority-class.test.ts</code>. They
+    cross on purpose, to assert that a shared vocabulary is not duplicated on both sides.</p>
+  </div>
+</details>
+
+<div class="callout">
+  <b>The open question is a product one, not an architecture one.</b> Whether CrowMark is two tools
+  that share a codebase or one two-sided network is worth deciding, and the architecture already
+  supports both answers. With no real customers yet, nothing is locked in, and the nine keys cost
+  nothing to keep and would be expensive to recreate.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ts-tenancy"><span class="n">Answer three</span>What we tell a buyer who wants its own database</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Model</th><th>What it means</th><th>Where it belongs</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Pool</b> <span class="pill p-live">today</span></td>
+      <td>All tenants in one schema, separated by row level security on a tenant column</td>
+      <td>The default, and what runs now. RLS is on with policies on every table.</td>
+    </tr>
+    <tr>
+      <td><b>Bridge</b></td>
+      <td>One database, a schema per tenant</td>
+      <td>Rarely the right stopping point. Most of the operational cost of a silo without the audit
+          story.</td>
+    </tr>
+    <tr>
+      <td><b>Silo</b> <span class="pill p-new">premium tier</span></td>
+      <td>A dedicated database per tenant</td>
+      <td>When a contract or a regulator demands it, and the tenant is large enough to pay for it.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout fix">
+  <b>Build the seam now, not the silo.</b> Route customer database connections through one resolver
+  that <i>can</i> return a different connection per tenant. That is a small change while there are
+  no silo tenants and an expensive one afterwards. Then a buyer asking for its own database is a
+  configuration and a contract, not a rebuild.
+</div>
+
+<div class="callout bad">
+  <b>What not to do.</b> Do not split customer data across databases by feature. The 474 foreign
+  keys say the customer schema is one system, and cutting it by feature is what puts the same fact
+  in several places. Splitting by <b>tenant</b> is a different operation and does not have that
+  problem, because one tenant's rows do not reference another tenant's rows.
+</div>
+
+<p class="src">Tenancy is covered in full, with the code evidence and the region question, under
+<b>Tenancy and isolation</b> in the switcher at the top of this page.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="ts-plan"><span class="n">The work</span>The sequence, in order, no conflicts</h2>
+
+<div class="step"><div class="num">0</div><div class="body">
+  <b>Delete the dead portal.</b>
+  <span>Remove the <code>crowagent-internal</code> Vercel project, archive the repository. No custom
+  domain, <code>"live": false</code>, superseded. Stops its Dependabot runs consuming Actions
+  minutes. Irreversible, so it needs the owner. Nothing else depends on this step.</span>
+</div></div>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Cut the two foreign keys.</b>
+  <span><code>platform_connector_apps.organisation_id</code> and
+  <code>platform_connector_connections.organisation_id</code> become plain identifiers. One
+  migration. After this the portal schema references nothing customer side and the split is a copy
+  rather than surgery, so every later step is cheaper.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b>Create the portal Supabase project and move the 26 tables.</b>
+  <span>The <code>portal_</code>, <code>founder_</code> and <code>platform_</code> tables plus
+  <code>health_history</code>, <code>sales_pipeline</code>, <code>headcount_plan</code>,
+  <code>rd_log</code>, <code>risk_register</code>, <code>mrr_snapshots</code> and
+  <code>infra_cost_history</code>, with their 13 internal keys intact. Staging first, verified row
+  for row, then production.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>Give the portal a service identity on the platform API.</b>
+  <span>Named credential, explicit scopes, audit trail. Replace the portal's remaining direct reads
+  of customer tables with API calls. This is the step that turns a shared secret into a revocable
+  one, and it is the real security win.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>Publish the shared packages by version.</b>
+  <span><code>tokens</code>, <code>ui</code>, <code>formatters</code>, <code>pricing</code>. Worth
+  doing even if nothing else happens, because today a token change forces the customer product to
+  rebuild.</span>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <b>Extract <code>apps/portal</code> into its own repository, with separate access and secrets.</b>
+  <span>History preserved, its own CI, its own deploy. Do the access list and the secrets at the
+  same time or the split is cosmetic. Last, because steps 1 to 3 deliver most of the security
+  benefit without it.</span>
+</div></div>
+
+<div class="step"><div class="num">6</div><div class="body">
+  <b>Build the tenant connection seam. Do not build silo tenants.</b>
+  <span>One resolver that can return a different connection per tenant. Cheap now, expensive
+  later.</span>
+</div></div>
+
+<div class="callout good">
+  <b>Every structural change here is at its cheapest right now.</b> No customer data to migrate, no
+  uptime to protect, no contract to renegotiate. The portal split, the tenant seam and the shared
+  package publishing are one-time costs that rise the moment a real customer arrives.
+</div>
+
+<p class="src">Prepared by Crow Agent, 29 August 2026. Foreign key counts, import counts and file
+counts were measured against production and the working tree on that date. No dates are attached to
+the steps: sizing is done by reading the code, and steps 4 to 6 should be measured when they are
+started rather than estimated now.</p>

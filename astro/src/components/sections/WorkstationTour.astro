@@ -440,10 +440,96 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     }
   }
 
+  /* ── ON A PHONE THE CAPTION COMES OUT FROM OVER THE SCREEN ────────────────
+   *
+   * The scrim plate above is built for a caption of one or two lines, which is
+   * what these sentences are from about 900px up. Measured on the built page at
+   * 390 and at 430 with device emulation, they are FOUR lines at --t-h3, so the
+   * plate came out 238.5px tall over a stage of 197.5px: the caption was taller
+   * than the screen it was sitting on, covered 96% of the drawing, and its own
+   * first line was clipped away by the stage's `overflow: hidden` because it had
+   * grown 42px past the top edge. The owner reported it from an iPhone 16 Pro
+   * Max, and the tag chip was printing straight over the product's own header.
+   *
+   * THE ONLY BLOCK THAT WAS HERE WRAPPED `.wt__controls` AND NOTHING ELSE, so
+   * nothing ever took the caption out of `position: absolute` at any width.
+   *
+   * WHAT CHANGES, AND WHY IT IS A STACK RATHER THAN A SMALLER PLATE. Shrinking
+   * the type would buy one line and lose it again on the next sentence, so the
+   * caption stops overlaying at all: the slides become grid items sharing one
+   * cell, which keeps the crossfade and the one-slide-visible behaviour exactly
+   * as they are while letting the stage take its height from the TALLEST slide
+   * instead of from a ratio. Inside a slide the drawing keeps the 16/10 box the
+   * stage used to impose, so the six screens (16/10, 4/3 and one portrait) still
+   * agree on a frame and the stage height never jumps between slides, and the
+   * caption sits under it on the floor the stage already paints. No scrim,
+   * because there is nothing left to read the caption against.
+   *
+   * DESKTOP AND TABLET ARE NOT TOUCHED. Everything here is inside the phone
+   * query, and the owner's report was explicit that both are fine.
+   */
   @media (max-width: 767px) {
+    .wt__stage {
+      display: grid;
+      grid-template-areas: 'slide';
+      /* The ratio moves onto the drawing inside each slide, below. */
+      aspect-ratio: auto;
+      max-block-size: none;
+    }
+
+    .wt__slide {
+      position: static;
+      grid-area: slide;
+    }
+
+    /* The <picture> is the box the ratio now lives on, so the drawing is
+       letterboxed exactly as it was and the caption starts below it. */
+    .wt__slide picture {
+      display: block;
+      aspect-ratio: 16 / 10;
+      /* The slide is a flex column, so the drawing must not be squeezed by the
+         caption under it: the ratio decides its height and nothing else. */
+      flex: 0 0 auto;
+    }
+
+    .wt__cap {
+      position: static;
+      flex: 0 0 auto;
+      /* Even padding now that it is a block under a drawing rather than the
+         foot of a ramp that had to start above the first glyph. */
+      padding: var(--stack-2);
+      background: none;
+    }
+
+    /* A section-level heading size over four lines on a 390px screen is the
+       other half of what made this read as a wall of text. --t-h4 is the tier
+       for a heading inside a card, which is what this now is. */
+    .wt__desc {
+      font-size: var(--t-h4);
+    }
+
+    /* THE CONTROL ROW WAS WRAPPING INTO A SHAPE NOBODY CHOSE. `space-between`
+       plus `wrap` put the previous arrow hard left with the dots pushed away
+       from it, and dropped pause and next onto a second line on their own. The
+       dots take a line of their own and the three transport controls sit under
+       them, centred, which is one decision instead of an accident. */
     .wt__controls {
       flex-wrap: wrap;
       justify-content: center;
+      row-gap: var(--stack-2);
+    }
+
+    .wt__dots {
+      order: -1;
+      flex-basis: 100%;
+      justify-content: center;
+    }
+
+    /* 36x24 clears WCAG 2.5.8 and is under the 44px this repo holds every touch
+       target to. The mark inside stays 12px and 36px active, so nothing about
+       the drawn dot changes: only the box a thumb has to hit. */
+    .wt__dot {
+      block-size: var(--btn-h-sm);
     }
   }
 </style>
