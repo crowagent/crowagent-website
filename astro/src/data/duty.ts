@@ -88,16 +88,32 @@ export const S71: DutyRow = {
 };
 
 /**
- * PPN 002: the minimum social value weighting at award.
+ * PPN 026: the minimum social value weighting at award.
  *
  * Ten per cent is a FLOOR on the evaluation weighting, not a score and not a
  * prediction: the remaining weighting is the authority's to set. The bar on the
  * proof card draws the segment at exactly 10% of the track so the picture and
  * the figure cannot disagree.
+ *
+ * TEN PER CENT AND NOT TWENTY, AND THE CHOICE IS LOAD BEARING RATHER THAN
+ * CAUTIOUS. PPN 026 carries TWO mandatory floors, 10% from 1m to 5m pounds inc
+ * VAT and 20% at 5m or above, and "or above" is INCLUSIVE. So 10% is the
+ * minimum ANYWHERE in scope and is true of the whole notice with no qualifier,
+ * while 20% would be FALSE for every contract in the lower band. The card draws
+ * its bar at exactly 10% of the track, so quoting 20% here would also make the
+ * picture disagree with the figure. The band is named in the citation instead,
+ * which is where a qualifying condition belongs.
+ *
+ * MOVED FROM PPN 002 ON 2026-08-30 BY OWNER DECISION. PPN 026 published on
+ * GOV.UK 5 August 2026 and applies to central government procurements commenced
+ * on or after 1 January 2027. NOTHING HERE SAYS PPN 002 WAS WITHDRAWN,
+ * REPLACED OR SUPERSEDED, because GOV.UK does not say that: PPN 026 never names
+ * PPN 002 and PPN 002 carries no withdrawal banner. Removing it from this site
+ * is our editorial choice, not a statement about the regulation.
  */
-export const PPN002: DutyRow = {
+export const PPN026: DutyRow = {
   fig: '10%',
-  cite: 'PPN 002 · published 13 February 2025, mandatory 1 October 2025',
+  cite: 'PPN 026 · £1m to £5m inc VAT · central government · from 1 January 2027',
 };
 
 /**
@@ -106,4 +122,4 @@ export const PPN002: DutyRow = {
  * set without labelling it; the two hero cards each spread these with their own
  * labels rather than consuming this array directly.
  */
-export const DUTIES: DutyRow[] = [S52, S71, PPN002];
+export const DUTIES: DutyRow[] = [S52, S71, PPN026];

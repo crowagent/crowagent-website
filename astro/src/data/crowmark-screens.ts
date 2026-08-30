@@ -140,7 +140,7 @@ export const SUPPLIER_SCREENS: Slide[] = [
   {
     src: shot('sup-4-evidence-tracker'),
     ...DESKTOP,
-    alt: 'The CrowMark evidence tracker, following a won contract into delivery. A headline bar gives the evidence coverage for this month against committed measures, and a card per measure lists the dated evidence filed against it with an upload control. A statutory strip runs along the foot covering section 52 KPIs, the section 71 cycle and the PPN 002 minimum weighting.',
+    alt: 'The CrowMark evidence tracker, following a won contract into delivery. A headline bar gives the evidence coverage for this month against committed measures, and a card per measure lists the dated evidence filed against it with an upload control. A statutory strip runs along the foot covering section 52 KPIs, the section 71 cycle and the statutory minimum weighting.',
     caption: 'After award, each commitment tracked to the dated evidence that proves it, month by month',
   },
   {
@@ -177,8 +177,8 @@ export const BUYER_SCREENS: Slide[] = [
   {
     src: shot('buy-1-requirement-builder'),
     ...DESKTOP,
-    alt: 'The CrowMark social value requirement builder for a buying authority. Four figures head the page: the social value weighting set against the PPN 002 minimum, the number of criteria published, the total weight split across quality, price and social value, and the responses received. The award criteria table lists each criterion with its TOMs reference, its weighting and the evidence a supplier must supply.',
-    caption: 'Criteria, weightings and the evidence each one demands, set against the PPN 002 minimum',
+    alt: 'The CrowMark social value requirement builder for a buying authority. Four figures head the page: the social value weighting set against the statutory minimum, the number of criteria published, the total weight split across quality, price and social value, and the responses received. The award criteria table lists each criterion with its TOMs reference, its weighting and the evidence a supplier must supply.',
+    caption: 'Criteria, weightings and the evidence each one demands, set against the statutory minimum',
   },
   {
     src: shot('buy-2-response-review'),
