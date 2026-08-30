@@ -1118,8 +1118,31 @@ const BOARDS = {
     ],
   },
 };
-let board = ((location.hash.replace('#','').split('/')[0]) in BOARDS)
-  ? location.hash.replace('#','').split('/')[0] : 'website';
+/* [R28-BOARD-HASH-FALLBACK-01] The board name is NORMALISED before the lookup,
+   and an unrecognised one is SAID OUT LOUD rather than silently swapped.
+
+   The owner sat on `#platform?` and reported the board as not updating. It was
+   updating perfectly. The trailing `?` made the lookup key `platform?`, which is
+   not in BOARDS, so this fell through to `website` and rendered a DIFFERENT
+   DATASET with no indication at all. A status surface that quietly shows you the
+   wrong board is worse than one that is stale, because stale at least looks
+   wrong eventually.
+
+   Normalising kills the whole class: anything after a `?` or a second `#` is
+   stripped, surrounding space goes, and the compare is case-insensitive, so
+   `#Platform`, `#platform?`, `#platform?x=1` and `#platform/` all land on the
+   platform board. When the hash still names nothing we know, the fallback is
+   announced and the URL is rewritten to what is actually being shown, so the
+   address bar can never disagree with the page. */
+function boardFromHash() {
+  const raw = location.hash.replace('#', '').split('/')[0];
+  const key = raw.split('?')[0].split('#')[0].trim().toLowerCase();
+  if (key in BOARDS) return { board: key, misread: raw !== key ? raw : null };
+  if (key) return { board: 'website', misread: raw, unknown: true };
+  return { board: 'website', misread: null };
+}
+const _initialBoard = boardFromHash();
+let board = _initialBoard.board;
 
 function renderTabs(){
   /* [R28-BOARD-NAV-01] `aria-pressed`, NOT a bespoke `.on` class. The class was
@@ -1436,6 +1459,22 @@ document.getElementById('docbody').addEventListener('click', e => {
 });
 
 load();
+
+/* [R28-BOARD-HASH-FALLBACK-01] Say it, then fix the URL. A silent correction
+   teaches the reader nothing and they will type the same address again. */
+if (_initialBoard.misread) {
+  const note = document.createElement('p');
+  note.className = 'head';
+  note.style.cssText = 'margin:12px 0;color:var(--open)';
+  note.textContent = _initialBoard.unknown
+    ? 'The address said "' + _initialBoard.misread + '", which is not a board on this page. '
+      + 'Showing ' + BOARDS[board].label + '. The address has been corrected.'
+    : 'The address said "' + _initialBoard.misread + '". Showing ' + BOARDS[board].label + '.';
+  const host = document.getElementById('stats');
+  if (host && host.parentNode) host.parentNode.insertBefore(note, host);
+  location.replace('#' + board);
+}
+
 /* [R27-ARCH-06] The poll refreshes platform.json for ISSUE boards. On a DOCUMENT
    board there is nothing to refresh, and re-injecting the fragment every 20
    seconds WIPED the reader's chosen diagram state and closed every evidence
