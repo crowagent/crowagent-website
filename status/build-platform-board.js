@@ -1415,6 +1415,7 @@ const board = {
     DECISION: 'Blocked on an owner decision or an owner action. Tracker verdict BLOCKED or DEFERRED, or a TODO the tracker marks as the owner\'s.',
     WIP: 'Diagnosed, in progress.',
     CLEARED: 'Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A.',
+    'ON HOLD': 'Parked, and NOT actionable by us. Blocked on something the owner has declined or cannot do yet, such as a paid plan tier or an external dependency. Tracker verdict HELD, ON HOLD or PARKED. Distinct from DECISION, which is waiting on an owner ANSWER we have asked for.',
   },
   /* The page renders these under the legend. They were absent, and index.html
      called .map() on them unconditionally, so the Platform tab threw and the
