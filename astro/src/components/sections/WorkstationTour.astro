@@ -527,8 +527,51 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
 
     /* 36x24 clears WCAG 2.5.8 and is under the 44px this repo holds every touch
        target to. The mark inside stays 12px and 36px active, so nothing about
-       the drawn dot changes: only the box a thumb has to hit. */
+       the drawn dot changes: only the box a thumb has to hit.
+
+       THIS RULE IS NOT THE TOUCH RULE, WHICH IS THE POINT OF THE ONE BELOW IT.
+       It raises the box on a NARROW VIEWPORT, and a narrow viewport is not the
+       same question as a thumb. See the pointer query after this block. */
     .wt__dot {
+      block-size: var(--btn-h-sm);
+    }
+  }
+
+  /* ── 44 x 44 ON A TOUCH SCREEN, AND THE WIDTH QUERY CANNOT ASK THAT ───────
+   *
+   * MEASURED on a dev render with `hasTouch` and `isMobile` set, which is the
+   * only way to make `(pointer: coarse)` match: the button is 36 x 44 at 320,
+   * 375 and 412, and 36 x 24 on an 820px tablet, because 820 never enters the
+   * max-width query above. A tablet is exactly the device a width breakpoint
+   * cannot see, and it is all thumb. So one axis was short on every phone and
+   * both axes were short on every tablet.
+   *
+   * IT ASKS ABOUT THE INPUT DEVICE, the way Footer.astro asks it for
+   * `.ca-social-link`. That file records itself as the one place on the site
+   * where the correct size genuinely depends on the pointer. A second place
+   * making the same argument for the same reason is a family, not a fork, so
+   * this is written in its shape rather than in a new one. A mouse keeps
+   * 36 x 24, which the comment above chose deliberately and which clears
+   * SC 2.5.8. `--btn-h-sm` is the 44px floor tokens.css already names as the
+   * smallest a control may ever be, so no number is invented here.
+   *
+   * THE GAP PAYS FOR THE WIDTH, or the row overflows the page. Six dots at 36
+   * with 10px between them measure 266px, and the content box at a 320px
+   * viewport measures 266px: there is no headroom at all, and widening the
+   * buttons alone would push the row 8px past the screen. Six at 44 with no
+   * gap measure 264 and fit. Nothing new is drawn by closing the gap, because
+   * the buttons are transparent and only the 12px marks are visible: they
+   * simply sit on a 44px pitch instead of a 46px one, and the row stays
+   * centred, so no mark moves more than 5px. Fixed in BOTH states, so the row
+   * still never reflows as the active mark elongates, which is the invariant
+   * the base rule states. */
+  @media (pointer: coarse) {
+    .wt__dots {
+      gap: 0;
+    }
+
+    .wt__dot {
+      inline-size: var(--btn-h-sm);
       block-size: var(--btn-h-sm);
     }
   }
