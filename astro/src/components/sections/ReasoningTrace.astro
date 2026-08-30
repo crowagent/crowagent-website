@@ -542,6 +542,72 @@ const TALLY = [
         */}
         <span class="chip rt__eg">illustrative</span>
       </p>
+
+      {/*
+        ── THE REFUSED FIGURE, PUT BACK INTO THE LEDGER SO IT CAN BE TAKEN OUT
+
+        WHAT THIS ADDS AND WHAT IT REFUSED TO ADD. The section already states
+        that one figure was dropped and draws the drop, hung under Ground, in
+        the refusal colour, named. What a reader could not do until now is see
+        what the ledger looks like WITH the ungrounded claim in it, which is the
+        state every competing tool ships as its finished answer. This is that
+        state, one press away, with the claim struck through.
+
+        NO FIGURE WAS INVENTED FOR IT, AND THAT WAS THE DESIGN CONSTRAINT RATHER
+        THAN A LIMITATION OF IT. The obvious build of this control gives the
+        refused claim a number, adds it to the total, and lets the reader watch
+        a bigger total shrink back. That number would have to be made up, on the
+        one section of the site whose entire subject is a machine refusing to
+        make a number up, in a file whose header records that the source concept
+        was rejected for exactly this ("that version invents a notice number,
+        two PDF filenames, a citation reference and an AUDIT HASH ... inventing
+        evidence is the precise failure this whole section is built to
+        demonstrate the engine refusing"). There is no value behind `local
+        supply chain spend`. That is what "no recorded commitment" means.
+
+        SO THE TOTAL DOES NOT MOVE, AND THAT IS THE STRONGER DEMONSTRATION. A
+        reader presses the control, the claim appears in the ledger struck
+        through, and £108,000 sits exactly where it was. An ungrounded claim
+        adds nothing to an answer because there was never anything behind it to
+        add. A number ticking up and back down would have said the opposite: that
+        the refused figure was worth something the engine chose not to count.
+
+        CORRECT AND COMPLETE WITH NO JAVASCRIPT. This row is rendered VISIBLE
+        and the control below it is rendered `hidden`, so a reader with no
+        script gets the fuller ledger and no button that does nothing. The
+        script's first act is to reveal the control and collapse the row, which
+        is the identical contract `.wt__pause` and `.in__pause` already state on
+        this same page and for the same reason.
+      */}
+      <p class="rt__refused" id="rt-refused">
+        <s class="rt__refused-claim">local supply chain spend</s>
+        <span class="rt__refused-why">
+          No recorded commitment, so it carries no figure. The total above is the
+          same with it as without it.
+        </span>
+      </p>
+
+      {/*
+        `control chip` is the site's existing recipe for a chip that is also a
+        target, already worn by `.art__pill` in layouts/Article.astro and by the
+        four glossary filters. Between styles/controls.css and styles/labels.css
+        it arrives with its fill, edge, ink, cursor, response, face, size,
+        weight, tracking, padding, pill radius and 36px target. This file states
+        the gap above it and nothing else.
+
+        `aria-expanded` and `aria-controls` rather than a live region: this is a
+        disclosure over content that is already in the document, and the row it
+        controls sits directly above it, so a reader who toggles it lands on the
+        change without being read to.
+      */}
+      <button
+        class="control chip rt__toggle"
+        type="button"
+        data-rt-toggle
+        aria-expanded="true"
+        aria-controls="rt-refused"
+        hidden
+      >Take the refused figure out</button>
     </figure>
 
     {/*
@@ -597,9 +663,50 @@ const TALLY = [
    * with the markup. If this script is blocked, throws, or never runs, the
    * section is unchanged.
    */
+  /**
+   * The refused-figure toggle. Also enhancement only, and it runs BEFORE the
+   * reduced-motion return below on purpose: a disclosure is not motion, and a
+   * reader who has asked for stillness should still get the control.
+   *
+   * The row it governs is rendered visible and this button is rendered `hidden`,
+   * so with no script the ledger carries the refused claim and there is no dead
+   * button beside it. The first two lines here invert that pair, which is the
+   * only moment the two states can disagree.
+   */
+  function initRefusedToggle(root: HTMLElement) {
+    const btn = root.querySelector<HTMLButtonElement>('[data-rt-toggle]');
+    const row = root.querySelector<HTMLElement>('#rt-refused');
+    if (!btn || !row) return;
+
+    /* THE LABEL IS THE BUTTON'S OWN TEXT NODE AND NOT A <span> INSIDE IT.
+       A wrapping span inherits the chip's mono uppercase type without the chip's
+       box, and scripts/check-treatments.js reads that as a FIFTH micro-label
+       recipe: it measured this exact element on the first build of this control,
+       reporting "JetBrains Mono 13.00px lh16.25 track1.04 w500 uppercase no box"
+       on one route. There are four label recipes on this site and there is no
+       fifth. Writing the button's textContent keeps the label inside the boxed
+       chip that already exists. */
+    btn.hidden = false;
+    let shown = false;
+    /* `hidden` rather than a class, so the row is out of the accessibility tree
+       as well as out of the layout and cannot be read while it is not on screen. */
+    row.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = 'Put the refused figure back';
+
+    btn.addEventListener('click', () => {
+      shown = !shown;
+      row.hidden = !shown;
+      btn.setAttribute('aria-expanded', String(shown));
+      btn.textContent = shown ? 'Take the refused figure out' : 'Put the refused figure back';
+    });
+  }
+
   function initReasoningTrace() {
     const root = document.querySelector<HTMLElement>('[data-rt]');
     if (!root) return;
+
+    initRefusedToggle(root);
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduced || typeof IntersectionObserver !== 'function') return;
@@ -1374,6 +1481,72 @@ const TALLY = [
     border: 1px solid color-mix(in srgb, var(--c-refused) 45%, transparent);
     white-space: nowrap;
     color: var(--c-refused);
+  }
+
+  /* ── THE REFUSED FIGURE IN THE LEDGER ─────────────────────────────────────
+   *
+   * A rule above the row rather than a box around it, so it reads as a line
+   * struck OUT of the ledger and not as a second card. `.rt__drop-box` in the
+   * rail is the boxed treatment and it is already the section's one refusal
+   * object, so a second box down here would be the same drawing twice.
+   *
+   * `border-block-start` alone, never a `border` shorthand: three sides of
+   * nothing is what a shorthand would assert, and the rule this draws is the
+   * ledger's own division between the total and what did not make it in. */
+  .rt__refused {
+    margin: var(--stack-2) 0 0;
+    padding-block-start: var(--stack-1);
+    border-block-start: 1px solid color-mix(in srgb, var(--c-refused) 30%, transparent);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--c-text-sub);
+  }
+
+  /* <s>, so the strike is in the DOCUMENT and not painted on by CSS. A
+   * text-decoration written here would leave the claim reading as a live figure
+   * to anyone whose stylesheet did not load, on the one line of this page where
+   * that would say the opposite of what is meant.
+   *
+   * THE HUE IS THE RESTING REFUSAL COLOUR, the same one `.rt__drop-name` two
+   * hundred lines up already carries on this identical string, so the claim
+   * looks the same in the ledger as it does in the rail. Mono, because it is a
+   * ledger line item rather than prose, which is the same call `.rt__sum`
+   * directly above makes. */
+  .rt__refused-claim {
+    display: block;
+    font-family: var(--font-mono);
+    color: var(--c-refused);
+    /* A claim has no spaces to break at once it is struck through as one run. */
+    overflow-wrap: anywhere;
+  }
+
+  .rt__refused-why {
+    display: block;
+    margin-block-start: 6px;
+    /* --measure-prose caps this at about 90 characters. It is a sentence of
+       prose inside a drawn ledger, so it takes the prose measure rather than
+       running the full width of a panel sized for a five-column rail. */
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+
+  /* ONE DECLARATION, AND EVERYTHING ELSE IS A SHARED CLASS.
+   *
+   * `control chip` is the site's existing recipe for a chip that is also a
+   * target, and it already ships on `.art__pill` and on the four `.gx-chip`
+   * filters. styles/controls.css gives the fill, the edge, the ink, the cursor
+   * and the pointer response. styles/labels.css gives the face, the size, the
+   * weight, the tracking, the uppercase, the padding and the pill radius, and
+   * its `:where(a, button, summary, [role='button']).chip` rule gives the 36px
+   * min-height that makes it a target, which clears the 24px check-controls.js
+   * rule 3 measures at 1440 and at 390.
+   *
+   * SO ONLY THE GAP ABOVE IT IS THIS FILE'S TO STATE. Anything else written
+   * here would be an eleventh control recipe or a twelfth chip geometry, which
+   * are the two counted defects those files exist to end, and the padding in
+   * particular is part of the fingerprint check-treatments.js measures. */
+  .rt__toggle {
+    margin-block-start: var(--stack-2);
   }
 
   /* ── Close ───────────────────────────────────────────────────────────────

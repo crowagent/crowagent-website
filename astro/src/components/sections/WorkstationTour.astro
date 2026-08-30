@@ -188,6 +188,27 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     border-radius: 16px;
     background: var(--c-floor);
     overflow: hidden;
+    /* ── THE SWIPE'S HALF OF THE CONTRACT, 2026-08-30 ──────────────────────
+     *
+     * `pan-y`, so the browser keeps every vertical gesture for the page and
+     * hands this element every horizontal one. Two things follow from that and
+     * both are the reason this line exists rather than being handled in script.
+     *
+     * THE PAGE STILL SCROLLS THROUGH THE STAGE. On a phone this box is most of
+     * the viewport. `touch-action: none` here would make it a dead zone a
+     * reader has to scroll around, which is the commonest way a carousel breaks
+     * a page, and it is invisible on a desktop.
+     *
+     * AND THE HORIZONTAL GESTURE ARRIVES WITHOUT A DELAY. Without this the
+     * browser holds each horizontal touchmove back while it decides whether the
+     * gesture belongs to a scroller, so the first swipe of a session lands late
+     * or not at all. Declaring the axis is what removes the decision.
+     *
+     * IT IS ALSO WHY THE LISTENERS CAN BE PASSIVE. Nothing in the script calls
+     * preventDefault, because this declaration has already said which axis is
+     * whose, so both listeners register `{ passive: true }` and neither can
+     * block a scroll frame. See the script at the foot of this file. */
+    touch-action: pan-y;
   }
 
   .wt__slide {
@@ -680,6 +701,84 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
         if (pauseLabel) pauseLabel.textContent = paused ? 'Play' : 'Pause';
       });
     }
+
+    /* ══ SWIPE ═══════════════════════════════════════════════════════════════
+     *
+     * WHY IT IS HERE. The prev and next buttons and the dot row are the whole
+     * of this carousel's manual control, and on a phone a horizontal swipe is
+     * what a reader tries first. Without it the tour is a thing that happens TO
+     * a touch reader on a seven second timer, with two 36px arrows as the only
+     * way to take it back.
+     *
+     * IT IS THE SAME CHOICE THE BUTTONS MAKE, NOT A NEW ONE. A swipe calls
+     * `stop()` and then `show()`, exactly as the prev and next handlers above
+     * do, so a reader who swipes has abandoned the timer for good and the
+     * announcement goes through the same live region. There is no second path
+     * through this component's state.
+     *
+     * BOTH LISTENERS ARE PASSIVE AND NEITHER DOES WORK ON MOVE. `touchmove` is
+     * deliberately not listened for at all: the gesture is resolved once, on
+     * `touchend`, from two numbers recorded on `touchstart`, so a swipe costs
+     * two events for the whole gesture rather than one per frame of it. The
+     * homepage is already over its Lighthouse budget on three routes and a
+     * per-frame handler on the largest element on the page is exactly the kind
+     * of cost that does not show up until a mid-range phone.
+     *
+     * `touch-action: pan-y` ON `.wt__stage` IS WHAT MAKES PASSIVE SAFE, and the
+     * reasoning is written out beside that declaration in the stylesheet above.
+     * Nothing here calls preventDefault, so nothing here can block a scroll.
+     *
+     * THE THRESHOLDS, AND THE SECOND ONE IS THE LOAD-BEARING ONE. 40px of
+     * travel is past the noise floor of a tap on a touch screen. The axis test
+     * is what stops a page scroll that drifted sideways from paging the
+     * carousel: the horizontal component has to be half again the vertical one,
+     * so a gesture that is mostly down the page stays a scroll however far it
+     * wandered. A distance threshold on its own fires on a diagonal scroll,
+     * which reads to a reader as the carousel jumping on its own.
+     *
+     * SINGLE TOUCH ONLY. A second finger means a pinch or a zoom, and `touches`
+     * carrying anything but one point abandons the gesture rather than guessing
+     * at its midpoint.
+     *
+     * NOT GATED ON `prefers-reduced-motion`. A swipe is a reader's own input and
+     * this is the direct equivalent of pressing next, which that preference has
+     * never withheld. What the preference governs on this component is the
+     * seven second timer, and `run()` above already refuses to start under it.
+     * The slide's own crossfade is a `--dur` transition, which tokens.css
+     * already collapses to 0.01ms under the same preference. */
+    let swipeX = 0;
+    let swipeY = 0;
+    let swiping = false;
+
+    root.addEventListener(
+      'touchstart',
+      (event) => {
+        const t = (event as TouchEvent).touches;
+        swiping = t.length === 1;
+        if (!swiping) return;
+        swipeX = t[0].clientX;
+        swipeY = t[0].clientY;
+      },
+      { passive: true },
+    );
+
+    root.addEventListener(
+      'touchend',
+      (event) => {
+        if (!swiping) return;
+        swiping = false;
+        const t = (event as TouchEvent).changedTouches;
+        if (t.length !== 1) return;
+        const dx = t[0].clientX - swipeX;
+        const dy = t[0].clientY - swipeY;
+        if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        stop();
+        /* Left means forward, which is the direction the content travels under
+           the finger rather than the direction the finger moves. */
+        show(index + (dx < 0 ? 1 : -1), true);
+      },
+      { passive: true },
+    );
 
     /* Hover and background are SUSPENSIONS, not choices, so they resume. */
     root.addEventListener('pointerenter', halt);

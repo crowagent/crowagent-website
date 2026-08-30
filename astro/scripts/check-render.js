@@ -256,6 +256,38 @@ const ALLOW_BESPOKE = [
       'control.',
   },
   {
+    selector: '.rt__toggle',
+    reason:
+      'The refused-figure toggle inside the homepage reasoning trace ledger. It is a ' +
+      'VIEW STATE governing the figure it sits inside rather than an action the page ' +
+      'offers, which is the same distinction .gx-chip is exempted on below ("a filter ' +
+      'is a state you are in rather than an action you take") and the same one ' +
+      '.wt__pause is exempted on above. It carries no destination and completes no ' +
+      'task: it puts the refused claim back into the ledger struck through, and takes ' +
+      'it out again. Rendering it with Button.astro would put a 54px primary call to ' +
+      'action inside a drawn proof, three lines above the two real links this section ' +
+      'closes on, so obeying the one-button rule literally here would make the page ' +
+      'worse in exactly the way that rule exists to prevent. It is emitted `hidden` ' +
+      'and revealed only by the script that gives it something to do, so a reader ' +
+      'with JavaScript off receives the fuller ledger and no dead control, which is ' +
+      'the contract .wt__pause and .tabsw-auto__pause already state on this same page. ' +
+      'It is on the shared `control chip` recipe, so its 36px target, its padding, its ' +
+      'radius and its pointer response are the same ones .art__pill and .gx-chip wear. ' +
+      '— WHAT THIS ENTRY IS NOT, MEASURED AND RECORDED BECAUSE THE TWO FAILURES LOOK ' +
+      'ALIKE FROM A DISTANCE. An earlier build of this control was reported at ' +
+      '173x19, below the 24px SC 2.5.8 floor, and an exemption for THAT would have been ' +
+      'the softening move this file exists to refuse: a gate does not stop a control ' +
+      'being too small to hit. That state was a real defect and it was fixed at the ' +
+      'source rather than exempted, by putting the button on `control chip` so it takes ' +
+      'the 36px min-height labels.css already gives a chip that is a link or a button. ' +
+      'Re-measured on the built page at three viewports: 263x36 at 1440, 245x36 on a ' +
+      'Pixel 7 and 245x36 on an iPhone 13, both with hasTouch and isMobile set. ' +
+      'check-controls.js rule 3 measures the same element at 1440 and 390 and passes it. ' +
+      'What is left, and the only thing this entry covers, is the bespoke-button rule ' +
+      'below: a padded, rounded, painted control that is not a .btn. Every user of ' +
+      '`control chip` on this site trips that rule and every one of them is named here.',
+  },
+  {
     selector: '.ca-search-trigger',
     reason:
       'The nav search affordance. It opens a palette rather than offering an action ' +
