@@ -176,6 +176,56 @@ const ALLOWED_LOSSES = new Map([
   ['*  link: /glossary/ppn-002',
    'The PPN 002 glossary entry was deleted 2026-08-30 by owner instruction and every internal link to it was repointed at /glossary/ppn-026 in the same change. The reader loses nothing: the destination is the entry for the edition that applies to central government procurements commenced on or after 1 January 2027, and the old URL 301s there for anyone holding it. Removing our page is an editorial decision about this site and not a statement about the regulation: GOV.UK has not withdrawn, replaced or superseded PPN 002.'],
 
+  /*
+   * A-197, 2026-08-30, the rest of the PPN 002 sweep. The pillar post moved from
+   * /blog/ppn-002-social-value-guide to /blog/ppn-026-social-value-guide and
+   * every internal link moved with it in the same change, so the routes that
+   * carried a link to the old slug lose it. ONE WILDCARD LINE for the same
+   * reason as the entry above: a single signal that left several pages at once
+   * for a single reason. The PAGE is not permitted here, only the LINKS: the old
+   * route is asserted in the affirmative, every run, by RETIRED_ROUTES below.
+   */
+  ['*  link: /blog/ppn-002-social-value-guide',
+   'The social value pillar post was republished at /blog/ppn-026-social-value-guide on 2026-08-30 and every internal link was repointed in the same change. The reader loses nothing: the destination is the same article rewritten against the edition that applies from 1 January 2027, and the old URL 301s there for anyone holding it. Renaming our own URL is an editorial decision about this site and not a statement about the regulation.'],
+
+  /* The PPN 002 term card came off the glossary index in the same pass. Its
+     h3 was the term name, so the heading goes with the card. The subject is not
+     lost: PPN 026 has its own card, its own full entry at /glossary/ppn-026 and
+     its own row on /sources. */
+  ['/glossary/  heading: ppn 002',
+   'The PPN 002 term card was removed from the glossary index on 2026-08-30 by owner instruction that the site must carry no outdated regulatory detail. The card immediately above it is PPN 026, which links to the full entry for the edition that applies to central government procurements commenced on or after 1 January 2027. Removing our card is an editorial decision about this site: GOV.UK has not withdrawn, replaced or superseded PPN 002.'],
+
+  /* /sources printed the previous edition's five missions from one shared
+     definition, and a record for the previous edition itself. Both came off in
+     the same pass. The heading and the two gov.uk links go with them. */
+  ['/sources/  heading: the five missions',
+   'The five missions are the PREVIOUS edition\'s model structure. PPN 026 publishes its own and this site has not sourced it, so a card naming five missions beside a record about the current floor would have been stating a structure we cannot cite. Removed 2026-08-30 rather than relabelled, because relabelling it would have been the guess the card existed to avoid.'],
+  /* The PPN 002 record itself is NOT listed here, and that is measured rather
+     than assumed: its h3 was "Procurement Policy Note 002, the previous edition"
+     and the surviving PPN 026 card is headed "Procurement Policy Note 026", which
+     clears the 0.6 heading threshold on its own. The two gov.uk links below do
+     not survive, because a URL is compared exactly. Keys carry no scheme:
+     normHref strips it. */
+  ['/sources/  link: www.gov.uk/government/publications/ppn-002-taking-account-of-social-value-in-the-award-of-contracts',
+   'The primary-source link on the PPN 002 record, removed with the record on 2026-08-30. That record described itself as retained only while a figure on this site still rested on it, and after the duty-card move (317fd5ef) and this pass, none does: the 10% homepage figure now resolves to #ppn-026, which states both weighting bands with their citation. The one sentence on it that was OURS rather than the regulation\'s, that CrowAgent stops supporting the previous edition on 31 December 2026, moved onto the PPN 026 record and is still published. /sources still links the primary source for every figure it prints, which is the whole job of the page.'],
+  ['/sources/  link: www.gov.uk/government/publications/ppn-002-taking-account-of-social-value-in-the-award-of-contracts/procurement-policy-note-002-the-social-value-model-html',
+   'The primary-source link on the five-missions card, removed with the card on 2026-08-30 for the reason recorded against that heading above.'],
+
+  /*
+   * THREE LOSSES THAT LANDED IN EARLIER COMMITS OF THIS SAME SWEEP AND WERE
+   * NEVER RECORDED. Found by running this gate on 2026-08-30, not by reading the
+   * diffs: 9e3d40c7 and 317fd5ef each renamed a heading off PPN 002 without an
+   * entry here, so the gate had been carrying unexplained losses since. They are
+   * written down now, with the commit that made each one, because a loss nobody
+   * recorded is indistinguishable from a loss nobody noticed.
+   */
+  ['/blog/regulatory-updates-2026/  heading: track your ppn 002 scoring',
+   'Renamed to "Track your social value scoring" in the 9e3d40c7 sweep. The closing call to action is unchanged in what it offers and its body still names PPN 026, so the reader loses a mention of the retired edition and nothing else.'],
+  ['/crowmark/  heading: deterministic ppn 002 maths',
+   'Renamed to "Deterministic social value maths" in the 9e3d40c7 sweep. The section is the same section and makes the same claim, that the arithmetic runs in code and the model never computes a figure. It names no edition now, which is deliberate: the claim is about the engine and is true under any edition.'],
+  ['/glossary/toms-framework/  heading: ppn 002',
+   'The related-term sidebar on the TOMs entry was repointed from PPN 002 to PPN 026 in the 9e3d40c7 sweep, and the sidebar title is the heading. The reader gains the entry for the edition that applies to central government procurements commenced on or after 1 January 2027 and loses a link to a page that no longer exists.'],
+
   /* The same change renamed two headings that named the retired edition in a
      title. The sections are still there and still say what they said. */
   ['/resources/  heading: ppn 002 social value: how the 10% weighting works',
@@ -227,6 +277,8 @@ const ALLOWED_LOSSES = new Map([
  * had, whereas /tools is a hub and would have read as a soft 404.
  */
 const RETIRED_ROUTES = new Map([
+  ['/blog/ppn-002-social-value-guide',
+   'The social value pillar post. The page is not retired, its URL is: the same article is published at /blog/ppn-026-social-value-guide, rewritten against the edition that applies to central government procurements commenced on or after 1 January 2027. The slug moved on 2026-08-30 because the old one still named PPN 002 in the address bar of a page that no longer teaches that edition, and a URL is a claim about what is on the page. The three rules that already pointed at the old slug (/blog/ppn-002-guide, /blog/ppn-002-social-value-explained, /blog/social-value-themes-explained) were RETARGETED at the new slug directly rather than left to chain through this one. THE RENAME IS EDITORIAL AND SAYS NOTHING ABOUT THE REGULATION. GOV.UK has not withdrawn, replaced or superseded PPN 002.'],
   ['/glossary/ppn-002',
    'The PPN 002 glossary entry. Removed 2026-08-30 by owner instruction: "you must remove the PPN002 page and add PPN026 must be there ... website must not have outdated details". 301 to /glossary/ppn-026, the entry for the edition of the Social Value Model that applies to central government procurements commenced on or after 1 January 2027. The rule can only fire because the page is genuinely gone from the build: a file on disk beats a redirect for the same path, so the deletion is what makes the 301 live rather than inert. THE DELETION IS EDITORIAL AND SAYS NOTHING ABOUT THE REGULATION. GOV.UK has not withdrawn, replaced or superseded PPN 002: it carries no withdrawal notice and still sits in the current Procurement Act 2023 collection. This is a decision about what this site publishes, and nothing here may be read as a claim about the status of the note.'],
   ['/tools/ppn-002-calculator',

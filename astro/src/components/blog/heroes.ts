@@ -60,7 +60,7 @@ export const HEROES: Record<string, Hero> = {
     file: 'writing-a-tender-response',
     alt: 'Close-up of two people at a desk working through a printed document with a pen',
   },
-  'ppn-002-social-value-guide': {
+  'ppn-026-social-value-guide': {
     file: 'social-value-in-the-community',
     alt: 'Volunteers in matching shirts handing out food and water at a community aid table',
   },

@@ -24,7 +24,7 @@
 export const RELATED_POSTS: Record<string, string[]> = {
   'find-first-public-sector-contract': [
     'procurement-act-2023-sme-guide',
-    'ppn-002-social-value-guide',
+    'ppn-026-social-value-guide',
     'regulatory-updates-2026',
     'method-statement-that-scores',
   ],
@@ -38,7 +38,7 @@ export const RELATED_POSTS: Record<string, string[]> = {
     'procurement-act-2023-sme-guide',
     'frameworks-and-dps-explained',
   ],
-  'ppn-002-social-value-guide': [
+  'ppn-026-social-value-guide': [
     'find-first-public-sector-contract',
     'regulatory-updates-2026',
     'social-value-portal-vs-crowmark',
@@ -51,25 +51,25 @@ export const RELATED_POSTS: Record<string, string[]> = {
   ],
   'procurement-act-2023-sme-guide': [
     'find-first-public-sector-contract',
-    'ppn-002-social-value-guide',
+    'ppn-026-social-value-guide',
     'regulatory-updates-2026',
     'frameworks-and-dps-explained',
   ],
   'regulatory-updates-2026': [
-    'ppn-002-social-value-guide',
+    'ppn-026-social-value-guide',
     'procurement-act-2023-sme-guide',
     'find-first-public-sector-contract',
     'frameworks-and-dps-explained',
   ],
   'social-value-portal-vs-crowmark': [
     'find-first-public-sector-contract',
-    'ppn-002-social-value-guide',
+    'ppn-026-social-value-guide',
     'procurement-act-2023-sme-guide',
     'private-sector-rfp-pqq-guide',
   ],
   'carbon-reduction-plan-ppn-0621-sme-guide': [
     'procurement-act-2023-sme-guide',
-    'ppn-002-social-value-guide',
+    'ppn-026-social-value-guide',
     'regulatory-updates-2026',
     'ai-tender-evaluation-uk-public-sector',
   ],

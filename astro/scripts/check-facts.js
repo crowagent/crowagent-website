@@ -220,17 +220,28 @@ const RULES = [
  * gate. Every entry must carry a reason a reader can check.
  */
 const ALLOW = [
-  {
-    rule: 'ppn002-act-date',
-    file: 'content/blog/private-sector-rfp-pqq-guide.md',
-    reason:
-      'Correct, and correct in a way no pattern can recognise: "The Procurement Act 2023, which ' +
-      'went live on 24 February 2025, and the Procurement Policy Notes issued under it, including ' +
-      'PPN 002". The date is attached to the ACT and the PPN is named as issued under it, which is ' +
-      'the true relationship. Not hedged automatically, because "under the Procurement Act 2023" ' +
-      'is also how the wrong sentence would most likely be written, and hedging on it would blind ' +
-      'the rule to the bug it exists to catch.',
-  },
+  /*
+   * EMPTY SINCE 2026-08-30, AND THAT IS THE RIGHT STATE RATHER THAN A GAP.
+   *
+   * The single entry exempted content/blog/private-sector-rfp-pqq-guide.md from
+   * ppn002-act-date, because that page wrote "The Procurement Act 2023, which
+   * went live on 24 February 2025, and the Procurement Policy Notes issued under
+   * it, including PPN 002" - the date attached to the ACT, the PPN named as
+   * issued under it, which is the true relationship and one no pattern can
+   * recognise. The sentence now names PPN 026, so the pattern no longer reaches
+   * it and the exception matched nothing. An exception is a place the gate has
+   * agreed not to look, so it is deleted the moment it stops being needed rather
+   * than left to print STALE forever.
+   *
+   * THE THREE PPN 002 RULES ARE DELIBERATELY KEPT. Measured on this build, none
+   * of them matches any published text any more: the site names PPN 026. They
+   * are not pointed at nothing, they are pointed at a REGRESSION - the three
+   * mistakes they encode (the Act's commencement date attached to the PPN, a 5%
+   * floor, a PPN 06/20 theme name presented as the current model's) are exactly
+   * what a future edit reintroducing the old edition would write, and every one
+   * of them has shipped on this site at least once. Softening or deleting a
+   * guard because the defect is currently absent is how it comes back.
+   */
 ];
 
 const EXT = new Set(['.astro', '.md', '.mdx', '.ts', '.tsx', '.js', '.json']);

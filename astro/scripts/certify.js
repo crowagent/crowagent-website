@@ -41,7 +41,7 @@ const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
    minutes, and these eight cover every layout the site has — homepage, pricing
    table, long prose, a form, a light reading pane, an index, a product page and
    a legal page. Stated so nobody reads "8 routes" as "all of them". */
-const SAMPLE = ['/', '/pricing/', '/about/', '/contact/', '/blog/ppn-002-social-value-guide/',
+const SAMPLE = ['/', '/pricing/', '/about/', '/contact/', '/blog/ppn-026-social-value-guide/',
   '/blog/', '/crowmark/', '/privacy/'];
 
 /* The one static server every browser gate uses. It also carries the no-build

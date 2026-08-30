@@ -18,7 +18,7 @@ faq:
   - question: >-
       How much does social value count in a bid?
     answer: >-
-      Under PPN 002, in-scope central government contracts must apply a minimum social value weighting of 10 percent of the total score. It is a scored section, not a box-ticking annex, so it can decide a close competition.
+      Under PPN 026, central government procurements at 1 million pounds inc VAT or above must apply a minimum social value weighting of 10 percent, rising to 20 percent at 5 million pounds inc VAT or above. It is a scored section, not a box-ticking annex, so it can decide a close competition.
   - question: >-
       Should I bid for every contract I can find?
     answer: >-
@@ -84,13 +84,13 @@ Before committing, score the opportunity honestly against a handful of questions
 
 If the honest answer to several of these is weak, walk away and put that effort into an opportunity you can win. A no-bid is not a failure. It is a decision that protects your team's time for the bids you are genuinely suited to.
 
-## Social value and PPN 002
+## Social value and PPN 026
 
-Almost every central government tender now includes a scored **social value** section, governed by **PPN 002**. For in-scope central government contracts, social value must carry a minimum weighting of **10 percent** of the total score. That is enough to decide a close competition, so it is not a section to leave until the last afternoon.
+Almost every central government tender now includes a scored **social value** section. Under **PPN 026**, which applies to central government procurements commenced on or after 1 January 2027 at 1 million pounds inc VAT or above, social value carries a minimum weighting of **10 percent**, rising to **20 percent** at 5 million pounds inc VAT or above. That is enough to decide a close competition, so it is not a section to leave until the last afternoon.
 
 Social value asks what wider benefit your delivery of the contract will bring: local employment and skills, support for smaller businesses in your supply chain, environmental improvements, and community wellbeing. Strong answers are specific and measurable. Rather than promising to "support the local community", commit to a defined number of apprenticeships, work-experience placements or volunteering hours tied to the contract, and describe how you will evidence delivery afterwards. Buyers mark commitments they can hold you to, not good intentions.
 
-For a full walk-through of scoring, the themes and the measurement framework, read our [complete PPN 026 social value guide](/blog/ppn-002-social-value-guide). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
+For a full walk-through of the weightings, the evidence a buyer expects and the measurement framework, read our [complete PPN 026 social value guide](/blog/ppn-026-social-value-guide). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
 
 ## Common first-timer mistakes
 
@@ -118,7 +118,7 @@ A Selection Questionnaire, or SQ, is a pass or fail pre-qualification stage that
 
 ### How much does social value count in a bid?
 
-Under PPN 002, in-scope central government contracts must apply a minimum social value weighting of 10 percent of the total score. It is a scored section, not a box-ticking annex, so it can decide a close competition.
+Under PPN 026, central government procurements at 1 million pounds inc VAT or above must apply a minimum social value weighting of 10 percent, rising to 20 percent at 5 million pounds inc VAT or above. It is a scored section, not a box-ticking annex, so it can decide a close competition.
 
 ### Should I bid for every contract I can find?
 

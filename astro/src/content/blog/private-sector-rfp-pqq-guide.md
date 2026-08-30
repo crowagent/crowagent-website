@@ -10,7 +10,7 @@ faq:
   - question: >-
       Do the same rules apply to private sector RFPs as public sector tenders?
     answer: >-
-      No. The Procurement Act 2023 and related policy notes such as PPN 002 apply to public contracting authorities, not to private companies buying goods or services. A private sector RFP is governed by whatever process the buying company chooses to run and the contract terms it sets, not by statutory procurement law.
+      No. The Procurement Act 2023 and related policy notes such as PPN 026 apply to public contracting authorities, not to private companies buying goods or services. A private sector RFP is governed by whatever process the buying company chooses to run and the contract terms it sets, not by statutory procurement law.
   - question: >-
       What is a PQQ in the private sector?
     answer: >-
@@ -35,7 +35,7 @@ None of this makes private sector bidding easier than public sector work. It is 
 
 ## How private sector procurement differs
 
-The single most important thing to understand about private sector procurement is what does not apply. The Procurement Act 2023, which went live on 24 February 2025, and the Procurement Policy Notes issued under it, including PPN 002 on social value, apply to public contracting authorities buying under UK public procurement law. A private company buying goods or services from a supplier is not a contracting authority in that sense, and its purchasing decisions are governed by ordinary contract law and whatever internal process it chooses to follow, not by the Act.
+The single most important thing to understand about private sector procurement is what does not apply. The Procurement Act 2023, which went live on 24 February 2025, and the Procurement Policy Notes issued under it, including PPN 026 on social value, apply to public contracting authorities buying under UK public procurement law. A private company buying goods or services from a supplier is not a contracting authority in that sense, and its purchasing decisions are governed by ordinary contract law and whatever internal process it chooses to follow, not by the Act.
 
 The practical consequences run in both directions. On one hand, there is no statutory minimum social value weighting, no mandatory transparency notices, and no Central Digital Platform equivalent, so you will not find a Find a Tender listing for most private sector opportunities. They are usually found through direct relationships, sector networks, referrals, or a company's own supplier portal. On the other hand, a private buyer has far more discretion. It can shortlist informally, negotiate terms after the RFP closes in ways a public buyer restricted by equal-treatment obligations cannot, change its requirement mid-process, or simply decide not to award at all. Understanding that the buyer is not bound by the same procedural fairness obligations changes how you should read every stage of the process.
 
@@ -83,7 +83,7 @@ If your organisation bids across both public and private work, the core writing 
 
 ### Do the same rules apply to private sector RFPs as public sector tenders?
 
-No. The Procurement Act 2023 and related policy notes such as PPN 002 apply to public contracting authorities, not to private companies buying goods or services. A private sector RFP is governed by whatever process the buying company chooses to run and the contract terms it sets, not by statutory procurement law.
+No. The Procurement Act 2023 and related policy notes such as PPN 026 apply to public contracting authorities, not to private companies buying goods or services. A private sector RFP is governed by whatever process the buying company chooses to run and the contract terms it sets, not by statutory procurement law.
 
 ### What is a PQQ in the private sector?
 

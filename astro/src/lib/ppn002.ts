@@ -1,6 +1,27 @@
 /**
  * ppn002.ts: the five PPN 002 government missions, and nothing else.
  *
+ * ── NOTHING IMPORTS THIS FILE ANY MORE, 2026-08-30. READ THIS FIRST. ────────
+ *
+ * pages/sources.astro was its one reader and it stopped printing the missions
+ * on 2026-08-30, when the last of the PPN 002 estate came off the site by owner
+ * instruction. So NOT ONE BYTE OF THIS FILE REACHES A BUILT PAGE, and MISSIONS
+ * is dead code by the only test that matters, the import graph.
+ *
+ * IT IS KEPT ON DISK ANYWAY, AND ONLY FOR WHAT IS WRITTEN BELOW IT. Three files
+ * cite this header BY NAME for the three binding accuracy rules it records:
+ * pages/sources.astro, lib/tender-matrix.ts and scripts/check-facts.js. Those
+ * rules are about arithmetic and about not asserting compliance, and they are
+ * binding on this codebase whether or not any page reads this array today.
+ * Deleting the file would blind three live citations to remove a module that
+ * publishes nothing, which is a trade in the wrong direction.
+ *
+ * SO DO NOT ADD A READER FOR `MISSIONS`. The five missions are the PREVIOUS
+ * edition's model structure. PPN 026 publishes its own and this site has not
+ * sourced it, so putting these five back on a page under the current edition's
+ * name would be stating a structure we cannot cite. That is precisely why the
+ * card came off /sources rather than being relabelled.
+ *
  * THAT IS ALL THIS FILE IS NOW, as of 2026-08-05 (A-101, owner: "delete and
  * remove all"). It used to hold the PPN 002 floor arithmetic as well. The owner
  * removed the calculator and its methodology page on 2026-08-04 ("remove PPN 002

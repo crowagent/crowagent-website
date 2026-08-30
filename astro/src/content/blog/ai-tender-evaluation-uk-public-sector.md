@@ -18,7 +18,7 @@ faq:
   - question: >-
       How can SME bidders structure responses for both automated and human evaluators?
     answer: >-
-      Bidders should align headings directly with tender specification questions, use clear evidence metrics rather than generic claims, mirror key regulatory terminology, ensure all mandatory annexes (such as PPN 002 or PPN 06/21) are attached, and run automated pre-submission compliance checks.
+      Bidders should align headings directly with tender specification questions, use clear evidence metrics rather than generic claims, mirror key regulatory terminology, ensure all mandatory annexes (such as PPN 026 or PPN 06/21) are attached, and run automated pre-submission compliance checks.
   - question: >-
       Will using AI to draft bids harm my tender score?
     answer: >-
@@ -76,7 +76,7 @@ Under MAT scoring within the Procurement Act 2023, buyers evaluate quality, deli
 
 ### How can SME bidders structure responses for both automated and human evaluators?
 
-Bidders should align headings directly with tender specification questions, use clear evidence metrics rather than generic claims, mirror key regulatory terminology, ensure all mandatory annexes (such as PPN 002 or PPN 06/21) are attached, and run automated pre-submission compliance checks.
+Bidders should align headings directly with tender specification questions, use clear evidence metrics rather than generic claims, mirror key regulatory terminology, ensure all mandatory annexes (such as PPN 026 or PPN 06/21) are attached, and run automated pre-submission compliance checks.
 
 ### Will using AI to draft bids harm my tender score?
 
