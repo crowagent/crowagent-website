@@ -172,9 +172,9 @@ const RESOURCES: NavMenu = {
           icon: 'arrow',
         },
         {
-          label: 'PPN 002 explained',
-          href: '/glossary/ppn-002',
-          description: 'The 10% minimum weighting, the five missions, the dates',
+          label: 'PPN 026 explained',
+          href: '/glossary/ppn-026',
+          description: 'The next edition of the Social Value Model, and the dates',
           accent: 'teal',
           icon: 'grid',
         },

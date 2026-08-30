@@ -10,13 +10,13 @@ termTagline: "Themes, Outcomes, Measures"
 heroDescription: "The standard UK structure for scoring social value in public sector procurement."
 definedTermDescription: "Themes, Outcomes and Measures, the standard UK scoring structure for measuring social value in public sector bids."
 sidebarKicker: "Related term"
-sidebarTitle: "PPN 002"
-sidebarBody: "The 10% minimum social value weighting, and the separate model central government scores against."
-sidebarHref: "/glossary/ppn-002"
-sidebarCta: "Read PPN 002 →"
+sidebarTitle: "PPN 026"
+sidebarBody: "The next edition of the Social Value Model, and the separate framework central government scores against."
+sidebarHref: "/glossary/ppn-026"
+sidebarCta: "Read PPN 026 →"
 productCardBody: "Maps your contract to the TOMs measures you are eligible for, and to the National TOMs proxy values behind them."
 readMoreHref: "/blog/ppn-002-social-value-guide"
-readMoreLabel: "PPN 002 social value guide"
+readMoreLabel: "Social value scoring guide"
 readMoreBody: "missions, TOMs measure selection, scoring methodology and worked examples."
 ctaHeading: "Structure your social value to the TOMs framework"
 ctaSub: "CrowMark maps your contract to the TOMs measures you are eligible for and scores them against National TOMs proxy values. A person reviews and approves the result."
@@ -48,7 +48,7 @@ ctaSub: "CrowMark maps your contract to the TOMs measures you are eligible for a
 <ul>
 <li><strong>Who publishes it:</strong> the Social Value Portal, with the Local Government Association and the National Social Value Taskforce. It is not a Cabinet Office instrument.</li>
 <li><strong>Proxy values:</strong> <strong>National TOMs 2023-24</strong> is a widely cited edition. Use the edition the buyer names.</li>
-<li><strong>Relationship to <a href="/glossary/ppn-002">PPN 002</a>:</strong> they are separate frameworks. PPN 002 publishes its own five missions, eight policy outcomes and standard reporting metrics, and does not mention TOMs or use monetary proxy values. TOMs is required by many buyers outside central government, particularly local authorities, NHS bodies and housing associations.</li>
+<li><strong>Relationship to the <a href="/glossary/ppn-026">Social Value Model</a>:</strong> they are separate frameworks. The central government model publishes its own missions, policy outcomes and standard reporting metrics, and does not mention TOMs or use monetary proxy values. TOMs is required by many buyers outside central government, particularly local authorities, NHS bodies and housing associations.</li>
 <li><strong>Evidence:</strong> each measure requires documented evidence (contracts, pay records, delivery reports) retained for audit.</li>
 <li><strong>Scoring:</strong> measure quantity &times; National TOMs proxy &rarr; monetary social value. Where a buyer applies PPN 002, the 10% minimum is a weighting of the evaluation score and is not derived from a monetised TOMs total.</li>
 <li><strong>Buyer discretion:</strong> buyers choose which TOMs measures to score. Under PPN 002 they cannot reduce the 10% weighting, only add to it.</li>

@@ -1,19 +1,23 @@
 ---
-title: "PPN 002: The Complete Guide to Social Value Scoring for UK Bids"
-seoTitle: "PPN 002 social value scoring for UK bidders"
-description: "PPN 002 social value scoring for UK bids: the five missions, the eight policy outcomes, the 10% minimum weighting, evidence requirements and common pitfalls."
+title: "Social Value Scoring for UK Bids: The Complete Guide to PPN 026"
+seoTitle: "PPN 026 social value scoring for UK bidders"
+description: "Social value scoring for UK bids under PPN 026, the edition of the Social Value Model that applies to central government procurements commencing from 1 January 2027, with the evidence requirements and the pitfalls."
 publishDate: 2026-04-01
-updatedDate: 2026-08-02
-category: "PPN 002"
+updatedDate: 2026-08-30
+category: "Social value"
 readingTime: 15
 draft: false
 ---
 
-Procurement Policy Note 002 (PPN 002) is the UK government rule that requires public sector buyers to score social value as at least 10% of the award decision on central government contracts. In plain terms: when you bid for public work, some of your marks now depend on the wider economic, social, and environmental benefit you will deliver alongside the contract itself, not just your price and technical quality. PPN 002 was published on 13 February 2025 and is mandatory for procurements commenced under the Procurement Act 2023 on or after 1 October 2025, continuing and updating the framework first set by Procurement Policy Note 06/20 in 2020. It binds central government departments, their executive agencies, and non-departmental public bodies, and the same approach is increasingly applied to work let by local authorities, NHS trusts, housing associations, and other public bodies that have adopted the standard voluntarily.
+**Procurement Policy Note 026 (PPN 026) is the current edition of the UK government Social Value Model.** It was published on GOV.UK on 5 August 2026 and applies to central government procurements commenced on or after **1 January 2027**, at **1 million pounds inc VAT or above**. If you are writing a proposal now, this is very probably the edition your bid will be scored against, because the date that decides it is when the procurement was commenced, not when you wrote the answer.
 
-For SMEs bidding on public sector work, understanding PPN 002 is no longer optional. It is a scored section of the bid, worth at least a tenth of the total marks. If your response does not address social value in a structured, evidenced way, you give away marks a better-prepared competitor will take. This guide explains what PPN 002 requires, how the scoring works in practice, which sectors are affected, what evidence you need, the pitfalls to avoid, and how to maximise your social value score using the right tools and frameworks.
+In plain terms: when you bid for public work, some of your marks depend on the wider economic, social and environmental benefit you will deliver alongside the contract itself, not just your price and technical quality. Social value is a scored section of the bid, and a response that does not address it in a structured, evidenced way gives away marks a better-prepared competitor will take.
 
-## 1. What is PPN 002?
+**A note on what this guide currently contains.** The sections below set out the Social Value Model as published in the previous edition: its five missions, its eight policy outcomes, and the 10% minimum weighting. Those remain the rules for central government procurements commenced before 1 January 2027, and the working method they describe, choosing measurable commitments and evidencing them in the units the buyer counts in, is the part that carries across editions. We have deliberately not restated that structure under the PPN 026 name, because doing so would mean assuming the new edition keeps it. When the published detail of PPN 026 can each be cited, this guide will be rewritten against it. Until then, read the model sections as the previous edition's and take the dates above as what governs your bid.
+
+The rest of this guide explains how the scoring works in practice, which sectors are affected, what evidence you need, the pitfalls to avoid, and how to build a social value response worth marking.
+
+## 1. The Social Value Model, and which edition applies
 
 Procurement Policy Note 06/20, published in September 2020 and effective from January 2021, first introduced the Social Value Model for central government procurement. This requirement has been updated by PPN 002 (published on 13 February 2025 and mandatory for procurements commenced under the Procurement Act 2023 on or after 1 October 2025), which aligns social value scoring with the Procurement Act 2023. It maintains the requirement for all central government departments and their executive agencies to evaluate social value as a scored criterion at the contract award stage, with a mandatory minimum weighting of 10% of the total award score.
 
@@ -21,9 +25,11 @@ PPN 002 does not define its scope by a contract value threshold. It applies to p
 
 The policy does not prescribe a single scoring formula. What it publishes is the PPN 002 Social Value Model, a menu built in layers: five government missions at the top, eight policy outcomes beneath them, model award criteria beneath each outcome, and standard reporting metrics beneath those. The buyer selects an outcome relevant to the subject matter of the contract and shapes its question from that outcome's criteria. Bidders must then show that what they are offering is additional to the core contract requirements, and evidence it in the units the reporting metrics use.
 
-PPN 002 is the current governing document, succeeding the foundational PPN 06/20. While PPN 06/20 established the 10% weighting and the Social Value Model, PPN 002 ensures these requirements are applied consistently under the modernised procurement rules of the 2023 Act. In-scope organisations must apply PPN 002 to procurements commenced under the Procurement Act 2023 on or after 1 October 2025. For procurements commenced under the Act before that date, they could apply PPN 002 or continue with PPN 06/20 during the transition period. A PPN is Cabinet Office policy rather than statute, so what binds you on any given tender is the requirement the buyer publishes in its own documents.
+**PPN 026 is the current edition**, published on 5 August 2026 and applying to central government procurements commenced on or after 1 January 2027 at 1 million pounds inc VAT or above. The previous edition governs procurements commenced before that date, and a procurement does not change edition part way through, so a supplier bidding across the turn of the year can be answering two editions in the same month.
 
-## 2. The five PPN 002 missions
+A PPN is Cabinet Office policy rather than statute, so what binds you on any given tender is the requirement the buyer publishes in its own documents. Where the invitation to tender names the model and the weighting, that statement governs the bid in front of you. Check it per tender rather than per calendar, and treat the edition dates as the starting question rather than the final answer.
+
+## 2. The five missions of the previous edition
 
 PPN 002 is built on the five government missions, and places eight policy outcomes beneath them. The missions are the policy framing. The outcomes are what a buyer actually scores. Beneath each outcome sit model award criteria, and beneath those sit standard reporting metrics, which fix the unit a commitment gets counted in: a number of people, a number of hours, litres, tonnes, square metres, or pounds of direct spend.
 

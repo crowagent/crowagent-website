@@ -83,7 +83,7 @@ It is also worth noting that the two platforms are not mutually exclusive. Some 
 
 ## The bigger picture: social value is not optional
 
-Regardless of which platform you choose, the underlying message is the same: social value is now a mandatory component of UK public sector procurement. PPN 002 requires a minimum 10% weighting, and many contracting authorities apply a higher weighting in practice. Suppliers who do not have a credible, evidence-backed social value strategy are leaving points on the table in every bid.
+Regardless of which platform you choose, the underlying message is the same: social value is now a mandatory component of UK public sector procurement. PPN 026 requires a minimum 10% weighting, and many contracting authorities apply a higher weighting in practice. Suppliers who do not have a credible, evidence-backed social value strategy are leaving points on the table in every bid.
 
 The cost of a weak social value response is not confined to one bid. The same section comes up on every public sector tender you enter, so a habit of leaving it until the last afternoon compounds across a year of bidding. Where two bids are close on quality and price, the social value marks are what separate them.
 
@@ -91,7 +91,7 @@ Whether you use SVP, CrowMark, or another approach entirely, the important thing
 
 ---
 
-### Build your PPN 002 social value plan in one sitting
+### Build your PPN 026 social value plan in one sitting
 
 Contract profiling, TOMs measure selection, AI narrative drafting, and evidence tracking. Starter is £49 a month for 1 user, Pro £149 for 5. Access is offered by request, so book a demo. Starting access needs a card, held securely by Stripe and never stored by us.
 

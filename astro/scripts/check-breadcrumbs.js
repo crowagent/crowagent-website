@@ -141,24 +141,17 @@ const ALLOW = [];
  */
 const NO_VISIBLE_TRAIL = [
   {
-    route: '/glossary/ppn-002/',
+    route: '/glossary/ppn-026/',
     reason:
       'layouts/Glossary.astro draws an explicit "Back to glossary" link in the hero, above the ' +
       'title, which is the whole of what a two-link trail would say. Two upward links side by ' +
-      'side is the duplication this gate exists to stop, not an improvement on one.',
+      'side is the duplication this gate exists to stop, not an improvement on one. Every page ' +
+      'built on that layout lands here by construction, so a new glossary term reddens this ' +
+      'gate on arrival and belongs in this list with the route that created it.',
   },
   {
     route: '/glossary/toms-framework/',
     reason: 'Same layout, same "Back to glossary" link. See the entry above.',
-  },
-  {
-    route: '/glossary/ppn-026/',
-    reason:
-      'Same layout, same "Back to glossary" link. See the PPN 002 entry above. Added with the ' +
-      'route itself on 2026-08-30 rather than afterwards: every page built on Glossary.astro ' +
-      'lands here by construction, so a new glossary term reddens this gate on arrival, and a ' +
-      'trail added to satisfy it would put a second upward link beside the one the layout ' +
-      'already draws, which is the exact duplication the three entries above refuse.',
   },
   {
     route: '/tools/tender-compliance-matrix/',

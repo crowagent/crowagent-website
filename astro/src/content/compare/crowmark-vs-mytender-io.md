@@ -2,7 +2,7 @@
 title: "CrowMark vs mytender.io: an honest UK bid software comparison"
 description: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
 ogDescription: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
-articleDescription: "CrowMark publishes pricing from £49/month and adds figure-grounding and PPN 002 maths. mytender.io is a UK AI tender-writing platform that does not publish a price. A sourced, balanced comparison."
+articleDescription: "CrowMark publishes pricing from £49/month and adds figure-grounding and social value maths. mytender.io is a UK AI tender-writing platform that does not publish a price. A sourced, balanced comparison."
 publishDate: 2026-07-26
 updatedDate: 2026-07-26
 competitor: "mytender.io"
@@ -27,9 +27,9 @@ faq:
   - question: "Can either tool stop the AI inventing figures?"
     answer: "CrowMark uses a deterministic figure-grounding gate: every £ and % in a draft must exist in an allowed-figure set computed from your own data, or the draft is rejected. We cannot verify an equivalent guarantee in mytender.io's public materials."
   - question: "Which suits an SME doing a few public-sector bids?"
-    answer: "CrowMark, because of its published pricing from £49 per month, its deterministic PPN 002 social value maths and its post-award delivery evidence. mytender.io positions itself for UK SMEs producing ten or more bids a year."
+    answer: "CrowMark, because of its published pricing from £49 per month, its deterministic social value maths and its post-award delivery evidence. mytender.io positions itself for UK SMEs producing ten or more bids a year."
   - question: "Can I use both CrowMark and mytender.io?"
-    answer: "Yes. The two are not mutually exclusive. A team could draft in one platform and use CrowMark for UK tender discovery, PPN 002 social value scoring and post-award delivery evidence."
+    answer: "Yes. The two are not mutually exclusive. A team could draft in one platform and use CrowMark for UK tender discovery, PPN 026 social value scoring and post-award delivery evidence."
 ---
 
 <p class="cmp-lead"><strong>CrowMark is a UK bid and tender management suite priced from &pound;49 per month. mytender.io is a UK AI tender-writing platform, built at the University of Southampton, that does not publish a price.</strong> Both are aimed at bid data that cannot go through general public AI tools. This page compares them feature by feature, states CrowMark's prices, marks anything mytender.io does not publish as Not published, and dates every source.</p>
@@ -48,7 +48,7 @@ faq:
 <tr><th scope="row">Drafting grounded in your own past bids</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Yes, retrieval over your content library</td></tr>
 <tr><th scope="row">Figure-grounding (AI blocked from inventing a number)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic gate</td><td>Not stated publicly</td></tr>
 <tr><th scope="row">PPN 017 AI-use disclosure on every draft</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated publicly</td></tr>
-<tr><th scope="row">PPN 002 social value calculation (10% floor)</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic</td><td>Not a dedicated calculator</td></tr>
+<tr><th scope="row">Social value calculation, deterministic</th><td class="cmp-us"><span class="cmp-yes">Yes</span>, deterministic</td><td>Not a dedicated calculator</td></tr>
 <tr><th scope="row">Post-award delivery evidence (Procurement Act 2023 s.52 / s.71)</th><td class="cmp-us"><span class="cmp-yes">Yes</span></td><td>Not stated</td></tr>
 <tr><th scope="row">Private-cloud (VPC) deployment</th><td>Standard cloud, EU data residency</td><td><span class="cmp-yes">Yes</span>, Virtual Private Cloud</td></tr>
 <tr><th scope="row">Content-tool integrations (SharePoint, Salesforce, Google Drive)</th><td>Focus is tender sources and exports</td><td><span class="cmp-yes">Yes</span></td></tr>
@@ -65,7 +65,7 @@ faq:
 <p>mytender.io does not publish a price. It points prospects to a demo or the in-app dashboard and offers a one-month refundable period after commencement. On this page we therefore mark its price as Not published.</p>
 
 <h2 id="what-is-crowmark">What is CrowMark?</h2>
-<p>CrowMark is CrowAgent's UK bid and tender management suite, in daily use on real bids. It tracks Contracts Finder and Find a Tender, drafts answers grounded in the supplier's own submitted bids, and calculates PPN 002 social value in code. Its defining rule is figure-grounding: before a draft is shown, every &pound; and % in the prose is checked against a set of allowed figures computed from your own data, and if a number is not in that set the draft is rejected. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a person to approve it.</p>
+<p>CrowMark is CrowAgent's UK bid and tender management suite, in daily use on real bids. It tracks Contracts Finder and Find a Tender, drafts answers grounded in the supplier's own submitted bids, and calculates social value in code. Its defining rule is figure-grounding: before a draft is shown, every &pound; and % in the prose is checked against a set of allowed figures computed from your own data, and if a number is not in that set the draft is rejected. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a person to approve it.</p>
 <figure class="cmp-shot">
 <picture>
 <source type="image/avif" srcset="/Assets/shots/figma-v2/buy-1-requirement-builder-light.avif?v=20260805a">
@@ -97,13 +97,13 @@ faq:
 <li>You want published pricing from &pound;49 per month, stated before any call.</li>
 <li>You need Contracts Finder and Find a Tender discovery refreshed daily.</li>
 <li>You want the AI blocked from inventing a figure, with a PPN 017 disclosure on every draft.</li>
-<li>You need deterministic PPN 002 social value maths and post-award delivery evidence.</li>
+<li>You need deterministic social value maths and post-award delivery evidence.</li>
 </ul>
 </div>
 </div>
 
 <h2 id="where-crowmark-loses">Where CrowMark loses honestly</h2>
-<p>mytender.io leads on two things CrowMark does not push today: a Virtual Private Cloud deployment model, which some security teams insist on, and native integrations with SharePoint, Salesforce and Google Drive for teams that manage their proposal content there. It is also further along on general drafting-workspace collaboration. CrowMark's focus is narrower and different: UK public-sector tender discovery, grounded answers with a hard figure-grounding gate, deterministic PPN 002 maths, and post-award delivery evidence under the Procurement Act 2023. The honest read is that they overlap on drafting but diverge on everything either side of it, and a team could reasonably run both.</p>
+<p>mytender.io leads on two things CrowMark does not push today: a Virtual Private Cloud deployment model, which some security teams insist on, and native integrations with SharePoint, Salesforce and Google Drive for teams that manage their proposal content there. It is also further along on general drafting-workspace collaboration. CrowMark's focus is narrower and different: UK public-sector tender discovery, grounded answers with a hard figure-grounding gate, deterministic social value maths, and post-award delivery evidence under the Procurement Act 2023. The honest read is that they overlap on drafting but diverge on everything either side of it, and a team could reasonably run both.</p>
 
 <h2 id="faq">Frequently asked questions</h2>
 <div class="cfaq">
@@ -133,11 +133,11 @@ faq:
   </details>
   <details>
     <summary><h3>Which suits an SME doing a few public-sector bids?</h3></summary>
-    <div class="cfaq-a"><p>CrowMark, because of its published pricing from &pound;49 per month, its deterministic PPN 002 social value maths and its post-award delivery evidence. mytender.io positions itself for UK SMEs producing ten or more bids a year.</p></div>
+    <div class="cfaq-a"><p>CrowMark, because of its published pricing from &pound;49 per month, its deterministic social value maths and its post-award delivery evidence. mytender.io positions itself for UK SMEs producing ten or more bids a year.</p></div>
   </details>
   <details>
     <summary><h3>Can I use both CrowMark and mytender.io?</h3></summary>
-    <div class="cfaq-a"><p>Yes. The two are not mutually exclusive. A team could draft in one platform and use CrowMark for UK tender discovery, PPN 002 social value scoring and post-award delivery evidence.</p></div>
+    <div class="cfaq-a"><p>Yes. The two are not mutually exclusive. A team could draft in one platform and use CrowMark for UK tender discovery, PPN 026 social value scoring and post-award delivery evidence.</p></div>
   </details>
 </div>
 

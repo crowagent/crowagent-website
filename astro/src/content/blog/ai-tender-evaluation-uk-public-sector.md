@@ -31,7 +31,7 @@ faq:
 
 As public procurement transitions under the **Procurement Act 2023** (which went live on **24 February 2025**), contracting authorities across England, Wales and Northern Ireland are handling higher volumes of statutory notices, compliance declarations and bid submissions. Some contracting authorities have introduced automated verification tools to help evaluation teams with that volume. How widely, and how far beyond simple document checks, is not something anyone publishes, so treat the sections below as a description of how automated screening works where it is used rather than as a claim about every buyer you will meet.
 
-For SME bidders, this shift fundamentally changes how your proposal is initially processed. Before a human evaluator reads your method statement, automated systems extract data, check mandatory compliance criteria (such as PPN 002 social value missions and PPN 06/21 carbon plans), and cross-reference evidence against tender requirements. Understanding how automated screening works allows bid teams to structure responses so they pass initial filters with full marks.
+For SME bidders, this shift fundamentally changes how your proposal is initially processed. Before a human evaluator reads your method statement, automated systems extract data, check mandatory compliance criteria (such as PPN 026 social value missions and PPN 06/21 carbon plans), and cross-reference evidence against tender requirements. Understanding how automated screening works allows bid teams to structure responses so they pass initial filters with full marks.
 
 ## How public sector buyers use automated screening
 
@@ -55,7 +55,7 @@ To ensure your proposal scores maximum points with both automated filters and hu
 
 - **Mirror Question Headings Exactly**: Use the exact phrasing and sub-heading numbers provided in the tender specification. This allows parsing tools to instantly map your text to the correct scoring rubric.
 - **Lead with Quantified Metrics**: State explicit figures early in each paragraph (for example, "Our team delivered 99.8% service uptime across 14 local authority contracts"). Automated tools easily index structured data.
-- **Reference Statutory Standards Explicitly**: Clearly name relevant regulations and standards, such as PPN 002 social value missions, ISO 27001 or Cyber Essentials Plus, rather than using generic descriptions like "industry best practice".
+- **Reference Statutory Standards Explicitly**: Clearly name relevant regulations and standards, such as PPN 026 social value missions, ISO 27001 or Cyber Essentials Plus, rather than using generic descriptions like "industry best practice".
 - **Provide Clear Evidence Tables**: Summarise key qualifications, staff credentials and contract references in structured tables. Tables are easily extracted during initial compliance reviews.
 
 ## Pitfalls of unevidenced AI content in tender drafting

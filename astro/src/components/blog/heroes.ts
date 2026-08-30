@@ -155,7 +155,7 @@ export function heroFor(slug: string): Hero {
 export type CategoryAccent = 'teal' | 'violet' | 'pink';
 
 const CATEGORY_ACCENTS: Record<string, CategoryAccent> = {
-  'PPN 002': 'teal',
+  'Social value': 'teal',
   'Method statements': 'teal',
   'Procurement Act 2023': 'teal',
   'Sustainability & Compliance': 'teal',
@@ -163,7 +163,7 @@ const CATEGORY_ACCENTS: Record<string, CategoryAccent> = {
   Frameworks: 'violet',
   'Getting started': 'violet',
   'Private sector bidding': 'pink',
-  'PPN 002 & Social Value': 'pink',
+  'PPN 026 & Social Value': 'pink',
 };
 
 /** Anything unmapped stays muted rather than picking a hue at random. */

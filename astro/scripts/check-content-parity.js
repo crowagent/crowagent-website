@@ -157,7 +157,32 @@ const UPDATE = process.argv.includes('--update');
  * — refresh the baseline and let the diff carry the argument. An entry is for
  * when a loss must be tolerated across several builds.
  */
-const ALLOWED_LOSSES = new Map([]);
+const ALLOWED_LOSSES = new Map([
+  /*
+   * A-196, 2026-08-30. The PPN 002 glossary entry was deleted by owner
+   * instruction and every link to it was repointed at /glossary/ppn-026 in the
+   * same change, so 44 routes lose the same one link. ONE WILDCARD LINE RATHER
+   * THAN 44, because the `*` key exists for exactly this: a single signal that
+   * left every page at once for a single reason. Forty-four identical entries
+   * would be longer without being truer, and a reviewer would skim them.
+   *
+   * IT IS SAFE TO WILDCARD ONLY BECAUSE THE ROUTE IS ASSERTED ELSEWHERE. The
+   * retirement itself is checked in the affirmative, every run, by the
+   * RETIRED_ROUTES entry below: the page must not ship, and a rule in
+   * _redirects must still carry it. This line permits the missing LINKS. It
+   * does not permit the missing PAGE, and nothing here would stay quiet if the
+   * redirect were dropped.
+   */
+  ['*  link: /glossary/ppn-002',
+   'The PPN 002 glossary entry was deleted 2026-08-30 by owner instruction and every internal link to it was repointed at /glossary/ppn-026 in the same change. The reader loses nothing: the destination is the entry for the edition that applies to central government procurements commenced on or after 1 January 2027, and the old URL 301s there for anyone holding it. Removing our page is an editorial decision about this site and not a statement about the regulation: GOV.UK has not withdrawn, replaced or superseded PPN 002.'],
+
+  /* The same change renamed two headings that named the retired edition in a
+     title. The sections are still there and still say what they said. */
+  ['/resources/  heading: ppn 002 social value: how the 10% weighting works',
+   'Renamed to "PPN 026 Social Value: How the Model Is Scored" in the A-196 sweep. The card and its link are unchanged, and the 10% weighting is not restated under the new edition because that edition\'s weighting is not sourced.'],
+  ['/roadmap/  heading: ppn 002 social value (mandatory from 1 october 2025)',
+   'Renamed to "PPN 026 Social Value (applies from 1 January 2027)" in the A-196 sweep. The regulatory clock row now carries the current edition with its published date and its application date.'],
+]);
 
 /*
  * ROUTES THAT WERE PUBLISHED AND ARE NOW GONE ON PURPOSE.
@@ -202,10 +227,12 @@ const ALLOWED_LOSSES = new Map([]);
  * had, whereas /tools is a hub and would have read as a soft 404.
  */
 const RETIRED_ROUTES = new Map([
+  ['/glossary/ppn-002',
+   'The PPN 002 glossary entry. Removed 2026-08-30 by owner instruction: "you must remove the PPN002 page and add PPN026 must be there ... website must not have outdated details". 301 to /glossary/ppn-026, the entry for the edition of the Social Value Model that applies to central government procurements commenced on or after 1 January 2027. The rule can only fire because the page is genuinely gone from the build: a file on disk beats a redirect for the same path, so the deletion is what makes the 301 live rather than inert. THE DELETION IS EDITORIAL AND SAYS NOTHING ABOUT THE REGULATION. GOV.UK has not withdrawn, replaced or superseded PPN 002: it carries no withdrawal notice and still sits in the current Procurement Act 2023 collection. This is a decision about what this site publishes, and nothing here may be read as a claim about the status of the note.'],
   ['/tools/ppn-002-calculator',
-   'The free PPN 002 social value calculator. Removed 2026-08-04 by owner instruction, on the ground that it was not giving any value: it did arithmetic a bidder could do unaided, against a floor that is a single constant. 301 to /glossary/ppn-002, which states that floor with its publication and mandatory dates. The remaining free tool, the Tender Compliance Matrix, is one click on from there via that entry\'s "Related tool" sidebar, which was repointed at it in the same change.'],
+   'The free social value calculator. Removed 2026-08-04 by owner instruction, on the ground that it was not giving any value: it did arithmetic a bidder could do unaided, against a floor that is a single constant. Its 301 pointed at /glossary/ppn-002 until 2026-08-30 and now points at /glossary/ppn-026 directly, retargeted rather than left to chain through a page that no longer exists. The remaining free tool, the Tender Compliance Matrix, is one click on from there.'],
   ['/tools/ppn-002-calculator/methodology',
-   'The calculator methodology page, retired with the calculator it documented. 301 to /glossary/ppn-002. Worth recording that this page was the site\'s longest-running accuracy defect: it described monetary proxy values, an Oxford Social Value Bank framework that does not exist, and Green Book discounting of forward-year cashflows, none of which the engine implemented — OA-17, which blocked the port, and the stale-baseline false finding that argued for capturing a fingerprint with every baseline. The glossary entry it now points at states the opposite and states it correctly: PPN 002 reports in counts, hours, litres, tonnes, square metres and pounds of direct spend, and does not use monetary proxy values at all.'],
+   'The calculator methodology page, retired with the calculator it documented. 301 to /glossary/ppn-026 since 2026-08-30, retargeted from /glossary/ppn-002 when that page was deleted. Worth recording that this page was the site\'s longest-running accuracy defect: it described monetary proxy values, an Oxford Social Value Bank framework that does not exist, and Green Book discounting of forward-year cashflows, none of which the engine implemented — OA-17, which blocked the port, and the stale-baseline false finding that argued for capturing a fingerprint with every baseline. The claim it made was corrected before that page was retired, and is recorded here because the defect is worth keeping on file: the Social Value Model reports in counts, hours, litres, tonnes, square metres and pounds of direct spend, and does not use monetary proxy values at all.'],
 ]);
 
 /* ------------------------------------------------------------------ */

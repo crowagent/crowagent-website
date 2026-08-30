@@ -57,7 +57,7 @@ export const PHASES: Phase[] = [
     items: [
       {
         title: 'CrowMark for Suppliers',
-        body: 'Contracts Finder and Find a Tender refreshed daily, tender document ingestion, answer drafting grounded in your own submitted bids, deterministic PPN 002 social-value calculation, post-award delivery evidence, and Procurement Act 2023 s.52 and s.71 KPI checks.',
+        body: 'Contracts Finder and Find a Tender refreshed daily, tender document ingestion, answer drafting grounded in your own submitted bids, deterministic social-value calculation, post-award delivery evidence, and Procurement Act 2023 s.52 and s.71 KPI checks.',
         href: '/crowmark',
       },
       {
@@ -79,7 +79,7 @@ export const PHASES: Phase[] = [
       },
       {
         title: 'Deeper grounded auto-fill (public sector)',
-        body: "Extending CrowMark's grounded AI drafting so it can read more of your uploaded evidence and propose PPN 002 narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. The model proposes, you decide.",
+        body: "Extending CrowMark's grounded AI drafting so it can read more of your uploaded evidence and propose social value narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. The model proposes, you decide.",
       },
     ],
   },
@@ -96,11 +96,11 @@ export const PHASES: Phase[] = [
     items: [
       {
         title: 'Regulatory Monitor (public sector)',
-        body: 'A live UK public procurement regulatory change feed. Material updates to PPN 002 and the Procurement Act 2023 flow straight into the CrowMark dashboard, so you act, not just read.',
+        body: 'A live UK public procurement regulatory change feed. Material updates to PPN 026 and the Procurement Act 2023 flow straight into the CrowMark dashboard, so you act, not just read.',
       },
       {
         title: 'Tender reasoning copilot (public sector)',
-        body: 'One statute-grounded assistant that reasons across PPN 002 and the Procurement Act 2023 at once, answering bid questions and citing the named regulation behind every line. Retrieval-grounded against the source law, never free-styling the legislation.',
+        body: 'One statute-grounded assistant that reasons across PPN 026 and the Procurement Act 2023 at once, answering bid questions and citing the named regulation behind every line. Retrieval-grounded against the source law, never free-styling the legislation.',
       },
     ],
   },
@@ -146,7 +146,7 @@ export const PHASES: Phase[] = [
 export const AI_LIVE: { heading: string; body: string; link?: { label: string; href: string } }[] = [
   {
     heading: 'Deterministic engine, then narrative',
-    body: 'The numbers come from code, not a model. PPN 002 social-value scoring and Procurement Act 2023 s.52 and s.71 KPI checks are computed deterministically. The language model is the last step: it turns that computed result into a readable narrative or report draft. It never invents the figure.',
+    body: 'The numbers come from code, not a model. Social-value scoring and Procurement Act 2023 s.52 and s.71 KPI checks are computed deterministically. The language model is the last step: it turns that computed result into a readable narrative or report draft. It never invents the figure.',
   },
   {
     heading: 'Two models, two jobs',
@@ -155,7 +155,7 @@ export const AI_LIVE: { heading: string; body: string; link?: { label: string; h
   },
   {
     heading: 'Grounded in the source law',
-    body: 'CrowMark reads the actual regulation it serves: PPN 002, published 13 February 2025 and mandatory from 1 October 2025, for social value, and the Procurement Act 2023 sections 52 and 71 for delivery KPIs. Outputs cite the named instrument so the claim is auditable rather than asserted.',
+    body: 'CrowMark reads the actual regulation it serves: PPN 026, the next edition of the Social Value Model, published 5 August 2026 and applying to central government procurements commenced on or after 1 January 2027 at 1 million pounds inc VAT or above, and the Procurement Act 2023 sections 52 and 71 for delivery KPIs. Outputs cite the named instrument so the claim is auditable rather than asserted.',
   },
   {
     heading: 'A human signs every output',
@@ -168,17 +168,17 @@ export const AI_NEXT: { status: PhaseStatus; heading: string; body: string }[] =
   {
     status: 'progress',
     heading: 'Deeper grounded auto-fill (public sector)',
-    body: 'CrowMark already drafts grounded bid answers from your own submitted bids. We are extending that pattern so it reads more of your uploaded evidence and proposes PPN 002 narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. Indicative timing Q3 2026, subject to change.',
+    body: 'CrowMark already drafts grounded bid answers from your own submitted bids. We are extending that pattern so it reads more of your uploaded evidence and proposes social value narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. Indicative timing Q3 2026, subject to change.',
   },
   {
     status: 'research',
     heading: 'Tender reasoning copilot (public sector)',
-    body: 'Early research, not committed engineering. One assistant that reasons across PPN 002 and the Procurement Act 2023 at once, answering bid questions and citing the named regulation behind every line. It would be retrieval-grounded against the source law, never free-styling the legislation.',
+    body: 'Early research, not committed engineering. One assistant that reasons across PPN 026 and the Procurement Act 2023 at once, answering bid questions and citing the named regulation behind every line. It would be retrieval-grounded against the source law, never free-styling the legislation.',
   },
   {
     status: 'research',
     heading: 'Regulatory monitor feed (public sector)',
-    body: 'A live UK public procurement regulatory change feed so material updates to PPN 002 and the Procurement Act 2023 surface in the CrowMark dashboard, with the model summarising what changed and what it means for your existing work. Research stage only.',
+    body: 'A live UK public procurement regulatory change feed so material updates to PPN 026 and the Procurement Act 2023 surface in the CrowMark dashboard, with the model summarising what changed and what it means for your existing work. Research stage only.',
   },
 ];
 
@@ -187,12 +187,12 @@ export const METHOD: { n: string; heading: string; body: string }[] = [
   {
     n: '01',
     heading: 'Regulatory deadlines',
-    body: 'A statutory instrument with a date attached (PPN 002 mandatory from 1 October 2025, Procurement Act 2023 commencement) earns a slot before anything else.',
+    body: 'A statutory instrument with a date attached (PPN 026 applying from 1 January 2027, Procurement Act 2023 commencement) earns a slot before anything else.',
   },
   {
     n: '02',
     heading: 'Demand-led',
-    body: 'When the same need comes up repeatedly from the teams we talk to, it moves up the plan. We prioritised post-award delivery evidence because Procurement Act 2023 KPI checks were the most-requested capability adjacent to our PPN 002 work.',
+    body: 'When the same need comes up repeatedly from the teams we talk to, it moves up the plan. We prioritised post-award delivery evidence because Procurement Act 2023 KPI checks were the most-requested capability adjacent to our social value work.',
   },
   {
     n: '03',

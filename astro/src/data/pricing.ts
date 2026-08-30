@@ -120,7 +120,7 @@ export const PLANS: Plan[] = [
     seats: 1,
     credits: 200,
     body:
-      '1 user and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic PPN 002 calculation, and branded PDF or DOCX export.',
+      '1 user and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic social value calculation, and branded PDF or DOCX export.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
   },
@@ -276,7 +276,7 @@ export const COMPARE_LEAD: CompareRow[] = [
     cells: [true, true, true],
   },
   { feature: 'Grounded AI drafting with PPN 017 disclosure', cells: [true, true, true] },
-  { feature: 'Deterministic PPN 002 calculation', cells: [true, true, true] },
+  { feature: 'Deterministic social value calculation', cells: [true, true, true] },
 ];
 
 /*

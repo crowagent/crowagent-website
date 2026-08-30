@@ -75,7 +75,7 @@ export const KEY_FACTS = [
   {
     term: 'The statute',
     detail:
-      'Advisory checks against the Procurement Act 2023 (sections 52 and 71) and PPN 002 social value, with its mandatory 10% minimum weighting. Advisory, never blocking, and not legal advice.',
+      'Advisory checks against the Procurement Act 2023 (sections 52 and 71) and PPN 026 social value. Advisory, never blocking, and not legal advice.',
   },
 ];
 
@@ -138,8 +138,8 @@ export const CAPABILITIES: Card[] = [
     body: "Retrieval runs across three citation buckets: the regulatory corpus, the tender's own clauses, and your organisation's answer library, which is a fallback the response flags when it is used. Win themes enter every answer, the first draft is critiqued and revised against the tender's criteria, and the figure-grounding gate rejects any draft containing a number your data does not support.",
   },
   {
-    heading: 'Deterministic PPN 002 maths',
-    body: 'Social value is calculated in code with unit-aware arithmetic against the 2025 PPN 002 model: five missions, M1 to M5, and eight policy outcomes. Measures are TOMs-aligned. The 10% minimum weighting is applied, never guessed, and it is a weighting, not a score.',
+    heading: 'Deterministic social value maths',
+    body: 'Social value is calculated in code with unit-aware arithmetic over a curated catalogue of TOMs-aligned measures. The weighting the buyer published is applied, never guessed, and it is a weighting, not a score.',
   },
   {
     heading: 'Tender document ingestion',
@@ -180,7 +180,7 @@ export const PLANS: Plan[] = [
     name: 'Starter',
     price: '£49',
     period: '/mo',
-    body: '1 user and 200 AI credits a month. Tender feed, document ingestion, cited drafting, PPN 002 calculation and PDF or DOCX export.',
+    body: '1 user and 200 AI credits a month. Tender feed, document ingestion, cited drafting, social value calculation and PDF or DOCX export.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
   },
@@ -259,7 +259,7 @@ export const FAQS: Faq[] = [
   {
     question: 'How is social value calculated?',
     answer:
-      'Deterministically, in code. CrowMark uses a curated catalogue of 19 social-value measures, aligned to National TOMs conventions, and applies unit-aware arithmetic against the 2025 PPN 002 model of five missions, M1 to M5, and eight policy outcomes. It is not a full National TOMs implementation, and the AI never computes the total. PPN 002 is dated February 2025 and is mandatory from 1 October 2025, with a 10% minimum social-value weighting. It is a weighting, not a score.',
+      'Deterministically, in code. CrowMark uses a curated catalogue of 19 social-value measures, aligned to National TOMs conventions, and applies unit-aware arithmetic to them. It is not a full National TOMs implementation, and the AI never computes the total. PPN 026, the next edition of the Social Value Model, applies to central government procurements commenced on or after 1 January 2027 at 1 million pounds inc VAT or above. The buyer publishes the weighting, and it is a weighting, not a score.',
   },
   {
     question: 'Can CrowMark read a scanned tender document?',

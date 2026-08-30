@@ -119,24 +119,24 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     standfirst: 'How CrowMark finds tenders, drafts answers and scores social value.',
     entries: [
       {
-        question: 'What is PPN 002?',
+        question: 'What is PPN 026?',
         answer:
-          'PPN 002 (Procurement Policy Note 002) is UK government policy dated February 2025 and mandatory from 1 October 2025. It requires a minimum 10% social value weighting on in-scope central government contract evaluations, and sets out five missions, M1 to M5, with eight policy outcomes that suppliers evidence in their bids.',
+          'PPN 026 (Procurement Policy Note 026) is the next edition of the UK government Social Value Model, published on GOV.UK on 5 August 2026. It applies to central government procurements commenced on or after 1 January 2027, at 1 million pounds inc VAT or above. The date that decides which edition applies is when the procurement was commenced, not when the proposal was written, so a bid drafted today is most likely scored under this one.',
       },
       {
         question: 'What is the 10% minimum?',
         answer:
-          'Under PPN 002, at least 10% of the total evaluation score for in-scope central government contracts must be allocated to social value. Many local authorities and NHS trusts apply the same or a higher weighting. CrowMark lets you model the weighting your buyer published, calculates the social-value total in code, and drafts the narrative with a PPN 017 AI-transparency disclosure for you to approve.',
+          'The buyer publishes the social value weighting in its own tender documents, and many local authorities and NHS trusts set a higher one than central government requires. CrowMark lets you model the weighting your buyer published, calculates the social-value total in code, and drafts the narrative with a PPN 017 AI-transparency disclosure for you to approve.',
       },
       {
         question: 'How is social value scored?',
         answer:
-          'CrowMark calculates it deterministically in code, using unit-aware arithmetic over a curated catalogue of 19 social-value measures that are aligned to National TOMs conventions and mapped to the 2025 PPN 002 model of five missions and eight policy outcomes. It is not a full National TOMs implementation. The language model never computes the figure: any generated prose containing a £ or % that the computed figures do not support is rejected rather than shown.',
+          'CrowMark calculates it deterministically in code, using unit-aware arithmetic over a curated catalogue of 19 social-value measures aligned to National TOMs conventions. It is not a full National TOMs implementation. The language model never computes the figure: any generated prose containing a £ or % that the computed figures do not support is rejected rather than shown.',
       },
       {
         question: 'Is CrowMark ready to use?',
         answer:
-          'CrowMark is live and in daily use, with more being added. Tender discovery from Contracts Finder and Find a Tender, document ingestion, grounded answer drafting, deterministic PPN 002 calculation, delivery tracking and Procurement Act 2023 s.52 and s.71 KPI checks all work today. See the CrowMark page for what each stage covers.',
+          'CrowMark is live and in daily use, with more being added. Tender discovery from Contracts Finder and Find a Tender, document ingestion, grounded answer drafting, deterministic social value calculation, delivery tracking and Procurement Act 2023 s.52 and s.71 KPI checks all work today. See the CrowMark page for what each stage covers.',
         link: { label: 'CrowMark page', href: '/crowmark' },
       },
     ],
@@ -231,7 +231,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: 'How are AI credits counted?',
         answer:
-          'One credit is one AI generation, such as a drafted tender answer or a rewritten method statement. Your plan includes a monthly allowance of them. Reading a tender document and extracting its requirements is charged by size, at 3 credits per 10 pages, rounded up, so a 10-page invitation to tender costs 3 credits. A page means one PDF page, one PowerPoint slide, or a whole Word or plain text document. Everything CrowAgent calculates rather than generates, including PPN 002 social value arithmetic, scoring and exports, is free and unlimited on every paid plan, and a generation that fails is never charged.',
+          'One credit is one AI generation, such as a drafted tender answer or a rewritten method statement. Your plan includes a monthly allowance of them. Reading a tender document and extracting its requirements is charged by size, at 3 credits per 10 pages, rounded up, so a 10-page invitation to tender costs 3 credits. A page means one PDF page, one PowerPoint slide, or a whole Word or plain text document. Everything CrowAgent calculates rather than generates, including social value arithmetic, scoring and exports, is free and unlimited on every paid plan, and a generation that fails is never charged.',
       },
       {
         // ── R262-WEB-08, 2026-08-09 ────────────────────────────────────────
@@ -281,7 +281,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: 'What data do you use?',
         answer:
-          "Social value is computed in code from the PPN 002 (February 2025) model with unit-aware arithmetic over CrowMark's curated measure catalogue.",
+          "Social value is computed in code with unit-aware arithmetic over CrowMark's curated measure catalogue.",
       },
       {
         question: 'Is my data secure?',

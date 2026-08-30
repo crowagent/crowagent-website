@@ -50,7 +50,7 @@ We may collect and process the following data about you:
 
 - **Account data:** Information that you provide by filling in forms on our site or via our application (app.crowagent.ai). This includes email address, full name, and password hash (via Supabase Auth).
 - **Sustainability data:** Activity and energy-consumption figures submitted through legacy reporting features, available to existing customers only. This is essential for the CrowAgent platform.
-- **Social Value data:** Procurement descriptions, National TOMs selections, and submissions you enter for PPN 002 scoring and CrowMark narrative generation.
+- **Social Value data:** Procurement descriptions, National TOMs selections, and submissions you enter for social value scoring and CrowMark narrative generation.
 - **Usage data:** Details of your visits to our site including, but not limited to, traffic data, location data, weblogs and other communication data, API call counts, feature usage events, timestamps, and subscription plan.
 - **Billing data:** Stripe customer ID and subscription status. We do not store raw card numbers. These are handled directly by Stripe.
 - **Technical data:** IP address, browser type, and error telemetry (collected by Sentry).

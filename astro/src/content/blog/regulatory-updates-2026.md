@@ -1,7 +1,7 @@
 ---
 title: "PPN 002 in 2026: What Changed (and What Didn't)"
 seoTitle: "PPN 002 in 2026: what changed"
-description: "PPN 002 social value scoring in 2026: the 10% minimum weighting has not changed, but it is a floor, not a cap. What UK public sector bidders should check."
+description: "PPN 026 social value scoring in 2026: the 10% minimum weighting has not changed, but it is a floor, not a cap. What UK public sector bidders should check."
 publishDate: 2026-04-02
 updatedDate: 2026-07-28
 category: "PPN 002"
@@ -11,7 +11,7 @@ draft: false
 
 ## Introduction
 
-PPN 002 social value scoring is the one procurement rule every UK public sector bidder plans around. This article summarises what changed for PPN 002 during 2026, and what stayed the same.
+PPN 026 social value scoring is the one procurement rule every UK public sector bidder plans around. This article summarises what changed for PPN 002 during 2026, and what stayed the same.
 
 ## PPN 002: social value in procurement
 
@@ -27,8 +27,8 @@ The practical consequence for suppliers is unchanged but sharper: social value i
 
 ---
 
-### Track your PPN 002 scoring
+### Track your social value scoring
 
-CrowMark for Suppliers drafts your PPN 002 social value answer from your own submitted bids, then tracks the evidence for each commitment after award.
+CrowMark for Suppliers drafts your PPN 026 social value answer from your own submitted bids, then tracks the evidence for each commitment after award.
 
 [Request access](/contact?enquiry=limited-access#contact-form)

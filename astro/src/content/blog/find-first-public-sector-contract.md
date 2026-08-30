@@ -90,7 +90,7 @@ Almost every central government tender now includes a scored **social value** se
 
 Social value asks what wider benefit your delivery of the contract will bring: local employment and skills, support for smaller businesses in your supply chain, environmental improvements, and community wellbeing. Strong answers are specific and measurable. Rather than promising to "support the local community", commit to a defined number of apprenticeships, work-experience placements or volunteering hours tied to the contract, and describe how you will evidence delivery afterwards. Buyers mark commitments they can hold you to, not good intentions.
 
-For a full walk-through of scoring, the themes and the measurement framework, read our [complete PPN 002 social value guide](/blog/ppn-002-social-value-guide). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
+For a full walk-through of scoring, the themes and the measurement framework, read our [complete PPN 026 social value guide](/blog/ppn-002-social-value-guide). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
 
 ## Common first-timer mistakes
 
@@ -137,7 +137,7 @@ No. Use a bid or no-bid decision to weigh fit, capacity, the strength of any inc
 
 ### Make the scored section your strength
 
-Social value carries at least 10 percent of the score on in-scope contracts. CrowMark for Suppliers helps you plan and draft a TOMs-aligned PPN 002 response, so your first bid has a real answer to the section that carries at least 10 percent of the marks.
+Social value carries at least 10 percent of the score on in-scope contracts. CrowMark for Suppliers helps you plan and draft a TOMs-aligned social value response, so your first bid has a real answer to the section that carries at least 10 percent of the marks.
 
 [See CrowMark →](/crowmark)
 [Compare CrowMark →](/compare)
