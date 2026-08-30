@@ -126,6 +126,22 @@ interface Stop {
  * is a hard pairing, not a convention: a numeral on this page with no row there
  * is a defect on both pages, and the `3` row was deleted in the same edit that
  * deleted this stop.
+ *
+ * A `tag` IS DATA AND IS EXPECTED TO CHANGE. THE LAYOUT KNOWS NOTHING ABOUT ITS
+ * TEXT (A-194, 2026-08-30). The third instrument here is under a dated review
+ * and its label will not read the same next year, so the drawing was checked
+ * against that before it was changed: nothing in the CSS names a stop, matches
+ * on a tag string, or reserves a width for one. The bay divider selects on
+ * `:not(:first-child)`, which is positional. `.spine__tag` sets no width, so
+ * the label sizes to whatever it says. `.spine__label` caps on a reading
+ * measure in ch rather than on any observed string. Changing the third tag is
+ * therefore an edit to this array and to the matching row in HOMEPAGE_MAP, and
+ * to nothing else.
+ *
+ * THE ACCENT IS BOUND TO THE POSITION, NOT TO THE INSTRUMENT. --c-ambient-end
+ * is the third rung of the ramp because this is the third stop. It does not
+ * mean anything about which notice the stop cites, so a tag change does not
+ * drag a colour decision along with it.
  */
 const STOPS: Stop[] = [
   {
@@ -501,14 +517,25 @@ const STOPS: Stop[] = [
   }
 
   .spine {
-    /* KEPT, and it is not redundant with the panel's own `position: relative`.
-       `.spine__stop::before` is absolutely positioned and `.spine__stop` is
-       not positioned, so this element is that pseudo-element's containing
-       block. Dropping it here would silently re-resolve it against the panel
-       and move it. Whether the pseudo-element's `inset` was ever written for
-       this containing block is a separate question and not one this change
-       answers: the job here was to move the panel treatment without moving a
-       pixel. */
+    /* THE SEPARATE QUESTION THIS COMMENT LEFT OPEN IS NOW ANSWERED, AND THE
+       ANSWER WAS NO. It used to read: "`.spine__stop::before` is absolutely
+       positioned and `.spine__stop` is not positioned, so this element is that
+       pseudo-element's containing block ... whether the pseudo-element's
+       `inset` was ever written for this containing block is a separate
+       question and not one this change answers."
+
+       MEASURED at 1440 on 2026-08-30: the backing computed 1230px wide, which
+       is the whole spine, against a 410px column. So hovering ANY ONE stop lit
+       ALL THREE, and the backing's own comment describes it as "one column
+       INSIDE the panel". The inset was written for a per-stop containing block
+       that did not exist. `.spine__stop` is `position: relative` now and the
+       backing measures 410px, which is what every line about it always said.
+
+       THIS DECLARATION STAYS, and it is no longer load bearing for that
+       pseudo-element. It is kept because `.spine` is the element a future
+       absolutely positioned child of the list would expect to measure against,
+       and because removing it is a silent geometry change with nothing asking
+       for it. Nothing here depends on it today. */
     position: relative;
     list-style: none;
     margin: 0;
@@ -638,6 +665,13 @@ const STOPS: Stop[] = [
     flex-direction: column;
     align-items: start;
     gap: var(--stack-1);
+    /* THE CONTAINING BLOCK FOR THIS STOP'S OWN PSEUDO-ELEMENTS, and it is a
+       FIX rather than plumbing for the divider below. See the note on
+       `.spine`: without it the hover backing measured the full 1230px spine
+       and lit all three figures at once. Both `::before` (the lit backing) and
+       `::after` (the bay divider) are per-stop drawings and both now measure
+       against the stop that owns them. */
+    position: relative;
     /* This is the spine. Three segments, one line, full track each. */
     border-top: 2px solid var(--accent);
     /*
@@ -654,9 +688,64 @@ const STOPS: Stop[] = [
      * and the panel's own inline padding is 0 by design, so this is also the
      * only thing holding the first numeral off the panel's hairline.
      */
-    padding: var(--blk-pad) var(--blk-pad) 0;
+    /*
+     * THE BLOCK START IS --stack-1 AND THE INLINE SIDES ARE UNCHANGED (A-194).
+     * It was --blk-pad on all three, which spaced the rule, the tag, the
+     * numeral and the label at four near-equal intervals, so the stop read as
+     * four loose fragments rather than as a figure with a provenance. The tag
+     * names the instrument the accent rule above it is drawn in, and it sat 34
+     * pixels away from that rule at 1440 with nothing tying the two together.
+     *
+     * Measured at 1440 before: 34 above the tag, 16 to the numeral, 16 to the
+     * label. After: 16, 32, 16. The stop loses 2px of height in total, so this
+     * buys the grouping without taking any space, which is why it is spacing
+     * that changed and not size. The break is one --stack-1 doubled on the
+     * numeral rather than a new token, so the two groups stay on the same
+     * rhythm at every width: at 390 the same three gaps read 12, 24, 12.
+     *
+     * THE INLINE SIDES ARE STILL ONE TOKEN ON BOTH, which is the property the
+     * note above is about. Only the block start moved.
+     */
+    padding: var(--stack-1) var(--blk-pad) 0;
     text-align: start;
     isolation: isolate;
+  }
+
+  /* THE BAYS, AND WHY A SECOND LINE DOES NOT CONTRADICT THE FIRST
+   *
+   * A-194, owner 2026-08-30: the section "does not look great". Measured at
+   * 1440, each column is 410px holding a 164px numeral over a 254px label, so
+   * roughly 156px of every column is empty and the three stops read as three
+   * islands adrift in a wide box rather than as one instrument with three
+   * bays. The accent rule is the only structure in the panel and it runs along
+   * the top, away from the content it heads.
+   *
+   * IT DOES NOT RE-OPEN THE COLUMN GAP. The rule above the stops still meets
+   * itself across the full track, because this is a 1px hairline INSIDE the
+   * column rather than space between columns. The grid is still three equal
+   * columns at zero gap and the pitch is still exactly one column.
+   *
+   * IT IS INSET TOP AND BOTTOM SO IT IS NOT A TABLE. A divider running the
+   * full height of the cell would meet the accent rule at the top and close
+   * the box at the bottom, which draws a grid, and a grid is the wrong reading
+   * of a set of three figures. Held --stack-2 clear at both ends it divides
+   * without enclosing, and the accent rule stays the only line in the panel
+   * that runs edge to edge.
+   *
+   * --c-border, NOT A NEW VALUE. It is the same hairline the panel itself is
+   * drawn with, so the divider is quieter than the accent rule by construction
+   * rather than by a number picked to be quieter.
+   *
+   * `:not(:first-child)` IS POSITIONAL AND NAMES NO STOP. It stays correct for
+   * two stops or for five and it never has to be read against the contents of
+   * the STOPS array. */
+  .spine__stop:not(:first-child)::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: var(--stack-2);
+    inline-size: 1px;
+    background: var(--c-border);
   }
 
   /* The instrument's name, in the slot the stage word used to occupy. Mono,
@@ -667,6 +756,13 @@ const STOPS: Stop[] = [
   }
 
   .spine__value {
+    /* THE GROUP BREAK. One more --stack-1 on top of the flex gap, so the four
+       items in a stop read as two pairs: the rule with the tag that names it,
+       then the figure with the words that say what it is. See the padding note
+       on `.spine__stop` for the measured before and after. It is a margin
+       rather than a second gap value because a flex `gap` is one number for
+       every child and only this one join should open. */
+    margin-block-start: var(--stack-1);
     font-family: var(--font-display);
     font-size: var(--t-numeral);
     font-weight: 800;
@@ -1088,17 +1184,129 @@ const STOPS: Stop[] = [
    * now has the full measure. --t-numeral governs at every width, which is one
    * fewer place for the sizes to disagree and is the direction the owner's
    * "the figures read too big" pushed the token in the first place. */
+  /* ══ THE SPINE TURNS, IT DOES NOT BREAK (A-194, 2026-08-30) ═══════════════
+   *
+   * WHAT WAS HERE AND WHY IT WAS THE WEAKEST PART OF THE SECTION. One column
+   * with `border-top` still on every stop draws THREE full width rules stacked
+   * down the panel with a gap between each, and the note this replaces argued
+   * that was fine because "every stop's rule is full track by definition,
+   * which is the same thing the desktop row says". Measured at 390, it is not
+   * the same thing, and the difference is the whole concept:
+   *
+   *   DESKTOP  three segments MEET at the column edges and form ONE line. That
+   *            is the drawing: one rule with three stops hung off it.
+   *   BEFORE   three separate rules, 18 to 26px of gap between them, each one
+   *            spanning the full panel. Three lines, not one. A reader sees
+   *            row dividers, which is the one shape a table has and a drawing
+   *            does not.
+   *
+   * IT ALSO MADE THE COLOUR AMBIGUOUS, which the desktop row never is. Side by
+   * side, each accent sits directly above its own figure and nothing else. In
+   * a stack, the cyan rule has s.52 above it and s.71 below it and no reader
+   * can tell which one it belongs to. A rule that names a thing must touch
+   * only that thing.
+   *
+   * SO THE RULE TURNS THROUGH NINETY DEGREES ONTO THE AXIS THE STOPS ARE NOW
+   * LAID ON. `border-inline-start` runs the height of the stop that owns it,
+   * so the colour is unmistakably paired with its own figure, and `row-gap: 0`
+   * puts the three segments edge to edge so they meet and form ONE continuous
+   * line down the panel in the same start, mid, end accent ramp. That is the
+   * desktop drawing at another orientation rather than a second layout, which
+   * is what the note below about the left track already asks of this state.
+   *
+   * NOTHING ABOUT THE DECISIONS ABOVE IS REVERSED. The rule is still full
+   * track for every stop, still carries no magnitude, and is still never a
+   * percentage, a width or a scaleX. The left track, the equal cells and the
+   * numeral token are untouched. What changes is which edge of the stop the
+   * 2px is drawn on, and that is a property of the axis, not of the data.
+   *
+   * THE SEPARATION IS NOW PADDING RATHER THAN A ROW GAP, because a gap would
+   * cut the line it is the point of this block to make continuous. Block
+   * padding inside each stop does the same spacing job and leaves the bar
+   * unbroken.
+   *
+   * THE INLINE PADDING IS DELIBERATELY ASYMMETRIC HERE, and that does not
+   * contradict the "one token on both inline sides" note above. That note is
+   * about the desktop track, where an identical inline padding is what keeps
+   * every left edge on a constant pitch of one column. There is one column
+   * here and no pitch to hold. The inline start now holds the content off a
+   * BAR and the inline end holds it off the panel, which are two different
+   * jobs, so they take two tokens. */
   @media (max-width: 1023px) {
     .spine {
       grid-template-columns: 1fr;
-      row-gap: var(--stack-2);
+      /* ── `1fr` LEVELS BANDS, AND ONE COLUMN HAS NO BANDS TO LEVEL ────────
+       *
+       * The note on `grid-auto-rows: 1fr` above says it "stays because it
+       * costs nothing" in the one-column state. Measured on 2026-08-30, it
+       * costs the difference between the tallest stop and every shorter one,
+       * once per stop. At 768 the labels are capped at 26ch, so two of them
+       * take two lines and "contract value threshold" takes one, and `1fr`
+       * pads that stop with 24.8px of empty panel to match its neighbours.
+       * Side by side that levelling is what keeps the accent rules at even
+       * intervals, which is the defect O-47 recorded. Stacked, there is no
+       * interval to keep even and no neighbour to match: every stop is alone
+       * on its row, so the only thing `1fr` can do is add dead space under
+       * whichever label is shortest.
+       *
+       * IT IS OVERRIDDEN HERE RATHER THAN DELETED ABOVE. O-47 is real and the
+       * declaration is still correct for every multi-column state, including
+       * a fourth stop wrapping the desktop grid into two bands. This says only
+       * that the rule does not apply on an axis with one track. */
+      grid-auto-rows: auto;
+      /* Zero, so the three bar segments touch and read as one line. See above. */
+      row-gap: 0;
+      /* The bar would otherwise be drawn ON the panel's own hairline and read
+         as a coloured panel edge rather than as a mark in the panel. This is
+         the only reason `.spine` takes any inline padding, and it is why the
+         `padding: 0` note above stays true for the desktop track: nothing here
+         is a user-agent leak and nothing here reaches the desktop state. */
+      padding-inline-start: var(--stack-1);
     }
 
-    /* THE SPINE STOPS BEING ONE LINE HERE, so the light has nothing to travel.
-       Stacked rules cannot be crossed by one horizontal highlight, and a light
-       that runs along the top row and ignores the rest is worse than no light.
-       The per-segment flash stays: it is per-stop and needs no geometry. */
+    .spine__stop {
+      border-top: 0;
+      border-inline-start: 2px solid var(--accent);
+      padding: var(--stack-2) var(--blk-pad) var(--stack-2) var(--stack-2);
+    }
+
+    /* THE BAY DIVIDER IS A THREE COLUMN DEVICE AND THERE IS ONE COLUMN HERE.
+       Left in place it drew a 1px stub at the inline start of stops two and
+       three, directly beside the accent bar, which is a second vertical line
+       saying nothing. `content: none` removes the box rather than hiding it. */
+    .spine__stop:not(:first-child)::after {
+      content: none;
+    }
+
+    /* The lit backing followed the rule round the corner. It reached UP over a
+       2px top border that no longer exists and stopped at the inline start of
+       a bar it should cover, so on a narrow window with a mouse the hover lit
+       a box that started below the bar and floated 2px clear of the figure.
+       The bottom inset is untouched, so the panel still reads through the foot
+       of it exactly as the note on the backing describes. */
+    .spine__stop::before {
+      inset-block-start: 0;
+      inset-inline-start: -2px;
+    }
+
+    /* THE SPINE STOPS BEING ONE HORIZONTAL LINE HERE, so the travelling light
+       has nothing to travel. A light that runs along the top row and ignores
+       the rest is worse than no light, and it is not re-pointed down the bar:
+       M2 is written as a horizontal sweep of a horizontal rule. The per
+       segment flash stays, it is per-stop and needs no geometry. */
     .spine__track { display: none; }
+  }
+
+  /* The hover response has to follow the rule round the corner too. The
+     declaration above it names `border-top-color`, which is inert once the
+     border is on the inline start, so a narrow window with a mouse lit the
+     backing and the tag and left the bar the reader is pointing at unchanged.
+     Nested rather than repeated inside the block above, because the condition
+     is genuinely both: this width AND a real pointer. */
+  @media (max-width: 1023px) and (hover: hover) {
+    .spine__stop:hover {
+      border-inline-start-color: var(--c-text);
+    }
   }
 
   /* The reading measure is the only thing left to drop, and it drops because a

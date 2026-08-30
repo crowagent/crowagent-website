@@ -152,6 +152,15 @@ const NO_VISIBLE_TRAIL = [
     reason: 'Same layout, same "Back to glossary" link. See the entry above.',
   },
   {
+    route: '/glossary/ppn-026/',
+    reason:
+      'Same layout, same "Back to glossary" link. See the PPN 002 entry above. Added with the ' +
+      'route itself on 2026-08-30 rather than afterwards: every page built on Glossary.astro ' +
+      'lands here by construction, so a new glossary term reddens this gate on arrival, and a ' +
+      'trail added to satisfy it would put a second upward link beside the one the layout ' +
+      'already draws, which is the exact duplication the three entries above refuse.',
+  },
+  {
     route: '/tools/tender-compliance-matrix/',
     reason:
       'The page draws its head through components/layout/Section.astro, which owns the whole ' +
