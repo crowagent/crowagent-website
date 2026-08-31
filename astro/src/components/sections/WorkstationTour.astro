@@ -50,12 +50,17 @@
  *
  * ── IT DOES NOT DUPLICATE ProductScreens, AND THAT IS ENFORCED BY POSITION ──
  *
- * Both draw the same five screens. That would be a repetition defect if they
- * made the same argument, so they do not: this section is the SWEEP (five
- * frames, one after another, read in ten seconds), and ProductScreens below it
- * is the READ, where each screen sits still beside the wording it carries and
- * the verbatim in-product quotes that keep the claims honest. Tour first, then
- * the detail. The five slides here carry no quote for exactly that reason.
+ * THEY OVERLAP ON NOTHING, AND THIS PARAGRAPH USED TO SAY THE OPPOSITE. It
+ * opened "Both draw the same five screens", which was true of the first version
+ * of this section and stopped being true the same week: data/tour.ts records
+ * the owner's instruction to stop reusing ProductScreens' five and picks from
+ * the screens nothing else on the site shows. Not one slide is shared.
+ *
+ * WHAT KEEPS THEM APART IS THE ARGUMENT, NOT ONLY THE SET. This section is the
+ * SWEEP, five frames one after another read in half a minute, and ProductScreens
+ * below it is the READ, where each screen sits still beside the wording it
+ * carries and the verbatim in-product quotes that keep the claims honest. Tour
+ * first, then the detail. The slides here carry no quote for exactly that reason.
  */
 import Section from '../layout/Section.astro';
 import { TOUR } from '../../data/tour';
@@ -64,6 +69,16 @@ import { TOUR } from '../../data/tour';
    these assets, so copy-assets.js fails the build if any of them is missing
    rather than shipping a silent 404. */
 import { variant, avifSrcset } from '../../data/crowmark-screens';
+
+/*
+ * ── THE TOKENS, READ AT BUILD TIME RATHER THAN COPIED ───────────────────────
+ *
+ * `?raw` gives Vite's own file read, so this is the SAME bytes the stylesheet
+ * ships and there is no second copy of a number anywhere. It happens in
+ * frontmatter, which is Node at build time, so not one byte of tokens.css
+ * reaches a reader through this import.
+ */
+import TOKENS from '../../styles/tokens.css?raw';
 
 /*
  * ── THIS SECTION HAD NO WIDTH LADDER AT ALL, 2026-08-31 ─────────────────────
@@ -81,41 +96,166 @@ import { variant, avifSrcset } from '../../data/crowmark-screens';
  * into data/crowmark-screens.ts, where the assets are recorded: a mechanism
  * that lives in one consumer is a mechanism the next consumer does not get.
  *
- * ── THE `sizes` ARE THIS STAGE'S, MEASURED AT THREE WIDTHS ──────────────────
+ * ── AND THE ARMS WERE THREE HAND-WRITTEN MEASUREMENTS, 2026-08-31 ───────────
  *
- * The image box, read off the built page:
+ * They were `(min-width: 1063px) 1022px`, `(min-width: 400px) calc(90vw - 2px)`
+ * and `calc(100vw - 76px)`, taken at three viewports and interpolated between.
+ * Two of the three were WRONG in between, and re-measuring at twenty-three
+ * widths is what showed it:
  *
- *     1440   1022px      capped by the section measure
- *      768    678px      90vw less the frame, the gutter having gone to 5vw
- *      390    314px      the gutter at its 20px floor plus the frame
+ *     vw     declared     actually rendered
+ *     1063   1022         993          29px over, and 1022 does not arrive
+ *                                      until 1132
+ *      768    689.2       677.6        11.6px over
+ *      500    448          416         32px over
+ *      421    376.9        337         39.9px over
  *
- * so the three arms below are those three measurements, not Carousel.astro's:
- * that component sits inside a padded showcase panel on this page and inside a
- * measure-capped column on /crowmark, and neither shape is this one. A `sizes`
- * copied from a neighbour is how a browser is told to fetch a rung for a box
- * that does not exist.
+ * NOTHING FAILS WHEN A `sizes` IS WRONG, WHICH IS THE WHOLE PROBLEM. The
+ * browser simply fetches a rung sized for a box that is not on the page, and
+ * the page still looks right. This is the class of defect that only a
+ * measurement finds, and the fix has to be one that cannot go stale the next
+ * time the shell moves.
  *
- * EVERY SLIDE USES ONE SET OF ARMS EVEN THOUGH THE SLIDES ARE THREE DIFFERENT
- * SHAPES. The <img> box is the stage at every slide; `object-fit: contain` then
- * paints a tablet or a phone drawing smaller INSIDE that box. The browser picks
- * a rung from the box, so the arms describe the box. A phone master is 780px
- * wide and MAX_OF_MASTER leaves it exactly one rung, so it is served its 400w
- * or its master and nothing in between either way.
+ * ── `sizes` CANNOT READ A CUSTOM PROPERTY, AND THAT IS NOT A DETAIL ─────────
+ *
+ * The honest statement first, because the obvious fix does not exist:
+ * `sizes="(min-width: 1132px) var(--stage)"` is not valid and could not be. The
+ * preload scanner reads this attribute and starts the fetch before any
+ * stylesheet has been parsed, so at the moment the value is needed there is no
+ * cascade to ask, and there never will be. Every `sizes` on the web is
+ * therefore a statement about geometry made outside the place geometry is
+ * declared.
+ *
+ * SO THE VALUES ARE READ OUT OF tokens.css AT BUILD TIME. `--gutter`, its one
+ * narrow-viewport step and the breakpoint that step happens at, and
+ * `--frame-pad-lg`'s three clamp terms are parsed from the stylesheet itself,
+ * which means the arms below are DERIVED from the same declarations the layout
+ * is. Move `--gutter` and this string moves with it, in the same build, with
+ * nothing to remember.
+ *
+ * AND IT THROWS RATHER THAN GUESSING. Every read is asserted. If a token is
+ * renamed, reshaped or removed, this build STOPS with the name of what it could
+ * not find, which is the behaviour `screen()` in ProductScreens.astro already
+ * has for the same reason: the alternative is a silent fallback that ships the
+ * wrong rung and looks fine in a diff.
+ *
+ * THE THREE NUMBERS BELOW ARE THIS COMPONENT'S OWN, AND THE STYLESHEET READS
+ * THEM FROM HERE. A hairline, the stage's height cap and its ratio are not
+ * sitewide tokens, they are this bezel. They are declared once, spent in the
+ * arithmetic, and handed to the CSS as custom properties on `.wt`, so the
+ * drawn stage and the string describing it cannot disagree. That is the part
+ * `sizes` genuinely can single-source, and it is done rather than described.
  */
+
+/*
+ * COMMENTS COME OFF FIRST, AND THE FIRST RUN OF THIS PROVED WHY. tokens.css is
+ * more prose than declaration, and one of its notes describes a reference build
+ * as carrying a shell width "with `--gutter: 24px`, dropping to". A scanner
+ * cannot tell code from prose, so the first read of --gutter returned four
+ * words of English and the build stopped with them quoted back. It stopped,
+ * which is the guard doing its job, and the lesson is the general one: strip
+ * the comments before scanning, or the scanner is reading a sentence.
+ */
+const DECLS = TOKENS.replace(/\/\*[\s\S]*?\*\//g, '');
+
+/** One `--name: value;` from tokens.css. Throws rather than returning a guess. */
+function token(name: string): string {
+  const hit = new RegExp(`--${name}\\s*:\\s*([^;}]+)`).exec(DECLS);
+  if (!hit) throw new Error(`WorkstationTour: tokens.css declares no --${name}`);
+  return hit[1].trim();
+}
+
+/** A bare pixel token, as a number. */
+function tokenPx(name: string): number {
+  const v = token(name);
+  const n = /^(-?[\d.]+)px$/.exec(v);
+  if (!n) throw new Error(`WorkstationTour: --${name} is "${v}", which is not a plain px value`);
+  return Number(n[1]);
+}
+
+const MEASURE = tokenPx('measure');
+const GUTTER = tokenPx('gutter');
+
+/*
+ * THE ONE STEP IN THE GUTTER. tokens.css carries exactly one media query that
+ * changes a layout value, and it is this: `--gutter` drops at a narrow width.
+ * It is matched as the shape it is written in rather than assumed, so a second
+ * step, a reordering or a rename fails the build instead of silently leaving
+ * the last arm describing a gutter that no longer exists.
+ */
+const STEP = /@media\s*\(max-width:\s*([\d.]+)px\)\s*\{\s*:root\s*\{\s*--gutter:\s*([\d.]+)px/.exec(DECLS);
+if (!STEP) throw new Error('WorkstationTour: tokens.css no longer steps --gutter at a max-width');
+const GUTTER_STEP_AT = Number(STEP[1]);
+const GUTTER_NARROW = Number(STEP[2]);
+
+/* --frame-pad-lg is `clamp(min, Nvw, max)`. All three terms are needed: the
+   floor decides where the third arm ends, the vw term is the slope of the
+   second, and the ceiling is only ever reached above the width the cap binds. */
+const PAD = /^clamp\(\s*([\d.]+)px\s*,\s*([\d.]+)vw\s*,\s*([\d.]+)px\s*\)$/.exec(token('frame-pad-lg'));
+if (!PAD) throw new Error(`WorkstationTour: --frame-pad-lg is "${token('frame-pad-lg')}", not the clamp(px, vw, px) this derivation reads`);
+const PAD_MIN = Number(PAD[1]);
+const PAD_VW = Number(PAD[2]);
+
+/** The bezel edge and the stage edge. One value, drawn twice, counted four times. */
+const HAIRLINE = 1;
+/** The stage never grows past this, which is what caps the image at the top end. */
+const STAGE_MAX_BLOCK = 640;
+/** Every master in Assets/shots/figma-v2 is 2880x1800, so the stage matches. */
+const STAGE_RATIO = 16 / 10;
+
+/**
+ * The image box at one viewport width, in CSS pixels.
+ *
+ * `.section__body` is `min(100vw, --measure)` with a gutter each side; `.wt`
+ * takes a hairline and `--frame-pad-lg` each side; `.wt__stage` takes one more
+ * hairline each side. Above 767 the stage's height cap and ratio then bound the
+ * result. Below it the picture carries the ratio instead and no cap applies,
+ * which does not matter because the cap cannot bind at those widths anyway.
+ */
+const boxAt = (vw: number): number => {
+  const gutter = vw <= GUTTER_STEP_AT ? GUTTER_NARROW : GUTTER;
+  const pad = Math.min(Math.max(PAD_MIN, (PAD_VW / 100) * vw), Number(PAD[3]));
+  const open = Math.min(vw, MEASURE) - 2 * gutter - 4 * HAIRLINE - 2 * pad;
+  return Math.min(open, STAGE_MAX_BLOCK * STAGE_RATIO - 2 * HAIRLINE);
+};
+
+/** The capped width, and the narrowest viewport at which the cap is reached. */
+const CAPPED = STAGE_MAX_BLOCK * STAGE_RATIO - 2 * HAIRLINE;
+/* Scanned rather than solved, because the solution changes shape every time a
+   clamp term does and a scan does not. It stops at the measure: past that the
+   body no longer grows with the viewport, so if the cap has not bound by then
+   this derivation has stopped describing the page and must say so. */
+let CAP_AT = 0;
+for (let vw = 400; vw <= MEASURE; vw++) {
+  if (boxAt(vw) >= CAPPED) { CAP_AT = vw; break; }
+}
+if (!CAP_AT) throw new Error('WorkstationTour: the stage never reaches its height cap below the measure, so the first arm below is wrong');
+
+/** Where --frame-pad-lg stops being its own floor and starts tracking the vw. */
+const PAD_FLOOR_TO = Math.floor(PAD_MIN / (PAD_VW / 100));
+
 const TOUR_SIZES = [
-  '(min-width: 1063px) 1022px',
-  '(min-width: 400px) calc(90vw - 2px)',
-  'calc(100vw - 76px)',
+  `(min-width: ${CAP_AT}px) ${CAPPED}px`,
+  `(min-width: ${PAD_FLOOR_TO + 1}px) calc(${100 - 2 * PAD_VW}vw - ${2 * GUTTER + 4 * HAIRLINE}px)`,
+  `(min-width: ${GUTTER_STEP_AT + 1}px) calc(100vw - ${2 * GUTTER + 4 * HAIRLINE + 2 * PAD_MIN}px)`,
+  `calc(100vw - ${2 * GUTTER_NARROW + 4 * HAIRLINE + 2 * PAD_MIN}px)`,
 ].join(', ');
+
+/* Handed to the stylesheet so the drawn stage and the string above are one
+   decision. See the note on the three constants. */
+const TOUR_VARS = `--wt-hairline:${HAIRLINE}px;--wt-stage-max:${STAGE_MAX_BLOCK}px;--wt-ratio:${STAGE_RATIO}`;
 ---
 
 <Section
   eyebrow="Workstation tour"
   title="The rest of the workstation."
-  standfirst="Six screens that appear nowhere else on this page: what a buyer publishes, what a supplier answers from, how a commitment is evidenced, how a response is banded, what the audit trail records, and the duties that get carried on a phone."
+  standfirst="Five screens that appear nowhere else on this page: what a buyer publishes, what a supplier answers from, how a commitment is evidenced, how a response is banded, and what the audit trail records."
   id="workstation-tour"
 >
-  <div class="wt" data-wt>
+  {/* The three numbers the `sizes` arithmetic above spent, handed to the
+      stylesheet so the drawn stage and the string describing it are one
+      decision rather than two that agree today. */}
+  <div class="wt" data-wt style={TOUR_VARS}>
     <div class="wt__stage">
       {
         TOUR.map((s, i) => (
@@ -204,7 +344,7 @@ const TOUR_SIZES = [
      shadow are what make it read as a device rather than as a section. */
   .wt {
     position: relative;
-    border: 1px solid color-mix(in srgb, var(--c-tour-accent) 35%, transparent);
+    border: var(--wt-hairline) solid color-mix(in srgb, var(--c-tour-accent) 35%, transparent);
     /* --radius-frame-lg and --frame-pad-lg, not --radius-card/--blk-pad: this
        is a device bezel holding a screen and its control bar, not a card, for
        the same reason Carousel.astro's `.pcar__frame` is not a `.surface`.
@@ -221,11 +361,18 @@ const TOUR_SIZES = [
   /* 16:10 IS THE SHOT LADDER'S OWN RATIO. Every screen in Assets/shots/figma-v2
      is 2880x1800, so the stage matches the source and nothing is cropped by the
      object-fit below. A mismatch here is what made an earlier carousel overflow
-     its caption bar. */
+     its caption bar.
+
+     THE RATIO AND THE HEIGHT CAP ARE DECLARED IN THE FRONTMATTER AND ARRIVE
+     HERE, 2026-08-31. They are two of the three terms the `sizes` arithmetic up
+     there spends, and the widest this image ever renders is `cap x ratio` less
+     two hairlines. Written in both places they would agree until the first time
+     one of them moved, and nothing would report it: the browser would simply
+     fetch a rung for a box that is not on the page. */
   .wt__stage {
     position: relative;
-    aspect-ratio: 16 / 10;
-    max-block-size: 640px;
+    aspect-ratio: var(--wt-ratio);
+    max-block-size: var(--wt-stage-max);
     /* The aspect-ratio + max-block-size pair makes this size like a replaced
        element: its width is computed from the constrained height rather than
        stretching to fill `.wt`'s content box, so once that computed width is
@@ -235,7 +382,7 @@ const TOUR_SIZES = [
        line existed: 1440px, `.wt` centre 720px, `.wt__stage` centre 653px, a
        67px miss, the homepage hero sitting visibly off-centre. */
     margin-inline: auto;
-    border: 1px solid color-mix(in srgb, var(--c-text) 18%, transparent);
+    border: var(--wt-hairline) solid color-mix(in srgb, var(--c-text) 18%, transparent);
     border-radius: 16px;
     background: var(--c-floor);
     overflow: hidden;
@@ -614,7 +761,7 @@ const TOUR_SIZES = [
        letterboxed exactly as it was and the caption starts below it. */
     .wt__slide picture {
       display: block;
-      aspect-ratio: 16 / 10;
+      aspect-ratio: var(--wt-ratio);
       /* The slide is a flex column, so the drawing must not be squeezed by the
          caption under it: the ratio decides its height and nothing else. */
       flex: 0 0 auto;

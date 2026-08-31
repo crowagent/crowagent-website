@@ -1,8 +1,11 @@
 /**
- * crowmark-screens.ts: the sixteen drawn CrowMark product screens, as data.
+ * crowmark-screens.ts: the drawn CrowMark product screens, as data.
  *
- * Eight supplier and eight buyer, drawn in Figma on 2026-08-03 and approved by
- * the owner the same day. The full node table, the token research they were
+ * SIXTEEN WERE DRAWN in Figma on 2026-08-03 and approved by the owner the same
+ * day, eight supplier and eight buyer. TWELVE ARE IN THE TWO SETS BELOW, six
+ * and six: the four phone renders came out on 2026-08-31 and the note above
+ * SUPPLIER_SCREENS says why. The files are all still on disk, so "sixteen
+ * drawn" stays true wherever this file says it. The full node table, the token research they were
  * built from and the traps hit while drawing them are in
  * specs/PRODUCT-SCREENS-FIGMA.md. The files were exported at 2x and published
  * as PNG/WebP/AVIF triples in Assets/shots/figma-v2/, and that directory's
@@ -39,11 +42,16 @@
  *
  * ── AND ONE RULE ABOUT THE ORDER ────────────────────────────────────────────
  *
- * Each set runs largest device first: four desktop screens, then two tablet,
- * then two phone. That is not a size preference, it is what keeps the frame
- * useful. The stage in Carousel.astro is 16/10, the desktop screens fill it
- * exactly, and a reader who arrives on slide 1 should see the screen that
- * carries the argument rather than a phone standing in the middle of a stage.
+ * Each set runs largest device first: four desktop screens, then two tablet.
+ * That is not a size preference, it is what keeps the frame useful. The stage
+ * in Carousel.astro is 16/10, the desktop screens fill it exactly, and a reader
+ * who arrives on slide 1 should see the screen that carries the argument.
+ *
+ * IT USED TO END "then two phone", AND THE SENTENCE AFTER IT ALREADY SAID WHY
+ * THAT WAS WRONG: a reader should not meet "a phone standing in the middle of a
+ * stage". The rule was written correctly and then broken by the set it governs.
+ * The four phone renders came out on 2026-08-31, and the note above
+ * SUPPLIER_SCREENS is the account of it.
  * Within the desktop four, the order is the order the work happens in.
  */
 import type { Slide } from '../components/ui/Carousel.astro';
@@ -160,8 +168,60 @@ export const avifSrcset = (src: string, masterWidth: number) =>
    eventually disagree with the file. */
 const DESKTOP = { width: 2880, height: 1800 };
 const TABLET = { width: 2048, height: 1536 };
-const MOBILE = { width: 780, height: 1688 };
+/* THE PHONE SIZE IS GONE WITH THE FOUR SCREENS THAT USED IT. See the note above
+   SUPPLIER_SCREENS. It is not left declared and unused: an unused constant is
+   how a removed thing quietly grows back, and the four masters are still on
+   disk if a phone frame is ever built to hold them. */
 
+/*
+ * ── THE FOUR PHONE SCREENS ARE NOT IN THESE SETS, 2026-08-31 ────────────────
+ *
+ * OWNER, FOR THE SECOND TIME: *"i can again see the issue you are repeating for
+ * carousels where mobile screens shots are being used in Workstation tour, why
+ * the fuck you do this? you must make this hard rule and correct"*.
+ *
+ * `sup-7-opportunity-detail`, `sup-8-action-centre`, `buy-7-evaluator-queue`
+ * and `buy-8-criterion-detail` are 780x1688 PORTRAIT phone renders. Every
+ * surface that consumed these two arrays presents a screen AS A DESKTOP:
+ * `ui/Carousel.astro` draws a browser window with three traffic lights and the
+ * address app.crowagent.ai, and `sections/WorkstationTour.astro` draws a 16/10
+ * bezel. A phone screen inside a desktop window is wrong by definition, at any
+ * size, however well it is fitted.
+ *
+ * AN EARLIER PASS ON THE SAME DAY FIXED THE WRONG THING AND MUST NOT BE
+ * REPEATED. It found that `object-fit: contain` had never run above 767px in
+ * the tour, so the phone render was showing its top eleven per cent, and it
+ * made the whole render display letterboxed instead. That was a true finding
+ * and a real repair of a different defect. The asset was still a phone.
+ * **Making a wrong asset display tidily is not fixing it.**
+ *
+ * WHAT WAS LOOKED FOR FIRST, AND WHAT WAS FOUND. A landscape capture of any of
+ * these four screens would have been the better answer, so the repository was
+ * searched before anything was removed: `Assets/shots/_raw`, `/dark`, `/figma`,
+ * `/v2`, `/devices`, `/mobile`, `/tablet`, `Assets/product-shots` and
+ * `concepts/img`. There is no desktop rendering of an opportunity detail, an
+ * action centre, an evaluator queue or a criterion detail anywhere. The
+ * landscape sets that do exist are the PREVIOUS generation, dark and drawn to a
+ * different design, and putting one beside the light figma-v2 screens would
+ * have swapped one visible wrongness for another.
+ *
+ * AND NOTHING WAS DRAWN TO FILL THE GAP. Inventing a desktop screen means
+ * inventing the figures on it, two sections away from a component whose entire
+ * argument is that this product refuses a figure it cannot trace. That is not
+ * a scruple, it is the same rule the rest of this file is written under.
+ *
+ * SO THE FOUR ARE OUT OF THE SETS AND THE FILES ARE STILL ON DISK. They are
+ * good drawings shown in the wrong frame. `/partners` renders
+ * `sup-8-action-centre` in a portrait card with no browser around it, which is
+ * the honest way to show a phone and is untouched by this. If a phone frame is
+ * ever built, all four come back through it.
+ *
+ * GUARDED BY `scripts/check-device-frames.js`, WHICH SHIPS WITH THIS CHANGE. It
+ * reads the intrinsic size out of each file's own header and fails the build on
+ * a portrait image inside either desktop frame. Not a filename, not the width
+ * and height attributes, not a CSS property: all three can be right while the
+ * picture is wrong, which is how this survived two reports.
+ */
 /** The supplier set, in the order a supplier meets the work. */
 export const SUPPLIER_SCREENS: Slide[] = [
   {
@@ -204,18 +264,6 @@ export const SUPPLIER_SCREENS: Slide[] = [
     alt: 'The CrowMark insights dashboard at tablet width. Four figures head the screen: contracts and sectors, social value delivered on won bids, evidence completion against committed measures, and section 71 assessments due. Panels below cover contracts by status, the pipeline, quick stats and sector benchmarks, under a footnote that every figure is drawn from your own contract records and from published awards.',
     caption: 'What has been committed, delivered and evidenced, drawn from your own records and published awards',
   },
-  {
-    src: shot('sup-7-opportunity-detail'),
-    ...MOBILE,
-    alt: 'A single opportunity on a phone: the buying authority, the value, the sector, the relevance percentage, the register it came from and the closing date. A fit card below gives the score and three banded bars, and closes with the line “fit context, not a probability of award”. Open in CrowMark and Save for later sit above a bottom tab bar.',
-    caption: 'The same notice and the same fit context on a phone, with the same line about what it is not',
-  },
-  {
-    src: shot('sup-8-action-centre'),
-    ...MOBILE,
-    alt: 'The CrowMark action centre on a phone. A due-this-week card counts the open items, then a card per task carries a type chip, a countdown and the contract it belongs to: an evidence upload, a section 71 assessment to publish, a drafted answer to approve and a social value baseline to confirm.',
-    caption: 'Every duty with a date on it, in one queue, on the device it will be remembered on',
-  },
 ];
 
 /** The buyer set, in the order an authority meets the work. */
@@ -256,17 +304,5 @@ export const BUYER_SCREENS: Slide[] = [
     ...TABLET,
     alt: 'The CrowMark reports and audit trail at tablet width. Four figures summarise the trail, with a seven-year retention marker and an export action, above a table listing each action with the person who took it and a timestamp. The closing line reads that every band carries the evaluator who set it and the time they set it. Nothing in this trail was written by the model.',
     caption: 'Every band, every change and every export, against the person and the moment it happened',
-  },
-  {
-    src: shot('buy-7-evaluator-queue'),
-    ...MOBILE,
-    alt: 'An evaluator queue on a phone, showing how many responses have been banded on the current criterion. Each supplier in the queue shows either a located match with a band-it action, no passage located, or the band already set, above a bottom tab bar.',
-    caption: 'The evaluation queue on a phone, with what was located and what was not stated plainly',
-  },
-  {
-    src: shot('buy-8-criterion-detail'),
-    ...MOBILE,
-    alt: 'One criterion banded on a phone. A located-passage card quotes the response, cites it to a section and page of the response document, and states underneath: CrowMark located this passage, it did not score it. Under your band, four radio options appear above a save-band-and-continue button.',
-    caption: 'One passage, one criterion, four bands, and a note that CrowMark located it but did not score it',
   },
 ];

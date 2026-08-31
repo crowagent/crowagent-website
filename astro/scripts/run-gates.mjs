@@ -112,6 +112,13 @@ const GATES = [
      from here on reads it. */
   { name: 'check-pricing-parity', cmd: node, args: ['scripts/check-pricing-parity.js'] },
   { name: 'check-links', cmd: node, args: ['scripts/check-links.js'] },
+  /* AFTER copy-assets, because it reads the image FILES the build has just
+     copied and not only the HTML that names them: the whole point of it is that
+     the intrinsic size comes out of the file's own header rather than out of a
+     width attribute or a filename, and before copy-assets there is no file to
+     read. Owner instruction 2026-08-31, on a second report of the same defect:
+     a phone render inside a desktop frame must fail the build. */
+  { name: 'check-device-frames', cmd: node, args: ['scripts/check-device-frames.js'] },
   { name: 'check-seo-parity', cmd: node, args: ['scripts/check-seo-parity.js'] },
   { name: 'check-faq-parity', cmd: node, args: ['scripts/check-faq-parity.js'] },
   { name: 'check-content-parity', cmd: node, args: ['scripts/check-content-parity.js'] },

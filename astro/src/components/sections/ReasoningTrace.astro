@@ -292,6 +292,44 @@ const TALLY = [
   { k: 'Traced', v: '3' },
   { k: 'Refused', v: '1', refused: true },
 ];
+
+/**
+ * ── THE WORKED SUM IS A NUMBER NOW, AND THE STRING IS DERIVED FROM IT ───────
+ *
+ * THE DEFECT THIS CLOSES, confirmed at HEAD. The count-up at the foot of this
+ * file took its target by reading `£108,000` back out of the DOM and stripping
+ * every character that is not a digit or a dot. It then formatted the frames
+ * with `Intl.NumberFormat`. So the value went OUT through a formatter and came
+ * back IN through a parser, and the two had no agreement of any kind: a
+ * thousands separator that is a space rather than a comma, a currency symbol
+ * that is not one character, a locale whose group separator is a full stop, or
+ * simply a hand-edit writing `£108,000 per year` would each have produced a
+ * different number, or NaN, and the count would have run to the wrong figure
+ * or not at all. Nothing would have failed. The page would have shown a wrong
+ * total in the one section whose entire subject is arithmetic you can check.
+ *
+ * SO THE NUMBER IS THE SOURCE AND EVERY STRING IS COMPUTED FROM IT. The three
+ * figures in the sentence below are one multiplication, written once. The
+ * template formats them, the element carries the target as data, and the script
+ * reads that attribute and formats with the IDENTICAL formatter. There is no
+ * parse anywhere, so there is nothing for a separator or a locale to break.
+ *
+ * IT IS THE SHAPE A COUNT-UP SHOULD TAKE ANYWHERE ON THIS SITE: the figure is
+ * data, the presentation is a function of it, and the script and the template
+ * call the same function rather than agreeing to write the same thing.
+ *
+ * £27,000 KEEPS ITS HEDGE AND ITS PROVENANCE. It is not a published figure from
+ * a named authority and specifically NOT a National TOMs proxy value, which
+ * /sources says in as many words. Nothing about that changes by naming it.
+ */
+const SUM_JOBS = 4;
+const SUM_PER_JOB = 27000;
+const SUM_TOTAL = SUM_JOBS * SUM_PER_JOB;
+const GBP = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  maximumFractionDigits: 0,
+});
 ---
 
 {/*
@@ -502,6 +540,54 @@ const TALLY = [
         ))
       }
     </ol>
+
+    {/*
+      ── THE SCRUBBER, 2026-08-31 ────────────────────────────────────────────
+
+      Owner: let a visitor step through the five stages, with the verification
+      marks landing as they go and the refusal firing where it happens.
+
+      A RANGE INPUT, AND IT IS THE LITERAL INSTRUMENT RATHER THAN A DRAWN ONE.
+      It is the one native control that means "a position in a sequence", and
+      it arrives with the whole keyboard contract already correct: arrows step,
+      Home and End go to the ends, Page keys jump, and the value is announced.
+      A row of five buttons would have been five more targets to size, a roving
+      tabindex to write, and a second answer to a question `role="tab"` on this
+      page already answers.
+
+      IT SHIPS `hidden` AND THE SCRIPT REVEALS IT, which is the identical
+      contract `.rt__toggle` below and `.wt__pause` and `.tabsw-auto__pause`
+      elsewhere on this page are under. With no script there is no scrubber,
+      rather than a slider that moves and changes nothing.
+
+      AND THE DIAGRAM IS UNTOUCHED UNTIL A READER TOUCHES IT. Owner instruction,
+      2026-08-05, is that this drawing is approved and must not change: five
+      steps, five dots, one rail, the drop hung under Ground. So no step carries
+      a state attribute until the first `input` event, and every rule keyed on
+      one therefore matches nothing on a page nobody has scrubbed. The resting
+      section is byte-for-byte the section that shipped.
+
+      NOTHING IT DOES REDUCES CONTRAST, AND THAT IS NOT A PREFERENCE. This
+      section has already failed the axe gate once on colour-contrast across
+      seven nodes, because a staged reveal left text semi-transparent while the
+      checker sampled it. The obvious scrubber dims the steps ahead of the
+      playhead and would walk straight back into it. So every state below only
+      ever RAISES contrast: the current step's log line moves from the quietest
+      ink to the next one up, and the steps ahead are left exactly as they are.
+    */}
+    <figcaption class="rt__scrub" data-rt-scrub hidden>
+      <label class="meta rt__scrub-label" for="rt-scrub">Step through the trace</label>
+      <input
+        class="rt__scrub-range"
+        id="rt-scrub"
+        type="range"
+        min="1"
+        max={STEPS.length}
+        value={STEPS.length}
+        step="1"
+        data-rt-range
+      />
+    </figcaption>
     </figure>
 
     {/* The result of the audit, and the one figure that survived to be shown.
@@ -527,10 +613,11 @@ const TALLY = [
           ambiguous sum in the section about traceable arithmetic would be the
           one cut that costs more than the words it saves. */}
       <p class="rt__sum">
-        <span>4 jobs × £27,000 per year =</span>{' '}
-        {/* Authored, not generated. aria-live is off: a number ticking many
-            times a second must never be announced. */}
-        <b data-rt-sum aria-live="off">£108,000</b>{' '}
+        <span>{SUM_JOBS} jobs × {GBP.format(SUM_PER_JOB)} per year =</span>{' '}
+        {/* THE TARGET TRAVELS AS DATA, NOT AS TEXT, and that is the whole of
+            the fix recorded beside SUM_TOTAL. aria-live is off: a number
+            ticking many times a second must never be announced. */}
+        <b data-rt-sum data-rt-total={SUM_TOTAL} aria-live="off">{GBP.format(SUM_TOTAL)}</b>{' '}
         {/*
           THE ONE-WORD HEDGE, AND IT MAY NEVER BE CUT FOR SPACE. £27,000 is not
           a published figure from a named authority and is specifically NOT a
@@ -673,10 +760,70 @@ const TALLY = [
    * button beside it. The first two lines here invert that pair, which is the
    * only moment the two states can disagree.
    */
-  function initRefusedToggle(root: HTMLElement) {
+  /**
+   * The scrubber. Returns the function that moves the playhead, so the refusal
+   * control below can drive it, or null when the markup is not there.
+   *
+   * THE STATE IS THREE WORDS ON FIVE ELEMENTS AND NOTHING ELSE. `done`, `now`
+   * and `next` on each step, written here and read by the stylesheet. There is
+   * no per-value selector to write out five times, no class to keep in step
+   * with an attribute, and no numeric state anywhere but the input's own value,
+   * which is the control the reader is holding.
+   */
+  function initScrub(root: HTMLElement) {
+    const wrap = root.querySelector<HTMLElement>('[data-rt-scrub]');
+    const range = root.querySelector<HTMLInputElement>('[data-rt-range]');
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('.rt__step'));
+    /* The control describes the rail, so a mismatch means it would be lying
+       about something. Leave it hidden rather than ship a slider whose ends are
+       not the ends of the sequence. */
+    if (!wrap || !range || !steps.length || steps.length !== Number(range.max)) return null;
+
+    const paint = (n: number) => {
+      steps.forEach((li, i) => {
+        li.dataset.rtState = i + 1 < n ? 'done' : i + 1 === n ? 'now' : 'next';
+      });
+      /* A bare "3" is what a range announces on its own, which says nothing
+         about a trace. The step's own heading already carries its number and
+         its verb, so it is read rather than restated. */
+      const name = steps[n - 1].querySelector('.rt__name')?.textContent ?? '';
+      range.setAttribute('aria-valuetext', name.replace(/\s+/g, ' ').trim());
+    };
+
+    wrap.hidden = false;
+    range.addEventListener('input', () => paint(Number(range.value)));
+
+    return (n: number) => {
+      range.value = String(n);
+      paint(n);
+    };
+  }
+
+  function initRefusedToggle(root: HTMLElement, goTo: ((n: number) => void) | null) {
     const btn = root.querySelector<HTMLButtonElement>('[data-rt-toggle]');
     const row = root.querySelector<HTMLElement>('#rt-refused');
     if (!btn || !row) return;
+
+    /*
+     * ── THE TOGGLE IS THE REFUSAL TRIGGER, AND IT ALWAYS WAS ────────────────
+     *
+     * Owner: a control that shows an untraced figure being rejected. This
+     * button already performs exactly that transaction on the LEDGER, in
+     * words: pressing "Take the refused figure out" removes the ungrounded
+     * claim and leaves the total where it was. What it did not do was connect
+     * that to the RAIL, where the refusal is drawn and where it actually
+     * happens. Now it does: the playhead lands on the step the drop hangs from
+     * and the drop replays, so the two halves of one event read as one event.
+     *
+     * THE STEP IS FOUND, NOT WRITTEN DOWN. `DROP_AT` in the frontmatter is the
+     * one place the section decides where grounding fails, and the drop box is
+     * rendered inside that step's own list item. Reading the position back off
+     * the markup means this cannot name a different stage from the one the
+     * drawing hangs the refusal under.
+     */
+    const dropAt = Array.from(root.querySelectorAll('.rt__step')).findIndex((li) =>
+      li.querySelector('.rt__drop'),
+    ) + 1;
 
     /* THE LABEL IS THE BUTTON'S OWN TEXT NODE AND NOT A <span> INSIDE IT.
        A wrapping span inherits the chip's mono uppercase type without the chip's
@@ -699,6 +846,10 @@ const TALLY = [
       row.hidden = !shown;
       btn.setAttribute('aria-expanded', String(shown));
       btn.textContent = shown ? 'Take the refused figure out' : 'Put the refused figure back';
+      /* Taking it out IS the refusal, so that is the press that moves the rail.
+         Putting it back is the reader asking to see the other tool's answer,
+         which is a state rather than an act, and it moves nothing. */
+      if (!shown && goTo && dropAt > 0) goTo(dropAt);
     });
   }
 
@@ -706,7 +857,13 @@ const TALLY = [
     const root = document.querySelector<HTMLElement>('[data-rt]');
     if (!root) return;
 
-    initRefusedToggle(root);
+    /* Both before the reduced-motion return, and for the same reason the
+       toggle already was: neither is motion. A scrubber is a reader moving
+       through content at their own speed, which is the opposite of the thing
+       that preference asks to stop, and the stylesheet takes the animation off
+       every state it sets. */
+    const goTo = initScrub(root);
+    initRefusedToggle(root, goTo);
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduced || typeof IntersectionObserver !== 'function') return;
@@ -714,11 +871,19 @@ const TALLY = [
     const sumEl = root.querySelector<HTMLElement>('[data-rt-sum]');
     if (!sumEl) return;
 
-    const authored = sumEl.textContent?.trim() ?? '';
-    const target = Number(authored.replace(/[^0-9.]/g, ''));
+    /* READ AS DATA, NEVER PARSED BACK OUT OF THE TEXT. See the note above
+       SUM_TOTAL in the frontmatter for the defect this replaces. */
+    const target = Number(sumEl.dataset.rtTotal);
     if (!Number.isFinite(target) || target <= 0) return;
 
-    const fmt = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
+    /* THE SAME FORMATTER THE TEMPLATE USED, so the frames, the final value and
+       the server-rendered string are one function of one number and cannot
+       differ by a separator, a symbol or a locale. */
+    const fmt = new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      maximumFractionDigits: 0,
+    });
 
     let played = false;
     const io = new IntersectionObserver(
@@ -734,11 +899,12 @@ const TALLY = [
 
           const frame = (now: number) => {
             const t = Math.min(1, Math.max(0, (now - startedAt) / DURATION));
-            sumEl.textContent = '£' + fmt.format(Math.round(target * easeOutQuart(t)));
+            sumEl.textContent = fmt.format(Math.round(target * easeOutQuart(t)));
             if (t < 1) requestAnimationFrame(frame);
-            // Restore the authored string exactly, so no formatting difference
-            // can survive the animation.
-            else sumEl.textContent = authored;
+            // The last frame is the target formatted by the same function that
+            // wrote the markup, so there is no authored string to restore and
+            // no formatting difference that could survive the animation.
+            else sumEl.textContent = fmt.format(target);
           };
           requestAnimationFrame(frame);
         }
@@ -764,6 +930,15 @@ const TALLY = [
   .rt {
     position: relative;
     isolation: isolate;
+    /* ONE CURVE, NAMED, BECAUSE IT WAS ALREADY WRITTEN TWICE. The drop box and
+       the tick that hangs it both settle with a slight overshoot, and both
+       carried the same literal cubic-bezier. The scrub below is a third reader
+       of it, and three copies of a design value in one file is the shape RULE
+       0-C exists to stop. It is local because tokens.css has no overshoot
+       easing to reach for and that file is not this change's to edit: if a
+       second component ever wants a settle, it graduates there rather than
+       being copied here. */
+    --rt-settle: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .rt__amb {
@@ -1272,7 +1447,7 @@ const TALLY = [
        start until its delay arrives rather than snapping down and dropping
        again. */
     [data-lit='on'] .rt__drop-box {
-      animation: rt-drop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--m-beat) * 1.4) both;
+      animation: rt-drop 420ms var(--rt-settle) calc(var(--m-beat) * 1.4) both;
     }
 
     /* The tick GROWS TO FOLLOW THE BOX, from the top, so the two stay joined
@@ -1280,7 +1455,7 @@ const TALLY = [
        from the rail it hangs off, which is the only thing making the box read
        as hanging from Ground at all. */
     [data-lit='on'] .rt__drop-tick {
-      animation: rt-tick 420ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--m-beat) * 1.4) both;
+      animation: rt-tick 420ms var(--rt-settle) calc(var(--m-beat) * 1.4) both;
     }
 
     /* THE CROSS USED TO DRAW ITSELF IN HERE, in two 160ms strokes over a cross
@@ -1302,6 +1477,61 @@ const TALLY = [
        fires as the light leaves the fifth step, so five beats. */
     [data-lit='on'] .rt__tally-row--refused dd {
       animation: rt-refused 500ms var(--m-ease-land) calc(var(--m-beat) * 5) 1;
+    }
+
+    /* ── AND THE SCRUB RE-RUNS THEM, ONE STEP AT A TIME ─────────────────────
+     *
+     * The three rules below name the SAME keyframes, the same durations and
+     * the same easings as the one-shots above. Not one new figure is drawn and
+     * nothing new moves. What changes is who triggers them: `data-lit` fires
+     * the whole sequence once when the section arrives, and these fire one
+     * step of it whenever the reader puts the playhead on that step.
+     *
+     * THE ATTRIBUTE IS WHAT RESTARTS THEM, which is why this is three
+     * declarations rather than a script that toggles a class and forces a
+     * reflow. A step going `done -> now` gains an animation it did not have,
+     * so the engine starts it; going `now -> done` takes it away again. Drag
+     * back and forth and each step re-runs on arrival, every time, with no
+     * state kept anywhere.
+     *
+     * `animation-delay: 0s` IS LOAD-BEARING. The rules above stagger each step
+     * by its position in the reveal, up to four beats for the fifth. Inherited
+     * here that would mean pressing on step five and waiting 2.4 seconds for
+     * anything to happen. Under the playhead a step is the first beat, always.
+     *
+     * INSIDE `no-preference`, so a reader who has asked for stillness gets the
+     * scrubber, the ink change, the halo and the tick, and no travelling light.
+     * The control still works; it simply does not perform.
+     */
+    /* `.rt__rail` IS IN EVERY SELECTOR BELOW AND IT IS NOT DECORATION. The
+       five staggered delays above are written as
+       `[data-lit='on'] .rt__step:nth-child(N) .rt__beam`, which is four
+       compounds. Without the ancestor these rules are three, so the stagger
+       would have outranked the `0s` and pressing on the fifth step would have
+       waited 2.4 seconds before anything moved. Matched in a browser before it
+       was written down: this is a specificity fix, not a habit.
+
+       THE DOT'S BLOOM IS DELIBERATELY NOT RE-RUN. `rt-dot` sets
+       `translate(-50%, -50%)` in every one of its offsets, which is correct for
+       the absolutely positioned dot of the wide layout and is a half-width
+       shove on the STATIC dot the rail becomes under 861px. The playhead
+       already opens that dot and widens its halo, without motion and at every
+       width, so there is nothing here that re-running the keyframes would add. */
+    .rt__rail .rt__step[data-rt-state='now'] .rt__beam {
+      animation: rt-beam var(--m-beat) var(--m-ease-travel) 0s 1;
+    }
+
+    /* THE REFUSAL, WHERE THE REFUSAL HAPPENS. Only step 02 renders a drop box,
+       so this rule fires on exactly one stage of the scrub, which is the whole
+       argument of the section restated as a trigger. The button under the
+       ledger drives the playhead here, so pressing "Take the refused figure
+       out" plays the drop rather than only editing a list. */
+    .rt__rail .rt__step[data-rt-state='now'] .rt__drop-box {
+      animation: rt-drop 420ms var(--rt-settle) 0s both;
+    }
+
+    .rt__rail .rt__step[data-rt-state='now'] .rt__drop-tick {
+      animation: rt-tick 420ms var(--rt-settle) 0s both;
     }
   }
 
@@ -1375,11 +1605,84 @@ const TALLY = [
     transform: translate(-50%, -50%);
     width: 10px;
     height: 10px;
+    /* The tick the scrub lands in it is a grid item rather than a positioned
+       pseudo-element, and that is what makes it survive the vertical layout
+       below: `.rt__dot` is `position: absolute` here and `static` under 861px,
+       so anything positioned against it would be positioned against something
+       else down there. A centred grid child does not care which. */
+    display: grid;
+    place-items: center;
     border-radius: 50%;
     background: var(--c-verified);
     /* Two radii, not one: a tight core and a wide halo read as light, where a
        single blur reads as a smudge. */
     box-shadow: 0 0 6px var(--c-verified-glow), 0 0 22px var(--c-verified-glow);
+  }
+
+  /* ══ THE SCRUB STATES ═════════════════════════════════════════════════════
+   *
+   * Three words, written on the five list items by the script and read here.
+   * NOT ONE OF THEM EXISTS UNTIL A READER MOVES THE CONTROL, so every selector
+   * below matches nothing on the section as it rests, which is the condition
+   * the owner's "the diagram is approved and must not change" puts on all of
+   * this.
+   *
+   * AND NOT ONE OF THEM LOWERS THE CONTRAST OF A WORD. `next` has no rules at
+   * all: a step ahead of the playhead is drawn exactly as it is drawn today,
+   * rather than dimmed. `now` moves the log line from the quietest ink on the
+   * ladder UP one tier. This section failed the axe gate once on
+   * colour-contrast across seven nodes, sampled mid-transition, and the
+   * direction of travel is the whole guard against a second time.
+   *
+   * THE TICK IS DRAWN FROM TWO BORDERS AND COSTS NO MARKUP. An inline SVG per
+   * step would have been five more paths in the heaviest document on the site,
+   * for a mark that is nine pixels of two straight lines. It scales from
+   * nothing rather than fading in, because a scale is a mark being DRAWN and an
+   * opacity is content that failed to appear: check-motion.js draws that line
+   * in as many words, and this is on the drawn side of it. --dur collapses to
+   * 0.01ms under `prefers-reduced-motion`, so the mark still lands, it simply
+   * lands at once.
+   */
+  .rt__dot::after {
+    content: '';
+    inline-size: 4px;
+    block-size: 8px;
+    /* The ground colour, so the tick reads as cut out of the teal dot rather
+       than laid on top of it. 15.9:1 against --c-verified. */
+    border: 0 solid var(--c-bg);
+    border-inline-end-width: 2px;
+    border-block-end-width: 2px;
+    /* A tick is a corner turned 45 degrees. The nudge re-centres the corner in
+       the box after the rotation, which the rotation itself does not. */
+    transform: translate(0, -1px) rotate(45deg) scale(0);
+    transition: transform var(--dur) var(--rt-settle);
+  }
+
+  .rt__step[data-rt-state='done'] .rt__dot::after {
+    transform: translate(0, -1px) rotate(45deg) scale(1);
+  }
+
+  /* The dot has to hold a mark now, so it opens from 10px. Both states, so the
+     rail does not step up and back down as the playhead passes. */
+  .rt__step[data-rt-state='done'] .rt__dot,
+  .rt__step[data-rt-state='now'] .rt__dot {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* The step under the playhead. Light and ink only: a wider halo on the dot,
+     the same brightness lift on its own segment of rail that a pointer already
+     gets, and the log line one tier up the ladder. */
+  .rt__step[data-rt-state='now'] .rt__dot {
+    box-shadow: 0 0 10px var(--c-verified-glow), 0 0 30px var(--c-verified-glow);
+  }
+
+  .rt__step[data-rt-state='now'] .rt__railcell::before {
+    filter: brightness(1.7);
+  }
+
+  .rt__step[data-rt-state='now'] .rt__detail {
+    color: var(--c-text-sub);
   }
 
   /* ── The dropped figure ────────────────────────────────────────────────── */
@@ -1464,6 +1767,61 @@ const TALLY = [
     background: color-mix(in srgb, var(--c-refused) 20%, transparent);
     color: var(--c-refused);
     white-space: nowrap;
+  }
+
+  /* ── The scrubber ─────────────────────────────────────────────────────────
+   *
+   * A figcaption on the drawing, which is what it is: the control that says
+   * where in the trace you are looking. The panel's own vertical padding is on
+   * the <ol>, so the caption states its own.
+   *
+   * `[hidden]` IS NOT RESTATED HERE, and that is the one difference from
+   * `.tabsw-step` in TabSwitcher.astro. That rule needs it because it declares
+   * a display value of its own that would outrank the attribute. This declares
+   * `display: flex` too, so tokens.css's unlayered
+   * `[hidden] { display: none !important }` is what carries it, and the
+   * `!important` is exactly why one global rule replaced five local ones. */
+  .rt__scrub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--stack-1);
+    padding: 0 var(--blk-pad) var(--blk-pad);
+  }
+
+  .rt__scrub-label {
+    margin: 0;
+    color: var(--c-text-muted);
+  }
+
+  /*
+   * THE NATIVE CONTROL, PAINTED WITH `accent-color` AND NOTHING ELSE. Rebuilding
+   * a slider from `::-webkit-slider-thumb` and its three siblings would be a
+   * fourth control recipe on a site that has spent a week getting to one, and it
+   * would take the keyboard behaviour with it. `accent-color` moves the track
+   * fill and the thumb onto the section's own verified teal in one declaration,
+   * per engine, with the focus ring, the drag, the arrow keys and Home and End
+   * left to the browser.
+   *
+   * --btn-h-sm IS THE TARGET, not the visual height. tokens.css names it as the
+   * smallest a control on this site may ever be, and a range input's own box is
+   * what a thumb has to find, so the box takes the floor and the drawn track
+   * sits in the middle of it.
+   *
+   * --measure-prose, because it is a control over a five-column diagram and not
+   * a full-width bar. The same 5/8 of the measure the standfirst and the
+   * refusal sentence take, so it lines up with the prose either side of it.
+   */
+  .rt__scrub-range {
+    inline-size: min(100%, var(--measure-prose));
+    block-size: var(--btn-h-sm);
+    accent-color: var(--c-verified);
+    cursor: pointer;
+  }
+
+  .rt__scrub-range:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
   }
 
   /* ── The result ────────────────────────────────────────────────────────── */
@@ -1692,6 +2050,12 @@ const TALLY = [
       color var(--dur) var(--ease),
       border-color var(--dur) var(--ease),
       filter var(--dur) var(--ease),
+      /* The dot opens from 10px to 18px as the playhead reaches it, so the two
+         box properties join the list the four ink ones were already on. Both
+         are animatable and neither is named by `rt-dot`, so the one-shot bloom
+         cannot own them the way it owns transform and box-shadow. */
+      width var(--dur) var(--ease),
+      height var(--dur) var(--ease),
       text-shadow var(--dur) var(--ease);
   }
 
@@ -1767,7 +2131,12 @@ const TALLY = [
     .rt__dot {
       position: static;
       transform: none;
-      display: block;
+      /* `grid`, not `block`, and it changes nothing about the dot: it is what
+         keeps the scrub's tick centred in it down here, where the dot is no
+         longer positioned and a positioned mark would resolve against the
+         railcell instead. Both values are block-level, so the row is
+         unaffected. */
+      display: grid;
     }
 
     /* The rail is vertical here and every step is a row, so a 64px counter

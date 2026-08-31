@@ -186,6 +186,29 @@ const offSelectors = tabs
 */}
 <div class:list={['tabsw-auto', { 'tabsw-auto--off': !autoplay && !showSteppers }]}>
   <div class="tabsw" data-tabs data-tabs-label={label} data-tabs-autoplay={autoplay ?? undefined}>
+    {/*
+      ── THE FILL THAT GLIDES, AND IT SHIPS AT ZERO WIDTH ──────────────────
+
+      Owner, 2026-08-31: switching a stage should carry the capsule across the
+      trough rather than repaint it in place. There is no React here and so no
+      `layoutId` to hand the work to. What that API does is measure the target
+      and animate one element between two rects, and that is what this element
+      is: one absolutely positioned fill whose x and width come from the
+      SELECTED tab's own measured box, written by scripts/tabs.ts.
+
+      IT IS EMITTED ALWAYS AND PAINTS NOTHING UNTIL MEASURED. `--glide-w`
+      falls back to zero, so before the module runs, and forever if it never
+      runs, this is a zero-width box and the selected pill keeps the fill it
+      has always had. The module's first act is to measure, size this, and set
+      `data-glide` on the trough, which is the one attribute that moves the
+      fill from the pill to here. Both are the same white capsule in the same
+      place, so the handover is invisible rather than a flash.
+
+      `aria-hidden`, because a tablist may contain only tabs and because this
+      states nothing: `aria-selected` is still the whole of the state, read by
+      assistive technology and by the stylesheet from the same attribute.
+    */}
+    <span class="tabsw__glide" data-tabs-glide aria-hidden="true"></span>
     {
       tabs.map((t) => (
         <a
@@ -447,13 +470,116 @@ const offSelectors = tabs
     overscroll-behavior-inline: contain;
     gap: 4px;
     max-width: 100%;
-    padding: 6px;
+    /* NAMED BECAUSE A SECOND RULE NOW DEPENDS ON IT. `.tabsw__glide` insets by
+       exactly this on the block axis, so the gliding fill is the height of a
+       pill without a second 6 being typed. The note on `overflow-x` above
+       already works out that the focus ring survives the scrollport by exactly
+       this figure too, which is the third reader of the same number. */
+    --tabsw-pad: 6px;
+    padding: var(--tabsw-pad);
+    /* The containing block for the fill. It has to be the TROUGH rather than
+       the wrapper: this element scrolls sideways, and a fill positioned against
+       anything outside it would sit still while the pills it is tracking moved
+       under a thumb. An absolutely positioned child of a scroll container
+       scrolls with the content, which is the behaviour wanted here. */
+    position: relative;
     border: 1px solid var(--c-border);
     border-radius: var(--radius-pill);
     background: var(--c-card);
   }
 
+  /* ── THE GLIDING FILL ────────────────────────────────────────────────────
+   *
+   * ONE ELEMENT, TWO NUMBERS, AND BOTH ARE MEASURED. `--glide-x` and
+   * `--glide-w` are written on the trough by scripts/tabs.ts from the selected
+   * tab's own `offsetLeft` and `offsetWidth`, so nothing here knows how many
+   * tabs there are, how wide a label is, or what the type scale did at this
+   * viewport. Hardcoding a pill width would have been wrong at the first
+   * label longer than "Draft".
+   *
+   * IT IS THE PILL'S OWN FILL, NOT A NEW TREATMENT. --c-interactive and the
+   * pill radius, which is exactly what `[aria-selected='true']` painted before
+   * this existed and still paints wherever the module has not run. There is no
+   * second selected look to keep in step.
+   *
+   * BEHIND THE LABELS. `.tabsw__tab` takes `position: relative` below for this
+   * and for nothing else: a positioned element paints over a static one, so
+   * without it the fill would cover the word it is meant to sit under.
+   *
+   * TRANSFORM AND WIDTH, NOT `left`. A transform is composited and a `left`
+   * is not, so the travel stays smooth on a phone. Width has to animate as
+   * well, because the pills are not equal: "Bid or no bid" is nearly twice
+   * "Draft", and a fixed-width marker sliding between them would be the wrong
+   * size at both ends.
+   *
+   * `--dur` AND `--ease`, WHICH IS WHERE THE SPRING COMES FROM AND IS ALSO
+   * WHY THERE IS NO NEW CURVE HERE. --ease is cubic-bezier(0.16, 1, 0.3, 1):
+   * it leaves at speed and settles long, which is the read a spring gives.
+   * An overshoot curve would have meant declaring a cubic-bezier in a
+   * component, which is a design value written outside tokens.css, and the
+   * capsule would have run past the pill it is naming on the way in. Both
+   * tokens collapse to 0.01ms under `prefers-reduced-motion: reduce` in
+   * tokens.css, so stillness is inherited rather than restated.
+   */
+  .tabsw__glide {
+    position: absolute;
+    inset-block: var(--tabsw-pad);
+    inset-inline-start: 0;
+    inline-size: var(--glide-w, 0);
+    transform: translateX(var(--glide-x, 0));
+    border-radius: var(--radius-pill);
+    background: var(--c-interactive);
+    pointer-events: none;
+  }
+
+  /* Set by the module once it has measured, and only then. Until it is, the
+     rule below cannot match and the selected pill keeps its own fill. */
+  .tabsw[data-glide] .tabsw__tab[aria-selected='true'] {
+    background: transparent;
+  }
+
+  /* `set` means positioned and still, which is the state the module writes on
+     first measure and on every resize. `on` is the state it moves to a frame
+     later, and it is the only one that travels: without the pair, the fill
+     would slide in from the trough's left edge on load and would chase a
+     window being dragged. */
+  .tabsw[data-glide='on'] .tabsw__glide {
+    transition:
+      transform var(--dur) var(--ease),
+      inline-size var(--dur) var(--ease);
+  }
+
+  /* ── THE INK IS NOT DELAYED, AND THAT WAS MEASURED RATHER THAN ARGUED ─────
+   *
+   * A selected label is --c-bg, the darkest ink on the site, and it is readable
+   * only because a white capsule is under it. The obvious hazard is the flight:
+   * flip the ink at once and the incoming label is dark against a dark trough
+   * until the capsule arrives.
+   *
+   * SO A `transition-delay: var(--dur)` WAS WRITTEN ON THE SELECTED RULE, to
+   * hold the label muted until the capsule had landed. It was wrong, and the
+   * contrast ratio through the travel is what says so. Sampled per frame at
+   * 1440, ink against whichever ground is actually under the label's centre:
+   *
+   *     delay var(--dur)   worst 2.04:1 at 198ms, and it STAYS there
+   *     delay 0            worst 6.60:1 at 228ms, never under 4.5:1
+   *
+   * THE REASON IS THE EASING, AND IT IS THE SAME REASON THIS FEELS LIKE A
+   * SPRING. --ease is cubic-bezier(0.16, 1, 0.3, 1): the capsule covers most of
+   * its distance in the first quarter of the travel and settles for the rest.
+   * It is therefore ALREADY under the incoming label long before 300ms, so a
+   * 300ms delay left muted ink sitting on a white capsule for about 150ms,
+   * which is the failure it was written to prevent, in the other direction.
+   *
+   * WITH NO DELAY THE COLOUR AND THE CAPSULE SHARE ONE DURATION AND ONE EASING,
+   * so the ink darkens at the rate the ground under it whitens, and the two
+   * cannot come apart at any frame or at any width. Nothing has to be tuned.
+   * The outgoing label is the same story mirrored: it goes muted while the
+   * white it sits on is leaving, and it measured 7.27:1 at its worst.
+   */
+
   .tabsw__tab {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -500,8 +626,17 @@ const offSelectors = tabs
     outline-offset: 3px;
   }
 
+  /* --dur is already 0.01ms under this preference, so the two rules below add
+     no guarantee that tokens.css has not made. They are written anyway because
+     `transition: none` is what a reader of `getComputedStyle` sees, and a
+     duration of 0.01ms reads as a transition that is still declared. The
+     capsule still MOVES to the selected pill, it simply arrives. */
   @media (prefers-reduced-motion: reduce) {
     .tabsw__tab {
+      transition: none;
+    }
+
+    .tabsw[data-glide='on'] .tabsw__glide {
       transition: none;
     }
   }

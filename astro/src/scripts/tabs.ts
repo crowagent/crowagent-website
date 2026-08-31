@@ -224,6 +224,15 @@ function setUp(group: HTMLElement): void {
    * to zero and hid it; the middle three were quietly scrolled 41px too far.
    * The difference of two rects plus `clientLeft` is the distance from the
    * trough's own padding edge whatever is positioned above it.
+   *
+   * THE TROUGH IS `position: relative` AS OF 2026-08-31 AND THIS FUNCTION IS
+   * DELIBERATELY UNCHANGED. The gliding fill needs the trough to be the offset
+   * parent, so `offsetLeft` now answers correctly and the paragraph above no
+   * longer describes today's stylesheet. It is kept because the reasoning is
+   * still the reasoning: this function asks where a tab is IN THE VIEWPORT, so
+   * that it can decide how far to scroll the strip, and that is a question no
+   * offset property answers at any time. Two nearby measurements, two different
+   * questions, and the rect is the right instrument for this one either way.
    */
   const keepTabInView = (tab: HTMLElement): void => {
     const room = group.scrollWidth - group.clientWidth;
@@ -237,6 +246,51 @@ function setUp(group: HTMLElement): void {
     if (Math.abs(left - group.scrollLeft) < 1) return;
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     group.scrollTo({ left, behavior: still ? 'auto' : 'smooth' });
+  };
+
+  /*
+   * ── THE CAPSULE GLIDES, 2026-08-31 ─────────────────────────────────────────
+   *
+   * Owner: switching stage should carry the selected capsule across the trough
+   * rather than snap it. There is no React on this site, so there is no
+   * `layoutId` to hand it to. What that API does is measure the target's box
+   * and animate ONE element between two rects, and that is precisely what is
+   * built here: `ui/TabSwitcher.astro` renders a single absolutely positioned
+   * fill and this writes the selected tab's own x and width onto the group as
+   * custom properties. The travel, the easing and the stillness under
+   * `prefers-reduced-motion` are all declared in that stylesheet, where a
+   * design value belongs.
+   *
+   * MEASURED, NEVER COMPUTED FROM A LABEL LENGTH OR A COUNT. The five homepage
+   * pills are five different widths, the type scale is fluid, and the trough
+   * scrolls: every one of those makes an arithmetic guess wrong at some
+   * viewport. `offsetLeft` and `offsetWidth` are the browser's own answer.
+   *
+   * AND `offsetLeft` IS CORRECT HERE FOR A REASON THAT WAS NOT TRUE YESTERDAY.
+   * The note on `keepTabInView` below records that this property was measured
+   * and rejected, because the trough was `position: static` and every tab
+   * therefore reported its offset from `.ps__showcase` with 41px of that
+   * panel's padding baked in. The trough is `position: relative` as of this
+   * change, precisely so it is the offset parent, so the figure is now the
+   * distance from the trough's own padding edge, which is the coordinate space
+   * the fill is positioned in. `keepTabInView` still uses rects and is
+   * untouched: it is asking a different question, about the viewport.
+   *
+   * NOTHING HAPPENS WITHOUT THE ELEMENT. A call site whose markup carries no
+   * `[data-tabs-glide]` gets no attribute, no listener and no observer, and its
+   * selected pill keeps painting its own fill.
+   */
+  const glide = group.querySelector<HTMLElement>('[data-tabs-glide]');
+  /* `set` before anything has moved: positioned, and not yet allowed to
+     travel. The stylesheet gives the transition to `on` alone, which is what
+     stops the fill sliding in from the trough's left edge on first paint. */
+  if (glide) group.dataset.glide = 'set';
+
+  /** Put the fill on one tab. Two numbers, both the browser's own. */
+  const place = (tab: HTMLElement): void => {
+    if (!glide) return;
+    group.style.setProperty('--glide-x', `${tab.offsetLeft}px`);
+    group.style.setProperty('--glide-w', `${tab.offsetWidth}px`);
   };
 
   /** Show one panel and mark its tab. The only place either state is written. */
@@ -255,7 +309,10 @@ function setUp(group: HTMLElement): void {
          ARIA tabs pattern. Arrow keys move within it. */
       tab.tabIndex = on ? 0 : -1;
       panel.hidden = !on;
-      if (on) keepTabInView(tab);
+      if (on) {
+        keepTabInView(tab);
+        place(tab);
+      }
       if (on && moveFocus) tab.focus();
     }
     /* `hidden` and nothing else. It is the one attribute that removes an element
@@ -483,6 +540,41 @@ function setUp(group: HTMLElement): void {
   const fallback =
     pairs.find(({ tab }) => tab.dataset.tabDefault !== undefined) ?? pairs[0];
   select((fromHash ?? fallback).panel.id, false);
+
+  /*
+   * ── AND IT IS RE-MEASURED, BECAUSE A PILL IS NOT A FIXED WIDTH ─────────────
+   *
+   * `--t-body` is a clamp and the labels are set in a webfont, so a pill's
+   * width changes when the viewport is dragged, when the reader enlarges their
+   * text, and once more when the font finishes loading and the fallback's
+   * metrics are replaced. A fill measured once is wrong after any of the three,
+   * and it would be wrong SILENTLY: a capsule sitting a few pixels off the word
+   * it is naming reads as a rendering fault rather than as a stale number.
+   *
+   * ResizeObserver rather than a resize listener, because the trough is
+   * `inline-flex` and tracks its own content: it changes size when the FONT
+   * lands as well as when the window does, and a window listener sees only one
+   * of those. Its first callback fires straight after `observe`, which is what
+   * lifts the fill out of `set` into `on` for the first time, so there is no
+   * separate start-up path to keep in step with this one.
+   *
+   * PARKED FOR THE DURATION OF THE MOVE. A resize is not a selection, so the
+   * fill must not ease towards its new box: dragging a window edge would leave
+   * it perpetually chasing the pill. `set` removes the transition, the two
+   * properties are written, and the next frame restores it in time for whatever
+   * the reader does next.
+   */
+  if (glide && typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => {
+      const hit = pairs.find(({ tab }) => tab.getAttribute('aria-selected') === 'true');
+      if (!hit) return;
+      group.dataset.glide = 'set';
+      place(hit.tab);
+      requestAnimationFrame(() => {
+        group.dataset.glide = 'on';
+      });
+    }).observe(group);
+  }
 
   /*
    * ── AUTOPLAY, OPT-IN, WITH THE THREE CONSTRAINTS THAT ARE NOT NEGOTIABLE ────

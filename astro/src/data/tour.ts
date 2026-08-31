@@ -22,16 +22,29 @@
  * written against the drawings. Retyping them here is how a caption comes to
  * describe a screen that has since been redrawn.
  *
- * ── ALL THREE DEVICE SIZES, WHICH IS THE ARGUMENT THE TOUR MAKES ────────────
+ * ── DESKTOP AND TABLET, AND THAT IS A CORRECTION, 2026-08-31 ──────────────
  *
- * ProductScreens is desktop-only, because it sits beside a paragraph and a
- * quote and a phone standing in that frame would be a picture of a phone rather
- * than a picture of the work. This section has no such column, so it can carry
- * the tablet and phone drawings, and they say something the desktop set
- * cannot: the duty with a date on it is remembered on the device the person
- * actually has. The stage below uses `object-fit: contain`, so a 4:3 tablet and
- * a portrait phone sit centred in the 16:10 frame with the floor around them
- * instead of being cropped to fit.
+ * THIS BLOCK USED TO BE HEADED "ALL THREE DEVICE SIZES, WHICH IS THE ARGUMENT
+ * THE TOUR MAKES", and it argued that a portrait phone render sitting centred
+ * in the 16:10 stage said something the desktop set could not. The owner has
+ * now rejected that twice, in the same words both times, and the second is
+ * unambiguous: a phone screen inside a desktop frame is wrong at any size.
+ *
+ * `.wt__stage` IS A DESKTOP BEZEL. It has no address bar, which is why a gate
+ * keyed on browser chrome would have walked past this, but it is a 16/10 device
+ * frame with a caption plate across its foot, and a 780x1688 render in the
+ * middle of it reads as a phone photographed on a monitor. `object-fit: contain`
+ * made that display tidily rather than making it right.
+ *
+ * SO THE TOUR IS FIVE, DESKTOP AND TABLET. The tablet drawings stay: 2048x1536
+ * is landscape, it letterboxes modestly inside 16/10, and a tablet in a desktop
+ * frame is the same class of object at a different width. The one slide that
+ * went is `sup-8-action-centre`, and what the tour loses with it is recorded
+ * beside the list below.
+ *
+ * `scripts/check-device-frames.js` NOW FAILS THE BUILD ON A PORTRAIT IMAGE
+ * INSIDE EITHER DESKTOP FRAME, measured from the file's own header, so this
+ * cannot come back by being re-added to the registry.
  */
 import { SUPPLIER_SCREENS, BUYER_SCREENS } from './crowmark-screens';
 /* The registry types its own arrays from Carousel's Slide and does not
@@ -60,16 +73,32 @@ const pick = (stem: string): Slide => {
 };
 
 /*
- * SIX, AND THE ORDER IS A CONTRACT RATHER THAN A GALLERY. The buyer publishes
+ * FIVE, AND THE ORDER IS A CONTRACT RATHER THAN A GALLERY. The buyer publishes
  * what it wants evidenced; the supplier answers from what it has already
  * written; the commitment made at award is tracked to dated evidence; the buyer
- * bands the response; the trail records who did it; and the duties with dates
- * on them are carried on a phone. Both sides, in the order the work happens.
+ * bands the response; and the trail records who did it. Both sides, in the
+ * order the work happens.
  *
- * NOT NINE. Eleven screens are unused and six are shown, because a sweep the
- * reader watches once has to end before it repeats, six at seven seconds is
- * forty-two, and nine would be over a minute of loop for a section that is not
- * the argument, only the picture of it.
+ * ── WHAT THE SIXTH SLIDE WAS, AND WHAT ITS REMOVAL COSTS ───────────────
+ *
+ * `sup-8-action-centre`, tagged "Supplier · Action centre", captioned "Every
+ * duty with a date on it, in one queue, on the device it will be remembered
+ * on". It is the only slide either section ever carried that showed the product
+ * AFTER the bid is won and the work is being done to a deadline, and the tour
+ * is thinner for losing it. That is a real cost and it is written down here
+ * rather than absorbed: the fix is a landscape rendering of that screen, and the
+ * moment one exists this slide comes back.
+ *
+ * WHAT IT DOES NOT COST. The order above still runs both sides of one contract
+ * from publication to audit, and nothing else on the page depended on there
+ * being a phone in this section: `/crowmark` says in its own words that the
+ * product runs on a phone, and `/partners` SHOWS this exact screen, in a
+ * portrait card, with no desktop frame around it.
+ *
+ * NOT NINE. Eleven screens went unused when this was six, and the sweep is short
+ * on purpose: a sweep the reader watches once has to end before it repeats, five
+ * at seven seconds is thirty-five, and nine would be over a minute of loop for a
+ * section that is not the argument, only the picture of it.
  */
 export const TOUR: TourSlide[] = [
   { ...pick('buy-1-requirement-builder'), tag: 'Buyer · Requirement builder' },
@@ -77,5 +106,4 @@ export const TOUR: TourSlide[] = [
   { ...pick('sup-4-evidence-tracker'), tag: 'Supplier · Evidence tracker' },
   { ...pick('buy-3-evaluation'), tag: 'Buyer · Evaluation' },
   { ...pick('buy-6-reports-audit'), tag: 'Buyer · Reports and audit' },
-  { ...pick('sup-8-action-centre'), tag: 'Supplier · Action centre' },
 ];
