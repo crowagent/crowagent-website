@@ -33,6 +33,36 @@ const year = new Date().getFullYear();
 
 <div class="ca-footer-hairline" aria-hidden="true"></div>
 <footer class="ca-footer" role="contentinfo">
+  {/*
+    THE SPRITE. Two glyphs, defined once, instanced nine times between them.
+
+    WHY IT EXISTS. Astro stamps its scope class on every element it renders, so
+    an inlined icon costs the <svg>, its geometry AND a scope token per node.
+    The trust mark was repeated five times and the column chevron four, 2,742
+    bytes of every one of the 46 documents on the site for two shapes.
+    scripts/check-budgets.js caps a route HTML at 100 KB and the homepage is
+    over it, so this is a budget fix rather than a tidy-up.
+
+    THE PRESENTATION MOVED TO CSS, WHICH IS WHERE THE SAVING ACTUALLY COMES
+    FROM. Width, height, stroke, fill and stroke-width used to be presentation
+    attributes repeated on every copy. They are one rule each now, in this
+    file own <style> block, so they are paid for once in an external stylesheet
+    rather than nine times in the HTML of every page. The geometry is the only
+    thing left in the markup.
+
+    `focusable="false"` AND width/height 0: the sprite is a definition, not a
+    picture. It must occupy no space and take no tab stop.
+  */}
+  <svg width="0" height="0" aria-hidden="true" focusable="false" class="ca-footer-sprite">
+    <symbol id="f-check" viewBox="0 0 24 24">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </symbol>
+    <symbol id="f-chev" viewBox="0 0 24 24">
+      <polyline points="6 9 12 15 18 9" />
+    </symbol>
+  </svg>
+
   <div class="ca-footer-wrap">
     <div class="ca-footer-credibility" role="group" aria-label="Security and compliance">
       <ul class="ca-footer-trust-row" role="list">
@@ -66,10 +96,7 @@ const year = new Date().getFullYear();
                 assertion. The claims are unchanged and still carry their
                 footnote; what is gone is a semantic hue certifying them.
               */}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-text-muted)" stroke-width="2" aria-hidden="true">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
+              <svg class="ca-footer-tick" aria-hidden="true"><use href="#f-check" /></svg>
               {badge}
             </li>
           ))
@@ -283,20 +310,7 @@ const year = new Date().getFullYear();
                 data-footer-acc
               >
                 <span class="grouplabel">{col.title}</span>
-                <svg
-                  class="ca-footer-col-chevron"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                <svg class="ca-footer-col-chevron" aria-hidden="true"><use href="#f-chev" /></svg>
               </button>
               <div class="ca-footer-links" id={panelId}>
                 {col.links.map((link) => (
@@ -812,7 +826,33 @@ const year = new Date().getFullYear();
   .ca-footer-col-toggle {
     display: none;
   }
+  /* THE PRESENTATION THE MARKUP USED TO REPEAT. Every value here was a
+     presentation attribute on each copy of the glyph before the sprite above
+     replaced them. Declared once, in a stylesheet, so it is paid for once.
+     `fill: none` and the stroke geometry have to be stated for BOTH glyphs
+     because a <use> instance inherits them from the use site rather than from
+     the <symbol>. */
+  .ca-footer-tick,
   .ca-footer-col-chevron {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* 14px and the muted ink, which is the bullet role this mark carries. The
+     note beside its markup above is the argument for why it is not a semantic
+     hue, and that is unchanged by moving the value here. */
+  .ca-footer-tick {
+    width: 14px;
+    height: 14px;
+    stroke: var(--c-text-muted);
+  }
+
+  .ca-footer-col-chevron {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
     flex: none;
     transition-property: transform;
     transition-duration: var(--dur-fast);

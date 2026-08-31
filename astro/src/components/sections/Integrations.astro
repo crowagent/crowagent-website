@@ -221,6 +221,27 @@ import { HOME_CHIPS } from '../../data/integrations';
         <stop offset="1" stop-color="var(--c-ambient-end)" />
       </linearGradient>
     </defs>
+    {/* THE GLYPH IS DEFINED ONCE AND INSTANCED SIX TIMES, AND THAT IS A BUDGET
+        FIX RATHER THAN A TIDY-UP. A-198, 2026-08-31. Astro stamps its scope
+        class on EVERY element it renders, so the inlined connector mark cost
+        408 bytes per chip: the <svg>, the <g>, two <path> elements and four
+        copies of the scope token. Six chips carried six identical copies of it,
+        2,448 bytes of one document, and scripts/check-budgets.js caps a route's
+        HTML at 100 KB with the homepage measured over it.
+
+        A <symbol> here plus a <use> at each chip states the geometry once. The
+        gradient above is already shared by all six exactly this way, so this is
+        the construction the section already uses rather than a new idea.
+
+        NOT A COMPONENT, DELIBERATELY. An Astro component would emit the same
+        markup six times again and add a seventh scope class; the saving comes
+        from the BROWSER instancing one definition, which only <use> does. */}
+    <symbol id="in-link" viewBox="0 0 24 24">
+      <g fill="none" stroke="url(#in-grad)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.5 1.5" />
+        <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.5-1.5" />
+      </g>
+    </symbol>
   </svg>
 
   <div class="in" data-spot="off" data-lit data-lit-threshold="0.35">
@@ -292,10 +313,7 @@ import { HOME_CHIPS } from '../../data/integrations';
 
                   <span class="in__logo in__logo--mark" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
-                      <g fill="none" stroke="url(#in-grad)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.5 1.5" />
-                        <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.5-1.5" />
-                      </g>
+                      <use href="#in-link" />
                     </svg>
                   </span>
                   <span class="in__name">{s.name}</span>

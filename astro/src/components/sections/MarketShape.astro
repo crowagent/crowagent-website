@@ -331,7 +331,22 @@ const STOPS: Stop[] = [
       whose removal would silently put 40px of user-agent inset back on the
       drawing.
     */}
-    <figure class="surface surface--panel spine__panel">
+    {/*
+      ── THE PANEL CAME OFF, 2026-08-31, FIGMA S4 (node 52:2) ───────────────
+
+      This was `surface surface--panel spine__panel`. S4 draws the figures as
+      cards sitting directly on the section ground, with no containing panel,
+      and once the stops became cards in their own right the panel was drawing
+      a box around boxes.
+
+      NOTHING ELSE MOVED. The ambient wash, the cursor light and the grain are
+      mounted on `.ms` above rather than on this element, so the section is lit
+      exactly as it was. `.spine__panel` stays as the layout wrapper.
+
+      TO REVERT: put `surface surface--panel` back on this class list and
+      restore the track span below. Both sets of CSS are still in this file.
+    */}
+    <figure class="spine__panel">
       {/*
         THE TRAVELLING HIGHLIGHT, AND IT IS AN OVERLAY ON A COMPLETE LINE
         RATHER THAN A WIPE OF AN INCOMPLETE ONE. The distinction is the whole
@@ -340,14 +355,21 @@ const STOPS: Stop[] = [
         not fire. This sits ON TOP of the finished spine and adds light to it.
         Sized and positioned entirely in CSS; it holds nothing and says nothing.
       */}
-      <span class="spine__track" aria-hidden="true">
-        <span class="spine__light"></span>
-      </span>
+      {/*
+        THE TRAVELLING LIGHT WENT WITH THE PANEL, AND THAT IS THE PART WORTH
+        RECORDING. It travelled the TOP EDGE OF THE PANEL. With the panel gone
+        it had no edge to travel and would have drawn a stray lit line hanging
+        above three unrelated cards. It is also no longer the only light here:
+        every card now carries its own accent hairline across its top edge,
+        which is S4 saying per figure what the rail used to say once for the
+        row. Removing it is a deduplication rather than a loss, and it takes one
+        always-on animation off the page with it.
+      */}
 
       <ol class="spine">
       {
         STOPS.map((s) => (
-          <li class="spine__stop" style={`--accent: ${s.accent}`}>
+          <li class="surface surface--panel spine__stop" style={`--accent: ${s.accent}`}>
             <span class="meta spine__tag">{s.tag}</span>
             {/*
               THE FIGURE IS THE CONTENT HERE, WHICH IS WHY IT TAKES THE NUMERAL
@@ -617,7 +639,16 @@ const STOPS: Stop[] = [
     grid-template-columns: repeat(3, 1fr);
     /* No column gap. The rules above the stops have to meet to read as one
        continuous line; the padding inside each stop provides the separation. */
-    gap: 0;
+    /* ── THE GAP OPENED, 2026-08-31, FIGMA S4 (node 52:2) ──────────────────
+       This was `gap: 0` and the note below it was right for the drawing it
+       described: the 2px accent rules above the stops had to MEET so the row
+       read as one continuous band broken into bays. S4 replaces that band with
+       separate elevated cards, so there is no rule left to keep continuous and
+       a zero gap would butt bordered boxes against each other. The note below
+       is kept because it records what the old drawing was doing, not because
+       it still governs. --stack-2 rather than a literal: the only decision
+       here is which rung of the existing scale, not what number. */
+    gap: var(--stack-2);
     /* ── EVERY STOP IS THE SAME HEIGHT, INCLUDING ACROSS A WRAP (O-47) ─────
      *
      * Three columns at 1440 is one band and the grid already levels it. When
@@ -707,7 +738,22 @@ const STOPS: Stop[] = [
   .spine__stop {
     display: flex;
     flex-direction: column;
-    align-items: start;
+    /* CENTRED FROM 2026-08-31, AND THIS IS THE SITE RULE BEATING THE DESIGN.
+       S4 left-aligns everything inside its cards, exactly as the homepage
+       concept does, and this site centres card content (owner decision,
+       2026-08-02, "text alignment: centred, sitewide"). The moment these
+       stops took a radius and a padding they BECAME cards by
+       scripts/check-render.js's own definition, and it measured the result on
+       the built page: the tag 157px, the numeral 112px and the label 77px off
+       their card's centre. That is the gate correctly reporting three children
+       of a centred card sitting off its axis.
+
+       `.hir__dot` in HowItRuns.astro records the identical collision and the
+       identical resolution, including the conclusion: this is a real
+       divergence from the design, it is a conflict between two owner
+       decisions rather than something to settle in a component, and
+       un-centring the site is a decision to ask for rather than to take here. */
+    align-items: center;
     gap: var(--stack-1);
     /* THE CONTAINING BLOCK FOR THIS STOP'S OWN PSEUDO-ELEMENTS, and it is a
        FIX rather than plumbing for the divider below. See the note on
@@ -717,7 +763,68 @@ const STOPS: Stop[] = [
        against the stop that owns them. */
     position: relative;
     /* This is the spine. Three segments, one line, full track each. */
-    border-top: 2px solid var(--accent);
+    /* ── AN ELEVATED CARD, 2026-08-31, FIGMA S4 (node 52:2) ────────────────
+
+       WHAT THIS REPLACES. A `border-top: 2px solid var(--accent)` and nothing
+       else: the stop was a BAY inside one panel, marked by a coloured rule
+       along its top and separated from its neighbours by a 1px divider. S4
+       draws each figure as its own raised card, and that is the point of the
+       change: a figure the reader is held to should read as an object rather
+       than as a column of a table.
+
+       EVERY VALUE IS A TOKEN, AND ONE OF THEM ALREADY EXISTED FOR THIS EXACT
+       PICTURE. --shadow-ladder in tokens.css is a five-layer stack whose alpha
+       ramp (0.05, 0.07, 0.09, 0.12, 0.17) is the ladder S4 specifies (0.05,
+       0.07, 0.09, 0.12, 0.15). Figma's offsets are roughly 3.5x larger because
+       its frame is drawn at a larger scale than this section renders at, so the
+       TOKEN is spent rather than the raw pixels. That is RULE 0-C and it is why
+       no new elevation token was added. --radius-card is 16px against S4's
+       18px, and 18 is not on this site's radius scale (20/16/14/12/10): a rung
+       is taken rather than a sixth radius invented for a 2px difference.
+
+       THE ACCENT SURVIVES AS A FADED HAIRLINE RATHER THAN A SOLID BAR, which
+       is what S4 draws: 1px, transparent at both ends, full strength in the
+       middle. It is a BACKGROUND LAYER rather than a pseudo-element because
+       both pseudo-elements here are already spoken for, `::before` is the hover
+       backing and `::after` was the bay divider, and a third drawing would need
+       a third element in the markup on a page that is over its HTML budget.
+
+       70% WIDE AND CENTRED, for the geometric reason `.hir__step--refused`
+       already gives: the card is 16px round, so a hairline running the full
+       width would cross both top corners and draw a straight line through a
+       curve.
+
+       THE FACE WASH IS color-mix ON A ROLE, NOT S4's rgba(255,255,255,0.055).
+       A raw white literal here would be a chromatic literal outside tokens.css
+       and check-palette-roles would be right to fail it. 5% of --c-text over
+       --c-panel is the same picture and moves with the palette. */
+    /* THE CARD IS REACHED THROUGH `.surface`, WHICH IS THE ONLY WAY IT MAY BE.
+       This rule first stated its own border, radius, fill and shadow, and
+       scripts/check-design-system.js failed the build on it: "CARD RECIPE one
+       card sitewide ... .spine__stop not reached through .surface". It was
+       right. A second card recipe three files from the first is the twenty-one
+       recipe defect styles/surfaces.css exists to end, and the fix is the class
+       list rather than an exemption.
+
+       SO THE BORDER AND THE FILL ARE GONE FROM HERE: `surface--panel` states
+       both. The radius and the padding stay, because a rung of a shared scale
+       chosen at the point of use is what those tokens are for, and `.hir__step`
+       in HowItRuns.astro is the same construction for the same reason.
+
+       THE ELEVATION IS SET AS THE KNOB, NOT AS A box-shadow. surfaces.css
+       declares `box-shadow: var(--surface-shadow)` once on `.surface` and has
+       each recipe state the knob instead, and `surface--panel` sets it to
+       `none` under the 2026-08-05 fidelity ruling. S4 elevates these cards, so
+       the knob is spent here rather than the property restated. Same mechanism
+       as the proof-gate override in ProofGate.astro. */
+    border-radius: var(--radius-card);
+    --surface-shadow: var(--shadow-ladder);
+    background-image:
+      linear-gradient(90deg, transparent, var(--accent), transparent),
+      linear-gradient(180deg, color-mix(in srgb, var(--c-text) 5%, transparent), transparent);
+    background-repeat: no-repeat;
+    background-size: 70% 1px, 100% 100%;
+    background-position: top center, 0 0;
     /*
      * ONE TOKEN ON BOTH INLINE SIDES, AND THAT IS WHAT MAKES THE TRACK A TRACK.
      * The columns are equal and the gap is zero, so an identical inline padding
@@ -750,8 +857,14 @@ const STOPS: Stop[] = [
      * THE INLINE SIDES ARE STILL ONE TOKEN ON BOTH, which is the property the
      * note above is about. Only the block start moved.
      */
-    padding: var(--stack-1) var(--blk-pad) 0;
-    text-align: start;
+    /* A CARD IS PADDED ON ALL FOUR SIDES. This was
+       `var(--stack-1) var(--blk-pad) 0`, an open-bottomed bay whose foot ran
+       into the panel below it. A bordered card has a floor, so the zero goes
+       and the padding becomes one rung of the --blk-pad ladder. --blk-pad-xs is
+       the tier `.hir__step` already takes for a small card in a dense row, and
+       this is the same object at the same scale. */
+    padding: var(--blk-pad-xs);
+    text-align: center;
     isolation: isolate;
   }
 
@@ -783,13 +896,15 @@ const STOPS: Stop[] = [
    * `:not(:first-child)` IS POSITIONAL AND NAMES NO STOP. It stays correct for
    * two stops or for five and it never has to be read against the contents of
    * the STOPS array. */
+  /* THE BAY DIVIDER IS GONE, 2026-08-31, FIGMA S4. It drew a 1px rule at the
+     inline start of stops two and three, which is what separates BAYS inside
+     one panel. The stops are separate bordered cards now, so each already
+     states its own edge and the divider would be a second line immediately
+     beside a border saying the same thing. The narrow-window override further
+     down already set `content: none` for its own reasons, so this is the same
+     answer at every width now rather than two answers. */
   .spine__stop:not(:first-child)::after {
-    content: '';
-    position: absolute;
-    inset-inline-start: 0;
-    inset-block: var(--stack-2);
-    inline-size: 1px;
-    background: var(--c-border);
+    content: none;
   }
 
   /* The instrument's name, in the slot the stage word used to occupy. Mono,
@@ -839,6 +954,11 @@ const STOPS: Stop[] = [
        left track it would push the label off the line the numeral above it
        starts on, which is the one thing this layout exists to hold. */
     max-width: 26ch;
+    /* The cap stays, and the auto margins put the capped block on the card's
+       own axis rather than at its inline start. Without them a 26ch label in a
+       wider card is a left-aligned box inside a centred one, which is the exact
+       shape check-render measures. */
+    margin-inline: auto;
   }
 
   /* THE ONLY LINK IN THE SECTION, and the only thing left where 90 words of

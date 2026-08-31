@@ -557,6 +557,36 @@
       animation-fill-mode: backwards;
     }
 
+    /* ── THE HOMEPAGE HEADLINE, 2026-08-31, OWNER REQUEST ──────────────────
+     *
+     * TRAVEL ONLY, AND THE OPACITY IS DELIBERATELY LEFT TO ITS ANCESTOR. The
+     * hero section is `main`'s first child, so the landing block directly above
+     * already fades it from --arrive-floor. Running a second opacity animation
+     * on the h1 inside it composes 0.75 x 0.75 = 0.5625, which is the exact
+     * arithmetic the comment on that block warns about: neither rule is wrong
+     * on its own and together they break the floor. So this takes
+     * `sv-land-row`, the travel-only keyframe, and the headline inherits the
+     * one fade its section is already doing.
+     *
+     * NEVER ANIMATE THIS ELEMENT FROM opacity: 0. Measured: at exactly zero
+     * Chromium drops the h1 from LCP candidacy entirely, 7 of 7 runs produced
+     * no LCP entry at all, and it was never re-admitted even seconds after the
+     * fade finished. Every variant starting above zero held the h1 as LCP at 84
+     * to 132ms against a 100ms static baseline. The floor is not decoration
+     * here, it is what keeps the page measurable.
+     *
+     * AN ID, SO IT MUST ALSO BE NAMED IN THE `reduce` BLOCK BELOW. That block
+     * matches structural selectors, and an id outranks every one of them, so
+     * `animation-name: none` would NOT reach this rule on specificity. It is
+     * listed there explicitly. Removing it from one place means removing it
+     * from both. */
+    #hero-title {
+      animation-name: sv-land-row;
+      animation-duration: var(--land-dur);
+      animation-timing-function: var(--m-ease-land);
+      animation-fill-mode: backwards;
+    }
+
     /* ── The rows inside it. Travel only, staggered.
      *
      * WHAT IS EXCLUDED, AND WHY EACH ONE IS LOAD-BEARING RATHER THAN TIDY:
@@ -635,6 +665,12 @@
    * surfaces.css already owns, which is not this file's business.
    */
   @media (prefers-reduced-motion: reduce) {
+    /* AN ID, AND IT HAS TO BE FIRST-CLASS HERE RATHER THAN COVERED BY ONE OF
+       THE STRUCTURAL SELECTORS BELOW. `#hero-title` is specificity 1,0,0 and
+       every other selector in this list is 0,0,x, so without this line the
+       headline rule in the `no-preference` block would outrank the reset and
+       the one reader who asked for no motion would be the only one who got it. */
+    #hero-title,
     main .surface,
     main figure,
     main > *:not(script, style, template):not(:only-child),

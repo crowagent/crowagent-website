@@ -108,7 +108,23 @@ const STAGES: Stage[] = [
     by exemption. This component declares no radius and no padding, so there is
     no second card recipe here to find.
   */}
-  <div class="surface surface--panel surface--ramp hir">
+  {/*
+    `data-lit` IS THE ONLY THING THIS SECTION ADDS TO DRIVE THE TRACE, AND THAT
+    IS THE POINT OF DOING IT THIS WAY. src/scripts/motion.ts already observes
+    every `[data-lit]` on the page, sets `data-lit="on"` ONCE and unobserves it.
+    So the pulse below costs no new JavaScript, no second observer and no
+    per-frame handler: this attribute is a switch and CSS owns everything after
+    it. 0.3 is that file own default threshold, stated here rather than left
+    implicit because the panel is short enough that the trace should not start
+    while only its top edge is on screen.
+
+    REDUCED MOTION NEEDS NO OVERRIDE AND MUST NOT GET ONE. motion.ts returns
+    before the observer is built when `prefers-reduced-motion: reduce` matches,
+    so `data-lit` stays unset, `[data-lit=on]` never matches, and the beam
+    renders exactly as it does today. Frame 00 is the reduced-motion state by
+    construction rather than by a second set of rules that can drift from it.
+  */}
+  <div class="surface surface--panel surface--ramp hir" data-lit data-lit-threshold="0.3">
     {/*
       THE BEAM. The concept runs a one-pixel light along the top edge of this
       panel, teal through cyan to violet, fading out at both ends. It is
@@ -269,6 +285,79 @@ const STAGES: Stage[] = [
       transparent
     );
     opacity: 0.6;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     THE TRACE: ONE PULSE, STAGE 01 TO STAGE 05, ONCE.
+
+     The section names five stages in order and the beam already runs the full
+     width of the panel above them, so the honest drawing of "these run in
+     sequence" is a light that crosses that beam once, left to right, when the
+     section arrives. It is the same idiom as `.in__spec` in Integrations.astro,
+     deliberately: this site already says that a light travelling a top edge is
+     how a boundary is marked, and a second vocabulary for the same statement
+     would be a second recipe to keep in step.
+
+     THERE IS NO CONNECTOR LINE BETWEEN THE CARDS, AND ONE WAS NOT ADDED. The
+     stages are a five-column grid that reflows to 3+2, then 2+2+1, then a
+     single column. A drawn line joining them would be correct at exactly one of
+     those four counts and wrong at the other three, and at the phone width it
+     would join a vertical stack left to right. The beam is the one element that
+     spans every stage at every viewport, so it is the connector this layout
+     actually has.
+
+     A PSEUDO-ELEMENT, SO IT COSTS NOTHING IN THE DOCUMENT. scripts/
+     check-budgets.js caps a route HTML at 100 KB and this document is measured
+     against it, so the pulse is drawn by `::after` on the beam rather than by a
+     span. No markup, no scope class, no bytes.
+
+     ACHROMATIC, AND THAT IS A PALETTE DECISION RATHER THAN A TASTE ONE. Teal
+     means evidenced on this site and orchid means refused, and stage 04 two rows
+     down is already wearing orchid on its dot, its number, its badge and its
+     accent bar. A coloured pulse would either repeat one of those two meanings
+     on an element that carries neither, or introduce a third hue beside the one
+     card the section is built to single out. --c-text carries no role, so a
+     white light reads as light. The beam underneath keeps the ambient ramp it
+     has always had, and the pulse passes over it. */
+  .hir__beam::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 20%;
+    background-image: linear-gradient(90deg, transparent, var(--c-text), transparent);
+    /* The rest state, and it is the reduced-motion state too. Invisible, so
+       nothing sits parked at the left edge for a reader who never gets the
+       animation. The BEAM stays fully visible either way: this rule hides the
+       travelling light, never the connector. */
+    opacity: 0;
+  }
+
+  /* ONE PASS, AND IT NEVER RESOLVES TO WHERE THE ELEMENT LIVES. The light starts
+     translated fully off the left edge at opacity 0 and ends translated fully off
+     the right edge at opacity 0. That is what keeps this a figure rather than an
+     entrance, which is what scripts/check-motion.js rule 2 tests for, and it is
+     the property `in-spec` documents in the same words three sections down.
+
+     THE TRAVEL IS 500% BECAUSE THE LIGHT IS 20% WIDE. translateX resolves
+     against the element OWN width, so moving a 20%-wide child from just off one
+     edge of its container to just off the other is -100% to 100/20 = 500%.
+     Change the width and this number changes with it.
+
+     THREE BEATS RATHER THAN ONE. --m-beat is the site unit and `in-spec` spends
+     exactly one of them crossing a 190px chip. This light crosses the full panel,
+     1,232px at 1440, so one beat would be roughly six times the speed for the
+     same idiom. Three keeps the apparent velocity in the range the reader has
+     already seen elsewhere on this page. */
+  [data-lit="on"] .hir__beam::after {
+    animation: hir-trace calc(var(--m-beat) * 3) var(--m-ease-travel) 1;
+  }
+
+  @keyframes hir-trace {
+    0%   { transform: translateX(-100%); opacity: 0; }
+    15%  { opacity: 0.9; }
+    85%  { opacity: 0.9; }
+    100% { transform: translateX(500%); opacity: 0; }
   }
 
   /* ── THE ROW. FIVE STAGES, SO THE COUNT IS STATED, NOT DISCOVERED ─────────

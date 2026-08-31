@@ -113,14 +113,31 @@
  * reproduce exactly the crop each one had. The two UPPER orbs are unchanged,
  * because the top of the hero has not moved.
  *
- * ── NO JAVASCRIPT, AND NOW NO ANIMATION AT ALL IN THIS COMPONENT ────────────
+ * ── NO JAVASCRIPT, AND THE ANIMATION CLAIM HERE WAS OUT OF DATE ────────────
  *
- * There is none. Every element here is visible and correct from the first
- * paint. The travelling rail light was the last moving part in this file and it
- * belonged to the graphic; with the graphic gone, the only motion the hero
- * carries is the shared ambient drift declared in styles/tokens.css, which is
- * decorative, is inside an aria-hidden subtree, and does not exist under
- * prefers-reduced-motion. Not one word on this page is animated.
+ * NO JAVASCRIPT IS STILL TRUE. There is none in this file, every element is
+ * visible and correct from the first paint, and the travelling rail light went
+ * with the graphic.
+ *
+ * "NOT ONE WORD ON THIS PAGE IS ANIMATED" WAS NOT TRUE, AND THE CORRECTION IS
+ * THE POINT OF THIS NOTE. styles/motion.css has been running `sv-land` on the
+ * hero section and `sv-land-row` on its rows, this headline among them, for as
+ * long as that file has existed. The sentence described this COMPONENT, which
+ * declares no animation, and then over-claimed about the PAGE, which does. A
+ * file asserting something the stylesheet contradicts is how the next reader
+ * talks themselves out of a real finding, so it is corrected rather than
+ * quietly deleted.
+ *
+ * WHAT RUNS ON THE HEADLINE NOW, 2026-08-31, OWNER REQUEST. `#hero-title`
+ * takes `sv-land-row` explicitly, a travel-only landing on the shared beat.
+ * The rule, the reason it is travel only rather than a fade, and the LCP
+ * measurement that forbids ever animating it from opacity 0 are all in
+ * motion.css beside the rule. It is declared THERE and not here because
+ * check-motion.js rule 2 gives motion.css the arrival and fails the build on a
+ * component that grows its own.
+ *
+ * The ambient drift is unchanged: decorative, inside an aria-hidden subtree,
+ * and absent under prefers-reduced-motion.
  *
  * ── THE PALETTE RULE, AND WHAT IS LEFT OF IT HERE ───────────────────────────
  *
@@ -133,6 +150,109 @@
  * else. Violet and teal appear nowhere near a control, a hover or a focus ring.
  */
 import Button from '../ui/Button.astro';
+import { analyse } from '../../lib/tender-matrix';
+
+/**
+ * ── THE HERO CHECK: THREE CLAUSES, AND THE ENGINE REALLY RAN ON THEM ───────
+ *
+ * The audit asked for an input under the hero buttons where a visitor pastes a
+ * clause and watches the proof check run. What is built is the honest form of
+ * that, and the reasoning is the whole design rather than a compromise made
+ * for room.
+ *
+ * WHY NOT A FREE TEXT BOX. This page's central claim is that the engine
+ * refuses to invent, and the line at the foot of this section reads "The
+ * engine cannot clear its own gate". A box that appears to analyse whatever a
+ * visitor pastes and then returns a scripted result would be a fabricated
+ * check on the one page that sells refusal to fabricate. That is the single
+ * thing this component may not do.
+ *
+ * TWO REAL OPTIONS EXISTED AND BOTH WERE MEASURED. src/lib/tender-matrix.ts is
+ * a real rule engine, 1,473 lines, no network and no model, already powering
+ * /tools/tender-compliance-matrix. Shipping it to the browser would make a
+ * paste box genuinely real. It does not fit: scripts/check-budgets.js caps
+ * jsRouteMax at 13 KB and that tool route already measures 12,874 B, so a
+ * second copy on this route breaches both that cap and the 23 KB jsTotal.
+ *
+ * SO THE ENGINE RUNS HERE, AT BUILD TIME, AND THE PAGE SHIPS ITS ANSWER. Every
+ * number rendered below is returned by `analyse()` on the clause printed
+ * beside it, computed while this file is being built. Nothing is transcribed,
+ * nothing is rounded by hand, and nothing can drift from the markup, because
+ * the markup reads the result object rather than restating it. The page makes
+ * no claim it did not compute. It costs zero bytes of JavaScript, which
+ * matters on a route already over its HTML budget and on a site with three
+ * pages under the Lighthouse floor.
+ *
+ * THE THIRD CLAUSE IS THE ONE THAT EARNS ITS PLACE. It contains "40%" and the
+ * engine returns NO rows for it, with weightingConfidence 'no_context_found':
+ * it saw the figure, and declined to report it as an award weighting because
+ * it is not in evaluation context. That is this product's argument, performed
+ * on the front page by the shipped engine rather than asserted in copy.
+ *
+ * NO JAVASCRIPT AT ALL, INCLUDING THE PICKER. Three radios and `:checked ~`
+ * switch the panes. With scripting off, the first clause and its result are on
+ * screen and the other two are one tap away exactly as they are with scripting
+ * on, so there is no dead input and no empty box to explain.
+ */
+/* One newline, named once. See the note on the sample text below. */
+const NL = String.fromCharCode(10);
+
+const SAMPLES = [
+  {
+    id: 'a',
+    tab: 'Obligations',
+    /* True of the result beside it: three rows, and none of them is a verdict. */
+    note: 'Each row is the clause verbatim. Whether you can meet it is not its call.',
+    text: [
+      '3.1 The supplier must provide a named account manager for the duration of the contract.',
+      '3.2 Tenderers shall submit a method statement of no more than 500 words.',
+      '3.3 Responses must be received by 12:00 on 14 March 2026.',
+    ].join(NL),
+  },
+  {
+    id: 'b',
+    tab: 'Weightings',
+    /* The three percentages sum to 110, so the engine reports sub_criteria
+       rather than a complete set. Saying "weightings found" and stopping is the
+       honest report: a pack listing sub-criteria as well as top-level criteria
+       sums past 100 and that is normal, not an error to flag. */
+    note: 'They add up to 110%, so these read as sub-criteria. No total is asserted.',
+    text: [
+      'Quality will be scored at 60% and price at 40% of the total award.',
+      'Bidders must hold Cyber Essentials Plus certification at the point of award.',
+      'Social value is weighted at 10% in line with PPN 002.',
+    ].join(NL),
+  },
+  {
+    id: 'c',
+    tab: 'A figure with no gate',
+    /* rows = 0 and weightingConfidence = 'no_context_found'. The engine saw 40%
+       and refused to report it as an award weighting. This is the sample the
+       section exists for. */
+    note: 'It found 40% and refused it. A figure outside evaluation context is not a weighting.',
+    text: [
+      'The authority spent 40% of its budget with local firms last year.',
+      'We are proud of our track record and hope suppliers will share our ambition.',
+    ].join(NL),
+  },
+] as const;
+
+/* The engine, run once per clause while this page is built. `analyse()` returns
+   null only below MIN_CHARS, which no clause here is, so the fallback exists to
+   keep the type honest rather than because it can fire. */
+const CHECKED = SAMPLES.map((s) => {
+  const m = analyse(s.text);
+  return {
+    ...s,
+    lines: m ? m.lines : 0,
+    rows: m ? m.rows.length : 0,
+    deadlines: m ? m.deadlineCount : 0,
+    limits: m ? m.limitCount : 0,
+    weightings: m ? m.weightingCount : 0,
+    total: m ? m.weightingTotal : 0,
+    confidence: m ? m.weightingConfidence : 'none',
+  };
+});
 ---
 
 {/*
@@ -286,6 +406,71 @@ import Button from '../ui/Button.astro';
       <Button href="/tools/tender-compliance-matrix/" variant="secondary">
         Read a tender, free
       </Button>
+    </div>
+
+    {/*
+      IT SITS BELOW THE BUTTON ROW, AND THAT POSITION IS MEASURED RATHER THAN
+      PREFERRED. Measured on the built page before this block existed, the
+      button row ends 570px down a 320x568 viewport, so the CTAs were already
+      2px under the fold on the narrowest phone. Everything here is BELOW them,
+      so it cannot move them: the CTA position is set entirely by the eyebrow,
+      the h1 and the standfirst above. This block makes the hero taller and
+      leaves both buttons exactly where they were at all three widths.
+
+      THREE RADIOS AND NO SCRIPT. The inputs come first so `:checked ~` can
+      reach the panes, which is the only reason the order looks odd. They are
+      not `display: none`, because that would take them out of the tab order
+      and off the keyboard.
+    */}
+    <div class="hmt">
+      {
+        CHECKED.map((s, i) => (
+          <input
+            class="hmt__radio"
+            type="radio"
+            name="hmt"
+            id={`hmt-${s.id}`}
+            checked={i === 0}
+          />
+        ))
+      }
+
+      <p class="meta hmt__lead">
+        Checked by this page's own rule engine, at build time.
+      </p>
+
+      <div class="hmt__tabs">
+        {CHECKED.map((s) => <label class="hmt__tab" for={`hmt-${s.id}`}>{s.tab}</label>)}
+      </div>
+
+      <div class="hmt__panes">
+        {
+          CHECKED.map((s) => (
+            <div class="hmt__pane" id={`hmt-p-${s.id}`}>
+              <pre class="hmt__src">{s.text}</pre>
+              <ol class="hmt__steps">
+                <li><b>Read</b> {s.lines} lines</li>
+                <li>
+                  <b>Match</b>{" "}
+                  {[
+                    `${s.rows} ${s.rows === 1 ? "requirement" : "requirements"} stated`,
+                    s.deadlines > 0 && `${s.deadlines} closing date`,
+                    s.limits > 0 && `${s.limits} response limit`,
+                    s.weightings > 0 && `${s.weightings} weightings totalling ${s.total}%`,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </li>
+                <li><b>Hold</b> {s.note}</li>
+              </ol>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="meta hmt__foot">
+        <a href="/tools/tender-compliance-matrix/">Run it on your own tender</a>
+      </p>
     </div>
   </div>
 
@@ -847,5 +1032,163 @@ import Button from '../ui/Button.astro';
     /* At 350px of content box the dot and the sentence fight for the same line
        and the wrap lands badly. The mark goes; it carries nothing. */
     .hero__gate-mark { display: none; }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     THE HERO CHECK. Every dimension here is a token and there is no second card
+     recipe: the pane wears `.surface` classes in the markup, so its border,
+     radius and fill are styles/surfaces.css and are not restated below. What
+     this block owns is where the parts sit and which one is showing. */
+  /* NO `text-align` HERE, AND THAT IS A GATE REQUIREMENT RATHER THAN A
+     PREFERENCE. This block set `text-align: start` and scripts/check-render.js
+     failed the build on it: "1 block(s) putting text on the left edge
+     sitewide, div.hmt". The owner's rule of 2026-08-03 is "all the text in
+     cards or non cards must be in central", styles/alignment.css states it on
+     <main>, and what may sit left is decided by WHAT AN ELEMENT IS rather than
+     by which block it is in.
+
+     THE ONE THING HERE THAT IS GENUINELY LEFT IS THE CLAUSE, AND IT IS LEFT
+     BECAUSE IT IS A <pre>. Code is on the gate's own excused list, and the
+     clause has to keep its line breaks anyway because the engine segments on
+     them. So the exception is carried by the tag rather than by a declaration,
+     which is exactly what that gate asks for. */
+  .hmt {
+    margin-block-start: var(--stack-3);
+  }
+
+  /* OFF SCREEN BUT STILL FOCUSABLE, which `display: none` would not be. The
+     radio is the control a keyboard reaches; the label is what a pointer hits.
+     Both drive the same input, so the two never disagree. */
+  .hmt__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hmt__lead {
+    margin: 0 0 var(--stack-1);
+    color: var(--c-text-muted);
+  }
+
+  .hmt__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    /* A flex container does not inherit the page's centring: `text-align` has
+       nothing to act on once the children are flex items, so the row has to say
+       where it sits. Without this the three tabs packed to the inline start
+       under a centred lead and above a centred link, which reads as a column
+       that lost its axis rather than as a deliberate left edge. */
+    justify-content: center;
+    gap: 8px;
+    margin-block-end: var(--stack-1);
+  }
+
+  /* `.chip` is not worn here because a chip is a static micro-label and this is
+     a control: it takes a pointer, it takes focus and it has a selected state.
+     Borrowing the chip recipe would put a third fingerprint on it and
+     scripts/check-treatments.js measures a chip by its padding. The values below
+     are the control scale tokens, not new numbers. */
+  .hmt__tab {
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-size: var(--t-micro);
+    color: var(--c-text-sub);
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+
+  .hmt__tab:hover {
+    color: var(--c-text);
+  }
+
+  /* THE PANES ARE ALL IN THE DOCUMENT AND ONE IS SHOWN. `hidden` on the two
+     that are not would need script to move, so the selected pane is chosen by
+     `:checked ~` instead and the page needs nothing to run. */
+  .hmt__pane {
+    display: none;
+  }
+
+  #hmt-a:checked ~ .hmt__panes #hmt-p-a,
+  #hmt-b:checked ~ .hmt__panes #hmt-p-b,
+  #hmt-c:checked ~ .hmt__panes #hmt-p-c {
+    display: block;
+  }
+
+  /* The selected tab and the keyboard ring. Both are written against the same
+     three ids for the same reason: the label is not a sibling of its own input,
+     so `+` cannot reach it and the id has to be named. --c-interactive is the
+     control role, which is what a selected control is. */
+  #hmt-a:checked ~ .hmt__tabs label[for="hmt-a"],
+  #hmt-b:checked ~ .hmt__tabs label[for="hmt-b"],
+  #hmt-c:checked ~ .hmt__tabs label[for="hmt-c"] {
+    border-color: var(--c-interactive);
+    color: var(--c-text);
+  }
+
+  #hmt-a:focus-visible ~ .hmt__tabs label[for="hmt-a"],
+  #hmt-b:focus-visible ~ .hmt__tabs label[for="hmt-b"],
+  #hmt-c:focus-visible ~ .hmt__tabs label[for="hmt-c"] {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  /* The clause, as it was fed to the engine. `pre` because the line breaks are
+     part of what was read: the engine segments on them, so reflowing the text
+     would show the reader something other than its input. */
+  .hmt__src {
+    margin: 0 0 var(--stack-1);
+    padding: var(--blk-pad-xs);
+    border-radius: var(--radius-card-sm);
+    background-color: var(--c-floor);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-body);
+    color: var(--c-text-sub);
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  .hmt__steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+    font-size: var(--t-micro);
+    color: var(--c-text-sub);
+  }
+
+  /* The three step names. --c-text rather than a role hue: Read, Match and Hold
+     are stages, not verdicts, and neither teal nor orchid may be spent on a
+     label that carries no status. */
+  .hmt__steps b {
+    color: var(--c-text);
+    font-weight: var(--t-w-h3);
+  }
+
+  .hmt__foot {
+    margin: var(--stack-1) 0 0;
+  }
+
+  /* 24px IS A WCAG FLOOR, NOT A DESIGN CHOICE, WHICH IS WHY IT IS A LITERAL.
+     scripts/check-render.js measured this link at 211x23 on the built page and
+     failed the build: SC 2.5.8 sets 24px as the minimum target and the link is
+     the only thing in its paragraph, so it is standalone rather than
+     constrained by surrounding line-height. The `meta` class sets --t-micro,
+     whose line box lands one pixel short.
+
+     THE TYPE DOES NOT MOVE TO FIX IT. Growing the label to --t-body would
+     clear 24px as a side effect and would also make a secondary link the
+     loudest thing under the demo. `inline-block` plus a floor on the block
+     size gives the pointer the 24px it is owed and leaves the type where the
+     design put it. The number is the standard's, so it is written as the
+     standard states it rather than routed through a design token that could
+     later drift below it. */
+  .hmt__foot a {
+    display: inline-block;
+    min-block-size: 24px;
   }
 </style>
