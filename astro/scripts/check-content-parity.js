@@ -159,6 +159,25 @@ const UPDATE = process.argv.includes('--update');
  */
 const ALLOWED_LOSSES = new Map([
   /*
+   * 2026-08-31. The /security/ heading "GDPR-aligned data processing" became
+   * "GDPR compliant", and this is a CORRECTION rather than a loss.
+   *
+   * "Aligned" is the right hedge for a STANDARD nobody has certified us
+   * against. It is the wrong word for a LAW. The ICO is explicit that
+   * certification under Article 42 is voluntary and only a way to DEMONSTRATE
+   * compliance, so GDPR compliance is self assessed by design and there is no
+   * body that confers it. Hedging it read as evasive to the one audience that
+   * matters, a procurement reader, and it understated what the company can
+   * actually evidence: ICO registration, signed DPAs with every named
+   * sub-processor, EU residency, RLS on all 358 production tables and erasure
+   * implemented in code.
+   *
+   * The reader loses nothing and gains a plainer statement of the same fact.
+   */
+  ['/security/  heading: gdpr-aligned data processing',
+   'Renamed to "GDPR compliant" on 2026-08-31 by owner instruction. GDPR compliance is a legal obligation that is self assessed by design, unlike ISO 27001 where an accredited body issues a certificate, so the two must not be hedged the same way. The subject-rights content under the heading is unchanged and the DPA sentence is still there.'],
+
+  /*
    * 2026-08-31. The /security/ heading lost the words "UK-hosted", and this is
    * a CORRECTION RATHER THAN A LOSS, which is why it is recorded here instead
    * of being swept up by a baseline refresh.

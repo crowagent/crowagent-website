@@ -19,9 +19,9 @@ Disk-level AES-256-GCM with automatic key rotation across databases, file storag
 
 Forward-secret HTTPS on every request with HSTS preload and modern cipher suites only.
 
-### GDPR-aligned data processing
+### GDPR compliant
 
-Subject rights supported end to end. Full Data Processing Agreement available for customers on request.
+Subject rights supported end to end, with lawful basis, retention and deletion documented. A Data Processing Agreement is available for customers on request.
 
 ### EU data residency
 

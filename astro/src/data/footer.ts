@@ -78,10 +78,40 @@ export const FOOTER = {
    *
    * REVERSING THIS IS ONE LINE if the owner disagrees: put 'GDPR compliant'
    * back between 'TLS 1.3 in transit' and 'EU data residency'.
-   */
+   *
+   * -- REVERSED 2026-08-31 ON OWNER INSTRUCTION, AND THE ARGUMENT ABOVE WAS
+   * HALF RIGHT --------------------------------------------------------------
+   *
+   * The reasoning above is sound about PLACEMENT and wrong about the CLAIM. It
+   * concluded "GDPR compliant is checkable against nothing" from the true
+   * premise that no GDPR certificate exists. Those are different things.
+   *
+   * THE ICO IS EXPLICIT: certification under Article 42 is VOLUNTARY and is
+   * only a way to DEMONSTRATE compliance. Compliance itself is a legal
+   * obligation an organisation either meets or does not, and it is SELF
+   * ASSESSED BY DESIGN. There is no body that confers it and none is required.
+   * That is the exact opposite of ISO 27001, where an accredited body issues a
+   * certificate and a claim without one is false.
+   *
+   * SO THE TWO MUST NOT BE HEDGED THE SAME WAY, which is what the old row did
+   * by treating them as neighbours of one kind. ISO 27001 stays hedged because
+   * this company holds no certificate. GDPR does not, because no certificate
+   * is the normal and expected state.
+   *
+   * WHAT BACKS IT, each verifiable: ICO registration on the public register,
+   * signed DPAs with every named sub-processor, EU data residency, row level
+   * security on all 358 production tables, and subject erasure implemented in
+   * code rather than promised.
+   *
+   * THE ONE THING THAT COULD FALSIFY IT IS OPERATIONAL, NOT LEGAL, AND IS
+   * TRACKED: an erasure request has sat failed for 59 days against a one month
+   * statutory deadline, and deletion_audit_log holds 8 incomplete rows with the
+   * oldest at 146 days. Board row A-222. A claim of compliance is only as good
+   * as the backlog behind it, so that is the item to close, not this line. */
   trustBadges: [
     'AES-256 at rest',
     'TLS 1.3 in transit',
+    'GDPR compliant',
     'EU data residency',
     'ISO 27001 controls*',
     'ICO registered',
