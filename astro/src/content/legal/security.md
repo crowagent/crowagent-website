@@ -21,7 +21,7 @@ Forward-secret HTTPS on every request with HSTS preload and modern cipher suites
 
 ### GDPR compliant
 
-Subject rights supported end to end, with lawful basis, retention and deletion documented. A Data Processing Agreement is available for customers on request.
+Subject rights supported end to end, with lawful basis, retention and deletion documented. A Data Processing Agreement is available for customers on request, currently in draft pending legal review.
 
 ### EU data residency
 
@@ -43,9 +43,9 @@ The detail behind each control, written for security and procurement teams. Jump
 
 ## AES-256 encryption
 
-All customer data is encrypted at rest using AES-256, and in transit using TLS 1.3. Encryption keys are managed at the infrastructure level and rotated automatically. Database snapshots, file storage, and backups inherit the same protection.
+All customer data is encrypted at rest using AES-256, and in transit using TLS 1.3. Disk encryption keys are managed and rotated by our infrastructure providers. Application credentials and API keys are rotated by us, on a documented procedure with a verification step before the old key is revoked. Database snapshots, file storage, and backups inherit the same protection.
 
-<dl class="deflist deflist--ledger"> <dt>At rest</dt> <dd>AES-256-GCM</dd> <dt>In transit</dt> <dd>TLS 1.3, HSTS</dd> <dt>Key rotation</dt> <dd>Automatic</dd> <dt>Backups</dt> <dd>Encrypted</dd> </dl>
+<dl class="deflist deflist--ledger"> <dt>At rest</dt> <dd>AES-256-GCM</dd> <dt>In transit</dt> <dd>TLS 1.3, HSTS</dd> <dt>Disk key rotation</dt> <dd>Provider managed</dd> <dt>Application key rotation</dt> <dd>Documented procedure</dd> <dt>Backups</dt> <dd>Encrypted</dd> </dl>
 
 ## EU data residency
 
@@ -61,9 +61,8 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 ## GDPR compliance
 
 - CrowAgent Ltd is registered as a data controller with the Information Commissioner’s Office (ICO) under the Data Protection (Charges and Information) Regulations 2018.
-- A full Data Processing Agreement (DPA) is available on request for customers.
+- A Data Processing Agreement (DPA) is available on request for customers. It is in draft pending legal review, so terms may change before signature.
 - Data subject rights supported: right to erasure, data portability, restriction of processing, and access.
-- Data Protection Impact Assessments (DPIAs) are reviewed for new product capabilities that process personal data.
 
 <dl class="deflist"> <dt>ICO contact &amp; registration</dt> <dd> <p>Verifiable on the <a href="https://ico.org.uk/ESDWebPages/Search">ICO public register</a> by searching for “CrowAgent Ltd”.</p> <p>Data requests: <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></p> </dd> </dl>
 
@@ -105,11 +104,11 @@ AI inference runs through server-side API calls only. Customer-facing drafting u
 
 ## Vulnerability disclosure
 
-Report security vulnerabilities responsibly to [security@crowagent.ai](mailto:security@crowagent.ai?subject=Security%20Disclosure) with the subject “Security Disclosure”. We acknowledge receipt within two business days and triage as below.
+Report security vulnerabilities responsibly to [security@crowagent.ai](mailto:security@crowagent.ai?subject=Security%20Disclosure) with the subject “Security Disclosure”. We acknowledge receipt within two business days and triage as below. These are targets we set ourselves, not a contractual service level.
 
 On a narrow screen, this table scrolls sideways.
 
-<div class="prose-scroll" role="region" aria-label="Table" tabindex="0"><table class="sec-table"> <thead> <tr> <th>Severity</th> <th>Examples</th> <th>Triage SLA</th> <th>Patch SLA</th> </tr> </thead> <tbody> <tr> <td><span class="chip">Critical</span></td> <td>RCE, auth bypass</td> <td>1 business day</td> <td>5 days</td> </tr> <tr> <td><span class="chip">High</span></td> <td>Privilege escalation</td> <td>2 business days</td> <td>14 days</td> </tr> <tr> <td><span class="chip">Medium</span></td> <td>CSRF, XSS</td> <td>3 business days</td> <td>30 days</td> </tr> <tr> <td><span class="chip">Low</span></td> <td>Hardening findings</td> <td>5 business days</td> <td>Best-effort</td> </tr> </tbody> </table></div>
+<div class="prose-scroll" role="region" aria-label="Table" tabindex="0"><table class="sec-table"> <thead> <tr> <th>Severity</th> <th>Examples</th> <th>Triage target</th> <th>Patch target</th> </tr> </thead> <tbody> <tr> <td><span class="chip">Critical</span></td> <td>RCE, auth bypass</td> <td>1 business day</td> <td>5 days</td> </tr> <tr> <td><span class="chip">High</span></td> <td>Privilege escalation</td> <td>2 business days</td> <td>14 days</td> </tr> <tr> <td><span class="chip">Medium</span></td> <td>CSRF, XSS</td> <td>3 business days</td> <td>30 days</td> </tr> <tr> <td><span class="chip">Low</span></td> <td>Hardening findings</td> <td>5 business days</td> <td>Best-effort</td> </tr> </tbody> </table></div>
 
 ## Uptime target
 
