@@ -267,6 +267,52 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
       />
     </div>
 
+  {/*
+    ── THE STAGE IS THE SAME SIZE ON ALL FIVE SLIDES, AND THE SIZE IS MEASURED ─
+       BY THE PAGE RATHER THAN WRITTEN DOWN
+
+    Owner, 2026-08-31, on the built page: "card size must be same height of
+    carousels in the section The product, looks very odd deifferent size of
+    side cards appearing for each pages, why cant all 5 cards be in same size".
+
+    That was exactly right and here are the numbers it was right about, taken
+    off the built page at a 1440 viewport before this block existed. The note
+    card, slide by slide: 385.2, 497.7, 655.8, 576.7, 490.6. The frame beside
+    it is 510.3 on every one of them, so three slides were shorter than the
+    screenshot and two were taller, the showcase measured 693.3 on three slides
+    and 838.8 on Draft, and everything below this section moved 145.5px every
+    time the carousel advanced. At 390 the same walk was 284.4px.
+
+    ── WHY A GHOST AND NOT A NUMBER ───────────────────────────────────────────
+
+    The obvious fix is `min-block-size` on the stage, and it is wrong here. The
+    tallest note is 782.5 at 360, 708.1 at 390, 397.4 at 720, 385.3 at 896,
+    721.3 at 900 and 655.8 at 1440: it moves with the column width AND with the
+    fluid type scale, it is not monotonic, and it changes the moment anyone
+    edits a sentence. A written-down height would be right at three widths and
+    quietly wrong at every other one.
+
+    So the height is measured by the browser. This block renders the five note
+    cards a second time, stacked in one grid cell, `visibility: hidden` and
+    `aria-hidden`, and the CSS below puts it in the same grid area as the live
+    panels. A hidden panel is `display: none` (tokens.css, unlayered and
+    !important, and its own note says anything that needs to be in the layout
+    while hidden should not be using that attribute), so the four panels that
+    are not showing contribute nothing and CANNOT be made to. The ghost is what
+    contributes instead: it is always laid out, it is always as tall as the
+    tallest of the five at the current width, and the grid row it shares with
+    the live panel therefore never changes height as the tabs advance.
+
+    IT IS NOT ANNOUNCED AND IT IS NOT REACHABLE. `aria-hidden` takes it out of
+    the accessibility tree and `visibility: hidden` takes it out of the tab
+    order, so a screen reader meets each note exactly once, inside the tabpanel
+    it belongs to.
+
+    THE MARKUP IS REPEATED ON PURPOSE AND MUST STAY IDENTICAL. A ghost that
+    renders a different box measures a different height. If the card below
+    gains an element, this one gains the same element.
+  */}
+  <div class="ps__panels">
     {
       STAGES.map((s) => (
         <div class="ps__panel" id={s.id}>
@@ -306,6 +352,26 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
         </div>
       ))
     }
+
+    <div class="ps__ghost" aria-hidden="true">
+      {
+        STAGES.map((s) => (
+          <div class="surface surface--flat ps__note">
+            <p class="meta ps__kicker">{s.kicker}</p>
+            <h3 class="ps__h">{s.title}</h3>
+            <p class="card__body ps__p">{s.body}</p>
+            {s.quote && (
+              <blockquote class="ps__quote">
+                <p class="card__body ps__p">&ldquo;{s.quote.text}&rdquo;</p>
+                <p class="meta ps__src">{s.quote.src}</p>
+              </blockquote>
+            )}
+            {s.note && <p class="card__body ps__p ps__muted">{s.note}</p>}
+          </div>
+        ))
+      }
+    </div>
+  </div>
   </div>
 </Section>
 
@@ -417,25 +483,112 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
    * ui/Carousel.astro. Recorded here rather than fixed here, and recorded
    * rather than dropped, because a call site reaching into another component's
    * scoped internals is the fork this file's header exists to prevent. */
-  .ps__stage {
+  /* ── THE GRID MOVED UP ONE LEVEL, WHICH IS WHAT MAKES THE STAGE STABLE ────
+   *
+   * `.ps__panels` is the stage now, and `.ps__stage` inside each panel is
+   * `display: contents`, so the frame and the note card of whichever panel is
+   * showing are direct items of THIS grid rather than of a grid per panel.
+   * The ghost's five note cards are items of the same grid, in the same cell,
+   * which is the whole mechanism: one grid, one set of tracks, and a row whose
+   * height is the tallest thing any of them needs at the current width.
+   *
+   * `display: contents` is on `.ps__stage` and NOT on `.ps__panel`. The panel
+   * carries `role="tabpanel"`, and a box-less element with a role is exactly
+   * the case where browsers have historically dropped the role out of the
+   * accessibility tree. The stage is a plain div with no role and nothing to
+   * lose. The panel keeps its box and takes `grid-template-columns: subgrid`
+   * instead, so its two children land on the parent's tracks.
+   *
+   * The concept's 7fr / 5fr and its 28px gutter are unchanged. The gap was
+   * clamp(20px, 3vw, 40px), which resolved to 40px at 1440 against the
+   * concept's 28px and pushed the note column 12px narrower than it draws. No
+   * max-width here, so nothing to centre and nothing for the capped-column
+   * rule to measure.
+   *
+   * `minmax(min-content, 1fr)` on the row rather than `auto`: `1fr` is what
+   * makes the row a stretch target, so the note card fills the stage instead
+   * of sitting at its own height inside it, and the `min-content` floor is
+   * what stops a 1fr row shrinking below the content when the ghost is the
+   * tallest item. */
+  .ps__panels {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: minmax(min-content, 1fr);
     gap: 28px;
-    align-items: start;
+  }
+
+  .ps__panel,
+  .ps__ghost {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+  }
+
+  .ps__stage {
+    display: contents;
+  }
+
+  /* ── THE GHOST IS LAID OUT AND IS NOT THERE ───────────────────────────────
+   *
+   * `visibility: hidden` rather than `display: none`, because the point of it
+   * is to occupy the row. It is out of the tab order and out of the
+   * accessibility tree, and `aria-hidden` in the markup says so a second time
+   * for the tree specifically. Its five cards all sit in the note column of
+   * the same row, on top of one another, so the row is as tall as the tallest
+   * of them and never taller. */
+  .ps__ghost {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .ps__ghost > .ps__note {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   /* Below the two-column breakpoint the two stack, which is the same 56rem
-     `.card-row` uses so the page has one place where its columns collapse. */
+     `.card-row` uses so the page has one place where its columns collapse.
+     The stage becomes two rows, the frame takes the first and every note card
+     takes the second, ghost included, so the reserved height is the frame plus
+     the tallest note rather than the larger of the two. */
   @media (max-width: 56rem) {
-    .ps__stage {
+    .ps__panels {
       grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(min-content, 1fr);
+    }
+
+    .ps__frame {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: stretch;
+    }
+
+    .ps__note,
+    .ps__ghost > .ps__note {
+      grid-column: 1;
+      grid-row: 2;
     }
   }
 
   /* `.pcar` caps itself at --measure-mid and centres inside whatever it is
-     given, so this column only has to not fight it. */
+     given, so this column only has to not fight it.
+
+     IT STARTS ON THE SAME LINE AS THE CARD, 2026-08-31. The stage is now held
+     at the height of the tallest of the five note cards, which at 1440 is
+     655.8 against a 510.3 frame, so there is 145.5px of stage the screenshot
+     does not need. Centring it in that slack was tried first and measured
+     wrong: it put the top of the device frame 73px below the top of the card
+     beside it, so the two columns of one object began on two different lines.
+     Apple's layout guidance is the argument against that in one sentence,
+     "align components with one another to make them easier to scan and to
+     communicate organization and hierarchy". Both columns start together and
+     the slack collects at the foot of the stage, in one place instead of four.
+     The note card beside it does the same and is argued on `.ps__note`. */
   .ps__frame {
     min-width: 0;
+    align-self: start;
   }
 
   /* ── THE INSPECTOR IS A COLUMN WITH A 16px GAP, AND IT SITS ON THE FLOOR ───
@@ -456,6 +609,22 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
    * laid on it. `surface--flat` gives the same glass with no cast shadow, for
    * the same reason. `background-color` alone; the border, radius and padding
    * stay surfaces.css's. */
+  /* ── THE SURFACE IS THE CONSTANT AND THE CONTENT SITS AT THE TOP OF IT ────
+   *
+   * Owner, 2026-08-31: all five cards the same size. They are, because the row
+   * is one height and the default `align-self: stretch` fills it, so what the
+   * reader sees on every slide is one card of one size in one place. The copy
+   * inside it is genuinely different lengths and is not padded, stretched or
+   * distributed to pretend otherwise: `flex-start` is the default `justify-
+   * content` for this column and it is what is wanted, so the kicker, the
+   * heading and the argument begin on the same line on all five and the slack
+   * collects at the foot where it reads as room rather than as a hole between
+   * two paragraphs.
+   *
+   * NOTHING IS CLIPPED AND NOTHING IS CLAMPED. There is no `overflow` and no
+   * `-webkit-line-clamp` here, and there must not be: the row is reserved with
+   * a MINIMUM, so a card whose copy grows past the reservation makes the stage
+   * taller rather than losing a sentence. */
   .ps__note {
     display: flex;
     flex-direction: column;
