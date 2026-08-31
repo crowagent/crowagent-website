@@ -1024,35 +1024,34 @@
    the LCP measurement that forbids zero, and why the blur is admitted here and
    nowhere else. */
 @keyframes sv-land-hero {
-  /* -- OPACITY ONLY, AND THE TRANSFORM IS GONE ON PURPOSE ------------------
+  /* -- THE RISE IS BACK, BECAUSE THE TRANSFORM WAS NEVER THE FAULT ---------
    *
-   * 2026-08-31, third attempt at one fault, so the reasoning is written out.
-   * The owner photographed a strip of the headline standing to the LEFT of
-   * where any word sits, and a strip OUTSIDE the text's own box can only exist
-   * if the geometry moved after something had already been painted. Exactly
-   * two things could move it: the font swap, closed by `font-display:
-   * optional` in fonts.css, and this translateY.
+   * It was removed on 2026-08-31 on a wrong diagnosis and restored the same
+   * day once the real cause was found. THE GHOST WAS A DOUBLE PAINT: the h1
+   * and each span were both clipping a gradient to the SAME glyphs, so two
+   * elements drew the same words, and only one of them moved. The note on
+   * `.hero__title` in HeroStack.astro carries it.
    *
-   * A TRANSFORM ANIMATION PROMOTES THE ELEMENT TO ITS OWN COMPOSITING LAYER
-   * AND GIVES IT A SECOND, MOVING GEOMETRY. An opacity animation promotes a
-   * layer too, which is why removing the blur alone was not enough, but it
-   * NEVER CHANGES WHERE THE GLYPHS SIT. A stale raster under opacity is drawn
-   * exactly where the live text already is and cannot read as a ghost beside
-   * it. Under a transform it can, and did.
+   * THREE THINGS WERE REMOVED CHASING THAT, and only the third was necessary.
+   * The blur went, the font swap was closed with `font-display: optional`, and
+   * then the transform went. Each changed WHERE the second copy sat and none
+   * could remove it, because a second copy needs two painters and there were
+   * still two. The blur and the transform were evidence, not causes.
    *
-   * WHAT IS LOST AND WHY THAT IS ACCEPTABLE. The rise is gone, the STAGGER
-   * stays, and the stagger is the part that reads as choreography: three
-   * phrases arriving one after another rather than a line appearing. What was
-   * removed is the part that could not be made safe on the owner's machine,
-   * measured at devicePixelRatio 1.5.
+   * THE BLUR STAYS OUT, and that is a judgement rather than a fix: at 83px it
+   * read as a smear rather than a bloom, and the stagger carries the arrival
+   * without it. `font-display: optional` stays too, on its own merits, because
+   * a headline that resizes mid animation is a fault whatever else is true.
    *
-   * --hero-land-lift is deliberately LEFT DEFINED AND UNUSED, so the next
-   * person who wants a rise here has to walk past this note to add one. */
+   * translateY ONLY. No translateX, no rotation, no scale, for the reasons in
+   * the note above this block. */
   from {
     opacity: var(--hero-land-floor);
+    transform: translateY(var(--hero-land-lift));
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
