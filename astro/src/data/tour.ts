@@ -36,11 +36,25 @@
  * middle of it reads as a phone photographed on a monitor. `object-fit: contain`
  * made that display tidily rather than making it right.
  *
- * SO THE TOUR IS FIVE, DESKTOP AND TABLET. The tablet drawings stay: 2048x1536
- * is landscape, it letterboxes modestly inside 16/10, and a tablet in a desktop
- * frame is the same class of object at a different width. The one slide that
- * went is `sup-8-action-centre`, and what the tour loses with it is recorded
- * beside the list below.
+ * SO THE TOUR IS FIVE, AND EVERY SLIDE IS NOW 16:10. The one slide that went is
+ * `sup-8-action-centre`, and what the tour loses with it is recorded beside the
+ * list below.
+ *
+ * ── "LETTERBOXES MODESTLY" WAS WRONG, CORRECTED 2026-08-31 (A-225) ──────────
+ *
+ * This block used to end by keeping the two tablet drawings on the argument
+ * that 2048x1536 "letterboxes modestly inside 16/10, and a tablet in a desktop
+ * frame is the same class of object at a different width". The owner has now
+ * reported the result, and modest is not what it looks like: Answer library and
+ * Reports and audit carried visible bars down BOTH SIDES while the three
+ * desktop slides beside them fitted the stage exactly. A defect that is only
+ * visible on two slides out of five reads as those two slides being broken.
+ *
+ * Both are now cropped to 16:10 in the registry as `TABLET_WIDE`, 256px off the
+ * bottom, which is empty ground in both drawings. See the note on that constant
+ * in crowmark-screens.ts for what was checked before the crop was taken. The
+ * tour therefore no longer mixes ratios at all, and the stage's `object-fit:
+ * contain` has nothing left to letterbox.
  *
  * `scripts/check-device-frames.js` NOW FAILS THE BUILD ON A PORTRAIT IMAGE
  * INSIDE EITHER DESKTOP FRAME, measured from the file's own header, so this

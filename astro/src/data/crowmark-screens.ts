@@ -63,7 +63,7 @@ import type { Slide } from '../components/ui/Carousel.astro';
  * year, and a corrected screen shipped without a new URL reaches nobody who
  * already holds the old one.
  */
-const V = '?v=20260805a';
+const V = '?v=20260831a';
 
 /*
  * ── THE LIGHT VARIANT, OWNER DECISION 2026-08-05 ────────────────────────────
@@ -168,6 +168,29 @@ export const avifSrcset = (src: string, masterWidth: number) =>
    eventually disagree with the file. */
 const DESKTOP = { width: 2880, height: 1800 };
 const TABLET = { width: 2048, height: 1536 };
+/* [A-225 2026-08-31] TABLET_WIDE is a tablet-resolution drawing CROPPED to 16:10,
+   and it exists because the Workstation tour stage is 16:10 and two of its five
+   slides were not.
+
+   The two screens it covers were exported 2048x1536, so `object-fit: contain`
+   pillarboxed them: the owner saw bars down the left and right of Answer library
+   and Reports and audit while the three desktop slides beside them fitted exactly.
+   Before the tour's contain rule was repaired, the same two were being CROPPED
+   118px at top AND foot, so this has been wrong in one direction or the other
+   the whole time.
+
+   256px came off the BOTTOM ONLY, which is empty ground in both drawings. Every
+   element survives, checked by eye on all four files rather than assumed: the
+   breadcrumb, the title, the controls, the full list or table, and the footnote.
+   A centred crop would have taken the header, which is the half a reader uses to
+   tell one screen from another.
+
+   THE OTHER TABLET DRAWINGS ARE UNTOUCHED. sup-6-insights and
+   buy-5-supplier-comparison are still 4:3 and still `...TABLET`, because they
+   appear only in the /crowmark carousels, which give every slide its own
+   `--screen-ratio` and letterbox nothing. Cropping them would be changing an
+   asset to satisfy a frame it never enters. */
+const TABLET_WIDE = { width: 2048, height: 1280 };
 /* THE PHONE SIZE IS GONE WITH THE FOUR SCREENS THAT USED IT. See the note above
    SUPPLIER_SCREENS. It is not left declared and unused: an unused constant is
    how a removed thing quietly grows back, and the four masters are still on
@@ -251,8 +274,8 @@ export const SUPPLIER_SCREENS: Slide[] = [
   },
   {
     src: shot('sup-5-answer-library'),
-    ...TABLET,
-    alt: 'The CrowMark answer library at tablet width. Previously submitted answers are listed under the note that the drafter grounds new answers in these, and that answers marked as coming from a won bid rank higher as sources. A search field, a sort control and a won-bids filter sit above the list, and each answer carries topic tags.',
+    ...TABLET_WIDE,
+    alt: 'The CrowMark answer library. Previously submitted answers are listed under the note that the drafter grounds new answers in these, and that answers marked as coming from a won bid rank higher as sources. A search field, a sort control and a won-bids filter sit above the list, and each answer carries topic tags.',
     caption: 'Your own submitted answers, held as the sources a new draft is grounded in',
   },
   {
@@ -301,8 +324,8 @@ export const BUYER_SCREENS: Slide[] = [
   },
   {
     src: shot('buy-6-reports-audit'),
-    ...TABLET,
-    alt: 'The CrowMark reports and audit trail at tablet width. Four figures summarise the trail, with a seven-year retention marker and an export action, above a table listing each action with the person who took it and a timestamp. The closing line reads that every band carries the evaluator who set it and the time they set it. Nothing in this trail was written by the model.',
+    ...TABLET_WIDE,
+    alt: 'The CrowMark reports and audit trail. Four figures summarise the trail, with a seven-year retention marker and an export action, above a table listing each action with the person who took it and a timestamp. The closing line reads that every band carries the evaluator who set it and the time they set it. Nothing in this trail was written by the model.',
     caption: 'Every band, every change and every export, against the person and the moment it happened',
   },
 ];
