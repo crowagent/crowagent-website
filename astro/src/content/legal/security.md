@@ -39,7 +39,7 @@ CrowAgent Ltd is registered with the Information Commissioner's Office and verif
 
 The detail behind each control, written for security and procurement teams. Jump to any topic, or contact us for an audit pack.
 
-<aside aria-label="Security contact"> <strong>Security Contact</strong> <p>For security disclosures or audit requests, contact our security team at <a href="mailto:security@crowagent.ai">security@crowagent.ai</a></p> </aside>
+<aside aria-label="Security contact" class="legal-aside"> <div class="legal-aside__card"> <strong>Security Contact</strong> <p>For security disclosures or audit requests, contact our security team at <a href="mailto:security@crowagent.ai">security@crowagent.ai</a></p> </div> </aside>
 
 ## AES-256 encryption
 

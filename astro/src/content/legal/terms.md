@@ -32,7 +32,7 @@ Tap any card to jump straight to the full clause. The complete agreement follows
 
 The complete agreement, written in plain language. Jump to any clause, or contact us for a Data Processing Agreement.
 
-<aside aria-label="Legal contact"> <strong>Legal contact</strong> <p>For DPA or contract requests, email <a href="mailto:legal@crowagent.ai">legal@crowagent.ai</a></p> </aside>
+<aside aria-label="Legal contact" class="legal-aside"> <div class="legal-aside__card"> <strong>Legal contact</strong> <p>For DPA or contract requests, email <a href="mailto:legal@crowagent.ai">legal@crowagent.ai</a></p> </div> </aside>
 
 ## 1. Parties and Agreement
 
