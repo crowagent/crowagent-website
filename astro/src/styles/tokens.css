@@ -970,6 +970,31 @@
    * (4 x 5) and 12.59 -> 12 (4 x 3) at 1440x900. Nothing visible moves on a
    * desktop; a 1920x1080 window tightens by 3.75px and 3.11px, which is the
    * height dependency being removed rather than a spacing change. */
+  /* ── --stack-3 EXISTED AT A CALL SITE AND NOT IN THIS FILE ───────────────
+   *
+   * ADDED 2026-08-31 because it was already being SPENT. WorkstationTour.astro
+   * set `margin-block-start: var(--stack-3)` on the control bar under the stage
+   * and this file declared only --stack-1 and --stack-2, so the property was
+   * INVALID AT COMPUTED-VALUE TIME and the margin computed to 0. Measured on the
+   * built page: the control row sat flush against the bottom edge of the stage
+   * with a 0px gap, on a component whose whole shape is a bezel around a screen
+   * AND its controls.
+   *
+   * THIS IS THE WORST FAILURE MODE A DESIGN SYSTEM HAS. An unresolved custom
+   * property throws nothing, warns nothing and fails no gate. The stylesheet
+   * reads as though it works, the declaration is right there in the source, and
+   * the only way to find it is to compute it in a browser or to diff the set of
+   * names declared against the set used. That sweep was run over all of src on
+   * the same day and found EIGHT undeclared names, of which this was the only
+   * one with no `var(name, fallback)` behind it. The other seven are
+   * script-assigned at runtime (--mx, --my, --mag-x, --mag-y and three more) and
+   * each already carries a fallback, which is what makes them safe.
+   *
+   * 32px, WHICH IS --space-8 AND THE NEXT RUNG UP. The ladder is now tight 12,
+   * normal 20, loose 32, three steps at roughly 1.6x, all on the 4px grid. That
+   * is what the call site was reaching for and it now exists rather than
+   * evaluating to nothing. */
+  --stack-3:   var(--space-8); /* 32px. loose gap: a control row under a stage */
   --stack-2:   var(--space-5); /* 20px. normal gap between stacked lines */
   --stack-1:   var(--space-3); /* 12px. tight gap between stacked lines */
 

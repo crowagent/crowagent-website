@@ -541,6 +541,41 @@ const MEASURE = `(() => {
     if (/^(BLOCKQUOTE|PRE|CODE|TABLE|THEAD|TBODY|TR|TH|TD|FIGURE|FIGCAPTION|DL|DT|DD|FORM|FIELDSET|LABEL|LEGEND|DETAILS|SUMMARY)$/.test(el.tagName)) continue;
     if (el.closest('pre, code, blockquote, table, .prose, .legal__body, .article-body, .gl-article')) continue;
 
+    /* ── ONE BOX, ONE AXIS. styles/alignment.css RULE 4 ───────────────────
+     *
+     * Owner instruction, 2026-08-31: a centred box with left aligned lines
+     * inside it, labels sharing one left edge. A card that DIRECTLY CONTAINS a
+     * left-axis block is a left-axis card, so its heading, kicker and call to
+     * action go left with its body instead of floating on a centre line the
+     * body does not use.
+     *
+     * THIS IS THE THIRD PLACE THE SAME LIST HAS TO BE STATED and there is no way
+     * round it: the stylesheet states it as a selector, MEASURE_LEFT below
+     * states it as the sitewide rule, and this card rule is a separate walk with
+     * its own exclusions. Landing the stylesheet and MEASURE_LEFT without this
+     * one was measured: 28 blocks on 120 route instances reported as off the
+     * centre line, every one of them a card the stylesheet had just corrected.
+     *
+     * THE TRIGGER SET IS NOT THIS RULE'S OWN TAG LIST ABOVE, and the difference
+     * is deliberate rather than a copying slip. FIGURE, BLOCKQUOTE, CODE and
+     * SUMMARY appear there and are NOT triggers here: each is a self-contained
+     * object with its own internal alignment rather than a reading axis the box
+     * adopts. Ten panels on the homepage alone are figures, and every card
+     * carrying an illustration would otherwise be excused on the strength of the
+     * picture rather than the words.
+     *
+     * '.section__body' IS EXCLUDED, mirroring the stylesheet, so a <dl> beside a
+     * '.lead' cannot drag the lead left. NO BACKTICKS: see the warning above. */
+    if (
+      !el.matches('.section__body') &&
+      ['table', 'form', 'fieldset', 'dl', 'pre',
+       '.prose', '.legal__body', '.article-body', '.gl-article', '.cmp-body',
+       '.faq-item__a', '.card__body', '.item__body', '.pair__body', '.cap__body',
+       '.principles__body', '.conn__note', '.role__p', '.note', '.tl__p',
+       '.hir__p', '.in__aside', '.compare', '.plans__trial',
+      ].some((t) => el.querySelector(':scope > ' + t))
+    ) continue;
+
     const r = el.getBoundingClientRect();
     if (r.width < 80 || r.height < 24) continue;
 
@@ -992,15 +1027,52 @@ const MEASURE_LEFT = `window.__measureLeft = () => {
      exceed three lines and .card__body alone runs to 22. The full argument,
      including why standfirsts and leads are deliberately NOT here, is in
      alignment.css beside the rule this string mirrors. */
+  /* Seven names were added on 2026-08-31, finishing A-16 rather than widening
+     it: .note, .tl__p, .hir__p, .in__aside, .compare and .plans__trial all
+     render centred paragraphs of four to eleven lines at 390, measured with
+     Range rectangles. .lead and .section__standfirst are deliberately still
+     absent and .pg__p is deliberately deferred; alignment.css states why for
+     each. */
   const BODIES =
     '.prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, ' +
     '.card__body, .item__body, .pair__body, .cap__body, .principles__body, ' +
-    '.conn__note, .role__p';
+    '.conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, ' +
+    '.plans__trial';
+
+  /* MIRRORS styles/alignment.css RULE 4, ONE BOX ONE AXIS, BY HAND, and the two
+     must be edited together like the two constants above. Owner instruction of
+     2026-08-31: a centred box with left aligned lines inside it, labels sharing
+     one left edge. A box that directly contains one left-axis block is itself a
+     left-axis box, so its heading, kicker and call to action stop floating on a
+     centre line the body below them does not use.
+     THE TRIGGER SET IS NOT THE SAME AS STRUCTURE, and the difference is the
+     point rather than a copying slip: figure, code, samp and kbd are in
+     STRUCTURE and are deliberately NOT triggers here. Each is a self-contained
+     object with its own internal alignment rather than a reading axis the box
+     adopts. Ten panels on the homepage alone are figures, and every card
+     carrying an illustration would otherwise be excused on the strength of the
+     picture rather than the words. */
+  const AXIS_TRIGGER =
+    'table, form, fieldset, dl, pre, ' + BODIES;
 
   const excused = (el) => {
     if (el.matches(STRUCTURE)) return 'structure';
     if (el.matches(BODIES)) return 'long-form body';
     if (el.matches('.surface--row')) return 'surface--row';
+    /* alignment.css rule 4. '.section__body' is excluded there so a <dl> beside
+       a '.lead' cannot drag the lead left, so it is excluded here too.
+       SINGLE QUOTES, NOT BACKTICKS, AND THIS WHOLE FILE IS UNDER THAT RULE. The
+       constant this comment lives inside is a TEMPLATE LITERAL, so one backtick
+       in a comment closes it and every line after it parses as garbage. Two
+       backticks landed here on 2026-08-31 and the gate stopped running: it did
+       not report red, it threw '.section__body is not a function' and measured
+       NOTHING, which reads exactly like a pass to anyone reading a summary. The
+       MEASURE and MEASURE_LEFT blocks above already carry the same warning. */
+    if (
+      !el.matches('.section__body') &&
+      AXIS_TRIGGER.split(', ').some((t) => el.querySelector(':scope > ' + t))
+    )
+      return 'one box one axis';
     /* alignment.css rule 3: a list item keeps the edge its marker hangs on.
      *
      * There used to be a branch above this one for a navigation list, mirroring

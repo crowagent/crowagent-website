@@ -263,7 +263,36 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
     min-height: 1em;
   }
 
-  .faq-list { display: grid; }
+  /* ── THE REGISTER IS A COLUMN, NOT A BAND ──────────────────────────────────
+   *
+   * ADDED 2026-08-31. This was `display: grid` and nothing else, so it took the
+   * section's full 1232px at 1440 while the answer inside it was capped at its
+   * own reading measure of 727px. Measured with every item open: the hairline
+   * rule under each entry, and the `+` mark that `summary::after` pushes to the
+   * trailing edge, both ran 505px past the last word of the answer. Forty-one
+   * per cent of the row was empty, on every row, and the affordance that opens a
+   * question sat half a screen away from the question.
+   *
+   * --measure-prose, 800px, because it is the step in the scale this content
+   * already sits on. tokens.css describes it as "a standfirst or short intro"
+   * and the same token feeds ten call sites of that kind. The 5/6 and 3/4 steps
+   * were both tried and rejected by looking: --measure-band at 960px is named in
+   * tokens.css for "an FAQ stack", but the stack it was sized for is the sector
+   * FAQ, which sits inside a card and has no independent answer measure. Here
+   * 960 still left a 233px overhang.
+   *
+   * ONE MEASURE WOULD BE BETTER THAN TWO AND IS NOT AVAILABLE. Letting the
+   * answer fill the full 800 would give the rule, the mark and the last word one
+   * shared right edge, but 800px holds about 90 real characters at --t-body
+   * (tokens.css records the arithmetic and the ch-is-not-a-character correction
+   * behind it), which is past the comfortable band for eight lines of continuous
+   * answer. So the answer keeps its own reading measure and the column is set to
+   * the nearest step above it: 73px of overhang rather than 505px. */
+  .faq-list {
+    display: grid;
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
 
   .faq-item {
     border-bottom: 1px solid var(--c-border);
@@ -323,7 +352,29 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
    * two edits are one line each and have to land together. */
   .faq-item__a {
     padding-bottom: var(--stack-2);
-    max-width: 72ch;
+    /* THE MEASURE BELOW IS IN em, SO THIS BOX HAS TO CARRY THE TIER IT IS
+     * MEASURING. `em` resolves against the ELEMENT'S OWN font-size, and this
+     * <div> had none, so it fell to the user agent's 16px while every <p> inside
+     * it set --t-body at 17px: a measure written for the 17px tier was resolving
+     * on 16 and came out 44px narrow. Stating the tier here fixes that and fixes
+     * a second thing it was hiding, the "Request access" link in an answer,
+     * which is a bare <a> with no size of its own and was therefore rendering a
+     * pixel tier below the sentence it sits under. */
+    font-size: var(--t-body);
+    /* ── em, NOT ch, 2026-08-31 ─────────────────────────────────────────────
+     * This read `72ch`. A-92 and the ch-is-not-a-character correction in
+     * tokens.css both apply: `1ch` is the advance of the digit zero, so it is a
+     * property of the LOADED FACE and jumps the instant the webfont swaps,
+     * which is the single mechanism that produced this site's layout shift, and
+     * it reads about 20% low as a character count so `72ch` was never 72
+     * characters.
+     *
+     * 42.7em is the SAME RENDERED WIDTH, 727px at --t-body's 17px, measured on
+     * the built page rather than converted on paper. So no answer re-wraps and
+     * no line gets longer: what changes is that the width no longer moves when
+     * the face arrives. In real characters 727px holds about 86, which is why
+     * this cap stays rather than being widened to the 800px column around it. */
+    max-width: 42.7em;
   }
 
   .faq-item__a p {

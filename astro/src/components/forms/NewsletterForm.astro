@@ -230,14 +230,33 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
 </script>
 
 <style>
-  /* The form sits under a centred head block, so it centres on the same axis.
-     Alignment only: nothing about the page structure changes. */
+  /* ── THE FORM STARTS WHERE ITS CARD STARTS, 2026-08-31 ────────────────────
+   *
+   * This read `margin-inline: auto`, argued as "the form sits under a centred
+   * head block, so it centres on the same axis". That was true of the head block
+   * it was written under and it is no longer true of the card it is in. Both
+   * call sites, /about and /contact, are `.digest` cards, and alignment.css rule
+   * 4 puts a box that contains a <form> on the left axis, on the owner
+   * instruction of 2026-08-31: a centred box with left aligned lines inside it,
+   * labels sharing one left edge.
+   *
+   * `text-align` COULD NOT HAVE DONE THIS AND THAT IS WHY THE RULE ALONE WAS NOT
+   * ENOUGH. Rule 4 moved the digest heading to the card's left edge and left the
+   * form exactly where it was, because an auto inline margin is not inline
+   * content and text-align cannot reach it. Measured on /about at 1440 after
+   * rule 4 landed and before this: heading at x=57, body text starting at x=350,
+   * email field at x=580. Three starts in one card, which is a worse reader than
+   * the centred version it replaced. The two auto margins had to go with it, and
+   * the third, `.digest__p`, is dealt with at each call site.
+   *
+   * THE 520px CAP STAYS. It is the reason a 1232px card does not present a
+   * 1100px-wide email field, and it has nothing to do with where the block
+   * sits. */
   .nl {
     display: flex;
     flex-direction: column;
     gap: var(--stack-1);
     max-width: 520px;
-    margin-inline: auto;
   }
 
   .nl__row {
@@ -260,9 +279,19 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
     text-align: left;
   }
 
+  /* NO `text-align` HERE, AND ITS ABSENCE IS THE FIX RATHER THAN AN OMISSION.
+     This read `center` under the same superseded assumption as the auto margin
+     above, and the first correction replaced it with `left`. That was the wrong
+     shape twice over: check-design-system rule 1 fires on a local
+     `text-align: left` inside a `.surface`, correctly, because a per-component
+     opt-out with no argument behind it is exactly what styles/alignment.css
+     exists to end. There is nothing to opt out of any more. The `.digest` card
+     around this line holds a <form>, so alignment.css rule 4 puts the whole card
+     on the left axis and this paragraph INHERITS it, along with the heading, the
+     body and the field. One declaration in one place, and the legal line lands
+     on the same left edge as everything above it by inheritance. */
   .nl__legal {
     margin: var(--stack-2) 0 0;
-    text-align: center;
     font-family: var(--font-body);
     font-size: var(--t-micro);
     color: var(--c-text-muted);

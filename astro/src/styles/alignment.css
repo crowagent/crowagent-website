@@ -283,10 +283,50 @@
     :is(
       .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a,
       .card__body, .item__body, .pair__body, .cap__body, .principles__body,
-      .conn__note, .role__p
+      .conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare,
+      .plans__trial
     ) {
     text-align: left;
   }
+
+  /* ── SEVEN MORE FAMILIES, 2026-08-31, AND THIS IS A-16 BEING FINISHED ─────
+   *
+   * A-16's rule is the owner's own words: CENTRE UP TO 3 LINES, LEFT-ALIGN
+   * BEYOND. Its note above says the threshold is applied by JUDGEMENT TO
+   * FAMILIES, because CSS cannot count lines, and it names the families that
+   * were known on 2026-08-04. It did not name all of them, so the rule has been
+   * half-applied ever since, and the half it missed is where the longest
+   * paragraphs on the site are.
+   *
+   * MEASURED at 390, counting PAINTED LINE BOXES with Range rectangles, the same
+   * instrument A-16 used, across six routes:
+   *
+   *     p.lead                /crowmark-buyers   up to 15 lines
+   *     p.tl__p               /about             up to 11 lines
+   *     p.note                4 routes           up to  8 lines
+   *     p.compare             /crowmark          up to  6 lines
+   *     p.in__aside           /                  up to  4 lines
+   *     p.hir__p              /                  up to  4 lines (5 at 1440)
+   *     p.plans__trial        /pricing           up to  4 lines
+   *
+   * Seven of those are added here. `.lead` is NOT, and neither is
+   * `.section__standfirst`: both are named in the note above as deliberately
+   * excluded, on the argument that a standfirst is scanned on the way past. A
+   * fifteen-line paragraph is not scanned on the way past, so that argument has
+   * outrun its subject, but withdrawing it is an owner decision rather than mine
+   * and it is raised with the measurement attached rather than taken quietly.
+   *
+   * `.pg__p` IS ALSO MEASURED AND ALSO NOT ADDED, for a different reason: at
+   * 8 lines it plainly qualifies, and ProofGate.astro is being edited by another
+   * agent in this same session. Changing what their component renders while they
+   * are looking at it is how two people end up debugging each other. It is
+   * reported to them instead.
+   *
+   * THIS INTERACTS WITH RULE 4 BY DESIGN. Each name added here is a left-axis
+   * block, so the card that directly contains it now flips its whole content to
+   * the left with it. That is the point: the alternative is a card whose body
+   * goes left while its heading stays on a centre line, which is exactly the
+   * three-axis card the owner reported. */
 
   /* ── 3. A LIST STILL CARRYING ITS MARKERS ───────────────────────────────
    *
@@ -331,6 +371,113 @@
    * step, and it tells the next reader that lists in navigation are a special
    * case when the real reason they sit left is that they are lists. */
   main :is(ul, ol) > li {
+    text-align: left;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RULE 4 IS IN `components`, AND EVERY OTHER RULE IN THIS FILE IS IN `base`.
+
+   THAT IS NOT AN INCONSISTENCY, IT IS THE DIFFERENCE BETWEEN A FLOOR AND AN
+   OVERRIDE, and it was found by measuring rather than by reading. Written in
+   `base` alongside the others, rule 4 changed the computed alignment of exactly
+   ZERO boxes on /sources, /resources and /contact: `.surface { text-align:
+   center }` lives in styles/surfaces.css in the `components` layer, layer order
+   is resolved BEFORE specificity, and a later layer wins however the earlier
+   rule is written. A rule that loses to the thing it exists to correct is a
+   control that reaches nothing, and it looked exactly like a passing edit.
+
+   Rules 1 to 3 are a FLOOR under a sitewide centring declaration, and the file's
+   header argues at length that they must be the easiest thing on the site to
+   argue with, or the next person reaches for !important. Rule 4 is the opposite
+   kind of statement: it OVERRIDES a card recipe's own centring, deliberately,
+   on an owner instruction. So it sits in the same layer as the recipe it
+   corrects and wins there on specificity, (0,2,1) against `.surface`'s (0,1,0),
+   which is a margin a future card class cannot accidentally close.
+
+   IT STILL DOES NOT BEAT AN ASTRO SCOPED STYLE, and that is worth knowing
+   before writing one. Astro's component styles are UNLAYERED and unlayered
+   rules rank above every layer, so a `.digest { text-align: center }` inside a
+   page's own <style> block beats this. Two existed, on /about and /contact, and
+   both were deleted rather than fought with; see the note at each site.
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* ── 4. ONE BOX, ONE AXIS ───────────────────────────────────────────────
+   *
+   * OWNER INSTRUCTION, 2026-08-31, RELAYED TWICE: "a CENTRED BOX with LEFT
+   * ALIGNED lines inside it, and labels sharing one left edge."
+   *
+   * THIS CHANGES THE OUTCOME OF A-16 AND THAT IS SAID PLAINLY RATHER THAN
+   * SLIPPED IN. A-16 (2026-08-04, recorded beside rule 2 above) put card bodies
+   * on the left axis and left everything else in the card centred. It was
+   * correctly reasoned and its measurement stands. What it produced, once every
+   * card on the site had one, is the defect the owner is now reporting: a card
+   * with a centred heading, a left body and a centred call to action is THREE
+   * axes in one box, and the heading has nothing to align with. Rule 2 is
+   * untouched, because it is still what decides which content is read rather
+   * than scanned. What this rule adds is the consequence A-16 did not draw: a
+   * box that contains ONE left-axis block is a left-axis box.
+   *
+   * MEASURED BEFORE WRITING IT, on the built site at 1440. The mixing was on
+   * every route that has a card: /pricing three plan cards plus the credits
+   * card, /resources both tool cards, /sources the vocabulary card, /about the
+   * pair, principles, company and digest cards, /contact the form card, the
+   * email aside and the digest, /crowmark nine boxes, /integrations fifteen,
+   * /roadmap thirteen. The single worst reader is /sources, where "UK public
+   * sector" is centred at x=392 over a definition list whose labels all start
+   * at x=68.
+   *
+   * WHY THE PARENT AND NOT THE SIBLINGS. The first version of this set
+   * `text-align: left` on the SIBLINGS of a left-axis block, which is a more
+   * obvious reading of the instruction and does not work. `text-align`
+   * positions the INLINE content of a box; where an inline-block box ITSELF
+   * lands is decided by its PARENT. `.eyebrow` and `.chip` are inline-blocks, so
+   * a sibling rule set the alignment of text inside a capsule that already hugs
+   * its text and moved the capsule not at all. Measured across eight routes: 169
+   * elements matched and every eyebrow and chip among them stayed exactly where
+   * it was. The parent is the only element that can move them.
+   *
+   * `> ` AND NOT A DESCENDANT COMBINATOR, so a card is flipped by its OWN
+   * content and never by something buried two components down. A card holding a
+   * panel holding a table is not a table card.
+   *
+   * `figure`, `code`, `samp` AND `kbd` ARE DELIBERATELY NOT TRIGGERS, though
+   * they are all in rule 1. Each is a self-contained object with its own
+   * internal alignment rather than a reading axis the box adopts: a drawing does
+   * not tell the heading above it where to start, and an inline `<code>` span
+   * certainly does not. `figure` matters most, because ten panels on the
+   * homepage alone are figures and every card carrying an illustration would
+   * otherwise flip on the strength of the picture rather than the words.
+   *
+   * `.section__body` IS THE ONE EXCLUSION AND IT PROTECTS A DIFFERENT DECISION.
+   * A section body is a slot, not a box. /crowmark and /crowmark-buyers both put
+   * `p.lead`, `dl.facts` and a closing line directly in one, and rule 2 records
+   * that `.lead`, `.section__standfirst` and `.sec-say` are deliberately NOT on
+   * the left axis, because a standfirst is scanned on the way past. Without this
+   * exclusion the `<dl>` beside them would drag both leads left and reverse that
+   * decision as a side effect of a rule about cards. A fact list sitting left
+   * inside centred section prose is the owner's own pattern working correctly:
+   * the centred box is the section, and the left-aligned lines are the list.
+   *
+   * Held by scripts/check-render.js, which mirrors this selector by hand. The
+   * two must be edited together, and the gate will fail if only one lands. */
+  /* THE BODY HALF OF THIS LIST MUST STAY IDENTICAL TO RULE 2's, and it is
+     repeated rather than shared because CSS has no way to name a selector list
+     once. Landing seven new families in rule 2 and not here was measured on the
+     first attempt: `.hir__p` went left inside a card whose dot, stage label and
+     stage name stayed on the centre line, which is the three-axis card this rule
+     exists to prevent, newly created by the rule that was supposed to prevent
+     it. If you add a name to rule 2, add it here. */
+  main
+    *:not(.section__body):has(
+        > :is(
+            table, form, fieldset, dl, pre,
+            .prose, .legal__body, .article-body, .gl-article, .cmp-body,
+            .faq-item__a, .card__body, .item__body, .pair__body, .cap__body,
+            .principles__body, .conn__note, .role__p, .note, .tl__p, .hir__p,
+            .in__aside, .compare, .plans__trial
+          )
+      ) {
     text-align: left;
   }
 }

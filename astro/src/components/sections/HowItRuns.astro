@@ -469,6 +469,13 @@ const STAGES: Stage[] = [
        stays `.surface`'s. */
     padding: var(--blk-pad-xs);
     background-color: var(--c-floor);
+    /* The positioning context for `.hir__badge`, which is pinned to this card's
+       top trailing corner so the one card carrying it does not push its own
+       three text rows 40px below the other four. See that rule for the
+       measurement. `.hir__step--refused::before` is already absolute inside this
+       box, so this is stating a containing block the card was relying on rather
+       than adding one. */
+    position: relative;
   }
 
   /* THE ONE MARKED STEP. `border-color` alone, never a `border` shorthand, so
@@ -573,8 +580,42 @@ const STAGES: Stage[] = [
      existing refusal chip, at 14% rather than its 20% because that one sits on
      --c-panel and this one sits on the tinted --c-floor above. Measured on the
      built page: --c-refused on that composite reads 8.4:1. */
+  /* ── THE BADGE NO LONGER PUSHES ITS OWN CARD OUT OF THE ROW ──────────────
+   *
+   * MEASURED at 1440 before this: the stage label sat at y=3020 in cards 1, 2, 3
+   * and 5 and at y=3060 in card 4, the stage name at 3042 against 3082, and the
+   * body at 3076 against 3116. FORTY PIXELS, on every one of the three rows, in
+   * one card of five. All five cards are 298px tall, so nothing about the row's
+   * outer geometry said anything was wrong; what was wrong was that card 4 has a
+   * fourth element and the other four do not, so it pushed its own contents down
+   * by the badge's height plus its gap.
+   *
+   * The badge is the section's argument (see the note at the markup) and is not
+   * being removed. It is taken OUT OF FLOW instead, pinned to the card's top
+   * right corner, so the four rows that all five cards share start on the same
+   * three baselines and the one card that has something extra says so beside
+   * them rather than above them.
+   *
+   * TOP RIGHT RATHER THAN TOP LEFT, because the card is now left aligned
+   * (alignment.css rule 4) and the stage label starts at the left edge. A badge
+   * on the same edge would be a second thing competing for the start of the
+   * line. The trailing edge is empty and the badge is short.
+   *
+   * `inset-inline-end` AND `inset-block-start` RATHER THAN right/top, so it
+   * follows the writing direction like everything else in this file.
+   *
+   * THE CARD NEEDS NO EXTRA PADDING FOR IT. --blk-pad-xs is 22px and the badge
+   * is 27.8px tall at `.chip`'s padding, so pinned at the padding edge it
+   * occupies the band the dot and the stage label already sit beside, and the
+   * stage label is 173px wide in a 219px card with the badge 80px wide on the
+   * far side. Verified by rendering rather than by arithmetic: no overlap at
+   * 1440, and below 900px the row stacks to one card per line where there is
+   * more width than either element needs. */
   .hir__badge {
-    margin-block-end: var(--stack-1);
+    position: absolute;
+    inset-block-start: var(--blk-pad-xs);
+    inset-inline-end: var(--blk-pad-xs);
+    margin: 0;
     color: var(--c-refused);
     background-color: color-mix(in srgb, var(--c-refused) 14%, transparent);
   }
@@ -617,12 +658,29 @@ const STAGES: Stage[] = [
      owner decisions rather than something to settle inside a component. Fixing
      it here, on one 10px mark, costs nothing and keeps the build honest;
      un-centring the site is a decision to ask for. */
+  /* ── THE AUTO MARGIN IS GONE, 2026-08-31, AND THE COMMENT ABOVE PREDICTED IT
+   *
+   * The paragraph directly above ends by saying the centring of this mark is
+   * "a conflict between two owner decisions rather than something to settle
+   * inside a component", that the concept is left-aligned throughout and this
+   * site centred, and that un-centring the site is a decision to ask for. It was
+   * asked and answered: the owner's instruction of 2026-08-31 is a centred box
+   * with left aligned lines inside it, labels sharing one left edge, and
+   * styles/alignment.css rule 4 now puts this card on the left axis because it
+   * holds a `.hir__p`.
+   *
+   * `margin-inline: auto` IS NOT REACHED BY text-align AND THAT IS WHY IT HAD TO
+   * BE DELETED HERE. Measured after rule 4 landed: the stage label, the stage
+   * name and the body all moved to the card's left edge at x=164 and this 10px
+   * dot stayed at x=245, alone on a centre line 81px away from everything it
+   * belongs to. An auto inline margin is not inline content, so no alignment
+   * rule can move it. The geometry, the 10px, the 14px of air under it and both
+   * hues are untouched. */
   .hir__dot {
     display: block;
     width: 10px;
     height: 10px;
     margin-block-end: 14px;
-    margin-inline: auto;
     border-radius: 50%;
     background: var(--c-verified);
   }

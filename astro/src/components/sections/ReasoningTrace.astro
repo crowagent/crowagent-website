@@ -941,6 +941,64 @@ const TALLY = [
     padding-inline: 6px;
   }
 
+  /* ── THE RAIL WAS DRAWN AT THREE DIFFERENT HEIGHTS ────────────────────────
+   *
+   * MEASURED at 1440 on the built page: the rail segment under Retrieve sat at
+   * y=369, the one under Ground at y=435 and the ones under Compute, Check and
+   * Cite at y=403. Three heights across five columns, with two visible steps in
+   * a line whose entire job is to be one continuous spine. The five list items
+   * measured 204, 378, 224, 224 and 224px tall.
+   *
+   * THE CAUSE IS THE LOG LINE, AND THE COMMENT ABOVE IT NAMED A MECHANISM THAT
+   * DOES NOT EXIST. `.rt__detail` is documented as reserving "the tallest case
+   * so all five columns agree on where the rail sits", with a `min-height` doing
+   * it. There is no `min-height` on that rule and there never was. What is
+   * actually there is `text-wrap: balance` and a 22ch measure, which even out
+   * the lines WITHIN a column and say nothing about the count ACROSS columns.
+   * At 1440 the five details wrap to 3, 5, 4, 4 and 4 lines, so the rail landed
+   * at three heights, exactly as those numbers predict. A comment asserting a
+   * guard that is not in the code is worse than no comment: it is why nobody
+   * looked.
+   *
+   * SUBGRID, WHICH IS THE ONLY CONSTRUCTION THAT ACTUALLY CLOSES IT. The five
+   * steps become one shared set of five row tracks, so track 4 (the rail cell)
+   * resolves to the same y in every column whatever the copy above it does, and
+   * the drop box in track 5 deepens only track 5, which is BELOW the rail. That
+   * is the property a min-height cannot give: a reserved height is a guess at
+   * the tallest case at one width, and it is wrong the moment the copy or the
+   * measure changes.
+   *
+   * WHY NOT BothSides.astro's CONSTRUCTION, since that section solved the same
+   * problem without subgrid. Its rows are `1fr auto auto auto auto 1fr` and the
+   * two flexible rows absorb the difference, which works because every one of
+   * its stations holds the SAME elements. This rail does not: Ground carries a
+   * drop box that no other step has, and it hangs BELOW the rail. Stretching all
+   * five to Ground's height would push the other four rails down past it and
+   * make the break worse rather than closing it.
+   *
+   * @supports, AND THE FALLBACK IS THE CURRENT BEHAVIOUR. Subgrid is Firefox 71,
+   * Safari 16 and Chrome 117, so a browser without it keeps exactly the layout
+   * that shipped yesterday: a rail with two small steps in it. Cosmetic, not
+   * broken, and nothing else in the section depends on it.
+   *
+   * NOT APPLIED BELOW 860px, where the media query at the foot of this file
+   * turns the rail 90 degrees, makes the list one column and takes the
+   * horizontal segments out with `display: none`. There is no shared row to
+   * align there and the steps are rows of the list rather than columns of it. */
+  @supports (grid-template-rows: subgrid) {
+    @media (min-width: 861px) {
+      .rt__rail {
+        grid-template-rows: auto auto auto auto auto;
+        align-items: stretch;
+      }
+
+      .rt__step {
+        grid-row: 1 / -1;
+        grid-template-rows: subgrid;
+      }
+    }
+  }
+
   /* ── THE LOG LINE ─────────────────────────────────────────────────────────
    *
    * Mono, because this is the engine reporting rather than the page talking,

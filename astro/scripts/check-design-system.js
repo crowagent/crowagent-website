@@ -222,8 +222,8 @@ const ALLOWED = new Map([
    * past, which is the distinction this gate exists to protect. They stay
    * centred, they stay measurable, and adding them is one more name on the line
    * the day the owner wants it. */
-  ['align  src/styles/alignment.css  main :is( .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, .card__body, .item__body, .pair__body, .cap__body, .principles__body, .conn__note, .role__p )',
-   'OWNER DECISION A-16, 2026-08-04: card bodies join the read-rather-than-scanned set. The gate is right that a card is scanned and its content centres, and it is right about every OTHER thing inside a .surface — a heading, a label, a figure, a short blurb. It is wrong about a body paragraph that runs to 22 lines, and 172 centred paragraphs on this site exceed three lines. The owner set the line at three: centre up to it, left-align beyond. This entry is the only place that decision is enforced, because CSS cannot count lines and the threshold therefore has to be applied to families by judgement. The families named are prose-in-a-card; standfirsts, leads and section says are deliberately left centred because they ARE scanned'],
+  ['align  src/styles/alignment.css  main :is( .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, .card__body, .item__body, .pair__body, .cap__body, .principles__body, .conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, .plans__trial )',
+   'OWNER DECISION A-16, 2026-08-04: card bodies join the read-rather-than-scanned set. The gate is right that a card is scanned and its content centres, and it is right about every OTHER thing inside a .surface — a heading, a label, a figure, a short blurb. It is wrong about a body paragraph that runs to 22 lines, and 172 centred paragraphs on this site exceed three lines. The owner set the line at three: centre up to it, left-align beyond. This entry is the only place that decision is enforced, because CSS cannot count lines and the threshold therefore has to be applied to families by judgement. The families named are prose-in-a-card, and standfirsts, leads and section says are deliberately left centred because they ARE scanned. THE KEY WAS RE-STATED ON 2026-08-31 RATHER THAN A SECOND ENTRY ADDED, because the selector gained six names and this gate keys on the selector TEXT, so the old key matched nothing and the gate reported the exception as stale while reporting the rule as a fresh violation. That is the loud, safe direction of the two: an allow-list entry that matches nothing is visible on every run. Widening the EXCLUSION instead would have been the silent one. THE SIX NEW NAMES ARE A-16 BEING FINISHED, NOT WIDENED. Measured at 390 with Range rectangles, the same instrument A-16 used: .tl__p runs to 11 lines, .note to 8, .compare to 6, and .in__aside, .hir__p and .plans__trial to 4. Every one is prose-in-a-card over the owner three-line threshold and every one was still centred because A-16 named the families that existed on 2026-08-04 and no rule made anybody revisit the list. .lead is deliberately still absent even though it measures 15 lines on /crowmark-buyers, because removing it is an owner decision rather than a gate one and it is raised separately'],
   ['align  src/components/forms/NewsletterForm.astro  .nl__err',
    'the inline validation message. It became reachable by this rule on 2026-08-03, when the owner asked for the monthly digest to sit in a card and the form moved inside a centred `.surface`. An error belongs on the same left edge as the field it is about — a centred error floats away from the input that caused it, and a reader scanning back up from the message has nothing to line it up with. This is the SC 3.3.1 relationship, not a styling preference'],
   /* The `.kicker--tight` entry that sat here is DELETED, not reworded. It argued
@@ -802,9 +802,16 @@ for (const r of rules) {
   const m = r.selector.trim().toLowerCase().match(/^h([1-6])\.([\w-]+)$/);
   if (!m) continue;
   const sz = decl(r.decls, 'font-size') || '';
-  const t = (sz.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
+  /* --t-page IS THE h1 TIER, added 2026-08-31 with the token itself. The scale
+     gained a fifth step between the hero and a section heading, because
+     --t-h1 says "the hero, and nothing else" and twenty routes were using it
+     for their page title anyway. This gate has to know the new step exists or
+     it stops guarding h1 sizes entirely: an unrecognised token makes `tier`
+     undefined and Rule 2b skips the heading rather than failing it, which is a
+     guard that silently reaches nothing. */
+  const t = (sz.match(/var\(\s*--t-(h[1-4]|page)\s*\)/) || [])[1];
   const lv = 'h' + Math.min(4, +m[1]);
-  if (t !== lv) continue;
+  if (t !== lv && !(t === 'page' && lv === 'h1')) continue;
   /* ── WHERE THE OVERRIDE LIVES DECIDES HOW FAR IT REACHES ──────────────────
    *
    * Corrected 2026-08-03. The key was ALWAYS `${r.file}|…`, which silently
@@ -884,7 +891,7 @@ for (const r of rules) {
   if (size) {
     const targetsHeading =
       /(^|[\s,>+~(])h[1-6]\b/.test(selLower) || r.classes.some((c) => headingClasses.has(c));
-    if (targetsHeading && !/var\(\s*--t-(h1|h2|h3|h4|stat)\s*\)/.test(size)) {
+    if (targetsHeading && !/var\(\s*--t-(h1|page|h2|h3|h4|stat)\s*\)/.test(size)) {
       report('type', r.file, r.selector, `heading sized ${size}, which is not one of the four tiers (line ${r.line})`);
     }
 
@@ -916,8 +923,12 @@ for (const r of rules) {
      *
      * AND AN h1 IS ALWAYS --t-h1. It is the page's one title; there is no
      * context in which it is something else. */
-    const TIER = { h1: 1, h2: 2, h3: 3, h4: 4 };
-    const tier = (size.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
+    /* `page` ranks WITH h1, not between h1 and h2, and that is the point of it.
+       Level is document structure; the two tokens are two sizes for one level,
+       the hero and the page title. So an <h1> at --t-page is correct and an
+       <h2> at --t-page is still two tiers out of place. */
+    const TIER = { h1: 1, page: 1, h2: 2, h3: 3, h4: 4 };
+    const tier = (size.match(/var\(\s*--t-(h[1-4]|page)\s*\)/) || [])[1];
     if (tier) {
       const levels = new Set();
       const direct = selLower.match(/(^|[\s,>+~(])h([1-6])\b/);
@@ -944,7 +955,7 @@ for (const r of rules) {
         )
           continue;
         const gap = TIER[tier] - TIER[lv];
-        if (gap >= 2 || (lv === 'h1' && tier !== 'h1')) {
+        if (gap >= 2 || (lv === 'h1' && tier !== 'h1' && tier !== 'page')) {
           report('type', r.file, r.selector,
             `<${lv}> sized --t-${tier}, ${gap} tier(s) below its level (line ${r.line})`);
         }

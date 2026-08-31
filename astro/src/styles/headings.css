@@ -124,9 +124,11 @@
  * ── TWO LEVELS, TWO TREATMENTS, AND THAT IS A REAL DISTINCTION ──────────────
  *
  * H1 is the page title. H2 is a section heading. They are different jobs and
- * each gets exactly ONE treatment: the shine and --t-h1 for the page title, flat
- * --t-h2 for a section heading. What was wrong was never that they differed, it
- * was that one of them differed FROM ITSELF across routes.
+ * each gets exactly ONE treatment: the shine and --t-page for the page title,
+ * flat --t-h2 for a section heading. What was wrong was never that they
+ * differed, it was that one of them differed FROM ITSELF across routes.
+ * (--t-page replaced --t-h1 here on 2026-08-31, because --t-h1 is the hero's
+ * token and a page title is not a hero. See the rule below.)
  *
  * The shine stays on the page title alone, and it is deliberate. The owner asked
  * that "all my pages except from home page hero must have similar white shiny
@@ -174,14 +176,39 @@
 
 /* ── THE PAGE TITLE ──────────────────────────────────────────────────────────
  *
- * `--t-h1` and 16ch: --t-h1 is far larger than a section heading, so a 22ch
- * measure would run to four lines. 16ch holds a page title to two at every
- * width, which is the same job 22ch does for a section heading. */
+ * --t-page and 18ch. Both numbers changed on 2026-08-31 and they changed
+ * together, so read them together.
+ *
+ * IT WAS --t-h1, AND --t-h1 IS THE HERO. tokens.css has described that token as
+ * "the hero, and nothing else" since the scale was written, and this rule was
+ * the reason the sentence was false: twenty routes rendered an <h1> at 72px at
+ * 1440 and exactly one of them was a hero. A blog archive and a contact form
+ * were set at the marketing headline size. --t-page is the fifth step that was
+ * missing from the scale, at 52.8px at 1440, and the full argument for its value
+ * is beside it in tokens.css. The homepage hero is `.hero__title` in
+ * HeroStack.astro, does not come through this rule, and is untouched at 72.
+ *
+ * 16ch BECAME 18ch BECAUSE THE MEASURE IS EXPRESSED IN em AND em JUST MOVED.
+ * A-92 wrote this measure in em precisely so it could not drift when the webfont
+ * swapped, and the consequence is that it scales with the font SIZE: 11.328em
+ * was 816px at 72px and would be 598px at 52.8px, a column 27% narrower for the
+ * same words. 12.744em is 18ch at the real face (0.70801 advance ratio, the same
+ * constant A-92 measured), which is 673px at 1440. Still 143px narrower than
+ * this rule shipped yesterday, so no page title gets a longer line than it had.
+ *
+ * MEASURED, ALL NINETEEN ROUTES, THREE WIDTHS, OLD MEASURE AGAINST NEW, rather
+ * than argued. At 1440 and at 768 exactly two routes change and both get
+ * SHORTER: /blog/procurement-act-2023-sme-guide 4 lines to 3, and
+ * /tools/tender-compliance-matrix 2 to 1. The other seventeen are identical. At
+ * 390 nothing moves at all, because the head block's own container is 350px
+ * there and the em measure has not been the binding constraint since well above
+ * that width. So the widening cannot cost a route a line; it can only save one,
+ * and on this scale it saved two. */
 h1.section__title {
   margin: 0;
   margin-inline: auto;
   font-family: var(--font-display);
-  font-size: var(--t-h1);
+  font-size: var(--t-page);
   font-weight: var(--t-w-h1);
   /* ── 1.15, NOT 1.04, AND THE REASON IS MEASURED ──────────────────────────
    *
@@ -205,11 +232,12 @@ h1.section__title {
   line-height: 1.15;
   letter-spacing: -0.02em;
   /* A-92: em rather than ch, for the reason written out at the 22ch measure
-     above. 11.328em is 16ch at the real face, so the rendered width does not
+     above. 12.744em is 18ch at the real face, so the rendered width does not
      change; what changes is that it no longer moves when the font swaps. This
      is the page-title measure, and /compare and /about were the two worst CLS
-     routes on the site because of it. */
-  max-width: 11.328em;
+     routes on the site because of it. See the 16ch-to-18ch note in this rule's
+     header for why the ch count moved when --t-page replaced --t-h1. */
+  max-width: 12.744em;
   /* THE FALLBACK, kept rather than removed, so a browser without
      background-clip and forced-colours mode both get readable text. */
   color: var(--c-text);
