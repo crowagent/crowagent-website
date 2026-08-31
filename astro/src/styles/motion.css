@@ -519,9 +519,38 @@
    * adds a delay to phrase one, or animates the h1 element itself rather than
    * its spans has to re-run it, because all three touch the same mechanism. */
   --hero-land-floor: 0.06;
-  --hero-land-lift:  calc(var(--stack-2) * 2.5);
-  --hero-land-dur:   calc(var(--m-beat) * 1.3);   /* 780ms */
-  --hero-land-step:  calc(var(--m-beat) / 5);     /* 120ms between phrases */
+  /* THE TRAVEL CANNOT EXCEED THE GAP BELOW THE HEADLINE. At 2.5 stacks, 50px,
+     the rising phrase started 50px lower than it ends while the standfirst sits
+     only --stack-2 below it, so mid animation the headline OVERLAPPED the line
+     under it. Seen in a captured frame at 400ms, not reasoned about. One stack
+     is the largest travel that cannot collide, and with the blur doing the
+     arrival the rise only has to be felt rather than seen. */
+  --hero-land-lift:  var(--stack-2);
+  --hero-land-dur:   calc(var(--m-beat) * 2);     /* 1200ms */
+  /* -- THE EASING IS WHY IT DID NOT FEEL CINEMATIC, NOT THE DURATION ------
+   *
+   * MEASURED. On --ease, which is cubic-bezier(0.16, 1, 0.3, 1), an EXPO OUT,
+   * all three phrases read 1.00 opacity by 1000ms of a 1200ms animation. The
+   * curve spends about 95% of its travel in the first third of its time, so
+   * lengthening the duration bought almost nothing: the reveal still snapped
+   * and then sat still. Three earlier attempts tuned duration, step and hold
+   * and never touched the curve.
+   *
+   * --ease IS RIGHT FOR A CONTROL AND WRONG FOR A REVEAL. A button should
+   * arrive under the finger immediately, which is what an expo out is for. A
+   * headline that is meant to be watched needs its motion spread ACROSS the
+   * duration, so the eye sees it happening rather than seeing it finished.
+   *
+   * cubic-bezier(0.4, 0, 0.2, 1) is roughly half travelled at half time. It
+   * keeps a gentle start, so the phrase eases in from the hold rather than
+   * jumping, and still settles rather than stopping dead.
+   *
+   * SCOPED TO THIS ANIMATION. --m-ease-land is shared with the section
+   * arrivals below and they are correct as they are: a section sliding in
+   * under a reader who is scrolling SHOULD resolve quickly. */
+  --hero-land-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --hero-land-blur:  8px;
+  --hero-land-step:  calc(var(--m-beat) / 2.75);  /* 218ms between phrases */
 
   /* -- THE HOLD WAS TUNING AN ANIMATION NOBODY COULD SEE ------------------
    *
@@ -548,7 +577,7 @@
    * The candidate is PRE.hmt__src, the hero demo clause block, at 34,832 px2.
    * --hero-land-floor stays at 0.06 anyway, because it costs nothing and the
    * research behind it stands for any page where the h1 IS the candidate. */
-  --hero-land-hold:  80ms;
+  --hero-land-hold:  300ms;
 
   /* The stagger is a DELAY here rather than a distance, because on a clock a
      delay is the thing a scroll timeline does not have. A sixth of a beat is
@@ -638,7 +667,7 @@
         --arrive-i: 0;
         animation-name: sv-arrive-item;
         animation-duration: auto;
-        animation-timing-function: var(--m-ease-land);
+        animation-timing-function: var(--hero-land-ease);
         animation-fill-mode: backwards;
         animation-timeline: view();
         animation-range:
@@ -1038,20 +1067,39 @@
    * could remove it, because a second copy needs two painters and there were
    * still two. The blur and the transform were evidence, not causes.
    *
-   * THE BLUR STAYS OUT, and that is a judgement rather than a fix: at 83px it
-   * read as a smear rather than a bloom, and the stagger carries the arrival
-   * without it. `font-display: optional` stays too, on its own merits, because
-   * a headline that resizes mid animation is a fault whatever else is true.
+   * THE BLUR IS BACK AND THE EARLIER JUDGEMENT WAS MADE ON A BROKEN PAGE. It
+   * was called a smear at 83px, and at the time TWO COPIES OF EVERY GLYPH were
+   * being blurred, one moving and one static. Of course it smeared. Rejudged
+   * against a single painter at 8px rather than the original 10.
+   *
+   * `font-display: optional` stays on its own merits, because a headline that
+   * resizes mid animation is a fault whatever else is true.
+   *
+   * THE TIMING IS THE CINEMATIC PART, and it is Linear's shape rather than a
+   * guess: a real HOLD before anything moves, then phrases that are clearly
+   * sequential rather than nearly simultaneous, over a duration long enough to
+   * read as arrival rather than as a page finishing loading. 300ms hold, 218ms
+   * step, 1200ms each, so the last phrase settles at 1936ms. The easing was
+   * already right, --ease is cubic-bezier(0.16, 1, 0.3, 1), the expo out
+   * Linear uses, so nothing there needed changing.
+   *
+   * THE HOLD IS AFFORDABLE HERE, and that was measured rather than assumed:
+   * 7 cold runs per variant put the h1 at 0 of 7 as the LCP element in every
+   * variant INCLUDING with the animation removed. The candidate is
+   * PRE.hmt__src at 34,832 px2, so a hold on the headline delays nothing that
+   * is scored.
    *
    * translateY ONLY. No translateX, no rotation, no scale, for the reasons in
    * the note above this block. */
   from {
     opacity: var(--hero-land-floor);
     transform: translateY(var(--hero-land-lift));
+    filter: blur(var(--hero-land-blur));
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
