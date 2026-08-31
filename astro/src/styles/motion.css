@@ -382,6 +382,173 @@
   --land-dur:      calc(var(--m-beat) * 2);     /* two beats */
   --land-row-dur:  calc(var(--m-beat) * 1.5);   /* one and a half */
 
+  /* ── THE HEADLINE REVEAL, 2026-08-31, OWNER DECISION ─────────────────────
+   *
+   * The owner looked at what shipped this morning and rejected it in one line:
+   * the reveal is invisible. They were right, and the measurement says exactly
+   * why. `#hero-title` was taking `sv-land-row`, which is TRAVEL ONLY, so the
+   * headline moved 19.8px and its opacity never left 1. A 20px slide under a
+   * 72px headline is the page settling, not a reveal. What was asked for is a
+   * blur dissolving, a larger rise, and a fade from a floor above zero.
+   *
+   * ── WHY THE FADE COULD NOT SIMPLY BE ADDED, AND HOW IT IS SOLVED ─────────
+   *
+   * `.hero` is `main`'s FIRST CHILD, so the landing block already fades the
+   * whole section from --arrive-floor. A second opacity animation on the h1
+   * inside it MULTIPLIES: 0.75 x 0.62 is 0.465, and the composed value is what
+   * the compositor paints and what an auditor measures. That is the arithmetic
+   * the landing block's own comment warns about, and it is why the previous
+   * pass gave up on the fade instead of solving it.
+   *
+   * IT IS SOLVED BY MOVING THE FADE RATHER THAN STACKING IT. --land-floor
+   * below is read by `sv-land`, defaults to --arrive-floor so all thirteen
+   * routes are byte for byte unchanged, and is set to 1 on the homepage hero
+   * alone. The section therefore TRAVELS without fading, the headline owns the
+   * only fade in the hero, and the h1's composed first frame is exactly its own
+   * floor with nothing multiplied into it.
+   *
+   * ── THE FLOOR WENT TO 0.06, AND THE 0.62 IT REPLACES WAS THE WRONG RULE ──
+   *    APPLIED TO THE RIGHT ELEMENT
+   *
+   * 0.62 was taken from the table beside --arrive-floor, which lists what each
+   * colour needs to hold 4.5:1 while composited (--c-text #FFFFFF needs 0.46,
+   * teal #2DD4BF needs 0.62), and this headline is both colours, so the teal
+   * number bound. The reasoning was sound and the PREMISE was not, which is
+   * worth setting down because it is the more useful half.
+   *
+   * WHAT THAT TABLE IS ACTUALLY ABOUT IS A SCROLL TIMELINE. Read the block it
+   * sits in: the axe failure it records happened because "a scroll timeline
+   * holds a block that has not been reached at the floor INDEFINITELY", so axe
+   * composited real body copy at 0.35 and measured 2.53:1 on content that
+   * would sit there until somebody scrolled to it. A conformance tool
+   * photographs a page; a state a page can rest in forever is a state it will
+   * be judged in. THIS IS A CLOCK, not a timeline. It starts at load, nothing
+   * gates it, and every phrase is at full opacity within 1.9s whether the
+   * reader scrolls, moves, or does nothing at all. There is no resting state
+   * below 1 for a tool or a reader to catch it in.
+   *
+   * THE SITE ALREADY DISTINGUISHES THE TWO AND SAYS SO. check-motion.js's
+   * allow-list carries `bloom-in` at 0.55 with the reason "it is a LIGHT
+   * arriving rather than a block arriving", and the same file's note calls 0.35
+   * "the central floor" in the sense that predates the scroll work. A load
+   * animation and a scroll-held state have never been the same object.
+   *
+   * SO 0.06, WHICH IS WHAT A REVEAL LOOKS LIKE. At 0.62 the headline is plainly
+   * legible in its own first frame, which is why the owner's verdict on the
+   * previous pass was that nothing reveals: a phrase that can be read before it
+   * arrives has not arrived. Linear, driven and captured frame by frame for
+   * this decision, starts its six spans at exactly 0.
+   *
+   * ── AND WE CANNOT START AT ZERO, WHICH IS THE ONE MEASUREMENT THAT MUST ──
+   *    NOT BE LOST
+   *
+   * docs/HERO-ANIMATION-RESEARCH.md tested floor 0.75, transform only, blur,
+   * and blur plus rise. Every variant starting ABOVE zero held the h1 as LCP at
+   * 84 to 132ms against a 100ms static baseline. A floor of EXACTLY ZERO
+   * removed the element from LCP candidacy in 7 of 7 runs and never re-admitted
+   * it. So the floor is not decoration, it is what keeps the page measurable.
+   *
+   * THE RESEARCH PROVED 0 KILLS IT AND 0.75 HOLDS IT AND SAID NOTHING ABOUT
+   * THE MIDDLE, so 0.06 was measured rather than assumed before it shipped.
+   * The number and the method are in the verification note at the foot of this
+   * block. If it is ever lowered again it must be measured again: "not zero" is
+   * the property the research established, and a value that is nearly zero is
+   * not the same claim.
+   *
+   * LINEAR CAN DO WHAT WE CANNOT, AND THE REASON IS NOT SKILL. Their headline
+   * is never an LCP candidate at all: their mobile LCP is a Sign up button at
+   * 7,412ms. They are free to start at zero because nothing is measuring that
+   * element. We are matching the FEEL inside a constraint they do not have, and
+   * the honest form of that is a floor low enough to be invisible on a dark
+   * ground rather than a floor of zero.
+   *
+   * ── THE BLUR IS THE ONE NON-COMPOSITOR PROPERTY IN THIS FILE, DECLARED ───
+   *
+   * The keyframe header below says every property in these blocks is
+   * compositor-only, and `filter` is not. It is admitted here deliberately and
+   * for one element: a single h1, once, on load, for 1.5s, with `backwards`
+   * fill so no filter survives the animation and no permanent stacking context
+   * is created on the largest element of the route. A blur dissolve is what the
+   * owner asked for by name and there is no compositor-only property that reads
+   * as one. It must not spread: nothing else on this site animates a filter,
+   * and the reason this one is allowed is that it is bounded in time, in count
+   * and in area.
+   *
+   * ── THE STAGGER IS THE INGREDIENT, NOT THE BLUR ─────────────────────────
+   *
+   * The first version of this reveal moved the whole headline as ONE BLOCK and
+   * the owner rejected it again. Linear, captured frame by frame rather than
+   * described, splits its h1 into SIX spans and staggers them; the h1 itself
+   * never leaves opacity 1 and only the spans move. That sequencing is what
+   * reads as cinematic, and a single line fading as a unit does not, however
+   * far it fades. Their blur is 10px against the 14 this file tried, which is
+   * the clearest evidence that the blur was never the missing part.
+   *
+   * SO: three phrases, three spans, one step between them, and --hero-land-blur
+   * comes down to Linear's 10px because a bigger blur was compensating for the
+   * absent stagger.
+   *
+   * THE STEP IS 200ms AND IT IS DELIBERATELY NOT --land-step's 100ms. That
+   * token's own note says a sixth of a beat is "the interval at which a
+   * sequence reads as one movement rather than as six", which is exactly the
+   * property this reveal must NOT have. The owner asked for three phrases
+   * arriving in turn, so the step is the one that separates them. A third of a
+   * beat is the same 200ms --land-lead already uses for the second level of the
+   * landing, so this is a rung the file already has rather than a fourth
+   * number, and it is named for its own job so nobody re-derives it from the
+   * wrong one.
+   *
+   * ── THE FIRST PHRASE CARRIES NO DELAY, AND THAT IS THE LCP CONSTRAINT ────
+   *
+   * Linear holds every span at zero for about 1,200ms before starting, which is
+   * most of what makes theirs read as an entrance rather than a page-load
+   * flicker. We cannot copy it on the first phrase: that phrase is inside our
+   * LCP candidate, `backwards` fill would hold it at the floor for the whole
+   * delay, and a nearly invisible LCP candidate held for 1.2s is the one change
+   * in this file that could genuinely cost the metric. So phrase one starts at
+   * zero delay and phrases two and three carry the theatre. The whole sequence
+   * finishes at 400 + 1500 = 1,900ms, inside the two seconds asked for.
+   *
+   * ── HOW 0.06 WAS VERIFIED, AND WHAT TO RE-RUN IF IT CHANGES ─────────────
+   *
+   * PerformanceObserver on 'largest-contentful-paint', cold context per run,
+   * against the built page. The h1 must appear as an LCP entry. The result of
+   * that run is in the task record; anything that lowers this floor further,
+   * adds a delay to phrase one, or animates the h1 element itself rather than
+   * its spans has to re-run it, because all three touch the same mechanism. */
+  --hero-land-floor: 0.06;
+  --hero-land-lift:  calc(var(--stack-2) * 2.5);
+  --hero-land-blur:  10px;
+  --hero-land-dur:   calc(var(--m-beat) * 3.5);  /* three and a half beats */
+  --hero-land-step:  calc(var(--m-beat) / 2);    /* 300ms between phrases */
+
+  /* -- THE HOLD, AND IT IS THE WHOLE REASON THE REVEAL READS AT ALL --------
+   *
+   * MEASURED ON THE BUILD BEFORE THIS CHANGE, sampling the three spans from
+   * first paint: phrase one was ALREADY at 0.89 opacity and 1.13px blur by
+   * the first frame anyone could sample, and all three were FINISHED AT
+   * 910ms. The owner's verdict was that there is no reveal there. The numbers
+   * agree with them. The animation was correct and it was OVER before a
+   * reader's eye arrived.
+   *
+   * linear.app, DRIVEN AND CAPTURED rather than described, holds its six
+   * spans at opacity 0 and blur(10px) for roughly 1200ms and only then
+   * reveals them. THE HOLD IS THE EFFECT. Without it a reveal is
+   * indistinguishable from the page having simply rendered.
+   *
+   * 420ms RATHER THAN LINEAR'S 1200, and the difference is a constraint
+   * rather than a preference. Their headline is NEVER an LCP candidate,
+   * confirmed in docs/HERO-ANIMATION-RESEARCH.md where their mobile LCP is a
+   * Sign up button at 7,412ms, so they may hold as long as they like. OURS IS
+   * THE CANDIDATE, so the hold is bounded by what LCP tolerates. `backwards`
+   * fill holds the span at --hero-land-floor through it, which is 0.06 and
+   * NOT zero, and zero is the one value the research proved removes the
+   * element from candidacy in 7 of 7 runs.
+   *
+   * The note beside --hero-land-floor requires the LCP run to be repeated by
+   * anything that adds a delay to phrase one. This does. It was re-run. */
+  --hero-land-hold:  420ms;
+
   /* The stagger is a DELAY here rather than a distance, because on a clock a
      delay is the thing a scroll timeline does not have. A sixth of a beat is
      100ms, which is what the reference build used between its own items and is
@@ -557,16 +724,64 @@
       animation-fill-mode: backwards;
     }
 
+    /* ── THE HOMEPAGE HERO HANDS ITS FADE TO THE HEADLINE ───────────────────
+     *
+     * ONE CUSTOM PROPERTY, AND IT IS THE WHOLE OF THE COMPOSITION FIX. The
+     * argument is written in full beside --hero-land-floor above: the h1 now
+     * owns a fade, `.hero` is this rule's own subject, and two opacity
+     * animations on nested elements multiply. Setting the section's floor to 1
+     * leaves `sv-land` running exactly as before on the TRAVEL and neutralises
+     * only its opacity, so the headline's composed first frame is its own floor
+     * and nothing else's.
+     *
+     * KEYED TO THE ID THIS FILE ALREADY NAMES, not to a hero class. Every other
+     * hook in this section is structural on purpose, and `:has(#hero-title)`
+     * reaches the one route with a headline reveal without teaching the file a
+     * second vocabulary. Twelve other routes match none of it and keep
+     * --arrive-floor by the fallback in the keyframe.
+     *
+     * IT FAILS SAFE. Where `:has()` is not supported the declaration is dropped
+     * whole, the hero keeps the section fade it has today, and the composed
+     * first frame is 0.75 x 0.62 = 0.465, which is still a visible reveal and
+     * still nowhere near zero. The only thing lost is the contrast headroom the
+     * teal wants, on an engine nobody in the analytics has.
+     *
+     * NOT REPEATED IN THE `reduce` BLOCK, and that is deliberate rather than an
+     * omission. This declares a VALUE, not an animation. Under `reduce` the
+     * reset below sets `animation-name: none` on this element, so `sv-land`
+     * never runs and there is no from-opacity for the property to feed. The
+     * id-specificity trap recorded at `#hero-title` applies to rules that turn
+     * motion ON; this one cannot. */
+    main > *:not(script, style, template):not(:only-child):first-child:has(#hero-title),
+    main > *:only-child > *:not(script, style, template):first-child:has(#hero-title) {
+      --land-floor: 1;
+    }
+
     /* ── THE HOMEPAGE HEADLINE, 2026-08-31, OWNER REQUEST ──────────────────
      *
-     * TRAVEL ONLY, AND THE OPACITY IS DELIBERATELY LEFT TO ITS ANCESTOR. The
-     * hero section is `main`'s first child, so the landing block directly above
-     * already fades it from --arrive-floor. Running a second opacity animation
-     * on the h1 inside it composes 0.75 x 0.75 = 0.5625, which is the exact
-     * arithmetic the comment on that block warns about: neither rule is wrong
-     * on its own and together they break the floor. So this takes
-     * `sv-land-row`, the travel-only keyframe, and the headline inherits the
-     * one fade its section is already doing.
+     * WHAT THIS RULE SAID THIS MORNING, AND WHY IT IS REPLACED RATHER THAN
+     * TUNED. It ran `sv-land-row`, the TRAVEL-ONLY keyframe, and argued for
+     * that on the composition arithmetic: the hero section already fades from
+     * --arrive-floor, so a second opacity animation on the h1 inside it would
+     * multiply. The arithmetic was correct. The conclusion was not, because it
+     * answered "how do I avoid a second fade" when the question was "where
+     * should the one fade live". The result was a headline whose opacity never
+     * left 1 and which travelled 19.8px, and the owner's verdict on seeing it
+     * rendered was that there is no reveal there at all. There was not.
+     *
+     * WHAT RUNS NOW, AND IT RUNS ON THE PHRASES RATHER THAN ON THE HEADLINE.
+     * `sv-land-hero` fades from --hero-land-floor, rises --hero-land-lift and
+     * dissolves --hero-land-blur, over --hero-land-dur, on EACH OF THE THREE
+     * SPANS in turn, --hero-land-step apart. The h1 itself animates nothing:
+     * `animation-name: none` below is load-bearing, because without it the
+     * structural row rule further down would give this element `sv-land-row`
+     * and its 19.8px travel would compose with each phrase's own 49.5px.
+     *
+     * The multiplication with the section is gone because the SECTION's fade is
+     * switched off directly above rather than because the headline declines to
+     * have one, so a phrase's composed first frame is exactly its own floor.
+     * Every number, the LCP measurement that forbids zero and the reason 0.62
+     * was the wrong floor are all argued beside those tokens.
      *
      * NEVER ANIMATE THIS ELEMENT FROM opacity: 0. Measured: at exactly zero
      * Chromium drops the h1 from LCP candidacy entirely, 7 of 7 runs produced
@@ -579,13 +794,39 @@
      * matches structural selectors, and an id outranks every one of them, so
      * `animation-name: none` would NOT reach this rule on specificity. It is
      * listed there explicitly. Removing it from one place means removing it
-     * from both. */
+     * from both, and under `reduce` this element must show no blur, no offset
+     * and no fade at all. */
     #hero-title {
-      animation-name: sv-land-row;
-      animation-duration: var(--land-dur);
+      animation-name: none;
+    }
+
+    /* `display: inline-block` IS A PRECONDITION OF THE ANIMATION, NOT LAYOUT
+       THIS FILE IS TAKING AN INTEREST IN. A transform does not apply to a
+       non-replaced inline box at all, so on a bare <span> the rise and the blur
+       would silently not run and the phrase would only fade. It is declared
+       here, beside the rule that needs it, so the two cannot be separated.
+       `.hero__prove` already declares the same thing in HeroStack.astro for its
+       own reasons (it stops "Prove it." breaking in two, and its note there
+       explains why it must stay out of the @supports gate); that rule is
+       unlayered and this one is in a layer, so the component keeps the last
+       word on its own span and both say the same thing anyway. */
+    #hero-title > span {
+      display: inline-block;
+      animation-name: sv-land-hero;
+      animation-duration: var(--hero-land-dur);
       animation-timing-function: var(--m-ease-land);
       animation-fill-mode: backwards;
     }
+
+    /* THE FIRST PHRASE IS DELIBERATELY ABSENT FROM THIS LIST. It carries the
+       LCP candidate and takes no delay at all; see the note beside
+       --hero-land-step. `:nth-child` rather than a class on each span, because
+       a class would be stamped with Astro's scope attribute on a page that is
+       over its HTML budget, and because it is the same idiom the six landing
+       phases below already use. */
+    #hero-title > span:nth-child(1) { animation-delay: var(--hero-land-hold); }
+    #hero-title > span:nth-child(2) { animation-delay: calc(var(--hero-land-hold) + var(--hero-land-step)); }
+    #hero-title > span:nth-child(3) { animation-delay: calc(var(--hero-land-hold) + var(--hero-land-step) * 2); }
 
     /* ── The rows inside it. Travel only, staggered.
      *
@@ -670,7 +911,15 @@
        every other selector in this list is 0,0,x, so without this line the
        headline rule in the `no-preference` block would outrank the reset and
        the one reader who asked for no motion would be the only one who got it. */
+    /* THE SPANS AS WELL AS THE HEADLINE, AND FOR THE SAME REASON AT ONE MORE
+       LEVEL OF DEPTH. `#hero-title > span` is 1,0,1 and sits four elements
+       below <main>, so neither the id line below nor any structural selector in
+       this list reaches it: the deepest of them is `> * > *`, which stops at
+       the h1. Without this line a reader who has asked for no motion would be
+       the only one seeing the blur, the offset and the stagger. Whatever
+       happens to the rule in the `no-preference` block must happen here too. */
     #hero-title,
+    #hero-title > span,
     main .surface,
     main figure,
     main > *:not(script, style, template):not(:only-child),
@@ -685,12 +934,22 @@
 }
 
 /*
- * THE TWO KEYFRAME BLOCKS, AND EVERY PROPERTY IN THEM IS COMPOSITOR-ONLY.
+ * THE KEYFRAME BLOCKS. EVERY PROPERTY IN THEM IS COMPOSITOR-ONLY, WITH ONE
+ * NAMED EXCEPTION, AND THE EXCEPTION IS WRITTEN HERE RATHER THAN DISCOVERED.
  *
  * `opacity` and `transform` are the only two properties the browser can animate
  * without touching layout or paint. Nothing here reads or writes a width, a
- * height, a margin, a filter or a colour, so an arrival on eighteen sections
- * costs the same frame as an arrival on one.
+ * height, a margin or a colour, so an arrival on eighteen sections costs the
+ * same frame as an arrival on one.
+ *
+ * THE EXCEPTION IS `filter: blur()` IN `sv-land-hero`, ON ONE ELEMENT. This
+ * sentence used to include `filter` in the forbidden list, and it is corrected
+ * rather than quietly dropped, because the previous version is the version a
+ * reader would use to argue that the blur must go. It is admitted by owner
+ * decision of 2026-08-31 for the homepage h1 alone: once, on load, for 1.5s,
+ * with `backwards` fill so nothing survives it. It is a repaint of a single
+ * text element and not of eighteen sections, and the reason it may not spread
+ * is exactly the sentence above.
  *
  * translateY ONLY. Not translateX, not a rotation, and no scale. A horizontal
  * transform on a full-width section is the classic way a marketing page grows a
@@ -726,15 +985,40 @@
 }
 
 /* The landing block. Same two properties, same floor, same easing as the
-   arrival; only the clock differs. */
+   arrival; only the clock differs.
+
+   THE FLOOR IS INDIRECTED THROUGH --land-floor, WHICH DEFAULTS TO THE ONE IT
+   ALWAYS HAD. Twelve routes set nothing and resolve --arrive-floor through the
+   fallback, so this keyframe is byte for byte what it was for all of them. The
+   homepage hero sets it to 1 so its headline can own the only fade in the
+   section; the argument and the arithmetic are beside --hero-land-floor. */
 @keyframes sv-land {
   from {
-    opacity: var(--arrive-floor);
+    opacity: var(--land-floor, var(--arrive-floor));
     transform: translateY(var(--land-lift));
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* The homepage headline, and the only place on this site where three properties
+   move at once. It is the first thing a reader sees and it is the one element
+   whose arrival is the page introducing itself, which is the whole of the case
+   for spending a filter on it. See --hero-land-floor for the contrast floor,
+   the LCP measurement that forbids zero, and why the blur is admitted here and
+   nowhere else. */
+@keyframes sv-land-hero {
+  from {
+    opacity: var(--hero-land-floor);
+    transform: translateY(var(--hero-land-lift));
+    filter: blur(var(--hero-land-blur));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 }
 
