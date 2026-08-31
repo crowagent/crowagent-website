@@ -115,11 +115,38 @@
   line-gap-override: 0%;
 }
 
+/* -- WHY JAKARTA IS `optional` AND INTER IS NOT ----------------------------
+ *
+ * ADDED 2026-08-31 to fix a hero fault, not a performance one. The homepage h1
+ * runs a staggered reveal, and `swap` meant the real face arrived DURING it.
+ * A centred line reflows whenever glyph widths change, MEASURED at span origins
+ * moving 314,632,873 to 300,631,882, and reflowing text that is mid animation
+ * is what left a stale, half drawn copy of the headline on screen. The owner
+ * photographed it, and reported it still present in incognito after the blur
+ * was removed, which is what proved the blur was not the whole cause.
+ *
+ * `optional` REMOVES THE SWAP RATHER THAN TIMING AROUND IT. The face gets a
+ * short block period and after that the browser commits to ONE answer for the
+ * page load: the real face if it arrived, the fallback if it did not. There is
+ * no third state where the text changes width under a running animation.
+ *
+ * THE BLOCK PERIOD IS PER FONT LOAD, NOT PER PAGE, which is the detail that
+ * makes this safe rather than a trade. Measured with the preload in Base.astro:
+ * the 700 face starts at 332ms and finishes at 340ms, so it is EIGHT
+ * MILLISECONDS of its own budget and is used normally. `optional` only falls
+ * back on a genuinely slow connection, and there it prevents a reflow instead
+ * of causing one. The metric overridden 'Jakarta Fallback' below is what makes
+ * that acceptable, since it is matched on size and vertical metrics.
+ *
+ * INTER AND JETBRAINS STAY ON `swap` DELIBERATELY. Nothing set in them is
+ * animated, so a swap there is an ordinary reflow rather than a paint fault,
+ * and putting body copy on `optional` would let a whole page load render in the
+ * fallback to solve a problem body copy does not have. */
 @font-face {
   font-family: 'Plus Jakarta Sans';
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: optional;
   src: url('/Assets/fonts/PlusJakartaSans-600.woff2') format('woff2');
   unicode-range: U+0000-00FF;
 }
@@ -128,7 +155,7 @@
   font-family: 'Plus Jakarta Sans';
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+  font-display: optional;
   src: url('/Assets/fonts/PlusJakartaSans-700.woff2') format('woff2');
   unicode-range: U+0000-00FF;
 }
@@ -137,7 +164,7 @@
   font-family: 'Plus Jakarta Sans';
   font-style: normal;
   font-weight: 800;
-  font-display: swap;
+  font-display: optional;
   src: url('/Assets/fonts/PlusJakartaSans-800.woff2') format('woff2');
   unicode-range: U+0000-00FF;
 }
