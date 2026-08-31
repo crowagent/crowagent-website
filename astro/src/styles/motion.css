@@ -683,6 +683,33 @@
 }
 
 @layer components {
+  /* ── THE STAGGER PHASE, LIFTED OUT OF BOTH BRANCHES, 2026-08-31 ───────────
+   *
+   * These six rules used to sit inside the `@supports (animation-timeline:
+   * view())` block below, because there was only one branch to serve. There are
+   * two now (see §THE FALLBACK further down) and both need the same phase on the
+   * same element, so the phase is declared once, here, and each branch reads it.
+   *
+   * A CUSTOM PROPERTY IS INERT ON ITS OWN, which is what makes the move free. An
+   * engine that runs neither branch resolves --arrive-i, feeds it to nothing and
+   * paints exactly what it painted before. Nothing was widened. One declaration
+   * stopped being written twice.
+   *
+   * The reset is stated rather than defaulted through `var(..., 0)` for the
+   * reason it always was: a figure inside a card would otherwise INHERIT the
+   * card's phase and arrive with it. It is declared before the five phases so
+   * the two rules differ by a pseudo-class and the cascade needs no argument.
+   *
+   * Six phases, and `:nth-child` counts every sibling rather than every card,
+   * which is correct: a grid's cards are its children, and where a card sits
+   * beside a non-card the visual order is still the DOM order. */
+  main :is(.surface, figure) { --arrive-i: 0; }
+  main :is(.surface, figure):nth-child(6n + 2) { --arrive-i: 1; }
+  main :is(.surface, figure):nth-child(6n + 3) { --arrive-i: 2; }
+  main :is(.surface, figure):nth-child(6n + 4) { --arrive-i: 3; }
+  main :is(.surface, figure):nth-child(6n + 5) { --arrive-i: 4; }
+  main :is(.surface, figure):nth-child(6n + 6) { --arrive-i: 5; }
+
   /*
    * GATED TWICE, AND BOTH GATES FAIL TO THE PAGE AS IT SHIPS TODAY.
    *
@@ -694,18 +721,22 @@
    *            only in the keyframes. There is deliberately no JavaScript
    *            polyfill; see ADR 0004.
    *
-   * ── THE OBSERVER QUESTION, ASKED AGAIN 2026-08-31, ANSWERED: LEAVE IT ────
+   * ── THE OBSERVER QUESTION, ASKED THREE TIMES, ANSWERED: BUILT ────────────
    *
-   * The recommendation is to LEAVE THE FALLBACK STATIC, and it is stated
-   * plainly rather than hedged. Four reasons, in the order they matter.
+   * This block used to end with a recommendation to LEAVE THE FALLBACK STATIC.
+   * The owner asked for it a third time on 2026-08-31 and it is built, in
+   * §THE FALLBACK directly below. The four reasons the recommendation gave are
+   * kept, because three of them are still true and shaped what was built.
    *
    * 1. FIREFOX ALREADY GETS THE PART THAT MATTERS MOST, AND THE HEADLINE
    *    FRAMING OF THIS FINDING IS THEREFORE TOO WIDE. §THE LANDING below is
    *    DELIBERATELY OUTSIDE this gate: it is an ordinary time based animation,
    *    every engine runs it, and it is what carries the hero of every route
-   *    including the whole homepage choreography. What a Firefox reader is
+   *    including the whole homepage choreography. What a Firefox reader was
    *    missing is the arrival of blocks BELOW the fold and the card stagger
-   *    inside them, not "no arrival motion". The first screen is identical.
+   *    inside them, not "no arrival motion". The first screen was identical
+   *    before the fallback existed and is identical after it. STILL TRUE, and
+   *    it is why §THE FALLBACK covers only what this gate covers.
    *
    * 2. THE PATTERN HAS SHIPPED PERMANENTLY INVISIBLE CONTENT HERE TWICE, and
    *    both are counted in this file's header: `js/modules/sv-reveal.js` left
@@ -713,31 +744,31 @@
    *    full page capture, and `sovereign-transformation-v2.js` reproduced it
    *    independently at 20/20 cards on /crowmark, 13/13 on /about, 9/9 on
    *    /contact. Two unrelated implementations, the same failure, which is what
-   *    makes it a property of the pattern. Adding it back for the browser
-   *    minority means the class of reader most likely to hit the bug is the one
-   *    who cannot be watched.
+   *    makes it a property of the pattern. STILL TRUE, and it is the whole of
+   *    what §THE FALLBACK is built against: both of those files hid content
+   *    with a RULE, at `opacity: 0`, and then depended on a callback to undo it.
+   *    The fallback below writes no such rule, so there is nothing for a
+   *    callback to undo and the failure they share is not available to it.
    *
    * 3. THE THREE SAFETY PROPERTIES AT THE HEAD OF THIS FILE ARE NOT PORTABLE TO
    *    AN OBSERVER. Property 2, "view() is geometry, not an event", is the
    *    whole argument, and an observer is precisely a callback that may never
    *    fire. A print, a full page capture, a restored scroll position and an
    *    anchor jump all produce a correct POSITION and therefore a correct
-   *    result today. None of them reliably produces a callback.
+   *    result today. STILL TRUE, AND NOT REPAIRED, so it is stated as the cost
+   *    of the fallback rather than argued away: in an engine on the fallback
+   *    path, a block whose callback never arrives is STILL, not hidden. That is
+   *    a worse arrival and it is not a worse page, which is the trade the owner
+   *    made. Properties 1 and 3 ARE portable and are both kept.
    *
-   * 4. THE BYTE COST, since it was asked for. A minimal correct observer is
-   *    roughly 380 to 450 bytes raw of JavaScript (the observer, a threshold, a
-   *    class add, an unobserve, and the reduced motion check that must be
-   *    restated in script because a media query cannot reach it), call it 480
-   *    with the CSS for the from state, and about 260 to 300 bytes over the
-   *    wire once brotli has it. That is small. IT IS NOT THE REASON, and it
-   *    should not be reported as though it were: /index.html is 10.9 KB over
-   *    its own budget already, so 480 bytes neither saves the page nor sinks
-   *    it. The reason is 2 and 3. Cost is stated because it was asked for.
+   * 4. THE BYTE COST, since it was asked for. Measured on the built site rather
+   *    than estimated: see §THE FALLBACK for the figure, raw and brotli. It is
+   *    small, it was never the reason, and it should not be reported as one.
    *
-   * WHAT WOULD CHANGE THE ANSWER. Firefox shipping scroll driven timelines
-   * unflagged, which removes the question, or evidence that below the fold
-   * arrival is worth a JavaScript dependency on the one route where it is not
-   * already covered by the landing. Neither exists today.
+   * WHAT WOULD REMOVE THE FALLBACK ENTIRELY. Firefox shipping scroll driven
+   * timelines unflagged. On that day this whole branch stops being reached, the
+   * script's own `CSS.supports` guard returns before it observes anything, and
+   * both can be deleted in one commit.
    *
    * @media     Reduced motion never enters the block at all, so there is
    *            nothing to override and nothing to reset. The explicit
@@ -797,12 +828,9 @@
        * `main .surface` already had, and the nth-child rules below keep
        * outranking it by exactly one pseudo-class as they did before. */
       main :is(.surface, figure) {
-        /* Set explicitly rather than defaulted through var(..., 0). A figure
-           inside a card would otherwise INHERIT the card's --arrive-i and take
-           its stagger phase, which is the one thing widening a hook can break
-           quietly. Declared here and overridden below, so the two rules differ
-           by a pseudo-class and the cascade needs no argument. */
-        --arrive-i: 0;
+        /* --arrive-i IS NO LONGER SET HERE. It and its five phases moved to the
+           head of this layer on 2026-08-31 so §THE FALLBACK can read the same
+           phase, and the note there carries the argument. Nothing else changed. */
         animation-name: sv-arrive-item;
         animation-duration: auto;
         /* PUT BACK ON --m-ease-land, 2026-08-31. It read --hero-land-ease, the
@@ -818,15 +846,6 @@
           entry calc(var(--arrive-i, 0) * var(--arrive-item-step))
           entry calc(var(--arrive-i, 0) * var(--arrive-item-step) + var(--arrive-item-settle));
       }
-
-      /* Six phases, and `:nth-child` counts every sibling rather than every
-         card, which is correct: a grid's cards are its children, and where a
-         card sits beside a non-card the visual order is still the DOM order. */
-      main :is(.surface, figure):nth-child(6n + 2) { --arrive-i: 1; }
-      main :is(.surface, figure):nth-child(6n + 3) { --arrive-i: 2; }
-      main :is(.surface, figure):nth-child(6n + 4) { --arrive-i: 3; }
-      main :is(.surface, figure):nth-child(6n + 5) { --arrive-i: 4; }
-      main :is(.surface, figure):nth-child(6n + 6) { --arrive-i: 5; }
 
       /* ── THE BLOCK. The arrival itself. ──────────────────────────────────
        *
@@ -863,6 +882,129 @@
         animation-range:
           entry 0%
           entry min(var(--arrive-settle-pct), var(--arrive-settle-max));
+      }
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * §THE FALLBACK, for an engine with no view timeline. 2026-08-31.
+   *
+   * Owner: *"Scroll-linked animations in motion.css rely exclusively on
+   * @supports (animation-timeline: view()). Because Firefox Release does not
+   * support CSS view timelines, Firefox users miss all scroll-driven arrival
+   * motion."* The framing is wider than the fact (see reason 1 above: the whole
+   * landing already runs everywhere) and the fact underneath it is real. This is
+   * the same two arrivals, on a clock, triggered by src/scripts/arrive.ts.
+   *
+   * ── IT IS NOT POSSIBLE FOR THIS BLOCK TO LEAVE AN ELEMENT HIDDEN, AND THAT
+   * ── IS THREE INDEPENDENT PROPERTIES RATHER THAN ONE CAREFUL AUTHOR ────────
+   *
+   * The two prior implementations that hid content on this site are named in
+   * reason 2 above and in this file's header. Both hid it with a RULE and then
+   * asked a callback to undo the rule. Every property below is aimed at that.
+   *
+   *   1. THERE IS NO HIDDEN STATE TO GET STUCK IN. Property 1 at the head of
+   *      this file, unchanged and not weakened: no rule in this file sets
+   *      `opacity` or `transform` on any of these elements. The from-state
+   *      exists only inside @keyframes, and both of these rules reuse the
+   *      EXACT keyframes the view() branch above already uses. Delete this
+   *      block, or never load the script, and the page is what it ships as.
+   *
+   *   2. THE TRIGGER CAN ONLY ADD. `data-arrived` is unset in the markup, no
+   *      component writes it, and the only value either rule matches is `on`.
+   *      A script that never loads, throws, or is blocked leaves the attribute
+   *      unset, `animation-name` at `none`, and every block fully opaque and
+   *      untransformed. This is the same inversion `data-lit` already uses and
+   *      the opposite of `sv-reveal`, which needed its callback to become
+   *      readable.
+   *
+   *   3. THERE IS NO FRAME IN WHICH ANYTHING IS HELD BACK. `backwards` fills
+   *      the interval between the animation being applied and its delay
+   *      elapsing, so a delay is the one window in which a from-state is
+   *      visible for longer than a frame. THE BLOCK RULE THEREFORE TAKES NO
+   *      DELAY AT ALL: it is triggered by entering the viewport, so there is
+   *      nothing for it to wait for. Only the ITEM rule staggers, and
+   *      `sv-arrive-item` touches opacity nowhere, it is travel only, for the
+   *      composition arithmetic in this file's header, so the worst state any
+   *      element on this path can be caught in is 14px below where it belongs,
+   *      at full opacity and full contrast.
+   *
+   * WHAT IS DELIBERATELY NOT CLAIMED. An observer is still a callback that may
+   * never fire, and this does not repair that. Reason 3 above states it as the
+   * cost. In an engine on this path, a print, a full-page capture or a restored
+   * scroll position can produce a block that never animates. It produces a
+   * block that is STILL, drawn correctly, with every word at full contrast.
+   *
+   * THE PHASE IS THE ONE THE OTHER BRANCH READS, which is why --arrive-i moved
+   * to the head of this layer. What differs between the branches is only how
+   * the phase is spent: `view()` spends it as 32px of scroll distance, this
+   * spends it as --land-step of time. There is no second stagger to keep in
+   * step and no second set of nth-child rules to drift.
+   *
+   * THE SELECTORS ARE THE OTHER BRANCH'S, PLUS ONE ATTRIBUTE, and they are also
+   * written a second time in src/scripts/arrive.ts, which is the one duplication
+   * here worth naming out loud. It is bounded in the only direction that
+   * matters: if the two ever disagree, the script marks an element the CSS does
+   * not animate, or the CSS waits for an attribute the script never writes.
+   * Both outcomes are an element that does not move. Neither is an element that
+   * cannot be read.
+   * ══════════════════════════════════════════════════════════════════════════ */
+  @supports not (animation-timeline: view()) {
+    /* ── THE STYLESHEET TELLS THE SCRIPT WHICH BRANCH IS LIVE ──────────────
+     *
+     * src/scripts/arrive.ts must not observe anything on an engine that already
+     * carries the arrival on geometry, or the two would run at once. The
+     * obvious build is for the script to ask `CSS.supports` the same question
+     * this `@supports` asks. That is a SECOND feature test, in a second
+     * language, which can answer differently from this one and would then have
+     * the script triggering a branch the stylesheet is not generating.
+     *
+     * So it is asked once, here, and read. `getPropertyValue` on the document
+     * element returns a non-empty string only where this block is live, so the
+     * script and the stylesheet cannot disagree about which branch a browser is
+     * on: they are the same decision, made in the place that owns it.
+     *
+     * IT IS ALSO WHAT LETS THE SCRIPT STOP NAMING `view()` AT ALL, which
+     * scripts/check-motion.js rule 1 correctly objected to: a timeline function
+     * written in a file that is not this one is indistinguishable, to a text
+     * scanner, from a second scroll-driven system. Rule 1 was right and the
+     * feature test was the thing to remove.
+     *
+     * DELIBERATELY NOT INSIDE THE `no-preference` GATE BELOW. This says which
+     * BRANCH the engine is on, which is true whatever a reader has asked for.
+     * The preference is the script's own first guard and the stylesheet's
+     * `reduce` block, and folding two different questions into one flag is how
+     * a flag starts meaning neither. */
+    :root {
+      --arrive-fallback: 1;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      /* THE ITEM. Travel only, staggered, exactly as above. --land-row-dur and
+         --land-step are §THE LANDING's own two numbers rather than new ones: a
+         card arriving under a reader who is scrolling and a row arriving under
+         a reader who has just landed are the same event at different times. */
+      main :is(.surface, figure)[data-arrived='on'] {
+        animation-name: sv-arrive-item;
+        animation-duration: var(--land-row-dur);
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
+        animation-delay: calc(var(--arrive-i, 0) * var(--land-step));
+      }
+
+      /* THE BLOCK. Declared after the item for the reason the other branch
+         declares it after the item: `div.fc.surface` on the homepage is both,
+         both selectors carry one attribute and one class, and the block rule
+         wins on source order so that card fades as a block rather than merely
+         rising. The order is load-bearing in both branches or in neither.
+
+         NO `animation-delay`, and property 3 above is why. */
+      main > *:not(script, style, template):not(:only-child):not(:first-child)[data-arrived='on'],
+      main > *:only-child > *:not(script, style, template):not(:first-child)[data-arrived='on'] {
+        animation-name: sv-arrive;
+        animation-duration: var(--land-dur);
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
       }
     }
   }
@@ -1152,6 +1294,92 @@
     *:has(> #hero-title) > *:nth-child(3) { --hero-follow-i: 3; }
     *:has(> #hero-title) > *:nth-child(4) { --hero-follow-i: 4; }
     *:has(> #hero-title) > *:nth-child(5) { --hero-follow-i: 5; }
+
+    /* ── THE OFFER CATCHES THE LIGHT AS IT LANDS ───────────────────────────
+     *
+     * Owner, 2026-08-31: *"The primary 'Request access' CTA button lacks a
+     * continuous or hover-triggered specular light sweep."*
+     *
+     * THE HOVER HALF ALREADY SHIPS AND IS NOT TOUCHED HERE. ui/Button.astro
+     * draws a white band on `.btn::after` and slides it across the face on
+     * pointer enter, on every button rather than only the primary, and
+     * scripts/check-sheen.js measures that travel in a browser on both. This
+     * adds the ONE thing that was missing, a single pass as the control
+     * arrives, and it deliberately adds no second hover mechanism: a control
+     * with two answers to one pointer is how a component grows a state nobody
+     * can predict.
+     *
+     * ── IT IS THE BUTTON ROW, NOT THE PRIMARY ALONE, AND THAT IS A
+     * ── MEASUREMENT RATHER THAN A GENEROSITY ─────────────────────────────
+     *
+     * The request names the primary. Built on the primary alone and measured
+     * frame by frame on the paused animation, the pass moved a mean of 1.35 of
+     * 255 per channel with a peak of 13. THE REASON IS THE FILL: the primary is
+     * `linear-gradient(135deg, #fff, #d2dbee)` and the band is --c-text at 50
+     * percent, which resolves to white. White light on a white face is not a
+     * sweep, and scripts/check-status-pulse.mjs records exactly this failure on
+     * this site once already, an "animated" wash moving 2 of 255, "real in the
+     * compositor and invisible to a person". The same band on the secondary,
+     * whose face is dark, measures a mean of 20 with a peak of 119.
+     *
+     * ui/Button.astro ALREADY SETTLED THIS QUESTION IN THE SAME DIRECTION and
+     * on an owner decision of 2026-08-04: the sweep used to be primary-only, the
+     * argument for that was "a specular pass over the secondary would make two
+     * equal offers out of a deliberate one", and it was overruled because the
+     * sweep is a property of the SURFACE rather than of the offer. Both controls
+     * are raised objects and the hierarchy is carried by the fill, which is
+     * where it can be read at rest. That reasoning is not weaker on a landing
+     * than it is on a hover, and following it here is what makes the effect
+     * something a reader actually sees.
+     *
+     * NOT CONTINUOUS, AND THAT IS A REFUSAL RATHER THAN AN OMISSION. The
+     * request offers "continuous or hover-triggered". ui/Button.astro already
+     * answers the second and states the argument against the first in its own
+     * words: *"A button that shines on its own is a button competing with the
+     * page for attention it has not been given."* A loop would also run on
+     * every frame of every visit for the life of the page, on the one element
+     * a reader is trying to read before clicking. One pass, at the moment the
+     * button appears, is the same idea with the cost paid once.
+     *
+     * IT BORROWS THE ROW'S OWN CLOCK RATHER THAN CHOOSING A NUMBER. The delay
+     * and the duration are the two the button row itself is running, so the
+     * light crosses the face over exactly the span the control is rising and
+     * finishes as it settles at 1350ms. --hero-follow-i is INHERITED from the
+     * row, so if the row moves in the cadence above, this moves with it and no
+     * second copy of the arithmetic can drift. The 4 is a fallback for a hero
+     * whose button row is not the fourth child, not a restatement.
+     *
+     * IT ANIMATES THE SAME TWO PROPERTIES ON THE SAME LAYER THE HOVER USES,
+     * which is why it composes with it rather than fighting it. Button.astro
+     * declares no `animation` on `::after` at all, so nothing here is
+     * overridden and nothing here overrides a declaration. An animation outranks
+     * every normal declaration while it is filling and contributes NOTHING once
+     * it is over, and `animation-fill-mode` is left at its default `none` on
+     * purpose: the moment the pass ends the layer is back on Button.astro's own
+     * `opacity: 0`, so a pointer arriving at 1400ms gets the hover sweep with
+     * nothing held over from this one.
+     *
+     * NOTHING IS HIDDEN IF IT NEVER RUNS. `.btn::after` is `opacity: 0` at rest
+     * and is a specular band with no content in it. Delete this rule, or read
+     * the page in an engine that drops it, and the button is exactly what
+     * ui/Button.astro draws. */
+    *:has(> #hero-title) .btn::after {
+      animation-name: sv-btn-sweep;
+      animation-duration: var(--hero-follow-dur);
+      /* --m-ease-travel, NOT --m-ease-land, AND IT WAS MEASURED RATHER THAN
+         PREFERRED. tokens.css binds --m-ease-travel to `linear` and names it as
+         the curve a travelling light takes; --m-ease-land is the expo out every
+         ARRIVING element on this page uses. Built once on --m-ease-land and read
+         off the paused animation, `background-position-x` went 160 percent to
+         -17.7 percent in the first 170ms of a 720ms pass: the band crossed the
+         face inside the first eighth and the remaining 550ms were spent off the
+         right edge. That is a flash, not a sweep. An expo out is right for a
+         thing that ARRIVES somewhere and wrong for a thing that PASSES, which is
+         the distinction the two tokens exist to keep apart. */
+      animation-timing-function: var(--m-ease-travel);
+      animation-delay:
+        calc(var(--hero-land-hold) + var(--hero-land-step) * var(--hero-follow-i, 4));
+    }
     /* The closing gate note is a sibling of the wrapper rather than a row
        inside it, so it is reached from the section instead. It is last on the
        page and last in, which is the whole of the choice. */
@@ -1301,10 +1529,33 @@
     *:has(> #hero-title) > *:first-child,
     *:has(> #hero-title) > *:nth-child(n + 3),
     *:has(> * > #hero-title) > *:last-child,
+    /* The CTA sweep, repeated verbatim for the reason the four lines above are.
+       It is already generated inside `no-preference` and can never run here, so
+       this is the belt-and-braces half of the same contract: it makes
+       `animationName === 'none'` a thing a test can read off the pseudo-element
+       rather than a fact inferred from a rule not having been entered.
+       scripts/check-sheen.js asserts the neighbouring half of this on the same
+       control: under `reduce` the hovered primary's ::after background-position
+       does not move at all. */
+    *:has(> #hero-title) .btn::after,
     #hero-title,
     #hero-title > span,
     main .surface,
     main figure,
+    /* ── §THE FALLBACK's TWO SELECTORS, VERBATIM AND FOR THE SAME REASON ────
+       They each carry one more attribute than the structural lines below, so
+       `main .surface` at (0,1,1) could not reach the item rule at (0,2,1) and
+       the two `main > *` lines could not reach the block rule. Repeated exactly
+       as written there, they tie on specificity and win on source order. They
+       are already generated inside `no-preference` and src/scripts/arrive.ts
+       returns before it observes anything under the preference, so this is the
+       third guard on a path that has two. It is here because the site's
+       accessibility standard is a property somebody can assert, and
+       `getComputedStyle(el).animationName === 'none'` is assertable where "the
+       rule was never entered" is not. */
+    main :is(.surface, figure)[data-arrived='on'],
+    main > *:not(script, style, template):not(:only-child):not(:first-child)[data-arrived='on'],
+    main > *:only-child > *:not(script, style, template):not(:first-child)[data-arrived='on'],
     main > *:not(script, style, template):not(:only-child),
     main > *:only-child > *:not(script, style, template),
     main > *:not(:only-child):first-child > *,
@@ -1324,6 +1575,15 @@
  * without touching layout or paint. Nothing here reads or writes a width, a
  * height, a margin or a colour, so an arrival on eighteen sections costs the
  * same frame as an arrival on one.
+ *
+ * THE EXCEPTION IS `background-position` IN sv-btn-sweep, ADDED 2026-08-31, AND
+ * IT IS A REPAINT RATHER THAN A RELAYOUT. It runs on ONE pseudo-element, once,
+ * for 720ms, on a control roughly 180 by 48 pixels, and it is the identical
+ * property ui/Button.astro already transitions on the identical layer every
+ * time a pointer crosses that button. So the cost is one the page pays already,
+ * on a smaller area, and the sentence above stays true of every rule that runs
+ * on more than one element. If a future arrival wants this property on a block,
+ * that is a different decision and this paragraph is not the permission for it.
  *
  * THERE IS NO LONGER AN EXCEPTION, AND THE HISTORY IS KEPT BECAUSE IT IS THE
  * ARGUMENT. `filter: blur()` was admitted here for the homepage h1 alone, then
@@ -1463,6 +1723,32 @@
 @keyframes sv-land-row {
   from { transform: translateY(var(--land-row-lift)); }
   to   { transform: translateY(0); }
+}
+
+/* One pass of light over the primary CTA as it lands.
+ *
+ * THE TWO POSITIONS ARE ui/Button.astro's OWN, NOT NEW ONES. That file puts the
+ * band at 160% at rest and drives it to -60% on hover across a 250% wide
+ * background, and those three numbers ARE the effect: they are what puts the
+ * band fully off one edge at each end so it never appears or vanishes mid-face.
+ * They are restated here rather than tokenised because a token holding 160%
+ * would be a shared name for one component's geometry, which is the mistake
+ * styles/controls.css spends its header refusing.
+ *
+ * IT STARTS AND ENDS AT opacity 0, so this is not an entrance in the sense
+ * check-motion.js rule 2 means: there is no resting state it resolves to. The
+ * layer's resting state is `opacity: 0` and the last frame hands it straight
+ * back. The fades are 15 percent of the pass at each end, which is what stops a
+ * band being switched on at full strength while it is still off the edge.
+ *
+ * NO OPACITY 1 IN THE MIDDLE WOULD ALSO WORK AND IS WRONG: the band is a
+ * 50 percent white stripe painted UNDER the label at z-index -1, so full alpha
+ * here is the same light the hover already draws, not a brighter one. */
+@keyframes sv-btn-sweep {
+  0%   { background-position: 160% 0; opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { background-position: -60% 0; opacity: 0; }
 }
 
 /* ============================================================================

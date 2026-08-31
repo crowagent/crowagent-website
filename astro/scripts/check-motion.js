@@ -142,6 +142,36 @@ const ALLOWED = new Map([
    * src/scripts/motion.ts, and twice more as a byte-identical inline script in
    * two page files. That is the duplication the charter forbids, and none of
    * the three files says the other two exist. */
+  /* ── A FIFTH OBSERVER, ADDED DELIBERATELY 2026-08-31, AND IT IS THE ONE THIS
+   * RULE WAS WRITTEN TO FORBID: it drives arrival. The entry is written long
+   * because an exemption for the exact thing a rule exists to stop has to be
+   * arguable, not merely present.
+   *
+   * WHAT THE RULE IS ACTUALLY PROTECTING. "Arrival is geometry now, not an
+   * event" is a claim about FAILURE, not about mechanism: the two observers
+   * that hid content on this site hid it with a CSS rule at `opacity: 0` and
+   * then depended on a callback to undo it, so a callback that never came left
+   * the content unreadable. src/scripts/arrive.ts writes one attribute whose
+   * only effect is to name an animation. There is no rule anywhere that hides
+   * these elements, so there is nothing for a missed callback to fail to undo,
+   * and the block rule it triggers takes no `animation-delay`, so there is not
+   * even a frame in which a from-state is held. The failure mode is a block
+   * that does not move.
+   *
+   * WHY IT EXISTS AT ALL. `animation-timeline: view()` is absent from Firefox
+   * Release, so §THE FALLBACK in styles/motion.css is the same two arrivals on
+   * a clock for the sixth of readers who cannot have them on geometry. The
+   * owner asked for it three times, and the recommendation to leave it static is
+   * still in motion.css above the block, kept rather than deleted, with the
+   * three of its four reasons that survived marked as surviving.
+   *
+   * WHAT WOULD MAKE THIS ENTRY STALE, AND IT IS A REAL EVENT RATHER THAN A
+   * FORM OF WORDS: Firefox shipping scroll driven timelines unflagged. Delete
+   * this entry, src/scripts/arrive.ts, its call in src/scripts/shell.ts and
+   * §THE FALLBACK together on that day. */
+  ['observer  src/scripts/arrive.ts  IntersectionObserver',
+   'the arrival fallback for engines with no view timeline, and the only observer here that drives appearance on purpose. It is exempt because the failure this rule exists to prevent is not available to it: nothing in the tree hides these elements, so the attribute it writes can only ADD an animation, and a callback that never fires leaves a block still and fully readable rather than invisible. It also returns before observing anything when CSS.supports says the engine has view() at all, so it is inert on Chrome, Edge and Safari'],
+
   ['observer  src/scripts/motion.ts  IntersectionObserver',
    'the `data-lit` trigger, and the one copy of it that should survive. It does not reveal content: it sets data-lit="on" once on a wrapper whose only job is to start ambient light-field loops, every one of them aria-hidden and behind the text. Rest state is final state, so if it never fires the page is complete and merely still. That is the exact inversion of the sv-reveal pattern rather than a smaller dose of it. If it ever gates something a reader has to read, it becomes a violation'],
   ['observer  src/pages/crowmark.astro  IntersectionObserver',

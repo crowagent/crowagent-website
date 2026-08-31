@@ -57,6 +57,7 @@ import { initNavDropdowns } from './nav-dropdown';
 import { initCommandPalette } from './command-palette';
 import { initMagnetic } from './magnetic';
 import { initCardSpotlight } from './card-spotlight';
+import { initArrive } from './arrive';
 
 /** The whole of the shell's client behaviour. Called once, from Base.astro. */
 export function initShell(): void {
@@ -71,4 +72,20 @@ export function initShell(): void {
    */
   initMagnetic();
   initCardSpotlight();
+  /*
+   * THE ARRIVAL FALLBACK, ADDED 2026-08-31, AND IT IS THE ONE THING HERE THAT
+   * RETURNS ON MOST BROWSERS. styles/motion.css runs the site's arrivals on
+   * `animation-timeline: view()`, which Firefox Release does not have, so a
+   * sixth of readers were getting the landing and nothing below the fold. This
+   * closes that and nothing else: `initArrive` asks `CSS.supports` the same
+   * question the stylesheet asks and returns before observing anything on every
+   * engine that already carries the real arrival.
+   *
+   * IT IS NOT `motion.ts`, AND THE PARAGRAPH ABOVE STILL STANDS. That module
+   * owns the homepage's ambient light rig and stays a second entry on that one
+   * route, and booting it here would put its `data-lit` trigger and its cursor
+   * light on 43 routes that never asked for either. The arrival is sitewide, so
+   * only the arrival is here.
+   */
+  initArrive();
 }

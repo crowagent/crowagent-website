@@ -374,6 +374,72 @@
     .fx-status-pulse {
       animation: fx-status-pulse calc(var(--m-beat) * 3) var(--m-ease-land) infinite;
     }
+
+    /* ── THE RING, ADDED 2026-08-31 ON AN OWNER REQUEST MADE TWICE ─────────
+     *
+     * *"Green verified status dots ... are static SVGs lacking a continuous
+     * subtle radar ping (@keyframes ping)."*
+     *
+     * WHAT THE RING SAYS, AND WHY ONLY THESE TWO MARKS MAY SAY IT. A ring
+     * leaving a mark on a cycle reads as CHECKING HAPPENING NOW. This site
+     * argues that CrowMark refuses what it cannot evidence, so a ping on a mark
+     * that records a finished verdict would be the exact defect the product
+     * exists to prevent, drawn in the design system. The two carriers named at
+     * the head of this rule both report a live state and both are one click or
+     * one glance from the thing that knows: the footer mark links to the status
+     * page, and the milestone dot is the single row of a dated rail that is
+     * still open. Four other teal marks on this site were read and refused, and
+     * the reasons are with them: `.hero__gate-mark` in HeroStack.astro,
+     * `.hir__dot` in HowItRuns.astro and `.rt__dot` in ReasoningTrace.astro,
+     * whose own comment says every step on its rail is one the engine already
+     * COMPLETED.
+     *
+     * THE SAME PERIOD AND THE SAME CURVE AS THE BREATHE, WHICH IS THE WHOLE
+     * REASON IT IS HERE RATHER THAN AT A CALL SITE. The note above records what
+     * the legacy tree did with this idea: three status pulses by three authors,
+     * at 2s, 2s and 1.8s, "on two different curves, one of them scaling a ring
+     * instead of varying opacity". This is the ring and the alpha on ONE clock
+     * and ONE curve, so a reader sees one mark breathing rather than two effects
+     * sharing an element.
+     *
+     * `:where()` FOR THE CONTAINING BLOCK, AND IT IS LOAD-BEARING RATHER THAN
+     * TIDY. The ring is absolutely positioned against its mark, so the mark has
+     * to be a containing block. `.ca-footer-status-dot` is static and needs
+     * `relative`; `.tl__dot` is already `absolute` and must keep it, because
+     * styles/timeline.css pulls it back onto the rail with a left offset. Both
+     * files are in `@layer components`, so a plain `.fx-status-pulse` at (0,1,0)
+     * would tie with `.tl__dot` and win on source order, moving the milestone
+     * marker off the rail. At (0,0,0) this rule can only ever reach a mark that
+     * has not positioned itself, which is the one case it is for.
+     *
+     * ONE KNOB FOR THE INK, DEFAULTING TO WHAT BOTH CARRIERS ALREADY RESOLVE.
+     * A border cannot read the mark's own `background`, so the recipe needs a
+     * colour where it previously needed none. --c-verified is the value both
+     * carriers set on themselves today, and a third carrier that is not teal
+     * sets --fx-status-ink beside its own fill rather than forking this block.
+     *
+     * IT CANNOT MAKE AN UNVERIFIED THING LOOK VERIFIED, which is the property
+     * the alpha-only note above was protecting. The ring is drawn in the mark's
+     * own colour, carries no hue of its own, is aria-hidden with the two
+     * carriers, and is generated only inside this `no-preference` block: under
+     * `reduce` the pseudo-element has `content: none` and there is nothing to
+     * undo, exactly as the breathe has nothing to undo. */
+    :where(.fx-status-pulse) {
+      position: relative;
+    }
+
+    .fx-status-pulse::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid var(--fx-status-ink, var(--c-verified));
+      /* The mark is decorative and, in the footer, sits inside a link. A ring
+         two and a half times its size must not become the thing a pointer
+         hits. */
+      pointer-events: none;
+      animation: fx-status-ping calc(var(--m-beat) * 3) var(--m-ease-land) infinite;
+    }
   }
 }
 
@@ -443,5 +509,31 @@
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* The ring leaving the mark. It STARTS on the mark's own edge at `scale(1)` and
+   never returns, so there is no resting state for it to be missing from and
+   check-motion.js rule 2 reads it correctly as a loop rather than an entrance.
+
+   IT RESTS FOR THE LAST THIRD OF EVERY CYCLE, which is what makes it subtle
+   rather than a strobe: the ring is gone by 70 percent and the mark spends the
+   remainder as a plain dot, so a reader who is not looking at it sees a mark
+   that breathes and a reader who is sees one departure per cycle.
+
+   2.6 IS THE LARGEST SCALE THAT STILL READS AS THIS MARK. On the footer's 8px
+   dot that is a 21px ring, which stays inside the 24px row the status pill is
+   already laid out at, so nothing reflows and no page grows a scrollbar.
+   0.5 rather than 1 at the start, for the reason fx-pulse never touches either
+   end of its range: a ring at full strength is an alert. */
+@keyframes fx-status-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
   }
 }
