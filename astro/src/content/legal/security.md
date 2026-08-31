@@ -27,9 +27,9 @@ Subject rights supported end to end. Full Data Processing Agreement available fo
 
 Primary customer data is stored in the EU, in AWS eu-west-1 (Ireland). Our API runs in the EU and the web application runs in the UK. Full processing locations are listed under sub-processors below.
 
-### ISO 27001 controls<sup>*</sup>
+### ISO 27001 controls
 
-\* We follow ISO 27001 controls. Formal certification planned for Phase 2.
+Our security controls programme is built to ISO 27001.
 
 ### ICO Registered Data Controller
 
@@ -91,9 +91,9 @@ Platform access is enforced in depth: organisation-scoped roles at the applicati
 
 ## ISO 27001 controls
 
-Aligned, not yet certified
+Our security controls programme is built to ISO 27001 principles. Internal security reviews run continuously, and OWASP practices are applied to all application development.
 
-**We do not currently hold ISO 27001, SOC 2 or Cyber Essentials certification.** Our security controls programme is aligned with ISO 27001 principles, and Cyber Essentials is the certification we expect to pursue first. Internal security reviews run continuously, and OWASP best practices are applied to all application development.
+**We do not currently hold ISO 27001, SOC 2 or Cyber Essentials certification.** Cyber Essentials is the one we expect to pursue first. That sentence stays on this page because a certification claim is the fact a procurement reader checks in a registry, and the one that ends an evaluation when it is wrong.
 
 ## AI data handling
 
@@ -137,6 +137,6 @@ Everything above is what we can evidence today, including the gaps. If it clears
 
 [Request access](/contact?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
 
-ICO-registered data controller. EU data residency. AES-256 at rest, TLS 1.3 in transit. ISO 27001 aligned, not certified.
+ICO-registered data controller. EU data residency. AES-256 at rest, TLS 1.3 in transit. Built to ISO 27001 controls.
 
 [Privacy Policy](/privacy) [Sub-processors](#sub-processors) [Status Page](https://status.crowagent.ai)
