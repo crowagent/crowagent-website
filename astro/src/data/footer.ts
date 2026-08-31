@@ -113,10 +113,27 @@ export const FOOTER = {
     'TLS 1.3 in transit',
     'GDPR compliant',
     'EU data residency',
-    'ISO 27001 controls*',
+    'Built to ISO 27001 controls',
     'ICO registered',
   ] as string[],
-  trustNote: '* We follow ISO 27001 controls. We are not certified yet.',
+  /*
+   * [2026-08-31] THE ASTERISK AND ITS FOOTNOTE ARE GONE, AND NOTHING WAS
+   * WEAKENED BY REMOVING THEM.
+   *
+   * "ISO 27001 controls*" leaned on a footnote to carry the honesty, so the
+   * badge alone said one thing and the truth lived somewhere else on the page.
+   * A reader who scans a trust row does not read footnotes, which is exactly
+   * the audience a trust row is for.
+   *
+   * "Built to ISO 27001 controls" is self contained. It claims the CONTROLS and
+   * cannot be read as the certificate, so the qualifier is inside the claim
+   * rather than beside it. The full denial still stands in its own section on
+   * /security/, where a procurement reader looks for it.
+   *
+   * Word for word the same string the platform login screen shows, from
+   * web/src/shared/ui/TrustSignals.tsx. A trust claim that differs between the
+   * marketing site and the product is the one a buyer notices.
+   */
 
   brand: {
     /**
