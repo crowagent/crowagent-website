@@ -1209,6 +1209,13 @@ const CHECKED = SAMPLES.map((s) => {
     color: var(--c-text-muted);
   }
 
+  /* 7s, not the carousel's shorter beat. A slide is glanced at and a clause is
+     READ: the longest of the three panes runs to two lines of clause plus a
+     three step verdict, and a reader who has not finished when the bar fills
+     has lost their place. Hover pauses it and any press ends it, so this is
+     the ceiling on an unattended visitor rather than a limit on a reading one. */
+  .hmt { --hmt-dwell: 7s; }
+
   .hmt__tabs {
     display: flex;
     flex-wrap: wrap;
@@ -1239,6 +1246,63 @@ const CHECKED = SAMPLES.map((s) => {
 
   .hmt__tab:hover {
     color: var(--c-text);
+  }
+
+  /* -- THE DWELL BAR IS THE TIMER, AND THERE IS NO setInterval --------------
+   *
+   * Owner asked for the three checks to advance on their own. This is the
+   * SAME CONTRACT `components/ui/Carousel.astro` already uses: a CSS animation
+   * runs, and its `animationend` is what advances the group. Nothing in the
+   * script measures time.
+   *
+   * THAT IS WHY THE TWO SWITCHES ARE FREE. Under `prefers-reduced-motion:
+   * reduce` and below 40rem the animation never runs, so `animationend` never
+   * fires and autoplay is off WITHOUT the script knowing either rule exists. A
+   * timer would need both conditions restated in JavaScript, where they drift.
+   * 40rem is the same breakpoint at which both carousels already stop
+   * autoplaying, so the page has one answer rather than two.
+   *
+   * IT IS ALSO THE PAUSE CONTROL WCAG 2.2.2 ASKS FOR. The bar is visible, so
+   * the reader can see that something is counting, and hover or keyboard focus
+   * anywhere in the block pauses it. A reader who has started reading a clause
+   * is not moved off it.
+   *
+   * AND A USER MOVE STOPS IT FOR GOOD RATHER THAN PAUSING IT. This panel holds
+   * a clause and a verdict, which is dense text somebody is READING, unlike a
+   * decorative carousel. Resuming under a reader is the same fault as never
+   * pausing, only later, so the first pointer or key press ends autoplay for
+   * the rest of the visit. */
+  .hmt__tab {
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (min-width: 40rem) {
+    .hmt:not([data-auto='off']) #hmt-a:checked ~ .hmt__tabs label[for='hmt-a']::after,
+    .hmt:not([data-auto='off']) #hmt-b:checked ~ .hmt__tabs label[for='hmt-b']::after,
+    .hmt:not([data-auto='off']) #hmt-c:checked ~ .hmt__tabs label[for='hmt-c']::after {
+      content: '';
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 0;
+      block-size: 2px;
+      background: var(--c-interactive);
+      transform: scaleX(0);
+      transform-origin: left center;
+      animation: hmt-dwell var(--hmt-dwell) linear;
+    }
+
+    /* Hover or focus ANYWHERE in the block, not only on the tabs, because the
+       thing being read is the pane below them. */
+    .hmt:hover .hmt__tabs label::after,
+    .hmt:focus-within .hmt__tabs label::after {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes hmt-dwell {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
   }
 
   /* THE PANES ARE ALL IN THE DOCUMENT AND ONE IS SHOWN. `hidden` on the two
@@ -1407,3 +1471,28 @@ const CHECKED = SAMPLES.map((s) => {
     min-block-size: 24px;
   }
 </style>
+
+<script>
+  /* Advance on `animationend` only. The two switches that turn autoplay off,
+     reduced motion and the narrow breakpoint, live in the stylesheet and are
+     not restated here, so they cannot drift apart from it. */
+  (() => {
+    const hmt = document.querySelector('.hmt');
+    if (!hmt) return;
+    const radios = [...hmt.querySelectorAll<HTMLInputElement>('.hmt__radio')];
+    if (radios.length < 2) return;
+
+    const stop = () => hmt.setAttribute('data-auto', 'off');
+    hmt.addEventListener('pointerdown', stop, { once: true });
+    hmt.addEventListener('keydown', stop, { once: true });
+
+    hmt.addEventListener('animationend', (event: Event) => {
+      const e = event as AnimationEvent;
+      if (e.animationName !== 'hmt-dwell') return;
+      if (hmt.getAttribute('data-auto') === 'off') return;
+      const i = radios.findIndex((r) => r.checked);
+      if (i < 0) return;
+      radios[(i + 1) % radios.length].checked = true;
+    });
+  })();
+</script>
