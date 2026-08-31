@@ -342,18 +342,36 @@ import Section from '../layout/Section.astro';
      job was already written. No new token was added, so there is none to remove
      on revert.
 
-     THE BLUR HALF OF THE AUDIT ITEM IS ALREADY BUILT AND IS DELIBERATELY LEFT
-     ALONE. `.surface` already declares `backdrop-filter: var(--blur-glass)`
-     inside an @supports guard in surfaces.css, so it is computing on these
-     cards today. It draws nothing, and that is by design rather than by
-     oversight: --c-panel is opaque, and a backdrop filter over an opaque fill
-     returns the same fill. components/nav/NavDropdown.astro records the
-     measurement, 21 of 21 cards on /pricing. Making it visible would mean
+     THE BLUR HALF OF THE AUDIT ITEM DOES NOT REACH THESE CARDS, AND THIS
+     PARAGRAPH USED TO SAY OTHERWISE. It read: "`.surface` already declares
+     `backdrop-filter: var(--blur-glass)` inside an @supports guard in
+     surfaces.css, so it is computing on these cards today. It draws nothing,
+     and that is by design rather than by oversight". The first sentence was a
+     CLAIM and it was wrong, which is the more useful half of the finding: a
+     comment describing a cost is not evidence that the cost is being paid.
+
+     MEASURED ON THE BUILT PAGE, 2026-08-31, at 1440. Computed `backdrop-filter`
+     on both .pg__card elements is `none`. `.surface--panel` in surfaces.css
+     resets it to none a few lines under the @supports block that sets it, and
+     every card here carries `surface--panel`, so the blur is cancelled before
+     it can be rasterised. There is no GPU work to remove and nothing to fix.
+
+     THE REASONING BELOW STANDS AND IS WHY THE RESET IS RIGHT. --c-panel is
+     opaque and a backdrop filter over an opaque fill returns the same fill, so
+     the filter could only ever cost a recomposite and return nothing.
+     components/nav/NavDropdown.astro records the same measurement from the
+     other direction, 21 of 21 cards on /pricing. Making it VISIBLE would mean
      turning these two cards translucent, which is a contrast risk this system
      has already been bitten by once (`.in__chip` measured 4.03:1 against the
      4.5:1 SC 1.4.3 requires) and a per-scroll-frame recomposite on the largest
      objects on the page. The elevation below is the part that changes what a
-     reader sees, so it is the only part done here. */
+     reader sees, so it is the only part done here.
+
+     WHERE THE FINDING IS STILL LIVE, RECORDED HERE BECAUSE IT IS NOT LIVE HERE.
+     The same measurement counted 20 elements on / computing a non-none
+     backdrop-filter, 14 of them over a fully opaque background colour. Those
+     are in surfaces.css and in components this file does not own. This card is
+     not one of them. */
   .pg__card {
     --surface-shadow: var(--shadow-panel);
   }

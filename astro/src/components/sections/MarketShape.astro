@@ -100,10 +100,35 @@
  * refusal recorded at `.spine__stop` below, which is the load-bearing half of
  * the 2026-08-05 layout decision.
  *
- * NO COUNT-UP ANIMATION. The legacy version animated these from zero on scroll,
- * which is the hide-then-reveal pattern that left 4 of 9 homepage sections
- * permanently invisible when the observer did not fire. A number that might not
- * arrive is worse than a number that does not animate.
+ * ── ONE FIGURE COUNTS NOW, AND THE OLD REFUSAL IS ANSWERED RATHER THAN ──────
+ *    DELETED (owner request, 2026-08-31)
+ *
+ * This paragraph read "NO COUNT-UP ANIMATION" and gave the reason: the legacy
+ * version animated these from zero on scroll, which is the hide-then-reveal
+ * pattern that left 4 of 9 homepage sections permanently invisible when the
+ * observer did not fire. A number that might not arrive is worse than a number
+ * that does not animate.
+ *
+ * EVERY WORD OF THAT IS STILL TRUE AND NONE OF IT IS BREACHED. The objection is
+ * to a figure whose ARRIVAL depends on script. It does not here. Each `value`
+ * is authored text in the markup, painted at first render, and the count writes
+ * over a figure that is already correct and always restores the authored string
+ * when it ends, when it is interrupted, and when it never starts. Blocked
+ * script, a thrown module, a browser without registered custom properties and a
+ * reader who has asked for stillness all get the same page: the finished
+ * figures, immediately.
+ *
+ * THE TRIGGER IS THE SECTION'S EXISTING `data-lit`, not a private observer.
+ * scripts/check-motion.js rule 3 fails any IntersectionObserver under src/ and
+ * is right to: this route already has one, in src/scripts/motion.ts, and it
+ * already lights this section. The count hangs off a CSS animation keyed to
+ * `[data-lit='on']` and the script does nothing but read its progress and print
+ * a number. CSS owns when it starts, how long it runs and how it eases. See
+ * `@keyframes ms-count` below.
+ *
+ * WHICH FIGURES COUNT IS AN EDITORIAL DECISION AND IT IS RECORDED WITH THE
+ * DATA, at `countTo` on the `Stop` interface. Two of the three figures and all
+ * three tags are deliberately still.
  */
 import Section from '../layout/Section.astro';
 
@@ -118,6 +143,58 @@ interface Stop {
   /** A few words. No full stop, no date, no threshold, no "in force". */
   label: string;
   accent: string;
+  /*
+   * ── WHICH FIGURES MAY COUNT, AND THE TEST THAT DECIDES IT ────────────────
+   *
+   * Owner request, 2026-08-31: the statutory numerals should tick up on scroll,
+   * 600ms, eased. The header note above this array has refused a count-up on
+   * these figures since the rebuild, and that refusal is answered rather than
+   * overruled: what it objects to is a number that MIGHT NOT ARRIVE, and
+   * nothing here hides one. `value` is authored text, painted at first render,
+   * and the count only ever writes OVER a figure that is already correct.
+   *
+   * `countTo` IS THE TARGET AND IT IS DATA, NEVER PARSED FROM THE PAGE. The
+   * count in ReasoningTrace.astro takes its target from the rendered element
+   * with `authored.replace(/[^0-9.]/g, '')`, which is the fault this field
+   * exists to avoid: that expression turns "£5m" into 5, and a figure carrying
+   * a comma or a decimal separator into a different number entirely, silently
+   * and only at runtime. A target written in the array is checked by reading
+   * the array.
+   *
+   * THE TEST FOR SETTING IT. Does any intermediate value the count displays
+   * coincide with a real and different figure in the same regulatory domain?
+   *
+   *   12    no. There is no rival interval. 7 or 9 months is arithmetic on the
+   *         way to the answer and names nothing. IT COUNTS.
+   *   £5m   yes. PPN 026 splits at exactly this figure, 1m to 5m carries the
+   *         10% floor and 5m or above carries 20%, and the notice's scope
+   *         starts at 1m. A count through £1m, £2m, £3m prints real contract
+   *         values from the OTHER band, one card away from the card printing
+   *         10%. IT DOES NOT COUNT.
+   *   10%   yes, and worst of the three. The count passes through 5%, which
+   *         this site has a standing rule never to print (CLAUDE.md rule 8,
+   *         enforced by scripts/check-facts.js) because it is the wrong PPN
+   *         threshold that readers actually confuse this one with, and through
+   *         2%, which reads as PPN 002. A section whose whole argument is that
+   *         every figure traces to something may not render the confusion it
+   *         exists to correct, however briefly. IT DOES NOT COUNT.
+   *
+   * A TAG NEVER COUNTS AND THERE IS NO FIELD THAT COULD MAKE ONE. s.52, s.71
+   * and PPN 026 are identifiers, not quantities. A counter running to 52 prints
+   * fifty-one references to other real sections of the Procurement Act, and one
+   * running to 026 prints PPN 002 and PPN 006 on the way, both live notices
+   * with different rules. The same holds for any date: 14 March 2026 names an
+   * instant and has no magnitude to count. This is why the field sits on the
+   * figure and not on the stop.
+   *
+   * ONE OF THREE TICKING IS THE CONSEQUENCE AND IT IS FLAGGED RATHER THAN
+   * HIDDEN. Applying the test leaves a single animating figure in a row of
+   * three, which is a design result the owner may want either widened or
+   * dropped. Both are one line in this array. Widening it means accepting that
+   * the row prints 5% and £3m in passing, which is the decision, not a detail
+   * of it.
+   */
+  countTo?: number;
 }
 
 /*
@@ -193,6 +270,9 @@ const STOPS: Stop[] = [
     tag: 's.71',
     value: '12',
     label: 'months between published assessments',
+    /* The only figure in the set that passes the test on `countTo` above. An
+       interval has no rival value on the way to it. */
+    countTo: 12,
     /* The middle. Violet, by owner decision of 2026-08-31. See the note above
        the array: this row is a symmetrical set, not a ramp. */
     accent: 'var(--c-ambient-end)',
@@ -425,7 +505,15 @@ const STOPS: Stop[] = [
               went stale, so it names the token instead. tokens.css carries the
               reasoning against the 128px the gap document proposes.
             */}
-            <span class="spine__value sv-numeral">{s.value}</span>
+            {/*
+              `data-count-to` IS THE WHOLE CONTRACT WITH THE SCRIPT, and it is
+              absent on every figure that must not move, so a still figure has
+              nothing for the script to select. The attribute carries the
+              TARGET; the authored text between the tags carries the TRUTH. The
+              script never derives one from the other, which is the fault this
+              shape exists to avoid.
+            */}
+            <span class="spine__value sv-numeral" data-count-to={s.countTo}>{s.value}</span>
             <span class="spine__label">{s.label}</span>
           </li>
         ))
@@ -980,6 +1068,72 @@ const STOPS: Stop[] = [
      * The alignment is bought by the fixed left track instead, which is a
      * property of the layout rather than of the font.
      */
+  }
+
+  /* ══ THE DIGIT TICKER ═════════════════════════════════════════════════════
+   *
+   * Owner request, 2026-08-31: "when entering the viewport, animate the primary
+   * statistics using a smooth cubic-bezier counter easing (600ms)".
+   *
+   * CSS IS THE CLOCK AND THE SCRIPT IS ONLY THE PRINTER, which is the same
+   * division src/scripts/motion.ts states for the cursor light: the script
+   * writes a number, CSS decides everything about how it moves. Duration,
+   * easing, trigger and whether the thing runs at all are all decided here, so
+   * a reader who wants to know what the count does reads this block rather than
+   * a bundle.
+   *
+   * IT SPENDS EXISTING TOKENS AND ADDS NONE. --m-beat is 600ms already, which
+   * is the owner's number to the millisecond, and --m-ease-land resolves to
+   * --ease, cubic-bezier(0.16, 1, 0.3, 1), which is the site's one smooth
+   * settle curve. Writing 600ms or a bezier here would be a second opinion
+   * about a decision tokens.css has already taken.
+   *
+   * WHY A REGISTERED PROPERTY RATHER THAN A KEYFRAMED WIDTH OR A TIMER. An
+   * unregistered custom property animates DISCRETELY: it would jump from 0 to 1
+   * halfway and the figure would sit on 0 for 300ms, which on a statutory
+   * numeral is the worst frame this page could paint. Registering it as a
+   * <number> makes it interpolate, so the script can sample a real eased
+   * progress that CSS produced. The script refuses to run at all where
+   * CSS.registerProperty is missing, so the discrete case never reaches a
+   * reader. --ms-count is prefixed because @property is a document-level
+   * registration wherever it is written, and `inherits: false` keeps the value
+   * on the one element that animates it.
+   *
+   * initial-value IS 1, WHICH IS THE FINISHED STATE. The resting value of a
+   * count is the end of it. Anything that "tidies" this to 0 arms exactly the
+   * defect the paragraph above describes. */
+  @property --ms-count {
+    syntax: '<number>';
+    initial-value: 1;
+    inherits: false;
+  }
+
+  /* Starts away from rest and returns to it, which reads like the entrance
+     scripts/check-motion.js rule 2 centralises, and is not one: that rule tests
+     `opacity` and `transform`, the two properties that can leave content
+     invisible or displaced. This moves neither. The element is fully painted
+     and fully legible at every offset, including this one. */
+  @keyframes ms-count {
+    from { --ms-count: 0; }
+    to   { --ms-count: 1; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* THE TRIGGER IS `data-lit`, THE SECTION'S EXISTING ONE. motion.ts sets it
+       when the section reaches the viewport and returns before doing so under
+       reduced motion, so this rule is guarded twice over and the second guard
+       is the one that survives motion.ts being replaced.
+
+       THE DELAY PUTS THE COUNT ON THE STOP'S OWN BEAT. `ms-segment` flashes
+       stop 2 at 1.5 beats, and a figure that started counting before its own
+       card was acknowledged would read as two unrelated events in one card. */
+    [data-lit='on'] .spine__value[data-count-to] {
+      /* NO fill MODE, DELIBERATELY. `backwards` would hold --ms-count at 0 for
+         the whole delay, so the property would read "not started" as "zero" to
+         anything that sampled it early. With no fill it reads its initial
+         value, 1, which is the finished figure, before and after. */
+      animation: ms-count var(--m-beat) var(--m-ease-land) calc(var(--m-beat) * 1.5) 1;
+    }
   }
 
   .spine__label {
@@ -1562,3 +1716,109 @@ const STOPS: Stop[] = [
     .spine__label { max-width: none; }
   }
 </style>
+
+<script>
+  /**
+   * THE DIGIT TICKER, AND IT IS A PRINTER RATHER THAN AN ANIMATION.
+   *
+   * Everything about the movement is decided in this component's stylesheet:
+   * when it starts, how long it runs, how it eases and whether it runs at all.
+   * See the `@keyframes ms-count` block there. What is left for a script is
+   * reading an eased number CSS has already produced and writing digits.
+   *
+   * FOUR WAYS THIS CAN FAIL AND ALL FOUR LAND ON THE TRUE FIGURE.
+   *
+   *   1 IT NEVER RUNS. Blocked, bundled away, thrown in an earlier module.
+   *     Every figure is authored text in the markup and is painted at first
+   *     render, so the section is already finished and correct.
+   *   2 THE READER ASKED FOR STILLNESS. The animation lives inside
+   *     `prefers-reduced-motion: no-preference`, so it never starts, so the
+   *     `animationstart` this listens for never fires and not one character is
+   *     written. There is no second code path to keep in step, which is why the
+   *     guard is a CSS media query rather than a matchMedia test here.
+   *   3 THE ENGINE HAS NO REGISTERED PROPERTIES. An unregistered custom
+   *     property animates discretely and would sample as 0 for half the run.
+   *     The CSS.registerProperty test below refuses the whole thing in that
+   *     case and the figure stands as authored.
+   *   4 SOMETHING INTERRUPTS MID-COUNT. A backgrounded tab, a cancelled
+   *     animation, a frame loop that stops being called. The timeout below
+   *     lands the authored string whatever happened to the frame loop, and the
+   *     loop itself writes the authored string rather than its own arithmetic
+   *     on the last frame. The true value wins on every exit.
+   *
+   * THE TARGET IS DATA AND IS NEVER PARSED OUT OF THE PAGE. It arrives on
+   * `data-count-to`, written by the template from the STOPS array.
+   * ReasoningTrace.astro takes its target from the rendered element instead,
+   * with `authored.replace(/[^0-9.]/g, '')`, and that is the fault this avoids:
+   * the same expression turns "£5m" into 5 and a thousands separator into extra
+   * digits, silently, at runtime, on a figure nobody is watching.
+   *
+   * THE WIDTH IS PINNED BEFORE THE FIRST DIGIT IS WRITTEN. `tabular-nums` on
+   * .sv-numeral equalises the advance of a DIGIT and cannot equalise a count of
+   * digits, so a figure passing from one digit to two would shift the card's
+   * centred column mid-count. Measuring the authored text and holding that
+   * width is exact by construction and needs no per-figure number.
+   */
+  const figures = document.querySelectorAll<HTMLElement>('[data-count-to]');
+
+  if (figures.length && typeof CSS !== 'undefined' && typeof CSS.registerProperty === 'function') {
+    for (const el of figures) {
+      const target = Number(el.dataset.countTo);
+      /** The authored string, taken verbatim and never interpreted. */
+      const authored = el.textContent ?? '';
+      if (!Number.isFinite(target) || target <= 0) continue;
+
+      el.addEventListener(
+        'animationstart',
+        () => {
+          const style = getComputedStyle(el);
+          el.style.minWidth = el.getBoundingClientRect().width + 'px';
+
+          let settled = false;
+          const settle = () => {
+            if (settled) return;
+            settled = true;
+            el.textContent = authored;
+            el.style.minWidth = '';
+          };
+
+          /* AN EMPTY SAMPLE SETTLES RATHER THAN COUNTING FROM NOTHING. If
+             --ms-count ever reads as the empty string the property is not
+             registered on this element, Number('') is 0, and a loop that
+             trusted it would hold the figure on 0 until the timeout. That is
+             the one frame this whole construction exists to make impossible,
+             so it is tested for rather than reasoned away. */
+          const step = () => {
+            if (settled) return;
+            const raw = style.getPropertyValue('--ms-count').trim();
+            const progress = Number(raw);
+            if (raw === '' || !Number.isFinite(progress) || progress >= 1) return settle();
+            /* ZERO IS NEVER PRINTED, AND THIS IS MEASURED RATHER THAN
+               PRECAUTIONARY. Without the test, whether a reader sees a "0"
+               frame depends on how close the first animation frame lands to the
+               start: at 1440 the first value printed was 5, at 768 and 390 it
+               was 0. Skipping the write leaves the authored figure standing for
+               that one frame, which costs nothing, because a count-up on a
+               figure the page has already painted always begins by replacing it
+               with a smaller number whatever the first value is. */
+            const value = Math.round(progress * target);
+            if (value) el.textContent = String(value);
+            requestAnimationFrame(step);
+          };
+
+          /* A floor under the frame loop rather than a duplicate of it. The
+             delay has already elapsed by the time this listener runs, so the
+             budget is one beat plus a few frames of slack, read from the same
+             token the animation runs on so the two cannot drift apart when the
+             beat changes. */
+          const beat = style.getPropertyValue('--m-beat').trim();
+          const ms = /ms$/.test(beat) ? parseFloat(beat) : parseFloat(beat) * 1000;
+          setTimeout(settle, (Number.isFinite(ms) ? ms : 600) + 200);
+
+          step();
+        },
+        { once: true },
+      );
+    }
+  }
+</script>
