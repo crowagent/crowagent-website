@@ -1231,6 +1231,130 @@
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * THE CARD LAMP: one gradient, one mask, and it does both halves of the ask.
+   * ══════════════════════════════════════════════════════════════════════
+   *
+   * Owner request, 2026-08-30, in two sentences that read as two effects:
+   * a radial wash on `.surface` that tracks the pointer, and a specular sheen
+   * on the 1px perimeter nearest to it, built with mask-composite.
+   *
+   * THEY ARE ONE PAINT HERE, AND THAT IS WHAT MAKES IT CHEAP. A second
+   * pseudo-element would have been a second composited layer on every hovered
+   * card for a second copy of the same gradient at a different strength. Two
+   * mask layers do it instead. `exclude` resolves to
+   * `src x (1 - dst-alpha) + dst x (1 - src-alpha)`, and with the inner layer
+   * held at 0.72 over an opaque outer one that arithmetic gives:
+   *
+   *   the face   inner 0.72, outer 1  ->  1 x (1 - 0.72)  =  0.28
+   *   the 1px ring  inner 0 (the content box excludes it), outer 1  ->  1
+   *
+   * So the perimeter is painted at full strength and the face at 28 percent of
+   * it, from ONE gradient. The owner asked for the wash at 0.08 alpha, and 29
+   * percent of --c-ambient-start through that ratio lands at 0.081. The ring is
+   * the same light at 0.29, which is what makes it read as specular rather than
+   * as a second border colour.
+   *
+   * A LAMP, NOT A MARKER, which is the L04 rule the ambient rig and the hero
+   * key light already follow: a hot white core with the hue in the bloom, never
+   * a flat coloured stroke. A marker would label whatever it happened to be
+   * over, and this passes over headings and figures.
+   *
+   * NOT --c-verified, AND THAT IS A ROLE DECISION RATHER THAN A SHADE ONE.
+   * The owner's text names rgba(45, 212, 191, 0.08), which is --c-teal with an
+   * alpha on it. --c-teal is a COLOUR and this site binds jobs, not colours, so
+   * the question is which job. Teal is --c-verified when it marks a claim as
+   * traced and --c-ambient-start when it is light in the room. A wash that
+   * follows a pointer across every card on the page is the second: it means
+   * nothing about what it lands on, and painting it in the verification hue
+   * would put a truth signal on a decoration. --c-ambient-start is the same
+   * pigment under the name that says what it is doing.
+   *
+   * PANELS ARE EXCLUDED, AND IT IS A REAL GAP RATHER THAN A CHOICE. A card has
+   * exactly two pseudo-elements and `.surface--panel` has spent both: `::after`
+   * carries the travelling sheen that scripts/check-sheen.js measures on
+   * `article.pg__card` on the homepage, and `::before` carries the 2px animated
+   * top beam a few hundred lines above. There is no third layer to take, and
+   * neither of the two can be displaced for a decoration. Seven of the twenty
+   * four cards on `/` are panels. Freeing `::before` means redrawing that beam
+   * as a background layer on the panel itself, which changes an animation two
+   * gates watch, so it is named here and left for a pass that can measure it
+   * rather than folded into this one.
+   *
+   * `--spot-reach` IS THE ONLY NEW KNOB AND IT IS A LENGTH, NOT A BRAND VALUE.
+   * 400px is the owner's figure. It is declared on the rule that reads it so
+   * there is one place to change it, and it is deliberately not in tokens.css:
+   * nothing else has a reach, so a token would be a shared name with one
+   * caller.
+   *
+   * ── THE FOUR GUARDS ──────────────────────────────────────────────────────
+   *
+   * `(hover: hover) and (pointer: fine)` so a touch device never gets it. There
+   * is no cursor on a phone to follow, and a tap latches `:hover`, which would
+   * park a lamp on one card and leave it there for the rest of the visit.
+   *
+   * `prefers-reduced-motion: no-preference` as a gate on the whole rule rather
+   * than as an override under it. Under `reduce` the pseudo-element is never
+   * generated, so there is nothing to travel and nothing to undo. That is the
+   * construction A-43 was written about and it is stronger than a duration of
+   * 0.01ms, which removes the animation and keeps the displacement.
+   *
+   * `@supports` on mask-composite for the reason styles/effects.css states at
+   * its own ring: without the mask the gradient would paint the whole box at
+   * ring strength, which is three and a half times the intended wash. A browser
+   * that cannot cut the ring gets no lamp instead of a bright one.
+   *
+   * AND THE REST STATE IS STILL FINAL. `--mx` and `--my` fall back to 50%, so a
+   * card with no JavaScript running shows a centred lamp on hover rather than a
+   * broken one. src/scripts/card-spotlight.ts only ever makes it follow. */
+  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+    @media (hover: hover) and (pointer: fine) {
+      @media (prefers-reduced-motion: no-preference) {
+        .surface:not(.surface--panel)::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          box-sizing: border-box;
+          padding: 1px;
+          pointer-events: none;
+          border-radius: inherit;
+          mix-blend-mode: screen;
+          background-image: radial-gradient(
+            circle var(--spot-reach, 400px) at var(--mx, 50%) var(--my, 50%),
+            color-mix(in srgb, var(--c-text) 26%, transparent) 0%,
+            color-mix(in srgb, var(--c-ambient-start) 29%, transparent) 38%,
+            transparent 80%
+          );
+          /* Achromatic paint, and a mask reads nothing but its alpha. The
+             prefixed pair is first so the standard one wins wherever both are
+             understood. */
+          -webkit-mask-image:
+            linear-gradient(rgba(0, 0, 0, 0.72) 0 0),
+            linear-gradient(rgba(0, 0, 0, 1) 0 0);
+          -webkit-mask-clip: content-box, border-box;
+          -webkit-mask-composite: xor;
+          mask-image:
+            linear-gradient(rgba(0, 0, 0, 0.72) 0 0),
+            linear-gradient(rgba(0, 0, 0, 1) 0 0);
+          mask-clip: content-box, border-box;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity var(--dur-card) var(--ease);
+        }
+
+        .surface:not(.surface--panel):hover::before { opacity: 1; }
+
+        /* The same two exclusions the sheen makes, for the same reason argued
+           beside it: one surface answers a pointer at a time and it is the
+           innermost one. A container lights its cards, not itself, and a figure
+           is a drawing that stands still. Written after the rule above so equal
+           specificity resolves this way round. */
+        .surface:has(.surface)::before { content: none; }
+        figure.surface::before { content: none; }
+      }
+    }
+  }
+
   /* Focus is a visible ring, never only the hover treatment. The hover state
      changes a border by one step of alpha, which is not a focus indicator. */
   a.surface:focus-visible,

@@ -56,11 +56,19 @@ import { initNav } from './nav';
 import { initNavDropdowns } from './nav-dropdown';
 import { initCommandPalette } from './command-palette';
 import { initMagnetic } from './magnetic';
+import { initCardSpotlight } from './card-spotlight';
 
 /** The whole of the shell's client behaviour. Called once, from Base.astro. */
 export function initShell(): void {
   initNav();
   initNavDropdowns();
   initCommandPalette();
+  /*
+   * The magnet and the lamp are the two pointer effects, and they never meet.
+   * The magnet binds per control and moves the element; the lamp binds once on
+   * the document and moves light inside a card. A `.btn` is not a `.surface`,
+   * so no element is claimed by both.
+   */
   initMagnetic();
+  initCardSpotlight();
 }
