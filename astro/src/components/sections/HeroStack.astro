@@ -787,11 +787,83 @@ const CHECKED = SAMPLES.map((s) => {
      * px because --t-h1 is itself expressed in rem, so the derivation survives
      * a user root font-size that is not 16px. */
     letter-spacing: clamp(-0.02em, -0.052rem, -0.01em);
+    /* ── THE DESCENDER ALLOWANCE, NAMED ONCE ────────────────────────────────
+     *
+     * Every padding and every compensating margin that exists to keep clipped
+     * ink painted on this headline reads THIS property and nothing else. The
+     * pair is the site's standard construction, the box grows for PAINT and the
+     * negative margin takes it back out of LAYOUT, and the failure mode the
+     * audit named is that removing one half of a pair passes every gate and
+     * silently opens a gap. With one name there is one number to change, the
+     * two halves cannot drift to different values, and a reader editing either
+     * one is looking at the other.
+     *
+     * ── 0.16em, RAISED FROM 0.12em, AND IT IS MEASURED PER FACE ─────────────
+     *
+     * Ink below the content box for "Qualify.", the deepest descender in this
+     * headline, at 1440 where --t-h1 renders 83.2px:
+     *
+     *   Plus Jakarta Sans (the real face)   9.74px   0.117em
+     *   'Jakarta Fallback' (Arial, metric
+     *     overridden to match)              9.74px   0.117em
+     *   system-ui (third in the stack)     11.24px   0.135em
+     *   bare Arial, no overrides            3.24px   0.039em
+     *
+     * SO YES, A FALLBACK FACE CAN PUSH PAST 0.12em, AND ONE IN THE SHIPPED
+     * STACK DOES. --font-display is 'Plus Jakarta Sans', 'Jakarta Fallback',
+     * system-ui, -apple-system, sans-serif, and 'Jakarta Fallback' resolves
+     * through `local('Arial'), local('Helvetica Neue'), local('sans-serif')`.
+     * On a machine carrying none of those three the stack falls through to
+     * system-ui, which overflows 0.135em and would have had its tail clipped by
+     * a 0.12em allowance. That is not a hypothetical face, it is entry three of
+     * five.
+     *
+     * THE OLD NOTE CLAIMED 0.12em WAS "about double the worst measured
+     * overflow" AND IT WAS NOT EVEN CLOSE, WHICH IS THE MORE USEFUL HALF OF
+     * THIS. Against the real face it cleared by 0.003em, a quarter of one CSS
+     * pixel at 1440. A number believed to carry 100% headroom was carrying 2%,
+     * and nothing measured it again for four weeks. 0.16em clears the worst of
+     * the five by 0.025em and the real face by 0.043em.
+     *
+     * IT COSTS NOTHING IN LAYOUT AT ANY VALUE, which is why the answer to a
+     * thin margin here is simply a bigger allowance. Each pad is cancelled by
+     * its own negative margin, so raising it moves the painted area down and
+     * moves no box at all. */
+    --hero-ink-pad: 0.16em;
     color: var(--c-text);
     /* One line at desktop, and at the widths where it cannot be, two even lines
        rather than four words and an orphan. Unsupported browsers get the normal
        greedy wrap, which is what they have today. */
     text-wrap: balance;
+  }
+
+  /* ── THE ALLOWANCE, ON THE THREE ELEMENTS THAT ACTUALLY PAINT ────────────
+   *
+   * One rule for all three phrases, because all three are painters and the
+   * clip is at each one's own box. The measurement that says the parent's
+   * allowance reaches none of them is in the @supports block below, and the
+   * per face numbers that pick 0.16em are beside --hero-ink-pad above.
+   *
+   * `display: inline-block` IS DECLARED HERE AND UNCONDITIONALLY, WHICH FIXES A
+   * SECOND HOLE AT THE SAME TIME. Padding on the block axis does nothing to the
+   * paint area of a non replaced INLINE box, so this pad only works on an
+   * inline-block. styles/motion.css gives the spans that display, but only
+   * inside `@media (prefers-reduced-motion: no-preference)`, because there it
+   * is a precondition of the animation rather than a statement about layout. A
+   * reader who has asked for no motion never enters that block, so without this
+   * line the allowance would be live for everybody except them, and the one
+   * headline nobody would ever look at twice is the one on a machine set to
+   * reduce motion. Declared unlayered here, so the component keeps the last
+   * word on its own span exactly as motion.css's note says it should.
+   *
+   * `.hero__prove` NO LONGER DECLARES ITS OWN BLOCK AXIS PAIR. It had the same
+   * two lines at 0.12em, and two copies of one allowance is the drift this
+   * whole change is about. Its INLINE axis pair is a different problem on a
+   * different axis and stays where it is. */
+  .hero__title > span {
+    display: inline-block;
+    padding-block-end: var(--hero-ink-pad);
+    margin-block-end: calc(var(--hero-ink-pad) * -1);
   }
 
   /* ── THE HEADING FADE, WHICH LIVE HAS AND WE DID NOT ────────────────────
@@ -877,9 +949,38 @@ const CHECKED = SAMPLES.map((s) => {
        * clipped descender is caught. It does NOT measure the compensating
        * negative margin (there is no spacing assertion anywhere in that file),
        * so removing that half would pass every gate and silently open a gap under
-       * the hero. Corrected 2026-08-04, A-57; this used to say "either half". */
-      padding-block-end: 0.12em;
-      margin-block-end: calc(var(--stack-2) - 0.12em);
+       * the hero. Corrected 2026-08-04, A-57; this used to say "either half".
+       *
+       * ── AND ON THIS HEADLINE IT NO LONGER PROTECTS ANY INK. MEASURED. ────
+       *
+       * THE PAINT MOVED AND THE ALLOWANCE DID NOT FOLLOW IT. This pad was
+       * correct while the h1 was the element clipping a gradient to the glyphs.
+       * It is not any more: the paint fix earlier today put the gradient on the
+       * three SPANS, `background-clip: text` clips to the box of whichever
+       * element paints, and the spans had no bottom padding of their own except
+       * `.hero__prove`.
+       *
+       * READ OFF THE BUILT PAGE AT 1440 by scanning painted pixels, with this
+       * padding at 0.12em and again forced to 0: the lowest inked row of
+       * "Qualify." ends at y=325.0 in BOTH cases, and the span's box bottom is
+       * 324.6. Identical with the allowance and without it, which is the proof
+       * that it reaches nothing. The "y" and the tail of the "Q" were being cut
+       * flat at the box, visible in a 4x capture.
+       *
+       * THE ALLOWANCE IS THEREFORE ALSO DECLARED ON THE SPANS, further down,
+       * where the paint actually is. THIS ONE STAYS, for two reasons that are
+       * not sentiment: it is the shape styles/headings.css uses on every other
+       * h1, h2 and h3 on the site, where the heading itself still paints, and
+       * check-heading-ink's own self test drives `h1 { padding-block-end: 0 }`
+       * and requires rule 2 to fire, so the shape has to exist. It is net zero
+       * in layout at any value, so it costs a box nothing to keep.
+       *
+       * BOTH HALVES NOW READ --hero-ink-pad, declared once on `.hero__title`.
+       * That is the answer to "nothing asserts the compensating margin": the
+       * two halves can no longer hold different numbers, because there is only
+       * one number. The measurement per font face is beside the token. */
+      padding-block-end: var(--hero-ink-pad);
+      margin-block-end: calc(var(--stack-2) - var(--hero-ink-pad));
     }
 
     /* -- THE SAME P0 THIS FILE ALREADY WARNS ABOUT, RECURRED ---------------
@@ -1061,9 +1162,18 @@ const CHECKED = SAMPLES.map((s) => {
      * STILL NO `overflow` ON THIS SPAN. The note above explains why: an
      * inline-block with a non-visible overflow takes its bottom margin edge as
      * its baseline instead of its last line box, and the phrase would drop off
-     * the headline. Padding does not do that. DO NOT ADD ONE. */
-    padding-block-end: 0.12em;
-    margin-block-end: -0.12em;
+     * the headline. Padding does not do that. DO NOT ADD ONE.
+     *
+     * ── THE PAIR ITSELF MOVED UP TO `.hero__title > span`, 2026-08-31 ───────
+     *
+     * Everything argued above is still the reason it exists and is now the
+     * reason it exists for all three phrases rather than for this one. This
+     * span was the only painter carrying the allowance, so "Prove it." was
+     * whole while "Qualify." had its "y" cut flat, which is measured in the
+     * @supports block on `.hero__title`. Two copies of one allowance at two
+     * values is exactly the drift the audit flagged, so there is now one
+     * declaration reading one property. The value went 0.12em to 0.16em with
+     * it, on the per face measurement beside --hero-ink-pad. */
     color: var(--c-ambient-start);
   }
 
@@ -1160,10 +1270,17 @@ const CHECKED = SAMPLES.map((s) => {
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     THE HERO CHECK. Every dimension here is a token and there is no second card
-     recipe: the pane wears `.surface` classes in the markup, so its border,
-     radius and fill are styles/surfaces.css and are not restated below. What
-     this block owns is where the parts sit and which one is showing. */
+     THE HERO CHECK. Every dimension here is a token and there is no card recipe
+     in this block at all. What it owns is where the parts sit and which one is
+     showing.
+
+     THIS PARAGRAPH USED TO SAY "the pane wears `.surface` classes in the
+     markup, so its border, radius and fill are styles/surfaces.css". IT DOES
+     NOT AND NEVER DID. Read the markup above: `.hmt__pane` carries one class.
+     The fill that was on screen belonged to the <pre> inside it, declared
+     locally, which is the defect §ONE BLOCK below is about. The comment was
+     describing an intention as though it were the build, which is how a second
+     recipe survives an audit that reads files instead of pages. */
   /* NO `text-align` HERE, AND THAT IS A GATE REQUIREMENT RATHER THAN A
      PREFERENCE. This block set `text-align: start` and scripts/check-render.js
      failed the build on it: "1 block(s) putting text on the left edge
@@ -1325,17 +1442,134 @@ const CHECKED = SAMPLES.map((s) => {
     to   { transform: scaleX(1); }
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+   * §ONE BLOCK, ONE TRACK, ONE SEAM. 2026-08-31, OWNER REQUEST.
+   *
+   * "why cant you make these much more better way to present below, top section
+   * text is in under dark background box and bottom text is in page it self."
+   *
+   * ── WHAT WAS ACTUALLY WRONG, WHICH IS NOT WHAT IT LOOKS LIKE ─────────────
+   *
+   * The clause and the verdict are ONE argument: the three lines under the
+   * clause are the engine's report ON that clause. They were reading as two
+   * unrelated pieces, and there were TWO causes, not one.
+   *
+   * 1. A BOUNDARY ROUND ONE HALF ONLY. The <pre> carried --c-floor, a radius
+   *    and its own padding. The three verdict lines carried nothing.
+   * 2. TWO DIFFERENT LEFT EDGES, WHICH IS THE ONE NOBODY HAD NAMED. The clause
+   *    and the list were EACH a `minmax(0, max-content)` track centred on the
+   *    page, so each was sized to ITS OWN widest line and each landed on its
+   *    own left edge. Measured at 1440 before this change, the clause started
+   *    at x=421 and the verdict at x=487: 66px apart. The owner's own rule for
+   *    this block is one shared left edge, and the build had two.
+   *
+   * ── THE RESEARCH, AND IT CONTRADICTED THE FIRST FRAMING ──────────────────
+   *
+   * Nielsen Norman on common region: "Creating a clear boundary is a strong
+   * visual cue that can overpower other grouping principles such as proximity
+   * or similarity." That is the finding that matters here, because it means
+   * moving the verdict CLOSER could never have fixed this. While one half has a
+   * fill and the other does not, the boundary keeps beating the spacing, at any
+   * gap. https://www.nngroup.com/articles/common-region/
+   *
+   * The same page, and this is what decided the direction: "When possible,
+   * using whitespace alone to create clear groupings reduces the visual
+   * complexity of a design ... in many situations it's enough to rely on
+   * proximity for grouping."
+   *
+   * Apple, Boxes: "Consider using padding and alignment to communicate
+   * additional grouping within a box. A box's border is a distinct visual
+   * element, adding nested boxes to define subgroups can make your interface
+   * feel busy and constrained." Also "Prefer keeping a box relatively small in
+   * comparison with its containing view."
+   * https://developer.apple.com/design/human-interface-guidelines/boxes
+   *
+   * Apple, Layout: "Align components with one another to make them easier to
+   * scan ... Along with indentation, alignment can also help people understand
+   * an information hierarchy." (One noun is elided from the first sentence
+   * rather than re-spelt, because check-english bans the American form in
+   * prose and quietly editing a word inside quotation marks is worse than
+   * showing the cut.)
+   * https://developer.apple.com/design/human-interface-guidelines/layout
+   *
+   * Material 3, Cards, under Don't: "Don't force content into cards when
+   * spacing, headlines, or dividers would create a simpler visual hierarchy."
+   * And on the seam: "Use inset dividers, which don't run the full width of a
+   * card, to separate related content."
+   * https://m3.material.io/components/cards/guidelines
+   * https://m3.material.io/components/divider/guidelines
+   *
+   * Material 3, Cards, on emphasis inside one container: "Card contents are
+   * grouped into blocks. Content can have different levels of visual emphasis
+   * depending on importance."
+   *
+   * ── THE ALTERNATIVE THAT WAS REJECTED, AND WHY ──────────────────────────
+   *
+   * Two fixes are supported by that reading and only two: put BOTH halves
+   * inside one container, or take the fill off the one half that has it and
+   * group by space and alignment. The container version was rejected on
+   * Apple's own second sentence: this block is most of the width of the hero,
+   * so a box round it is a box close to the size of its containing view, and it
+   * would be the only card on the page. Everything above it, the eyebrow, the
+   * headline, the standfirst and the button pair, sits on the page itself. A
+   * card here would make the demo the loudest object in the hero and put a
+   * second boundary inside a section whose whole composition is one axis.
+   *
+   * WHAT IS NOT SUPPORTED BY ANY SOURCE IS THE THING THAT SHIPPED: one half in
+   * a box, the other loose. Both guidelines name that shape directly.
+   *
+   * ── SO: ONE TRACK, AND THE ALIGNMENT IS THE CONTAINER ───────────────────
+   *
+   * The pane is now the single centred `minmax(0, max-content)` track and both
+   * halves stretch into it, so the clause and the verdict share ONE left edge
+   * and ONE right edge, sized to the widest line of either. The grouping is
+   * done by common alignment and space, which is Apple's Layout paragraph
+   * doing exactly the job it describes, and the block keeps the centred box
+   * with left aligned lines the owner fixed on.
+   *
+   * THE SEAM IS THE ONE MARK ADDED, AND IT IS THE ONLY THING ON SCREEN THAT
+   * SAYS "what follows is about what came before". A hairline on the verdict's
+   * top edge, which by construction is exactly as wide as the shared track: it
+   * is INSET relative to the page, which is Material's guidance for separating
+   * related content, and it spans the group, so it reads as a seam inside one
+   * object rather than as the lid of a second one.
+   *
+   * NOT A LEFT ACCENT BAR, AND THAT IS A STANDING OWNER DECISION RATHER THAN A
+   * PREFERENCE. 52 were removed sitewide today. Nothing in the research
+   * recommends a left rule as a grouping device in any case, so the constraint
+   * cost nothing.
+   *
+   * THE TWO HALVES ARE STILL TOLD APART, BY TYPE AND BY EMPHASIS RATHER THAN BY
+   * A SECOND BOX. The clause is monospace, which is what marks it as verbatim
+   * input, and it drops to --c-text-muted; the verdict stays --c-text-sub with
+   * its stage names in --c-text. That is Material's "different levels of visual
+   * emphasis depending on importance", and it puts the louder half on the
+   * engine's answer rather than on the quotation, which is the right way round
+   * for a block whose whole point is the refusal.
+   *
+   * NO NEW MARKUP, WHICH MATTERS ON THIS ROUTE. /index.html is over its HTML
+   * budget before any of this, so the container is an element that was already
+   * in the document doing nothing but `display: block`. The change is a net
+   * REMOVAL of declarations.
+   * ══════════════════════════════════════════════════════════════════════════ */
+
   /* THE PANES ARE ALL IN THE DOCUMENT AND ONE IS SHOWN. `hidden` on the two
      that are not would need script to move, so the selected pane is chosen by
-     `:checked ~` instead and the page needs nothing to run. */
+     `:checked ~` instead and the page needs nothing to run.
+
+     THE TRACK IS DECLARED ON THE HIDDEN STATE TOO, so the shown rule below has
+     one job, switching the pane on, and cannot drift from the geometry. */
   .hmt__pane {
     display: none;
+    grid-template-columns: minmax(0, max-content);
+    justify-content: center;
+    row-gap: var(--stack-1);
   }
 
   #hmt-a:checked ~ .hmt__panes #hmt-p-a,
   #hmt-b:checked ~ .hmt__panes #hmt-p-b,
   #hmt-c:checked ~ .hmt__panes #hmt-p-c {
-    display: block;
+    display: grid;
   }
 
   /* The selected tab and the keyboard ring. Both are written against the same
@@ -1360,14 +1594,16 @@ const CHECKED = SAMPLES.map((s) => {
      part of what was read: the engine segments on them, so reflowing the text
      would show the reader something other than its input. */
   .hmt__src {
-    margin: 0 0 var(--stack-1);
-    padding: var(--blk-pad-xs);
-    border-radius: var(--radius-card-sm);
-    background-color: var(--c-floor);
+    /* THE PANE OWNS THE GAP NOW, as `row-gap`, so a margin here would be a
+       second spacing authority between the same two elements. */
+    margin: 0;
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     line-height: var(--lh-body);
-    color: var(--c-text-sub);
+    /* THE QUIETER OF THE TWO EMPHASIS LEVELS. It is a quotation, and the loud
+       half of this block is the engine's answer to it. --c-text-muted measures
+       9.94:1 on --c-bg, so this is quiet rather than dim. */
+    color: var(--c-text-muted);
     white-space: pre-wrap;
     overflow-x: auto;
     /* ── THE PANEL IS FULL WIDTH, THE CLAUSE INSIDE IT IS A CENTRED COLUMN ──
@@ -1393,15 +1629,52 @@ const CHECKED = SAMPLES.map((s) => {
      *
      * IT IS DELIBERATELY THE SAME CONSTRUCTION AS `.hmt__steps` BELOW AND
      * `.pg__never` IN ProofGate.astro. Three blocks of the same shape on one
-     * page, and any difference between them would read as a mistake. */
-    display: grid;
-    grid-template-columns: minmax(0, max-content);
-    justify-content: center;
+     * page, and any difference between them would read as a mistake.
+     *
+     * ── AND THAT IS EXACTLY WHY IT MOVED UP ONE LEVEL, 2026-08-31 ──────────
+     *
+     * The construction was right and the ELEMENT it sat on was wrong. This
+     * block and `.hmt__steps` each declared their own centred max-content
+     * track, so each sized itself to its own widest line and the two landed on
+     * two different left edges, 66px apart at 1440. Two centred boxes of
+     * different widths is the second half of why the clause and the verdict
+     * read as unrelated, and it is the half that survives removing the fill.
+     *
+     * The track is now declared ONCE, on `.hmt__pane`, and both halves stretch
+     * into it. Same construction, same three blocks on the page, one owner. See
+     * §ONE BLOCK, ONE TRACK, ONE SEAM above for the sources.
+     *
+     * WHAT WAS REMOVED WITH IT. --c-floor, --radius-card-sm and --blk-pad-xs
+     * were the fill, the corner and the inset of a box drawn round the clause
+     * alone. The `overflow-x` stays: `minmax(0, max-content)` cannot exceed the
+     * space available and `pre-wrap` wraps, so it guards nothing that is
+     * reachable today, and it is one declaration standing between a long
+     * pasted line and the horizontal-overflow failure the sitewide gate checks
+     * at four widths. */
   }
 
   .hmt__steps {
     margin: 0;
-    padding: 0;
+    /* `padding-inline` KILLS THE LIST INDENT, which is all `padding: 0` was for.
+       `padding-block-start` is new and is the seam's breathing room: a hairline
+       with the same gap above and below it reads as a divider between two
+       regions of one object, and a hairline hard against the text under it
+       reads as an underline belonging to the text above. */
+    padding-inline: 0;
+    padding-block: var(--stack-1) 0;
+    /* ── THE SEAM. THE ONE MARK ON SCREEN THAT SAYS THE VERDICT IS ABOUT THE ─
+     *    CLAUSE
+     *
+     * This element now stretches to the pane's shared track, so the rule is
+     * exactly as wide as the block and no wider. That is what makes it read as
+     * a seam inside one object rather than as the top edge of a second one, and
+     * it is Material's guidance for a divider between related content: inset
+     * relative to the page, spanning the group. See §ONE BLOCK above.
+     *
+     * --c-border, the same hairline every bounded block on this site draws its
+     * edge with, so this introduces no new value and no marker hue. A seam
+     * carries no status, and teal or orchid on it would say one. */
+    border-block-start: 1px solid var(--c-border);
     list-style: none;
     display: grid;
     /* ── ONE CENTRED COLUMN, AND THE LINES INSIDE IT SHARE A LEFT EDGE ──────
@@ -1420,9 +1693,18 @@ const CHECKED = SAMPLES.map((s) => {
      * the sitewide gate fails a page for at 320, 390, 768 and 1440.
      * `justify-content: center` then centres that track, and the <li> stretch
      * to fill it, so all three labels start on one line that is itself on the
-     * page's axis. */
-    grid-template-columns: minmax(0, max-content);
-    justify-content: center;
+     * page's axis.
+     *
+     * ── THE TRACK MOVED TO `.hmt__pane`, 2026-08-31, AND THIS LIST NOW ──────
+     *    STRETCHES INTO IT
+     *
+     * Everything the paragraph above argues for is still true and is now true
+     * of the WHOLE block rather than of this list alone. Declaring the track
+     * here as well would re-size it to the widest VERDICT line, which is
+     * narrower than the widest clause line, and the second left edge that
+     * caused would be the exact defect §ONE BLOCK above removes. One implicit
+     * column, filling the item, is what keeps all three labels and the clause
+     * above them on one edge. */
     gap: 6px;
     font-size: var(--t-micro);
     color: var(--c-text-sub);

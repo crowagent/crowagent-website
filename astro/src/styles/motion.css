@@ -526,31 +526,96 @@
      is the largest travel that cannot collide, and with the blur doing the
      arrival the rise only has to be felt rather than seen. */
   --hero-land-lift:  var(--stack-2);
-  --hero-land-dur:   calc(var(--m-beat) * 2);     /* 1200ms */
-  /* -- THE EASING IS WHY IT DID NOT FEEL CINEMATIC, NOT THE DURATION ------
+  --hero-land-dur:   calc(var(--m-beat) * 1.25);  /* 750ms, the deblur */
+
+  /* ── THE CURVE, AND THE TOKEN THAT WAS POINTED AT THE WRONG RULE ─────────
    *
-   * MEASURED. On --ease, which is cubic-bezier(0.16, 1, 0.3, 1), an EXPO OUT,
-   * all three phrases read 1.00 opacity by 1000ms of a 1200ms animation. The
-   * curve spends about 95% of its travel in the first third of its time, so
-   * lengthening the duration bought almost nothing: the reveal still snapped
-   * and then sat still. Three earlier attempts tuned duration, step and hold
-   * and never touched the curve.
+   * THE OWNER ASKED FOR cubic-bezier(0.16, 1, 0.3, 1) AND THAT IS WHAT HE WAS
+   * ALREADY LOOKING AT, WHICH IS THE FINDING RATHER THAN THE CONTRADICTION IT
+   * LOOKED LIKE. This token was moved to cubic-bezier(0.4, 0, 0.2, 1) earlier
+   * today on the measurement the deleted note recorded, and THE CHANGE NEVER
+   * REACHED THE HEADLINE. `#hero-title > span` asked for --m-ease-land, and
+   * the only rule in this file reading --hero-land-ease was
+   * `main :is(.surface, figure)`, the scroll arrival for cards. So a curve
+   * written for one h1 was applied to roughly 200 cards on 43 routes, the
+   * headline kept the expo out, and the note above it described a change that
+   * had not happened.
    *
-   * --ease IS RIGHT FOR A CONTROL AND WRONG FOR A REVEAL. A button should
-   * arrive under the finger immediately, which is what an expo out is for. A
-   * headline that is meant to be watched needs its motion spread ACROSS the
-   * duration, so the eye sees it happening rather than seeing it finished.
+   * MEASURED ON THE BUILT PAGE AT HEAD, 1440, BEFORE ANY CHANGE TODAY: all
+   * three spans compute animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1).
+   * A request to use the curve that is already running is not a contradiction,
+   * it is a reader describing what is on screen. The comment was the thing that
+   * was untrue, which is why the old note is replaced rather than argued with.
    *
-   * cubic-bezier(0.4, 0, 0.2, 1) is roughly half travelled at half time. It
-   * keeps a gentle start, so the phrase eases in from the hold rather than
-   * jumping, and still settles rather than stopping dead.
+   * ── SO THE CURVE IS DECIDED HERE FOR THE FIRST TIME, ON NUMBERS ──────────
    *
-   * SCOPED TO THIS ANIMATION. --m-ease-land is shared with the section
-   * arrivals below and they are correct as they are: a section sliding in
-   * under a reader who is scrolling SHOULD resolve quickly. */
-  --hero-land-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --hero-land-blur:  8px;
-  --hero-land-step:  calc(var(--m-beat) / 2.75);  /* 218ms between phrases */
+   * The number that decides a CASCADE is progress at the moment the next
+   * phrase starts, because that is the whole of the difference between three
+   * phrases arriving in turn and one block dissolving. Evaluated exactly over
+   * a 750ms run with a 120ms step:
+   *
+   *   curve                        p(120ms)   blur under 0.5px   opacity over 0.95
+   *   cubic-bezier(0.16, 1, 0.3, 1)  0.68       247ms  (33%)        313ms  (42%)
+   *   cubic-bezier(0.4, 0, 0.2, 1)   0.14       475ms  (63%)        540ms  (72%)
+   *   cubic-bezier(0, 0, 0.2, 1)     0.45       448ms  (60%)        524ms  (70%)
+   *
+   * THE EXPO OUT FAILS AT THE STEP, NOT AT THE FADE, AND THAT IS THE CORRECTION
+   * TO THE OLD DIAGNOSIS. At 0.68 the first phrase is all but finished before
+   * the third one leaves, so what a reader sees is a shape that has already
+   * resolved being rippled, and two thirds of a 750ms run has nothing left to
+   * show. "Snaps and then sits still" was the right observation about the wrong
+   * property: the thing that cannot be seen is the SEQUENCE.
+   *
+   * cubic-bezier(0.4, 0, 0.2, 1) FAILS AT THE OTHER END, WHICH IS WHY THE
+   * EARLIER FIX WOULD NOT HAVE WORKED HAD IT LANDED. Its ease IN holds the
+   * first phrase at 0.14 while the second is already leaving, so all three sit
+   * near their from state together and read as one block dissolving. A whole
+   * block dissolving is the version the owner rejected by name.
+   *
+   * cubic-bezier(0, 0, 0.2, 1) IS THE ONE THAT SERVES A CASCADE. No ease in at
+   * all, so a phrase departs the instant its delay expires and is visibly half
+   * arrived when the next one leaves, and a long decelerate, so the deblur is
+   * still happening across 60% of the run rather than 33%. It is the standard
+   * decelerate rather than a fourth invented curve.
+   *
+   * SCOPED TO THE HEADLINE, AND NOW ACTUALLY APPLIED TO IT: it is read by
+   * `#hero-title > span` below and by nothing else. `main :is(.surface, figure)`
+   * goes back to --m-ease-land, which is what the note under that rule always
+   * said it should have: a card sliding in under a reader who is scrolling
+   * should resolve quickly, and it is not a reveal. */
+  --hero-land-ease:  cubic-bezier(0, 0, 0.2, 1);
+
+  /* ── 5px, OWNER REQUEST, AND IT WAS LOOKED AT RATHER THAN ASSUMED ────────
+   *
+   * The two candidates were rendered at 1440 and compared frame by frame at the
+   * point each phrase is roughly half arrived, which is where a deblur is
+   * either legible or a smear. 8px at 83px type keeps the counters of "Q", "a"
+   * and "f" filled in, so the word reads as a grey mass that resolves into
+   * letters. At 5px the letterforms are recognisable for the whole of the run
+   * and what changes is their EDGE, which is what "optical deblur" means and
+   * what the owner asked for by name.
+   *
+   * IT ALSO MATTERS MORE ON THIS CURVE THAN IT DID ON THE OLD ONE. The expo out
+   * was under 0.5px of blur by 33% of the run, so most of the 8px was spent in
+   * the first 250ms and was barely seen. On the decelerate the blur is visible
+   * across 60% of the run, so the same amplitude is on screen roughly twice as
+   * long and a heavier value has twice as long to read as a fault.
+   *
+   * THE HISTORY IS KEPT BECAUSE IT IS WHY 10px IS NOT AN OPTION. 10px was
+   * rejected as a smear, then 8px was rejudged as acceptable once the double
+   * paint that was blurring two copies of every glyph had been fixed. Both
+   * judgements stand. 5px is a further step in the same direction on a curve
+   * that holds the blur on screen for longer. */
+  --hero-land-blur:  5px;
+
+  /* 120ms, OWNER REQUEST, AND A RUNG THIS FILE CAN DERIVE RATHER THAN A NUMBER
+     BORROWED FROM OUTSIDE IT. A fifth of a beat. --land-step is a sixth, 100ms,
+     and its own note calls that "the interval at which a sequence reads as one
+     movement rather than as six", which is exactly the property a three phrase
+     cascade must NOT have. 218ms, which this replaces, put 436ms between the
+     first phrase and the last and is most of why the headline was still
+     arriving long after the page under it had settled. */
+  --hero-land-step:  calc(var(--m-beat) / 5);     /* 120ms */
 
   /* -- THE HOLD WAS TUNING AN ANIMATION NOBODY COULD SEE ------------------
    *
@@ -576,8 +641,36 @@
    * as the LCP element in every variant INCLUDING with the animation removed.
    * The candidate is PRE.hmt__src, the hero demo clause block, at 34,832 px2.
    * --hero-land-floor stays at 0.06 anyway, because it costs nothing and the
-   * research behind it stands for any page where the h1 IS the candidate. */
-  --hero-land-hold:  300ms;
+   * research behind it stands for any page where the h1 IS the candidate.
+   *
+   * ── 150ms FROM 300ms, AND IT PUTS "Prove it." ON THE OWNER'S OWN CLOCK ───
+   *
+   * A quarter beat. The hold plus two steps starts the third phrase at 390ms,
+   * and the brief opens the follow through window at 400ms, so the phrase the
+   * whole page turns on begins within 10ms of where the lede and the buttons
+   * are asked to start rising. That is not a coincidence worth trusting a
+   * second time, so it is written down: if the step or the hold moves, the
+   * follow through delays below move with them, because they are stated as
+   * multiples of the same two tokens rather than as their own numbers. */
+  --hero-land-hold:  calc(var(--m-beat) / 4);     /* 150ms */
+
+  /* ── THE FOLLOW THROUGH NEEDS TWO DURATIONS THE FILE DID NOT HAVE ────────
+   *
+   * THE EYEBROW BLOOMS IN 400ms because the brief says so and because it is the
+   * only element above the headline: it has nothing to wait for and nothing
+   * waits on it, so it is the one row that can be over before the h1 starts.
+   * Two thirds of a beat rather than a new number.
+   *
+   * EVERY ROW BELOW THE HEADLINE TAKES 720ms, one beat plus one step, AND THE
+   * CEILING IS WHAT PICKS IT RATHER THAN A FEEL. --land-row-dur is 900ms, and a
+   * row starting at 510ms would then settle at 1410ms against a headline that
+   * settles at 1140ms, which is 270ms of a row still visibly moving after the
+   * thing it is following has stopped. A follow through that outlasts what it
+   * follows is the same inversion this whole block exists to remove, pointing
+   * the other way. 720ms is the longest duration under which the last row still
+   * reads as trailing the headline rather than as its own event. */
+  --hero-brow-dur:   calc(var(--m-beat) * 2 / 3); /* 400ms */
+  --hero-follow-dur: calc(var(--m-beat) + var(--hero-land-step)); /* 720ms */
 
   /* The stagger is a DELAY here rather than a distance, because on a clock a
      delay is the thing a scroll timeline does not have. A sixth of a beat is
@@ -600,6 +693,51 @@
    *            is the current page, unchanged, because the from-state lives
    *            only in the keyframes. There is deliberately no JavaScript
    *            polyfill; see ADR 0004.
+   *
+   * ── THE OBSERVER QUESTION, ASKED AGAIN 2026-08-31, ANSWERED: LEAVE IT ────
+   *
+   * The recommendation is to LEAVE THE FALLBACK STATIC, and it is stated
+   * plainly rather than hedged. Four reasons, in the order they matter.
+   *
+   * 1. FIREFOX ALREADY GETS THE PART THAT MATTERS MOST, AND THE HEADLINE
+   *    FRAMING OF THIS FINDING IS THEREFORE TOO WIDE. §THE LANDING below is
+   *    DELIBERATELY OUTSIDE this gate: it is an ordinary time based animation,
+   *    every engine runs it, and it is what carries the hero of every route
+   *    including the whole homepage choreography. What a Firefox reader is
+   *    missing is the arrival of blocks BELOW the fold and the card stagger
+   *    inside them, not "no arrival motion". The first screen is identical.
+   *
+   * 2. THE PATTERN HAS SHIPPED PERMANENTLY INVISIBLE CONTENT HERE TWICE, and
+   *    both are counted in this file's header: `js/modules/sv-reveal.js` left
+   *    4 of 9 homepage sections invisible on a normal scroll and 7 of 9 in a
+   *    full page capture, and `sovereign-transformation-v2.js` reproduced it
+   *    independently at 20/20 cards on /crowmark, 13/13 on /about, 9/9 on
+   *    /contact. Two unrelated implementations, the same failure, which is what
+   *    makes it a property of the pattern. Adding it back for the browser
+   *    minority means the class of reader most likely to hit the bug is the one
+   *    who cannot be watched.
+   *
+   * 3. THE THREE SAFETY PROPERTIES AT THE HEAD OF THIS FILE ARE NOT PORTABLE TO
+   *    AN OBSERVER. Property 2, "view() is geometry, not an event", is the
+   *    whole argument, and an observer is precisely a callback that may never
+   *    fire. A print, a full page capture, a restored scroll position and an
+   *    anchor jump all produce a correct POSITION and therefore a correct
+   *    result today. None of them reliably produces a callback.
+   *
+   * 4. THE BYTE COST, since it was asked for. A minimal correct observer is
+   *    roughly 380 to 450 bytes raw of JavaScript (the observer, a threshold, a
+   *    class add, an unobserve, and the reduced motion check that must be
+   *    restated in script because a media query cannot reach it), call it 480
+   *    with the CSS for the from state, and about 260 to 300 bytes over the
+   *    wire once brotli has it. That is small. IT IS NOT THE REASON, and it
+   *    should not be reported as though it were: /index.html is 10.9 KB over
+   *    its own budget already, so 480 bytes neither saves the page nor sinks
+   *    it. The reason is 2 and 3. Cost is stated because it was asked for.
+   *
+   * WHAT WOULD CHANGE THE ANSWER. Firefox shipping scroll driven timelines
+   * unflagged, which removes the question, or evidence that below the fold
+   * arrival is worth a JavaScript dependency on the one route where it is not
+   * already covered by the landing. Neither exists today.
    *
    * @media     Reduced motion never enters the block at all, so there is
    *            nothing to override and nothing to reset. The explicit
@@ -667,7 +805,13 @@
         --arrive-i: 0;
         animation-name: sv-arrive-item;
         animation-duration: auto;
-        animation-timing-function: var(--hero-land-ease);
+        /* PUT BACK ON --m-ease-land, 2026-08-31. It read --hero-land-ease, the
+           headline reveal's curve, which is how a change written for one h1 was
+           applied to roughly 200 cards on 43 routes and never reached the h1.
+           The note beside that token carries the measurement. A card arriving
+           under a reader who is scrolling is not a reveal and should resolve
+           quickly, which is what the section arrivals below already say. */
+        animation-timing-function: var(--m-ease-land);
         animation-fill-mode: backwards;
         animation-timeline: view();
         animation-range:
@@ -844,7 +988,12 @@
       display: inline-block;
       animation-name: sv-land-hero;
       animation-duration: var(--hero-land-dur);
-      animation-timing-function: var(--m-ease-land);
+      /* --hero-land-ease, WHICH THIS RULE HAS NEVER ASKED FOR UNTIL NOW. It
+         asked for --m-ease-land, so the token named for this animation was
+         read only by the card arrival above and the headline ran the expo out
+         the whole time. The measurement, the three curves compared and the
+         reason a cascade needs no ease in are all beside that token. */
+      animation-timing-function: var(--hero-land-ease);
       animation-fill-mode: backwards;
     }
 
@@ -857,6 +1006,156 @@
     #hero-title > span:nth-child(1) { animation-delay: var(--hero-land-hold); }
     #hero-title > span:nth-child(2) { animation-delay: calc(var(--hero-land-hold) + var(--hero-land-step)); }
     #hero-title > span:nth-child(3) { animation-delay: calc(var(--hero-land-hold) + var(--hero-land-step) * 2); }
+
+    /* ══ THE HERO CHOREOGRAPHY, 2026-08-31, OWNER REQUEST ═══════════════════
+     *
+     * "Eliminate layout voids and orchestrate a ... cinematic entrance ... the
+     * body copy and CTA button row rise into place as 'Prove it.' settles,
+     * creating one continuous, intentional choreography."
+     *
+     * (The elision is one adjective, and it is elided rather than re-spelt
+     * because check-english bans the American form in prose and silently
+     * correcting a word inside quotation marks is worse than showing the cut.)
+     *
+     * THE CHOREOGRAPHY WAS INVERTED, AND IT IS MEASURED RATHER THAN JUDGED.
+     * Read off the built page at HEAD, 1440, before this block existed:
+     *
+     *   .hero__inner    sv-land-row   900ms   delay 0      --land-i 0
+     *   .hero__eyebrow  sv-land-row   900ms   delay 0      --land-i 0
+     *   .hero__lede     sv-land-row   900ms   delay 0      --land-i 0
+     *   .btn-row        sv-land-row   900ms   delay 0      --land-i 0
+     *   .hmt            sv-land-row   900ms   delay 0      --land-i 0
+     *   .hero__gate     sv-land-row   900ms   delay 0      --land-i 0
+     *   span 3          sv-land-hero 1200ms   delay 736ms  settles 1936ms
+     *
+     * Every row of the hero was finished at 900ms and the last phrase of the
+     * headline was still arriving at 1936ms, so for a full second the reader
+     * met a completely filled page with a hole where the title goes. That is
+     * the void in the brief, and it is a fact about the stylesheet rather than
+     * a matter of taste.
+     *
+     * THE ROWS SIT AT delay 0 BECAUSE THE SIX PHASE STAGGER FURTHER DOWN IS
+     * INERT. That is a separate defect, it is recorded at the rule that causes
+     * it, and NOTHING HERE DEPENDS ON IT IN EITHER DIRECTION: every delay in
+     * this block is stated outright, so fixing or removing that stagger cannot
+     * move the hero by a millisecond.
+     *
+     * ── THE HOOK IS `:has()` ON THE ID THIS FILE ALREADY NAMES ─────────────
+     *
+     * `*:has(> #hero-title)` is the headline's own wrapper and
+     * `*:has(> * > #hero-title)` is the hero section, so the entire cadence is
+     * reached without this file learning one component class name. It is the
+     * choice `#hero-title` itself already made two rules up, at one and two
+     * levels of remove.
+     *
+     * IT ALSO HAS TO OUTRANK (0,3,2), WHICH IS WHY EVERY SELECTOR CARRIES THE
+     * ID. The structural row rule below computes to (0,3,2) and would otherwise
+     * hand each of these `sv-land-row` at delay 0, which is the state above.
+     * Each selector here lands at (1,1,0) and wins outright rather than by
+     * ordering. THE SAME ARITHMETIC IS WHY ALL OF THEM ARE REPEATED VERBATIM IN
+     * THE `reduce` BLOCK: its structural selectors top out at (0,2,1) and could
+     * not reach a single one of these, which is the identical trap already
+     * recorded for `#hero-title`. Anything added here is added there.
+     *
+     * ── THE CADENCE ────────────────────────────────────────────────────────
+     *
+     *              start    dur     settles   what moves
+     *   eyebrow      0ms    400ms    400ms    fade and rise, no blur
+     *   Qualify.   150ms    750ms    900ms    deblur, fade and rise
+     *   Draft.     270ms    750ms   1020ms
+     *   Prove it.  390ms    750ms   1140ms
+     *   lede       510ms    720ms   1230ms    travel only
+     *   buttons    630ms    720ms   1350ms
+     *   demo       750ms    720ms   1470ms
+     *   gate note  870ms    720ms   1590ms
+     *
+     * IT IS ONE MONOTONIC CASCADE DOWN THE PAGE. No element settles before the
+     * element above it does, at any width, which is the property the old
+     * sequence broke and the only one worth asserting.
+     *
+     * ── THE ONE PLACE THE BRIEF HAD TO BE RECONCILED RATHER THAN OBEYED ────
+     *
+     * It asks for the lede and the actions at 400ms to 800ms AND for them to
+     * arrive "as 'Prove it.' settles", and those two cannot both be endpoints.
+     * A 750ms deblur starting at 390ms settles at 1140ms, so a row that both
+     * starts and finishes inside 400 to 800 is done 340ms BEFORE the phrase it
+     * is meant to be following. That is this task's own defect reproduced one
+     * rung smaller. The window is therefore taken as the window in which they
+     * START: the lede leaves at 510ms and the buttons at 630ms, both inside it,
+     * both while "Prove it." is visibly still resolving, and both settling
+     * after it. Obeying the literal endpoints would have re-created the
+     * inversion the same paragraph asks to remove.
+     *
+     * IT IS ALSO 346ms SHORTER THAN WHAT IT REPLACES. The old sequence ran to
+     * 1936ms with the title arriving last. This runs to 1590ms with the title
+     * third of eight.
+     *
+     * ── WHY THE WRAPPER STOPS ANIMATING ────────────────────────────────────
+     *
+     * `.hero__inner` was taking `sv-land-row` at the same moment as all five of
+     * its own children, and transform composes, so every row of the hero was
+     * travelling 20px inside a wrapper travelling another 20px. Switching the
+     * wrapper off is what makes the per row travel below mean what it says. The
+     * SECTION keeps `sv-land`, which is the only opacity animation in the block
+     * and is already neutralised to a floor of 1 by the rule above so the
+     * headline can own the one fade. */
+    *:has(> #hero-title) {
+      animation-name: none;
+    }
+
+    /* The eyebrow blooms, and it is `sv-land-hero` with the blur switched off
+       rather than a fourth keyframe. The fade and the rise are exactly what a
+       bloom is, and this is the one row that may own a fade because the section
+       above it does not. THE BLUR IS ZEROED BY THE TOKEN, NOT BY A SECOND
+       KEYFRAME: a 12px mono label has no glyph mass to deblur and 5px on it
+       would be illegible rather than soft. `filter: blur(0)` still resolves, so
+       the keyframe is unchanged and nothing here forks.
+
+       `.fx-shimmer` IS UNTOUCHED BY THIS AND IT WAS CHECKED. Its sweep animates
+       `::after`, not the element, so an `animation-name` on the eyebrow itself
+       cannot replace it, and `.fx-shimmer` is already `position: relative`, so
+       the containing block a filter creates is the one the sweep already had. */
+    *:has(> #hero-title) > *:first-child {
+      --hero-land-blur: 0px;
+      animation-name: sv-land-hero;
+      animation-duration: var(--hero-brow-dur);
+      animation-timing-function: var(--m-ease-land);
+      animation-fill-mode: backwards;
+      animation-delay: 0s;
+    }
+
+    /* The follow through. Travel only, for the composition arithmetic in this
+       file's header: a row that faded inside a section that fades would compose
+       to 0.56, and a row that is moving is at FULL contrast for every frame it
+       moves, which is what the axe failure recorded above was about.
+
+       THE INDEX IS A CUSTOM PROPERTY SO THE DELAY IS STATED ONCE. Four rows,
+       one formula, and the phase is the only thing that differs. Same idiom as
+       --land-i and --arrive-i, and the reason is the same: a second copy of a
+       calc() is a second place for it to drift.
+
+       `:nth-child(n + 3)` IS THE LEDE ONWARDS. Child 1 is the eyebrow, which
+       blooms above, and child 2 is the h1, which animates nothing itself and is
+       held at `animation-name: none` by the id rule. Stated as a range rather
+       than as three separate selectors so that a row added to the bottom of the
+       hero joins the cascade instead of silently falling back to delay 0. */
+    *:has(> #hero-title) > *:nth-child(n + 3),
+    *:has(> * > #hero-title) > *:last-child {
+      animation-name: sv-land-row;
+      animation-duration: var(--hero-follow-dur);
+      animation-timing-function: var(--m-ease-land);
+      animation-fill-mode: backwards;
+      animation-delay:
+        calc(var(--hero-land-hold) + var(--hero-land-step) * var(--hero-follow-i, 3));
+    }
+
+    *:has(> #hero-title) > *:nth-child(3) { --hero-follow-i: 3; }
+    *:has(> #hero-title) > *:nth-child(4) { --hero-follow-i: 4; }
+    *:has(> #hero-title) > *:nth-child(5) { --hero-follow-i: 5; }
+    /* The closing gate note is a sibling of the wrapper rather than a row
+       inside it, so it is reached from the section instead. It is last on the
+       page and last in, which is the whole of the choice. */
+    *:has(> * > #hero-title) > *:last-child { --hero-follow-i: 6; }
 
     /* ── The rows inside it. Travel only, staggered.
      *
@@ -895,7 +1194,42 @@
       > *:not(script, style, template, b, i, [aria-hidden], [data-field]) {
       /* Reset rather than defaulted, for the inheritance reason on --arrive-i:
          a custom property set on a row would otherwise be inherited by the row
-         inside it and both would sit on the same phase. */
+         inside it and both would sit on the same phase.
+
+         ── AND THIS RESET SILENTLY WINS AGAINST THE PHASES IT IS RESETTING ───
+         ── OPEN DEFECT, RECORDED 2026-08-31, NOT FIXED IN THIS PASS ─────────
+
+         MEASURED ON THE BUILT PAGE AT 1440, HEAD, before any change today:
+         EVERY row of the homepage hero computes --land-i: 0 and
+         --land-depth: 0s, so all six rows run at animation-delay 0 and the
+         entire six phase stagger below, plus the half step lead, contributes
+         nothing on any of the thirteen routes.
+
+         THE CAUSE IS SPECIFICITY, NOT ORDER. This selector is
+         `main` + `*:not(script, style, template)` + `:not(:only-child)` +
+         `:first-child` + a child `*:not(..., [data-field])`, and `:not()` takes
+         the specificity of its most specific argument, so `[data-field]`
+         contributes a class column. That is (0,3,2). The phase rules are
+         `main > *:not(:only-child):first-child :nth-child(6n + 2)`, which is
+         (0,3,1). This rule outranks all five of them by one type selector and
+         its reset is what every row ends up with. The lead rule at (0,2,1)
+         loses by more.
+
+         IT IS VISIBLE IN THE SPANS, WHICH IS WHAT MAKES IT PROVABLE RATHER THAN
+         ARGUED: `#hero-title > span:nth-child(2)` sits one level deeper than
+         this selector can reach, so it is NOT reset, and it computes
+         --land-i: 1. The phase rules work everywhere this reset does not.
+
+         WHY IT IS NOT FIXED HERE. Making the phases win is one bump on five
+         selectors, and it would hand a real 100ms per row stagger to the first
+         block of all thirteen routes at once, which is a visible change to
+         twelve pages that nobody asked about in a session with three other
+         agents in the tree. It belongs in its own change with its own look.
+
+         THE HERO DOES NOT WAIT FOR IT. §THE HERO CHOREOGRAPHY above states
+         every one of its delays outright and reads neither --land-i nor
+         --land-depth, so fixing or deleting this stagger cannot move the
+         homepage by a millisecond in either direction. */
       --land-i: 0;
       --land-depth: 0ms;
       animation-name: sv-land-row;
@@ -912,7 +1246,13 @@
     main > *:only-child > *:first-child > * > * { --land-depth: var(--land-lead); }
 
     /* Six phases, capped by modulo exactly as the arrival's are. A hero with
-       nine rows does not put the ninth eight steps behind the first. */
+       nine rows does not put the ninth eight steps behind the first.
+
+       THESE FIVE RULES REACH NOTHING TODAY. They are (0,3,1) against a reset at
+       (0,3,2), so every row takes 0 and no row takes a phase. The measurement,
+       the arithmetic and the reason it is left standing rather than fixed in
+       this pass are all at that reset. Read them before believing this block
+       does anything. */
     main > *:not(:only-child):first-child :nth-child(6n + 2),
     main > *:only-child > *:first-child :nth-child(6n + 2) { --land-i: 1; }
     main > *:not(:only-child):first-child :nth-child(6n + 3),
@@ -948,6 +1288,19 @@
        the h1. Without this line a reader who has asked for no motion would be
        the only one seeing the blur, the offset and the stagger. Whatever
        happens to the rule in the `no-preference` block must happen here too. */
+    /* ── AND EVERY SELECTOR OF THE HERO CHOREOGRAPHY, VERBATIM ─────────────
+       Same trap as the two lines above, one rung higher. Those rules carry
+       `#hero-title` inside a `:has()` so that they can outrank the (0,3,2)
+       structural row rule, which lands each of them at (1,1,0). The deepest
+       structural selector in this list is (0,2,1), so not one of them would be
+       reached. They are therefore repeated here EXACTLY as written above, which
+       makes the reset equal on specificity and later in source order, so it
+       wins. Anything added to that block is added here in the same edit or the
+       reader who asked for stillness is the only one who gets motion. */
+    *:has(> #hero-title),
+    *:has(> #hero-title) > *:first-child,
+    *:has(> #hero-title) > *:nth-child(n + 3),
+    *:has(> * > #hero-title) > *:last-child,
     #hero-title,
     #hero-title > span,
     main .surface,
