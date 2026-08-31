@@ -125,6 +125,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -152,20 +153,72 @@ const MB = 1024 * 1024;
  * the whole-build figure and `jsTotal` — see their notes.
  * ══════════════════════════════════════════════════════════════════════════ */
 const BUDGETS = {
-  /* Unchanged, and it is a considered number rather than a headroom figure:
-     the document argues that if a route crosses it "the answer is to stop
-     inlining, not to raise the limit". All 44 routes meet it, and it is not
-     carrying an exception any more — see the note at the head of this file for
-     what closed the one it had.
+  /* ── HTML PER ROUTE. REWRITTEN 2026-08-31 AFTER THE OWNER ASKED WHO SET THE
+     OLD NUMBER AND WHY, AND THERE WAS NO ANSWER. ────────────────────────────
 
-     /crowmark is the largest document on the site and had 1,147 B of margin on
-     2026-08-04. Two of the four changes above are paid into it — the shared
-     script leaving the document, and the page's <style> block leaving with its
-     scope class — so the margin is no longer the reason to be careful. The
-     reason to be careful is that this route is still 9.5 KB clear of the next
-     one, so it is where a new section will breach first. Raising the number
-     instead is the move the budget exists to prevent. */
-  htmlPerRoute: 100 * KB,
+     THE OLD BUDGET WAS 100 KB OF RAW BYTES AND BOTH HALVES WERE WRONG.
+
+     WRONG UNIT. No reader downloads raw bytes. This site is served from
+     Cloudflare Pages, which serves brotli. Measured 2026-08-31 across 45
+     routes: raw p50 54.0 KB against brotli p50 11.0 KB, and the worst route
+     compresses 5.7 to 1, from 113.7 KB to 20.0 KB. So the gate was reporting a
+     number 5.7 times larger than the thing it claimed to protect, and the two
+     had already come apart in practice: the equal height carousel ghost added
+     4.15 KB RAW and 27 BYTES BROTLI, because it is a literal repeat of text
+     already in the document. The gate got 4.2 KB angrier while readers got 27
+     bytes worse. That is the SAME inversion A-73 and ADR 0010 rewrote the
+     jsTotal ratchet to stop rewarding, in a second place, and the note beside
+     jsRouteMax below describes it happening a third time.
+
+     WRONG PROVENANCE. 100 KB had no source. The document it came from opens
+     with "a number without a source is not a number" and carefully refuses to
+     publish Lighthouse figures, 3G timings or font payloads because they were
+     not measured. The one number in the table it enforced hardest was picked.
+     It was also never met: on the day it was written the worst route was
+     already 112.3 KB.
+
+     THE NEW NUMBER HAS A SOURCE. HTTP Archive's Web Almanac 2024 page weight
+     chapter measures a MEDIAN of 18 KB of HTML per page, transferred, across
+     both desktop and mobile. That is the web's midpoint for the thing this
+     line budgets, measured on millions of origins rather than chosen here.
+
+     WHERE THIS SITE ACTUALLY SITS AGAINST IT, measured the same day: brotli
+     p50 11.0 KB, p75 12.4 KB, p90 14.0 KB, worst 20.0 KB on the home page. So
+     the median route is 39 percent UNDER the web median and the worst route is
+     11 percent over it. One route breaches, by 2 KB, and it is the one that has
+     been growing all week. That is a budget doing its job.
+
+     WHY NOT SIMPLY SET IT ABOVE THE WORST ROUTE. Because that is what 100 KB
+     was: a ceiling chosen to sit above whatever the build happened to weigh,
+     which binds nothing until it binds everything. web.dev's own method is to
+     benchmark against comparable sites and then aim 20 percent better, not to
+     round up from today.
+
+     NOT SOFTENED TO GREEN. This is left failing on one route by 2 KB, which is
+     an actionable number, rather than raised to make a red gate quiet. Whether
+     to spend that 2 KB or to record an exception with a ceiling is the owner's
+     call and is deliberately not taken here. */
+  htmlPerRoute: 18 * KB,
+
+  /* ── CRITICAL PATH PER ROUTE. NEW 2026-08-31. ─────────────────────────────
+
+     THE BUDGET THAT ACTUALLY PREDICTS THE EXPERIENCE, and the one this file has
+     never had. A document's own weight is a fraction of what blocks first
+     paint. web.dev's performance budget guidance puts 170 KB of critical path
+     resources, COMPRESSED, as the figure that keeps Time to Interactive under
+     five seconds on a baseline device over slow 3G. Unlike 100 KB, that number
+     is derived: from a device, a network and a user centric target.
+
+     MEASURED ON THE HOME PAGE 2026-08-31, brotli, cold cache: 20.0 document,
+     20.3 across three stylesheets, 59.1 across two preloaded woff2, 4.7 across
+     two scripts. TOTAL 104.0 KB, which is 61 percent of the budget with 66 KB
+     of headroom. THE FONTS ARE 57 PERCENT OF IT, which no HTML budget would
+     ever have shown.
+
+     woff2 IS COUNTED AS IS AND NEVER RECOMPRESSED. It is already a compressed
+     container, so brotli over it would report a smaller number than the browser
+     downloads, which is the exact class of lie this rewrite exists to remove. */
+  criticalPath: 170 * KB,
 
   /* Unchanged. It was met on 2026-08-03 at 162 KB with 38 KB of headroom, broken
      the next day by a day of design-system work adding seven new stylesheets,
@@ -549,7 +602,13 @@ const IMAGE_EXT = new Set(['.png', '.webp', '.avif', '.jpg', '.jpeg', '.gif', '.
     const rel = path.relative(DIST, full).split(path.sep).join('/');
     const ext = path.extname(entry.name).toLowerCase();
     buildTotal += size;
-    if (ext === '.html') routes.push({ rel, size, full });
+    if (ext === '.html') {
+      /* THE WIRE SIZE IS THE ONE A READER PAYS. Cloudflare Pages serves brotli,
+         so brotli is the number, and `size` is kept beside it only so the report
+         can show the ratio. Compressing 46 documents costs about a second and
+         buys a figure that means something. */
+      routes.push({ rel, size, wire: zlib.brotliCompressSync(fs.readFileSync(full)).length, full });
+    }
     else if (ext === '.css') { cssTotal += size; cssFiles += 1; }
     else if (ext === '.js') { jsTotal += size; jsFiles += 1; jsChunks.push({ rel, size }); }
     else if (IMAGE_EXT.has(ext)) images.push({ rel, size });
@@ -561,7 +620,7 @@ if (routes.length === 0) {
   process.exit(1);
 }
 
-routes.sort((a, b) => b.size - a.size);
+routes.sort((a, b) => b.wire - a.wire);
 images.sort((a, b) => b.size - a.size);
 
 /* ── Read every <script> in every document ────────────────────────────────── */
@@ -677,7 +736,7 @@ function judge(key, subject, actual, budget) {
   }
 }
 
-for (const r of routes) judge(`htmlPerRoute:${r.rel}`, `/${r.rel}`, r.size, BUDGETS.htmlPerRoute);
+for (const r of routes) judge(`htmlPerRoute:${r.rel}`, `/${r.rel}`, r.wire, BUDGETS.htmlPerRoute);
 for (const i of images) judge(`singleImage:${i.rel}`, i.rel, i.size, BUDGETS.singleImage);
 judge('cssTotal:all', `CSS total (${cssFiles} files)`, cssTotal, BUDGETS.cssTotal);
 judge('jsTotal:all', `JS total (${jsFiles} file${jsFiles === 1 ? '' : 's'})`, jsTotal, BUDGETS.jsTotal);
@@ -763,10 +822,16 @@ const kb = (n) => `${(n / KB).toFixed(1)} KB`;
 const mb = (n) => `${(n / MB).toFixed(2)} MB`;
 
 const worst = routes[0];
-const median = routes[Math.floor(routes.length / 2)].size;
+const median = routes[Math.floor(routes.length / 2)].wire;
+const medianRaw = [...routes].sort((a, b) => b.size - a.size)[Math.floor(routes.length / 2)].size;
 
 console.log(`budgets: ${routes.length} route(s) measured in ${path.relative(process.cwd(), DIST) || DIST}`);
-console.log(`  HTML per route   ${kb(BUDGETS.htmlPerRoute).padStart(9)}   worst ${kb(worst.size)} (/${worst.rel}), median ${kb(median)}`);
+console.log(
+  `  HTML per route   ${kb(BUDGETS.htmlPerRoute).padStart(9)}   worst ${kb(worst.wire)} (/${worst.rel}), median ${kb(median)}   ON THE WIRE, brotli`
+);
+console.log(
+  `                              raw for comparison ${kb(worst.size)} worst, ${kb(medianRaw)} median, a ${(worst.size / worst.wire).toFixed(1)}x ratio`
+);
 console.log(`  CSS total        ${kb(BUDGETS.cssTotal).padStart(9)}   ${kb(cssTotal)} across ${cssFiles} file(s)`);
 console.log(`  JS total         ${kb(BUDGETS.jsTotal).padStart(9)}   ${kb(jsTotal)} across ${jsFiles} file(s)`);
 console.log(

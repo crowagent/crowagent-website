@@ -56,6 +56,88 @@ That sentence was here before the gate was, and it was not true. From this docum
 expensive half of the defect: an unenforced budget lets a regression through, an unenforced budget
 that says it is enforced stops anyone looking. Five of the six were already breached one day later.
 
+## How a budget on this site is now derived, 2026-08-31
+
+**The owner asked who set the 100 KB HTML budget and why. Nobody could answer, so the method was
+looked up rather than defended.** What follows is the method, its sources, and what it says about
+this site. The old table is below and is kept as a record.
+
+### The method, from the people who publish it
+
+**web.dev, Performance budgets 101.** Three kinds of budget: quantity based (bytes, request counts),
+milestone timings (user centric metrics), and rule based (a Lighthouse score). The headline quantity
+figure is **170 KB of critical path resources, compressed and minified**, and it is derived rather
+than chosen: from a baseline device on a slow 3G connection targeting Time to Interactive under five
+seconds, on the reasoning that over half of web traffic is mobile.
+
+**web.dev, Your first performance budget.** The procedure is measure your own site, then **find
+about ten competitors and measure them**, then **be at least 20 percent faster than the fastest
+comparable site**, because 20 percent is the point at which a difference is noticeable. For a site
+already live it says start at 20 percent faster than your own current speed and ratchet from there.
+
+**Google, Defining the Core Web Vitals thresholds.** This is the part worth copying. A threshold has
+to satisfy three things at once. It must reflect a **quality experience**, grounded in human
+perception research, which is how the LCP candidate range came from a cited 0.3 to 3 second window
+of sustained attention. It must be **achievable**, and the test they apply is that **at least 10
+percent of origins already meet it**. And it is measured at the **75th percentile** of page loads,
+so three visits in four see it or better, while outliers cannot drag it.
+
+### The four rules this site now follows
+
+1. **A budget is measured in the unit a reader pays.** Transferred, compressed bytes, never raw. This
+   site is served from Cloudflare Pages, which serves brotli.
+2. **A budget cites its source.** A number without one is not a number, which this document already
+   said and did not do.
+3. **A budget is derived from a user outcome**, a device and a network, or from a measured
+   distribution of real sites. Never from rounding up whatever the build currently weighs.
+4. **A budget must be achievable and must bind.** One that sits above everything binds nothing until
+   it binds everything at once.
+
+### What the site actually weighs, measured 2026-08-31
+
+Forty five routes, brotli, the bytes a reader downloads:
+
+| | p50 | p75 | p90 | worst |
+|---|---|---|---|---|
+| **HTML on the wire** | 11.0 KB | 12.4 KB | 14.0 KB | **20.0 KB** (`/`) |
+| raw, for comparison | 54.0 KB | 61.4 KB | 72.0 KB | 113.7 KB |
+
+**The worst route compresses 5.7 to 1.** HTTP Archive's Web Almanac 2024 measures a **median of 18 KB
+of HTML per page, transferred**, across desktop and mobile. So this site's median route is **39
+percent under the web median** and its worst route is **11 percent over it**.
+
+Critical path for `/`, brotli, cold cache: **104.0 KB against the 170 KB budget, 61 percent, 66 KB of
+headroom.** Document 20.0, three stylesheets 20.3, two preloaded woff2 59.1, two scripts 4.7.
+**The fonts are 57 percent of it**, which no HTML only budget would ever have shown.
+
+### What was wrong with 100 KB, stated plainly
+
+**The unit was wrong.** Nobody downloads raw bytes. The gate reported a number 5.7 times larger than
+the thing it claimed to protect, and the two had already visibly come apart: the carousel equal
+height ghost added **4.15 KB raw and 27 bytes brotli**, because it is a literal repeat of text
+already in the document. The gate got 4.2 KB angrier while readers got 27 bytes worse. That is the
+same inversion `ADR/0010` rewrote the `jsTotal: 0` ratchet to stop rewarding, in a second place.
+
+**The provenance was wrong.** 100 KB had no source anywhere in this repository, no owner decision
+attached, and it was never met: on the day it was written the worst route was already 112.3 KB.
+
+**woff2 is counted as delivered and is never recompressed.** It is already a compressed container, so
+running brotli over it would report a smaller number than the browser downloads, which is the same
+class of lie in the other direction.
+
+### Still not measured, and therefore still not claimed
+
+The competitor benchmark that web.dev's method requires **has not been done**. Ten comparable
+procurement and bid software sites should be measured for LCP, INP and critical path weight, and the
+20 percent rule applied. Until that exists, `htmlPerRoute` rests on the HTTP Archive median, which is
+a real distribution but is the whole web rather than this market. **That is a weaker source than the
+method asks for and it is written down here rather than glossed.**
+
+No field data. There is no CrUX or RUM data for this origin, so nothing here is measured at the 75th
+percentile of real visits, which is where Core Web Vitals are judged.
+
+---
+
 | Budget | Limit | 2026-08-04 | State |
 |---|---|---|---|
 | HTML per route | **100 KB** | worst 112.3 KB (`/crowmark`), median 63.6 KB | 43 of 44 routes pass; one recorded exception |
