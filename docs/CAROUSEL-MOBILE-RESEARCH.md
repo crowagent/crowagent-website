@@ -543,6 +543,25 @@ is true of the asset set as a whole and false for the case that fails.
 - `#workstation-tour` uses `buy-1` (D), `sup-5` (T), `sup-4` (D), `buy-3` (D), `buy-6` (T),
   `sup-8` (M). Only one of six has a phone render, and it already is one.
 
+  > **CORRECTED 2026-08-31, AND THE SENTENCE ABOVE IS WHERE THIS WENT WRONG.** "It already is
+  > one" asked whether the ASSET was a phone render. It never asked what FRAME the asset was
+  > being shown in. `.wt__stage` is a 16/10 desktop bezel, so a 780x1688 portrait render sitting
+  > in it reads as a phone photographed on a monitor, and this line recorded that as already
+  > correct. The owner reported it twice. An earlier pass on 2026-08-31 then fixed
+  > `object-fit: contain`, which had never run above 767px, and made the render display tidily
+  > instead of making it right.
+  >
+  > `sup-8-action-centre` is out of the tour and the four portrait renders are out of
+  > `SUPPLIER_SCREENS` and `BUYER_SCREENS`. **The tour is five slides, all landscape**, and the
+  > two product carousels are six each. The files stay on disk, and `/partners` still shows
+  > `sup-8-action-centre` in a portrait card with no desktop frame around it, which is the
+  > honest way to show a phone. `astro/scripts/check-device-frames.js` now fails the build on a
+  > portrait image inside either desktop frame, measured from the file's own header.
+  >
+  > Every measurement in this document is left exactly as it was taken. Only this composition
+  > claim and the dot count in R4 are corrected, because those two describe the build rather
+  > than a moment.
+
 So "serve the phone render on a phone" **cannot be executed for `#product` today**. It can be
 executed for exactly one slide of the tour, which is already correct. Building the plumbing without
 the assets would ship a mechanism with nothing to switch to.
@@ -688,7 +707,8 @@ navigation mechanism.
 
 - On `#product` keep the tab row, because it names the five stages and the names carry the
   argument.
-- On `#workstation-tour` keep the six dots and drop both 46x46 arrows, which is what
+- On `#workstation-tour` keep the dots (six when this was written, five since the phone render
+  came out of the set on 2026-08-31) and drop both 46x46 arrows, which is what
   `Carousel.astro` already says should happen at this width and what the tour does not inherit.
 
 - **Byte cost:** 0 B HTML. About 130 B CSS to hide the arrows and pause at the breakpoint, plus
