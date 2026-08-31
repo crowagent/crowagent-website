@@ -159,6 +159,28 @@ const UPDATE = process.argv.includes('--update');
  */
 const ALLOWED_LOSSES = new Map([
   /*
+   * 2026-08-31. The /security/ heading lost the words "UK-hosted", and this is
+   * a CORRECTION RATHER THAN A LOSS, which is why it is recorded here instead
+   * of being swept up by a baseline refresh.
+   *
+   * 97f136b6 ("keep the residency claim proportionate to what residency
+   * means") replaced it deliberately. The page's own body is the evidence the
+   * old heading was an OVERCLAIM: primary customer data is in AWS eu-west-1,
+   * which is IRELAND, the API runs in the EU, and only the web application
+   * runs in the UK. A visitor reading "UK-hosted" would have formed a belief
+   * about where their data sits that the sub-processor table on the same page
+   * contradicts.
+   *
+   * THIS IS DELIBERATELY NOT A `--update` REFRESH. Refreshing the baseline
+   * would have accepted this line AND silently accepted every other loss in
+   * the same build, including ones nobody has looked at. A named entry accepts
+   * exactly one signal and leaves the rest still guarded. A baseline refresh
+   * is the widest possible waiver wearing the clothes of routine maintenance.
+   */
+  ['/security/  heading: encrypted, uk-hosted, and documented.',
+   'Replaced in 97f136b6 by "Encrypted, documented, and auditable." because "UK-hosted" was an overclaim the page itself contradicted: primary customer data is stored in AWS eu-west-1 (Ireland), the API runs in the EU, and only the web application runs in the UK. The reader loses nothing true and stops being told something false. Residency is still stated on the page, more precisely, under its own EU data residency section with the processing locations listed under sub-processors.'],
+
+  /*
    * A-196, 2026-08-30. The PPN 002 glossary entry was deleted by owner
    * instruction and every link to it was repointed at /glossary/ppn-026 in the
    * same change, so 44 routes lose the same one link. ONE WILDCARD LINE RATHER
