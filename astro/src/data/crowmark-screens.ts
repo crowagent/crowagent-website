@@ -109,6 +109,52 @@ export const VARIANT = '-light';
    the two facts the old date was describing. */
 const shot = (name: string) => `/Assets/shots/figma-v2/${name}${VARIANT}.png${V}`;
 
+/**
+ * ── THE WIDTH LADDER, MOVED HERE 2026-08-31 SO A SECOND CONSUMER CAN HAVE IT ─
+ *
+ * WHY THIS FILE. The rungs on disk are written by
+ * `scripts/build-product-screens.mjs` for THESE sixteen screens and no others,
+ * and this module is already the single record of what those screens are: the
+ * paths, the cache-buster, the light variant and the three device sizes. Which
+ * widths exist beside a master is a fact about the same assets, so it belongs
+ * with them rather than inside whichever component happened to need it first.
+ *
+ * THE DEFECT THAT FORCED THE MOVE. `ui/Carousel.astro` had this ladder and
+ * `sections/WorkstationTour.astro` had NONE, so the tour served the full 2x
+ * master at every viewport: measured on the built homepage at 390, its six
+ * slides fetched 440,673 B of masters into an image box 314 CSS px wide, where
+ * the 400w rungs that already exist on disk would have cost 137,436 B. Roughly
+ * 303 KB per phone visit, for files the build had already produced. One
+ * component knowing the mechanism and its neighbour not knowing it is the
+ * duplication cost paid in advance, so the ladder is stated once here and both
+ * import it.
+ *
+ * IT IS STILL PostImage.astro'S FOUR WIDTHS AND MUST CHANGE WITH THEM. Adding a
+ * rung means writing the file first: `scripts/copy-assets.js` reads srcset and
+ * fails the build on a reference that is not on disk, so the mistake stops a
+ * build rather than reaching a reader.
+ *
+ * 0.7 IS MEASURED AND ITS ARGUMENT IS IN Carousel.astro, beside the `<source>`
+ * elements: these are 2x renders of flat UI panels, so a rung close to the
+ * master's own width costs almost as much as the master and buys nothing. The
+ * number is not repeated as a claim here, only spent.
+ */
+const LADDER = [400, 600, 800, 1200] as const;
+const MAX_OF_MASTER = 0.7;
+
+/** One derivative's path. `null` width means the master itself. */
+export const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
+  src.replace(/\.png(\?|$)/, `${width === null ? '' : `-${width}w`}.${ext}$1`);
+
+/** Every AVIF rung that exists for a master of this width, plus the master. */
+export const avifSrcset = (src: string, masterWidth: number) =>
+  [
+    ...LADDER.filter((w) => w <= masterWidth * MAX_OF_MASTER).map(
+      (w) => `${variant(src, 'avif', w)} ${w}w`,
+    ),
+    `${variant(src, 'avif', null)} ${masterWidth}w`,
+  ].join(', ');
+
 /* The three drawn device sizes, at the 2x they were exported at. Written once:
    a width and height typed out sixteen times is a width and height that will
    eventually disagree with the file. */

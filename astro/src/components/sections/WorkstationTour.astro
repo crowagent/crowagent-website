@@ -60,10 +60,53 @@
 import Section from '../layout/Section.astro';
 import { TOUR } from '../../data/tour';
 
-/* AVIF and WebP siblings are derived from the PNG the same way Carousel.astro
-   derives them, so copy-assets.js fails the build if any of the three is
-   missing rather than shipping a silent 404. */
-const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`);
+/* AVIF and WebP siblings are derived from the PNG by the registry that owns
+   these assets, so copy-assets.js fails the build if any of them is missing
+   rather than shipping a silent 404. */
+import { variant, avifSrcset } from '../../data/crowmark-screens';
+
+/*
+ * ── THIS SECTION HAD NO WIDTH LADDER AT ALL, 2026-08-31 ─────────────────────
+ *
+ * MEASURED ON THE BUILT HOMEPAGE, not inferred. The AVIF <source> below carried
+ * a bare one-candidate srcset and no `sizes`, so this carousel negotiated
+ * FORMAT and never RESOLUTION: at a 390 viewport it fetched 440,673 B of 2x
+ * masters into an image box 314 CSS px wide, where the 400w rungs already on
+ * disk cost 137,436 B. About 303 KB per phone visit, for files the build had
+ * already produced and nothing was asking for.
+ *
+ * IT IS THE SAME DEFECT A-93 FIXED IN Carousel.astro ON 2026-08-04 AND IT WAS
+ * NOT FIXED HERE, because this component was written afterwards and the ladder
+ * lived inside the other one. That is the whole argument for moving the ladder
+ * into data/crowmark-screens.ts, where the assets are recorded: a mechanism
+ * that lives in one consumer is a mechanism the next consumer does not get.
+ *
+ * ── THE `sizes` ARE THIS STAGE'S, MEASURED AT THREE WIDTHS ──────────────────
+ *
+ * The image box, read off the built page:
+ *
+ *     1440   1022px      capped by the section measure
+ *      768    678px      90vw less the frame, the gutter having gone to 5vw
+ *      390    314px      the gutter at its 20px floor plus the frame
+ *
+ * so the three arms below are those three measurements, not Carousel.astro's:
+ * that component sits inside a padded showcase panel on this page and inside a
+ * measure-capped column on /crowmark, and neither shape is this one. A `sizes`
+ * copied from a neighbour is how a browser is told to fetch a rung for a box
+ * that does not exist.
+ *
+ * EVERY SLIDE USES ONE SET OF ARMS EVEN THOUGH THE SLIDES ARE THREE DIFFERENT
+ * SHAPES. The <img> box is the stage at every slide; `object-fit: contain` then
+ * paints a tablet or a phone drawing smaller INSIDE that box. The browser picks
+ * a rung from the box, so the arms describe the box. A phone master is 780px
+ * wide and MAX_OF_MASTER leaves it exactly one rung, so it is served its 400w
+ * or its master and nothing in between either way.
+ */
+const TOUR_SIZES = [
+  '(min-width: 1063px) 1022px',
+  '(min-width: 400px) calc(90vw - 2px)',
+  'calc(100vw - 76px)',
+].join(', ');
 ---
 
 <Section
@@ -78,8 +121,16 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
         TOUR.map((s, i) => (
           <figure class:list={['wt__slide', i === 0 && 'is-active']} aria-hidden={i === 0 ? 'false' : 'true'}>
             <picture>
-              <source type="image/avif" srcset={alt(s.src, 'avif')} />
-              <source type="image/webp" srcset={alt(s.src, 'webp')} />
+              <source type="image/avif" srcset={avifSrcset(s.src, s.width)} sizes={TOUR_SIZES} />
+              {/* No `sizes` on the WebP source, and its absence is the honest
+                  signal rather than an oversight: that tier is one candidate at
+                  the master's own width, so a hint would have nothing to choose
+                  between. Carousel.astro's note records why the WebP tier is
+                  deliberately not laddered (it encodes these flat UI panels
+                  LARGER than PNG on all 16 of 16 files, and a WebP ladder took
+                  the whole build 3.3 MB past its budget for bytes nobody
+                  fetches). */}
+              <source type="image/webp" srcset={variant(s.src, 'webp', null)} />
               <img
                 src={s.src}
                 alt={s.alt}
@@ -231,7 +282,7 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     pointer-events: auto;
   }
 
-  /* CONTAIN, NOT COVER, BECAUSE THE SET IS NO LONGER ONE SHAPE. The tour now
+  /* CONTAIN, NOT COVER, BECAUSE THE SET IS NO LONGER ONE SHAPE. The tour
      carries 16:10 desktop, 4:3 tablet and portrait phone drawings. `cover`
      would crop a phone to a landscape strip and throw away the screen it is
      there to show; `contain` centres each one in the frame and lets the floor
@@ -241,6 +292,62 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     inline-size: 100%;
     block-size: 100%;
     object-fit: contain;
+  }
+
+  /* ══ `contain` HAD NOTHING TO CONTAIN AGAINST, AND HAD NEVER RUN ABOVE ════
+   *    767px. 2026-08-31
+   *
+   * OWNER REPORT: the "Supplier, Action centre" slide uses a phone screenshot
+   * and it looks wrong beside the desktop screens. It does, and the cause is
+   * not the asset. `block-size: 100%` on the image resolves against its
+   * <picture>, the <picture> is a flex item with an AUTO height, and a
+   * percentage against an indefinite height computes to `auto`. So the image
+   * took its own intrinsic ratio at full width, overflowed the stage, and was
+   * cropped by `.wt__stage`'s `overflow: hidden`. The rule directly above has
+   * been inert at every width over 767 since the day it was written, and its
+   * comment describing centred, letterboxed drawings has been describing
+   * something nobody has seen.
+   *
+   * MEASURED ON THE BUILT PAGE, ALL SIX SLIDES AT 1440, STAGE 1024x640:
+   *
+   *     buy-1-requirement-builder   1002 x  633    inside the stage
+   *     sup-4-evidence-tracker      1002 x  633    inside the stage
+   *     buy-3-evaluation            1002 x  633    inside the stage
+   *     sup-5-answer-library        1002 x  758    118px cropped, top and foot
+   *     buy-6-reports-audit         1002 x  758    118px cropped, top and foot
+   *     sup-8-action-centre         1002 x 2174    1,534px cropped
+   *
+   * THREE OF SIX WERE BEING CROPPED, NOT ONE. The three 16:10 desktop drawings
+   * fit only because their own ratio happens to match the stage, which is why
+   * this went unseen: the failure is invisible on exactly the slides anybody
+   * would check it on. The phone slide is simply the case where a 3.5x
+   * overflow makes it impossible to miss, and the owner saw the top eleven per
+   * cent of a queue under a caption promising a queue.
+   *
+   * THE FIX IS ONE DEFINITE HEIGHT. `.wt__slide` is `position: absolute;
+   * inset: 0` inside the stage, so it already HAS the stage's height; the
+   * picture simply never took it. Giving the picture `block-size: 100%` gives
+   * the image's own 100% something to resolve against, and `object-fit:
+   * contain` then does what its comment has always said.
+   *
+   * NO ASSET WAS SUBSTITUTED AND NONE WAS INVENTED. There is no desktop
+   * capture of the action centre in Assets/shots/figma-v2, and swapping in a
+   * different screen would leave a caption describing something the picture
+   * does not show. What this does is show the whole phone screen, centred, with
+   * the stage floor around it. That is what data/tour.ts already argues for in
+   * as many words ("a portrait phone sits centred in the 16:10 frame with the
+   * floor around it instead of being cropped to fit") and what the section
+   * standfirst promises ("the duties that get carried on a phone").
+   *
+   * BELOW 768 NOTHING CHANGES. That query gives the picture its own
+   * `aspect-ratio` and `flex: 0 0 auto` for the caption-stacking layout the
+   * owner signed off from an iPhone, so this is bounded to the widths where
+   * the stage owns the ratio and the bug lived. */
+  @media (min-width: 768px) {
+    .wt__slide picture {
+      display: block;
+      block-size: 100%;
+    }
   }
 
   /* The caption sits ON the screen, over a ramp from transparent to the floor,
@@ -625,6 +732,23 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     if (slides.length < 2) continue;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    /*
+     * NO AUTOPLAY BELOW 40rem, 2026-08-31. The same decision, on the same
+     * evidence, as the product showcase in src/scripts/tabs.ts, and it is
+     * written as a condition on the TIMER rather than as a return so this
+     * driver's arrows, dots and swipe all keep working exactly as they do now.
+     * A reader on a phone still moves through the tour, they simply move it
+     * themselves. docs/CAROUSEL-MOBILE-RESEARCH.md is the evidence: ten of
+     * fourteen reference sites ship no controlled carousel of product UI on a
+     * phone, and the GOV.UK Design System has no carousel at all.
+     *
+     * THE PAUSE CONTROL GOES WITH IT AND IS NOT SEPARATELY HIDDEN. It is
+     * revealed only where a timer genuinely runs, which is the contract
+     * recorded at constraint 2 above, so a width that starts nothing shows
+     * nothing. That is one control off the narrowest layout for no CSS and no
+     * markup.
+     */
+    const narrow = window.matchMedia('(max-width: 39.999rem)');
     let index = 0;
     let timer: number | null = null;
     let abandoned = false;
@@ -653,7 +777,7 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     };
 
     const run = (): void => {
-      if (timer !== null || abandoned || paused || reduced.matches) return;
+      if (timer !== null || abandoned || paused || reduced.matches || narrow.matches) return;
       timer = window.setInterval(() => show(index + 1, false), INTERVAL);
     };
 
@@ -690,7 +814,7 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
       dots[index]?.focus();
     });
 
-    if (pauseBtn && !reduced.matches) {
+    if (pauseBtn && !reduced.matches && !narrow.matches) {
       pauseBtn.hidden = false;
       pauseBtn.addEventListener('click', () => {
         paused = !paused;

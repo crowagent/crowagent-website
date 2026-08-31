@@ -305,8 +305,68 @@ function setUp(group: HTMLElement): void {
     writeHash(id);
   });
 
+  /*
+   * ── THE STEPPER BUTTONS WERE DEAD FROM THE DAY THEY SHIPPED ──────────────
+   *
+   * Owner, 2026-08-31: the product section's scroll button does nothing. It
+   * does nothing, and the cause is the two lines this comment replaces.
+   *
+   * REPRODUCED BEFORE IT WAS TOUCHED, on the built page at 1440, autoplay
+   * paused first so it could not confound the result:
+   *
+   *   BEFORE  tabs ["true","false","false","false","false"]  counter "1 of 5"
+   *   click   #product button[aria-label="Next stage"]
+   *   AFTER   tabs ["true","false","false","false","false"]  counter "1 of 5"
+   *           document.activeElement -> BUTTON aria-label="Next stage"
+   *
+   *   then, in the same page: focus the selected tab, dispatch the IDENTICAL
+   *   synthetic ArrowRight at the group
+   *   AFTER   tabs ["false","true","false","false","false"]
+   *
+   * So the button exists, is not hidden, is not disabled, its listener fires,
+   * and the event reaches this handler. THE HANDLER THEN DISCARDS IT. The
+   * steppers synthesise an arrow key at the group, and this line resolved the
+   * current index from `document.activeElement`, which after a real mouse
+   * press is the BUTTON. A button is not in `pairs`, `findIndex` returned -1,
+   * and the early return sent every click straight to the floor.
+   *
+   * IT WAS NEVER THE CAROUSEL. `ProductScreens.astro` mounts `Carousel.astro`
+   * once per panel with a single slide, and that carousel's own controls are
+   * hidden because `data-pcar` is unset. That is a true statement about a
+   * different component and it is the obvious place to look, so it is written
+   * down: the arrows in the showcase belong to TabSwitcher and to this file,
+   * and the carousel was never wired to them and never had to be.
+   *
+   * THE FIX KEEPS THE SYNTHESISED KEY, WHICH IS THE PART OF THE DESIGN THAT IS
+   * RIGHT. The note below the handler argues at length that dispatching the key
+   * buys wrapping, selection, focus and the autoplay stop for free rather than
+   * duplicating five lines, and that argument is sound and is why this is a
+   * three-line change. What was missing is that the ARIA pattern's index and
+   * the CONTROL's index are two different questions: a keyboard user is asking
+   * about the tab they are standing on, and a stepper is asking about the tab
+   * that is currently selected. Only the first has an answer in `activeElement`.
+   *
+   * `moveFocus` FOLLOWS THE SAME DISTINCTION AND IS NOT A DETAIL. A keyboard
+   * user must have focus carried to the newly selected tab or the roving
+   * tabindex strands them. A pointer user pressing "next" three times must NOT
+   * have focus yanked off the button under their cursor, or the second press
+   * lands on an element that has moved out from under them and the arrow keys
+   * then step the tablist instead of the button doing it. So focus moves only
+   * when it was in the tablist to begin with, which is exactly what `fromTab`
+   * records.
+   */
   group.addEventListener('keydown', (event) => {
-    const current = pairs.findIndex(({ tab }) => tab === document.activeElement);
+    const focused = pairs.findIndex(({ tab }) => tab === document.activeElement);
+    const fromTab = focused !== -1;
+    /* Not focused in the tablist: this is a stepper, so step from what is
+       SELECTED. `aria-selected` is written by `select` and by nothing else, so
+       there is no second copy of this state to fall out of step with. */
+    const current = fromTab
+      ? focused
+      : pairs.findIndex(({ tab }) => tab.getAttribute('aria-selected') === 'true');
+    /* Neither focused nor selected. Unreachable while `select` has ever run,
+       and kept because a keydown bubbling from some future child of the group
+       must not be able to index `pairs[-1]`. */
     if (current === -1) return;
 
     let next = current;
@@ -336,7 +396,9 @@ function setUp(group: HTMLElement): void {
 
     event.preventDefault();
     const id = pairs[next].panel.id;
-    select(id, true);
+    /* See the note above the handler: focus follows the keyboard and never
+       follows a pointer, or the second press of a stepper lands on nothing. */
+    select(id, fromTab);
     writeHash(id);
   });
 
@@ -364,7 +426,18 @@ function setUp(group: HTMLElement): void {
    *
    * REVEALED ONLY HERE. The wrapper ships `hidden`, so the arrows exist for a
    * reader whose module ran and for nobody else. The same contract the pause
-   * control is under, and the reason neither can become a dead control.
+   * control is under.
+   *
+   * THAT SENTENCE USED TO END "and the reason neither can become a dead
+   * control", AND IT WAS WRONG IN THE MOST INSTRUCTIVE WAY. These arrows were
+   * revealed, enabled, focusable and completely inert from the day they
+   * shipped until 2026-08-31, and the owner found it by pressing one. Revealing
+   * a control on the condition that the module RAN says nothing about whether
+   * the control WORKS: the module ran, the listener attached, the event
+   * dispatched, and the handler it dispatched into threw the event away. The
+   * reproduction and the cause are recorded above that handler. A guard that
+   * proves a script executed is not a guard that proves a button does anything,
+   * and this comment is left as the standing example of that.
    */
   if (stepWrap) {
     const press = (key: string) => () =>
@@ -443,6 +516,41 @@ function setUp(group: HTMLElement): void {
   const pauseBtn = wrapper?.querySelector<HTMLButtonElement>('[data-tabs-pause]') ?? null;
   const pauseLabel = pauseBtn?.querySelector<HTMLElement>('[data-tabs-pause-label]') ?? null;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  /*
+   * ── A FOURTH CONSTRAINT: NO AUTOPLAY ON A PHONE. 2026-08-31 ──────────────
+   *
+   * docs/CAROUSEL-MOBILE-RESEARCH.md, which drove fourteen reference sites
+   * rather than describing them: TEN OF FOURTEEN ship no controlled carousel of
+   * product UI on a phone at all, and the four that do ship an uncontrolled
+   * scroll-snap strip whose only affordance is a peek of the next card. The
+   * GOV.UK Design System, which is the strongest precedent for this buyer, has
+   * no carousel component among its forty, and its TABS stop being tabs on a
+   * small screen and render as sections in order.
+   *
+   * THE REASON IT IS THE LOAD-BEARING MOVE AND NOT A PREFERENCE. Constraint 2
+   * above is what puts a pause button on this control, and it is conditional:
+   * WCAG 2.2.2 applies to something MOVING that starts automatically. Nothing
+   * starts automatically here below 40rem any more, so the requirement is not
+   * satisfied by a control, it is not raised. One decision removes a control
+   * rather than laying it out, on the width where there was no room for it.
+   *
+   * THE TABS ARE UNTOUCHED AND ARE STILL THE CONTROL. This turns off a timer,
+   * not navigation: a reader on a phone still picks a stage, they simply pick
+   * it rather than being carried through five of them while reading one.
+   *
+   * 40rem, WHICH IS 640px AT THE ROOT DEFAULT AND MOVES WITH IT. In `rem` and
+   * not `px` deliberately, so a reader who has enlarged their root font gets
+   * the phone treatment at the width where their text behaves like phone text.
+   *
+   * READ ONCE, LIKE `autoplaySeconds`, AND NOT WATCHED. A reader who rotates a
+   * phone into landscape does not want a timer to start under them mid-read,
+   * and `run()` is only ever called by an explicit resume path. Rechecking on
+   * resize would be a route that STARTS motion nobody asked for, which is the
+   * same hostility constraint 3 refuses.
+   */
+  const narrow = window.matchMedia('(max-width: 39.999rem)');
+  if (narrow.matches) return;
 
   let timer: number | null = null;
   /** Set once a reader picks a tab. One-way, by design: see constraint 3. */

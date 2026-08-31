@@ -433,9 +433,77 @@ const menus = NAV.menus.map((menu) => ({
    *
    * z-index: -1 is safe rather than lucky: this element is `position: sticky`
    * with `z-index: 100`, so it establishes a stacking context and the pseudo-
-   * element cannot escape behind the page. The fill is the same
-   * rgba(5, 7, 14, 0.72) it always was, now written against --c-bg (#05070E)
-   * instead of as a literal. */
+   * element cannot escape behind the page.
+   *
+   * ── THE FILL WENT 72% -> 100%, 2026-08-31, OWNER REPORT ──────────────────
+   *
+   * "The section headings sit behind the sticky nav." They did, and the fill is
+   * why. 72% was inherited from the live site and was never wrong about being
+   * frosted; it was wrong about how much it had to suppress. Shot mid-scroll at
+   * all three widths with a section heading parked inside the bar's own band,
+   * which is where a reader meets it during ordinary scrolling:
+   *
+   *   1440   "The engine that refuses to make things up." legible straight
+   *          through the bar and crossing Products, Resources, Pricing, Blog,
+   *          FAQ and About. A second heading, "A figure with nothing behind
+   *          it", legible under the search field and both buttons.
+   *   390    "Three numbers you are already held to" legible through the
+   *          CrowAgent wordmark.
+   *
+   * WHY THE BLUR WAS NOT ENOUGH ON ITS OWN. --blur-glass is blur(16px) and it
+   * IS running (the pseudo-element fix directly above is what made it run at
+   * all). A 16px blur softens a 40px 700-weight white heading and does not
+   * remove it: at 72% fill the surviving 28% of white over #05070E composites
+   * to roughly #4A4E58, which is far above the point at which large type stops
+   * being readable. Blur changes the EDGES; only the fill changes the LEVEL.
+   *
+   * WHY NOT scroll-margin-top. Because this is not an anchor fault. `html`
+   * already carries `scroll-padding-top: 96px`, every in-page jump already
+   * lands its target clear of the bar, and a test that only checks anchor
+   * navigation passes while the page still looks like this. Nothing about
+   * scroll offsets touches what a reader sees while scrolling with a finger or
+   * a wheel, which is how every one of the shots above was produced.
+   *
+   * ── 92% WAS TRIED FIRST AND IT DID NOT WORK, WHICH IS THE PART WORTH ─────
+   *    RECORDING RATHER THAN THE NUMBER THAT DID
+   *
+   * The first fix set 92% and argued it from arithmetic: the surviving 8% of a
+   * white heading composites to about #1A1D26 against a #05070E bar, which
+   * "is below the threshold at which an edge reads as a letterform". IT IS NOT.
+   * Rendered at 92, 96, 98 and 100 and the four shots opened and compared, with
+   * a heading parked in the bar's own band:
+   *
+   *     92%   "The engine that refuses to make things up." plainly readable
+   *     96%   still readable, and "A figure with nothing" readable beside it
+   *     98%   a visible ghost of both headings, faint but legible
+   *    100%   nothing. The bar is clean.
+   *
+   * A 40px 700-weight glyph on a dark ground survives a contrast ratio that
+   * would hide body copy several times over, which is exactly why the
+   * arithmetic was the wrong instrument: it was a calculation about a colour
+   * where the question was about a letterform. The only reliable test was
+   * looking at all four.
+   *
+   * SO THE BAR IS OPAQUE, AND WHAT THAT COSTS IS STATED. It is no longer glass
+   * over the page: the hero's violet field no longer tints it and the ambient
+   * light behind the header now ends at the bar's own edge. That is a real loss
+   * and it is smaller than the defect, which was two section headings and six
+   * navigation links legible on top of each other on every scroll of every page.
+   *
+   * THE `backdrop-filter` WENT WITH IT, because at 100% fill it has nothing to
+   * filter and a declaration that cannot change a pixel is a claim the next
+   * reader has to disprove. --blur-glass is NOT orphaned: the mega-menu in
+   * NavDropdown.astro still spends it, and that panel is genuinely translucent.
+   *
+   * ── ::before IS STILL LOAD-BEARING AND MUST NOT BE COLLAPSED INTO .ca-nav ──
+   *
+   * With the filter gone, the obvious tidy is to move this fill onto the header
+   * and delete the pseudo-element. DO NOT. The paragraph above it records the
+   * measured defect that put it here: `.ca-nav` carrying `backdrop-filter`
+   * became a BACKDROP ROOT for its descendants, so the mega-menu inside it
+   * filtered the bar's own backdrop instead of the page and painted no blur at
+   * all. That fault returns the moment any filter is set on the header, and
+   * keeping the fill one level down means nobody has to remember why. */
   .ca-nav {
     position: sticky;
     top: 0;
@@ -447,9 +515,7 @@ const menus = NAV.menus.map((menu) => ({
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: color-mix(in srgb, var(--c-bg) 72%, transparent);
-    backdrop-filter: var(--blur-glass);
-    -webkit-backdrop-filter: var(--blur-glass);
+    background: var(--c-bg);
   }
 
   .ca-nav-row {

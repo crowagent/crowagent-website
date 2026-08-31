@@ -78,9 +78,14 @@
  * earliest of the three, and it now reads last. The order is instrument order
  * (Procurement Act s.52, then s.71, then the Cabinet Office note), which is also
  * the order they appear in on /sources, so the two pages can be read against
- * each other. The accent ramp still runs teal to cyan to violet across the three
- * and still says the same weaker thing it always said: that this is one set read
- * in one direction. It no longer claims that direction is time.
+ * each other. The accents used to run teal to cyan to violet and said the same
+ * weaker thing a ramp always says, that this is one set read in one direction,
+ * without claiming that direction was time. THEY ARE NO LONGER A RAMP: owner
+ * decision of 2026-08-31 makes them teal, violet, teal, so the colour now says
+ * "a set of three" and says nothing at all about order. The reading order is
+ * still instrument order and is still carried by the tags and by /sources; it
+ * simply no longer has a second, quieter voice repeating it. See the note above
+ * the STOPS array.
  *
  * DO NOT MERGE SECTION 52 AND SECTION 71. s.52 sets and publishes the KPIs.
  * s.71 assesses performance against them and publishes the result. Collapsing
@@ -142,10 +147,40 @@ interface Stop {
  * therefore an edit to this array and to the matching row in HOMEPAGE_MAP, and
  * to nothing else.
  *
- * THE ACCENT IS BOUND TO THE POSITION, NOT TO THE INSTRUMENT. --c-ambient-end
- * is the third rung of the ramp because this is the third stop. It does not
+ * THE ACCENT IS BOUND TO THE POSITION, NOT TO THE INSTRUMENT. The accent on a
+ * stop is the third rung of the ramp because it is the third stop. It does not
  * mean anything about which notice the stop cites, so a tag change does not
  * drag a colour decision along with it.
+ *
+ * ── IT IS NO LONGER A RAMP. OWNER DECISION, 2026-08-31 ──────────────────────
+ *
+ * "First and last teal, middle purple." The order below is teal, violet, teal,
+ * and the paragraph above about spending start -> mid -> end contiguously is
+ * answered rather than forgotten: a ramp reads as a DIRECTION, three steps of
+ * one journey, and this is not a journey. It is three separate duties a reader
+ * is already under, in the owner's chosen order, and a symmetrical pair either
+ * side of one different colour reads as a set with a centre rather than as a
+ * sequence with an end. --c-ambient-mid, the cyan, is no longer spent here.
+ *
+ * IT IS DONE THROUGH THE SAME TWO TOKENS AND NO NEW VALUE. --c-ambient-start is
+ * the teal and --c-ambient-end is the violet, both already on this row before
+ * today, so this is a reordering of an existing spend and not a palette change.
+ *
+ * WHAT ELSE READS THIS ORDER, CHECKED BEFORE CHANGING IT RATHER THAN AFTER.
+ * The `accent` string is written to a `--accent` custom property on each <li>
+ * and is read by exactly three things, all inside this component and all
+ * per-stop: `.spine__tag`'s colour, the card's top accent hairline, and the
+ * `ms-segment` flash which opens and closes on `--accent` whatever it holds.
+ * Nothing outside this file resolves a stop's accent. The `ms-hue` keyframe
+ * DOES still ramp start -> mid -> end, and it is left exactly as it is because
+ * it colours `.spine__light`, the travelling highlight, which went with the
+ * panel on 2026-08-31 and has no element in the markup any more. Re-pointing a
+ * keyframe with nothing to animate would be inventing agreement between two
+ * dead things. The three uses that ARE live all follow the array.
+ *
+ * The tokens themselves are shared with eleven other surfaces (Lifecycle's hue
+ * stops, HowItRuns' ramp, Integrations' gradient, BothSides' fade), and NONE of
+ * them is touched: the change is which stop names which token, here.
  */
 const STOPS: Stop[] = [
   {
@@ -158,7 +193,9 @@ const STOPS: Stop[] = [
     tag: 's.71',
     value: '12',
     label: 'months between published assessments',
-    accent: 'var(--c-ambient-mid)',
+    /* The middle. Violet, by owner decision of 2026-08-31. See the note above
+       the array: this row is a symmetrical set, not a ramp. */
+    accent: 'var(--c-ambient-end)',
   },
   /*
    * ── THE THIRD TAG MOVED TO PPN 026 ON 2026-08-30, AND THE FIGURE DID NOT ──
@@ -204,7 +241,8 @@ const STOPS: Stop[] = [
     tag: 'PPN 026',
     value: '10%',
     label: 'minimum social value weighting',
-    accent: 'var(--c-ambient-end)',
+    /* Teal, matching the first stop. The pair is the set's outer edge. */
+    accent: 'var(--c-ambient-start)',
   },
 ];
 ---
@@ -1195,12 +1233,18 @@ const STOPS: Stop[] = [
     }
   }
 
-  /* The accents are a DIRECTION ramp that is already approved and already
-     shipped on the stops. The light rides them rather than replacing them, and
-     it must ride the SAME three the stops carry: with three stops the ramp runs
-     start -> mid -> end and --c-ambient-far is not on the row, so a light that
-     still ended on orchid would be painting a hue nothing under it holds.
-     The ramp is spent evenly across the pass, one accent per stop. */
+  /* A DIRECTION RAMP FOR A LIGHT THAT NO LONGER HAS AN ELEMENT, AND THAT IS
+     STATED HERE RATHER THAN LEFT TO BE INFERRED. `.spine__light` went with the
+     panel on 2026-08-31 (see the markup note in the figure), so nothing in the
+     document carries this animation and these three stops paint nothing today.
+
+     IT IS ALSO NO LONGER THE ORDER THE STOPS CARRY. The accents became teal,
+     violet, teal on the same day by owner decision, and this still ramps start
+     -> mid -> end. Re-pointing it was considered and refused: it would be
+     inventing agreement between a keyframe with no element and a row whose
+     colours are deliberately not a ramp any more. Anything that restores the
+     travelling light has to decide what a light crossing a symmetrical set
+     should do, and this block is not that decision already taken. */
   @keyframes ms-hue {
     0%      { color: var(--c-ambient-start); }
     50%     { color: var(--c-ambient-mid); }
@@ -1413,45 +1457,86 @@ const STOPS: Stop[] = [
        * on its row, so the only thing `1fr` can do is add dead space under
        * whichever label is shortest.
        *
-       * IT IS OVERRIDDEN HERE RATHER THAN DELETED ABOVE. O-47 is real and the
-       * declaration is still correct for every multi-column state, including
-       * a fourth stop wrapping the desktop grid into two bands. This says only
-       * that the rule does not apply on an axis with one track. */
-      grid-auto-rows: auto;
-      /* Zero, so the three bar segments touch and read as one line. See above. */
-      row-gap: 0;
-      /* The bar would otherwise be drawn ON the panel's own hairline and read
-         as a coloured panel edge rather than as a mark in the panel. This is
-         the only reason `.spine` takes any inline padding, and it is why the
-         `padding: 0` note above stays true for the desktop track: nothing here
-         is a user-agent leak and nothing here reaches the desktop state. */
-      padding-inline-start: var(--stack-1);
+       * ── THE WHOLE OF THE PARAGRAPH ABOVE IS ABOUT A DRAWING THAT NO LONGER
+       *    EXISTS, AND IT IS REVERSED HERE, 2026-08-31, ON OWNER REPORT ──────
+       *
+       * OWNER, LOOKING AT 390: the three cards are unequal in height, they
+       * touch with no gap, and they do not read as the same object. All three
+       * are one fault, and the fault is that THIS BLOCK WAS NEVER RE-READ WHEN
+       * THE STOPS BECAME CARDS. Everything deleted below was written for the
+       * pre-S4 drawing: one panel, three bays, a coloured bar down the inline
+       * start of each, and no space between them because a bay has no space
+       * around it. S4 replaced that with three elevated cards and the desktop
+       * grid was updated for it. This block was not, so below 1024 the section
+       * shipped half of each drawing at once: a bordered radiused card WITH a
+       * 2px bar down its side, an accent hairline across its top, and its
+       * neighbour welded to its bottom edge.
+       *
+       * MEASURED ON THE BUILT PAGE BEFORE THIS CHANGE:
+       *
+       *              stop 1     stop 2     stop 3     row gap
+       *     390      157.4px    182.2px    157.4px    0px
+       *     768      172.8px    197.6px    172.8px    0px
+       *     1440     212.7px    212.7px    212.7px    19.8px
+       *
+       * The middle stop is the one whose label takes two lines. The desktop
+       * state was already correct on both counts, which is the clearest
+       * evidence that this block is a leftover rather than a decision.
+       *
+       * WIDTHS WERE MEASURED TOO AND WERE ALREADY EQUAL: 338.2px each at 390
+       * and 705.7px each at 768, every stop on the same inline start. The owner
+       * read them as unequal and that reading is fair, because three boxes of
+       * three different heights, touching, with a radius at every corner and a
+       * coloured bar down one side, present no common edge for the eye to
+       * measure against. Equal heights with real space between them is what
+       * makes the equality visible, so it is fixed by the two declarations
+       * below rather than by a width nobody had got wrong.
+       *
+       * `1fr` IS RIGHT FOR A CARD AND WAS WRONG FOR A BAY, WHICH IS THE WHOLE
+       * REVERSAL. Dead space inside a bay is dead space in the panel, and
+       * nothing about a bay says it should be as tall as the bay above it.
+       * Three cards in a column are three objects of the same class and the
+       * reader compares them, so levelling them is what a matched set costs.
+       * There is still no number in it: a fourth stop, a longer label or a
+       * different breakpoint all resolve themselves. */
+      grid-auto-rows: 1fr;
+      /* THE GAP THE DESKTOP GRID ALREADY HAS. It was 0 so that three accent
+         BARS met as one continuous line, and there are no bars: the cards carry
+         their own edges and a zero gap butts two bordered boxes together. The
+         same --stack-2 the three-column state sets, so one token spaces this
+         set at every width and there is no second number to keep in step. */
+      row-gap: var(--stack-2);
+      /* THE INLINE PADDING WENT WITH THE BAR IT WAS HOLDING OFF THE EDGE. It
+         existed only so a 2px accent bar was not drawn on top of the panel's
+         own hairline, and there is now neither a bar nor a containing panel.
+         Left in place it inset the whole stacked column by 11 to 16px against
+         nothing, which is the third of the three widths the reader was
+         comparing. */
     }
 
-    .spine__stop {
-      border-top: 0;
-      border-inline-start: 2px solid var(--accent);
-      padding: var(--stack-2) var(--blk-pad) var(--stack-2) var(--stack-2);
-    }
+    /* NO `.spine__stop` OVERRIDE AT ALL BELOW 1024, WHICH IS THE POINT. The
+       block that stood here set `border-top: 0`, `border-inline-start: 2px
+       solid var(--accent)` and a four-value asymmetric padding, every one of
+       them a property of a bay. The card recipe above already states the
+       border, the radius, the elevation, the top accent hairline and a uniform
+       --blk-pad-xs, and none of it needs a narrow-window answer. Deleting the
+       override is what makes the phone and the desktop the same object. */
 
     /* THE BAY DIVIDER IS A THREE COLUMN DEVICE AND THERE IS ONE COLUMN HERE.
        Left in place it drew a 1px stub at the inline start of stops two and
-       three, directly beside the accent bar, which is a second vertical line
-       saying nothing. `content: none` removes the box rather than hiding it. */
+       three. `content: none` removes the box rather than hiding it. The rule
+       above the media query now says the same thing at every width, so this is
+       a restatement rather than an override, and it is kept only so the answer
+       does not depend on which of the two blocks a reader finds first. */
     .spine__stop:not(:first-child)::after {
       content: none;
     }
 
-    /* The lit backing followed the rule round the corner. It reached UP over a
-       2px top border that no longer exists and stopped at the inline start of
-       a bar it should cover, so on a narrow window with a mouse the hover lit
-       a box that started below the bar and floated 2px clear of the figure.
-       The bottom inset is untouched, so the panel still reads through the foot
-       of it exactly as the note on the backing describes. */
-    .spine__stop::before {
-      inset-block-start: 0;
-      inset-inline-start: -2px;
-    }
+    /* THE HOVER BACKING'S OVERRIDE WENT WITH THE BAR TOO. It pulled the lit
+       surface up over a 2px top border and 2px past the inline start, which is
+       exactly where the accent bar used to be. With the card's own border back
+       at every width the default `inset: -2px 0 12%` is correct here as it is
+       at 1440, and the override was drawing the backing 2px out of true. */
 
     /* THE SPINE STOPS BEING ONE HORIZONTAL LINE HERE, so the travelling light
        has nothing to travel. A light that runs along the top row and ignores
@@ -1461,17 +1546,15 @@ const STOPS: Stop[] = [
     .spine__track { display: none; }
   }
 
-  /* The hover response has to follow the rule round the corner too. The
-     declaration above it names `border-top-color`, which is inert once the
-     border is on the inline start, so a narrow window with a mouse lit the
-     backing and the tag and left the bar the reader is pointing at unchanged.
-     Nested rather than repeated inside the block above, because the condition
-     is genuinely both: this width AND a real pointer. */
-  @media (max-width: 1023px) and (hover: hover) {
-    .spine__stop:hover {
-      border-inline-start-color: var(--c-text);
-    }
-  }
+  /* THE NARROW-WINDOW HOVER OVERRIDE WENT WITH THE BAR, 2026-08-31. It existed
+     because `border-top-color` was inert once the accent moved to the inline
+     start below 1024, so it lit `border-inline-start-color` instead. There is
+     no inline-start accent at any width now: the card carries one hairline all
+     the way round and the accent is a background layer across its top. Left in
+     place this rule would light the LEFT edge of a card on a narrow window with
+     a mouse while a wide one lights the TOP, which is two answers to one
+     question. The sitewide `@media (hover: hover)` block above now governs
+     every width, which is what it did before the bay ever existed. */
 
   /* The reading measure is the only thing left to drop, and it drops because a
      26ch cap inside a phone-width column just leaves a ragged right edge. */

@@ -220,7 +220,24 @@ const SAMPLES = [
     text: [
       'Quality will be scored at 60% and price at 40% of the total award.',
       'Bidders must hold Cyber Essentials Plus certification at the point of award.',
-      'Social value is weighted at 10% in line with PPN 002.',
+      /* ── PPN 002 -> PPN 026, 2026-08-31, AND THE FIGURE IS UNCHANGED ──────
+       *
+       * This was the LAST "PPN 002" left in any HTML the site serves, and it
+       * survived the sweep that cleared the rest because it is a FABRICATED
+       * SAMPLE CLAUSE rather than site copy. A text sweep reads a quoted
+       * example as quoted text and walks past it, which is exactly the shape of
+       * reference that goes stale unnoticed. Checked by grepping the built
+       * `dist` rather than the source: one occurrence sitewide, this one.
+       *
+       * 10% IS STILL CORRECT UNDER PPN 026 AND THAT IS WHY THE FIGURE DID NOT
+       * MOVE WITH THE NAME. PPN 026's floor is 10% from 1 million pounds inc
+       * VAT to 5 million and 20% at 5 million or above, so a clause citing 10%
+       * under PPN 026 is accurate for the lower band and is the figure this
+       * site states everywhere else, including the statutory-figures section.
+       *
+       * IT IS ALSO STILL A DRAWN EXAMPLE AND NOT A QUOTATION FROM ANY REAL
+       * TENDER. Nothing about the change alters what this block is. */
+      'Social value is weighted at 10% in line with PPN 026.',
     ].join(NL),
   },
   {
@@ -370,8 +387,45 @@ const CHECKED = SAMPLES.map((s) => {
       deliberate emphasis rather than a degradation. Nothing outside this one
       span is touched, so there is no descendant for a text-fill to leak onto.
     */}
+    {/*
+      ── THREE PHRASES, THREE ELEMENTS, 2026-08-31, OWNER REQUEST ────────────
+
+      "Qualify. Draft. Prove it. will appear slowly and cinematic way in the
+      screen." That is a SEQUENTIAL reveal, the phrases arriving in turn, and
+      CSS cannot address a phrase inside a text node. So the first two get an
+      element each, exactly as the third already had one.
+
+      BARE <span>, NO CLASS, AND THE BYTE ARGUMENT FOR IT WAS HALF WRONG.
+      This page is over its HTML budget, so the spans carry no class and the
+      stagger is declared in styles/motion.css on `#hero-title > span`. The
+      reasoning written here first was that Astro stamps its scope attribute
+      only on elements a scoped selector matches, so a classless span would ship
+      as 13 bytes. MEASURED ON THE BUILT PAGE, IT DOES NOT: Astro stamps
+      `class="astro-xq4k5jhz"` on every element in a component that has scoped
+      styles, matched or not, and the two spans cost 73 bytes rather than 26.
+
+      THE DECISION SURVIVES THE CORRECTION AND THE NUMBER IS RECORDED BECAUSE
+      IT DID NOT. A class of our own would have added its name on top of the
+      stamp we get anyway, so classless is still the cheaper of the two, just by
+      less than claimed. 73 bytes is the real cost of the reveal and it is
+      written here so the next reader budgets from a measurement.
+
+      IT IS ALSO WHERE THE ARRIVAL HAS TO BE DECLARED ANYWAY.
+      scripts/check-motion.js rule 2 gives motion.css the arrival and fails the
+      build on a component that grows its own, so the choice of file was made
+      for us and the byte saving is a consequence rather than the reason.
+
+      THE THIRD PHRASE KEEPS ITS CLASS AND EVERYTHING ATTACHED TO IT. The
+      gradient, the @supports fallback to solid teal, the trailing side-bearing
+      pad and the inline-block that stops "Prove it." breaking in two are all
+      `.hero__prove` and all unchanged. The two new spans take the same
+      inline-block from motion.css, because a transform does not apply to a
+      non-replaced inline box at all: without it the rise and the blur would
+      simply not run on phrases one and two, which is a silent failure of
+      exactly the kind this task exists to stop.
+    */}
     <h1 class="hero__title" id="hero-title">
-      Qualify. Draft. <span class="hero__prove">Prove it.</span>
+      <span>Qualify.</span> <span>Draft.</span> <span class="hero__prove">Prove it.</span>
     </h1>
 
     <p class="hero__lede">Every figure traced to evidence you already hold.</p>
@@ -1052,8 +1106,34 @@ const CHECKED = SAMPLES.map((s) => {
      clause has to keep its line breaks anyway because the engine segments on
      them. So the exception is carried by the tag rather than by a declaration,
      which is exactly what that gate asks for. */
+  /* ── THIS BLOCK HAD NO TOP MARGIN AT ALL, AND THE CAUSE WAS A TOKEN THAT ──
+   *    DOES NOT EXIST
+   *
+   * Owner, 2026-08-31, on the rendered page: the "Checked by this page's own
+   * rule engine" line is jammed against the two buttons with almost no gap.
+   * Measured on the built page before this change, at all three widths:
+   *
+   *     .btn-row bottom -> .hmt top     0.0px     390, 768 and 1440
+   *
+   * Zero, not "tight". This rule said `var(--stack-3)` and THERE IS NO
+   * --stack-3 IN THIS CODEBASE. tokens.css declares --stack-1 and --stack-2 and
+   * stops. An unresolved custom property makes the declaration invalid at
+   * computed-value time, which for `margin-block-start` falls back to the
+   * initial value of 0, silently, with no console warning and no gate failure.
+   * The stylesheet said "put a large gap here" and the browser put none.
+   *
+   * THAT IS THE FINDING WORTH KEEPING, RATHER THAN THE NUMBER. A misspelt token
+   * does not degrade to a smaller gap, it degrades to NO gap, and it looks
+   * exactly like a rule nobody wrote. Anything reaching for a rung of this
+   * scale has two to choose from.
+   *
+   * --sec-gap, WHICH IS THE TOKEN THE HERO ALREADY USES FOR THIS EXACT JOB.
+   * `.hero__gate` two blocks up takes `margin: var(--sec-gap) auto 0` to hold
+   * the closing note off the block above it, and this is the same relationship:
+   * the CTAs end one movement and the demo begins another. Reusing it means the
+   * hero states one separation value rather than inventing a second. */
   .hmt {
-    margin-block-start: var(--stack-3);
+    margin-block-start: var(--sec-gap);
   }
 
   /* OFF SCREEN BUT STILL FOCUSABLE, which `display: none` would not be. The
@@ -1067,8 +1147,14 @@ const CHECKED = SAMPLES.map((s) => {
     pointer-events: none;
   }
 
+  /* --stack-2 RATHER THAN --stack-1 FROM 2026-08-31, SAME OWNER REPORT. "The
+     tab row below it is tight too." Measured: 11.8px at 390, 14.3px at 768 and
+     12.6px at 1440 between this line and the tab row. That is the TIGHT rung of
+     a two-rung scale, used between lines that belong to each other, and this
+     line is a caption for the demo while the row under it is a control. The
+     normal rung is what separates two things that are not the same thing. */
   .hmt__lead {
-    margin: 0 0 var(--stack-1);
+    margin: 0 0 var(--stack-2);
     color: var(--c-text-muted);
   }
 
@@ -1149,6 +1235,33 @@ const CHECKED = SAMPLES.map((s) => {
     color: var(--c-text-sub);
     white-space: pre-wrap;
     overflow-x: auto;
+    /* ── THE PANEL IS FULL WIDTH, THE CLAUSE INSIDE IT IS A CENTRED COLUMN ──
+     *
+     * Owner, twice, 2026-08-31: centre the BLOCK and left align the LINES. The
+     * clause was a full-width <pre>, so its text started at the panel's own
+     * padding edge and every line ran from the far left of a centred hero. The
+     * lines were right to be left aligned, and the block was wrong to be.
+     *
+     * WHY THE PANEL ITSELF IS NOT SHRUNK. `width: fit-content` on this element
+     * is the one-line version of the same idea, and it would size the PANEL to
+     * whichever clause is showing. The three tabs hold clauses of three
+     * different widths, so the card would jump width on every tab press and the
+     * demo would read as broken. The panel is the stage and has to be stable;
+     * only the text inside it moves.
+     *
+     * SO THE TRACK IS SIZED AND THE BOX IS NOT. `display: grid` makes the
+     * clause's text one anonymous item in a single track, that track is sized
+     * to the widest line and never wider than the space available, and
+     * `justify-content: center` centres it. `white-space: pre-wrap` is
+     * inherited by the item, so the line breaks the engine segmented on are
+     * still exactly the line breaks that render.
+     *
+     * IT IS DELIBERATELY THE SAME CONSTRUCTION AS `.hmt__steps` BELOW AND
+     * `.pg__never` IN ProofGate.astro. Three blocks of the same shape on one
+     * page, and any difference between them would read as a mistake. */
+    display: grid;
+    grid-template-columns: minmax(0, max-content);
+    justify-content: center;
   }
 
   .hmt__steps {
@@ -1156,10 +1269,61 @@ const CHECKED = SAMPLES.map((s) => {
     padding: 0;
     list-style: none;
     display: grid;
+    /* ── ONE CENTRED COLUMN, AND THE LINES INSIDE IT SHARE A LEFT EDGE ──────
+     *
+     * This is the owner's shape and it is neither of the two obvious answers.
+     * Centred TEXT gives three ragged lines on three different left edges, so
+     * Read, Match and Hold no longer read as a column of stages. A left ALIGNED
+     * BLOCK puts the whole thing on the container's inline edge, away from the
+     * centred hero above it, which is the defect this started as. What is
+     * wanted is a centred BOX with left aligned content.
+     *
+     * `minmax(0, max-content)` sizes the single track to the widest line and
+     * NEVER wider than the space available, which is the half that matters at
+     * 390 where the third line wraps: a bare `max-content` track would size to
+     * the unwrapped sentence and push the hero into horizontal overflow, which
+     * the sitewide gate fails a page for at 320, 390, 768 and 1440.
+     * `justify-content: center` then centres that track, and the <li> stretch
+     * to fill it, so all three labels start on one line that is itself on the
+     * page's axis. */
+    grid-template-columns: minmax(0, max-content);
+    justify-content: center;
     gap: 6px;
     font-size: var(--t-micro);
     color: var(--c-text-sub);
   }
+
+  /* ── READ, MATCH AND HOLD WERE THE ONLY LEFT-ALIGNED WORDS IN A CENTRED ───
+   *    HERO, AND THE CAUSE IS A SITEWIDE RULE DOING ITS JOB
+   *
+   * Owner, 2026-08-31, on the rendered page. Measured at 1440 before this
+   * change: the eyebrow, the h1, the standfirst, the buttons, the lead and the
+   * tab row all sit on the page centre and these three lines start at x=104,
+   * hard against the container's inline edge.
+   *
+   * THE ALIGNMENT ITSELF IS CORRECT AND STAYS. styles/alignment.css rule 3
+   * sets `main :is(ul, ol) > li { text-align: left }`, and its reasoning holds:
+   * a bullet is a hanging indent and centring the line walks the text away from
+   * its own marker. These items carry no marker, so that argument does not
+   * reach them, but the owner's answer is not to centre the words either.
+   *
+   * THE FAULT WAS THE BOX, NOT THE TEXT, WHICH IS WHY NOTHING HERE OVERRIDES
+   * alignment.css. Owner, on the correction: centre the BLOCK and left align
+   * the LINES inside it, so Read, Match and Hold share one left edge that is
+   * itself on the page's axis. The list was a full-width grid, so its single
+   * column started at the container's inline edge and the left alignment
+   * inherited from the base rule put every label 104px off centre at 1440. The
+   * grid declaration above now sizes that column to its own content and centres
+   * it, and the inherited `text-align: left` is then exactly what is wanted.
+   * This is the case alignment.css's rule 3 describes as a layout list taking
+   * its centring back through the thing that makes it a layout, done on the
+   * container rather than on the words.
+   *
+   * THE <pre> ABOVE THEM STAYS LEFT AND ON THE FULL WIDTH. It is verbatim
+   * clause text whose line breaks are what the engine segmented on,
+   * alignment.css rule 1 excuses it BY TAG, and the note at the head of this
+   * block already records why. It is a quotation and it keeps a quotation's
+   * full measure; the stages under it are a column and take a column's width. */
 
   /* The three step names. --c-text rather than a role hue: Read, Match and Hold
      are stages, not verdicts, and neither teal nor orchid may be spent on a

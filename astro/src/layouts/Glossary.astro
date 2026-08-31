@@ -350,9 +350,18 @@ const schema: Record<string, unknown>[] = [
     color: var(--c-interactive);
     font-weight: 700;
   }
+  /* 800 -> --t-w-h3, 2026-08-31, SAME OWNER REPORT. An inline `strong` was set
+     heavier than every heading on the page and heavier than anything the
+     display scale reaches: G15 in tokens.css took the h1 off 800 in 2026-08-03
+     on nine measured comparators, none of which exceeds 700, and this rule
+     quietly kept the weight G15 removed and spent it on body copy. The glossary
+     entries lean on `strong` hard, twelve to twenty per page, so at 800 a
+     paragraph read as a paragraph of headings. It is a token now rather than a
+     literal, and it is the same 700 the headings above it use, which is the
+     ceiling this scale has. */
   .gl-article :global(strong) {
     color: var(--c-text);
-    font-weight: 800;
+    font-weight: var(--t-w-h3);
   }
   /* THE FILL AND THE EDGE COME FROM styles/surfaces.css, WHICH ALREADY GIVES
      THIS BLOCK A CARD.
@@ -374,6 +383,39 @@ const schema: Record<string, unknown>[] = [
      the lit edge off teal for the same reason. So the block keeps its padding,
      its radius and its margin, which are its own, and takes its surface from
      the one place a surface is decided. */
+  /* ── ONE ENTRY DROPPED ITS TL;DR ON 2026-08-31, AND WHY IT IS NOT A BUG ───
+   *
+   * The owner asked what the TL;DR on /glossary/ppn-026 was for. It was for
+   * nothing, on that page, and it is gone from that entry's markdown. The
+   * recipe stays here and stays in use on /glossary/toms-framework, so the next
+   * reader who finds one entry with a summary and one without has this note
+   * rather than a guess.
+   *
+   * THE TEST IS WHETHER IT COMPRESSES OR REPEATS, and the two entries answer it
+   * differently because they are different lengths. toms-framework runs to four
+   * sections and its summary is three ABSTRACTIONS of them, none longer than a
+   * dozen words ("themes, then outcomes, then measures"), so a reader who stops
+   * at the box still leaves with the shape of the thing.
+   *
+   * ppn-026 IS DELIBERATELY THIN. It is a policy note with five cited facts and
+   * an explicit section saying it will not state anything beyond them. Its
+   * TL;DR was four FULL SENTENCES carrying the publication date, the
+   * application date, the threshold and both weightings, sitting directly above
+   * a standfirst and two paragraphs carrying the publication date, the
+   * application date, the threshold and both weightings, under a hero
+   * description that had already carried all four. Three statements of the same
+   * facts inside about 250 vertical pixels. A summary the same length as its
+   * source is not a summary, it is the page said twice, and on a compliance
+   * page it doubles the surface that has to be corrected when an instrument
+   * moves.
+   *
+   * NOTHING WAS LOST. Three of its four bullets duplicated the body outright.
+   * The fourth, why the edition matters to a bid being drafted now, appeared
+   * nowhere else on the page and is now a sentence in the third paragraph.
+   *
+   * SO THE RULE FOR A NEW ENTRY: a summary earns its place when a reader would
+   * otherwise have to read several sections to get the shape. On an entry short
+   * enough to read whole, it is duplication with an arrow in front of it. */
   .gl-article :global(.gl-tldr) {
     padding: var(--blk-pad);
     border-radius: var(--radius-card);
@@ -405,22 +447,55 @@ const schema: Record<string, unknown>[] = [
     flex-direction: column;
     gap: 0.85rem;
   }
+  /* ── THE EMPHASIS WAS NESTED THREE DEEP AND NOTHING RECEDED ──────────────
+   *
+   * Owner, 2026-08-31, on /glossary/ppn-026: the type is oversized and over
+   * bolded. Measured on the built page, 37 elements on that route were at
+   * weight 600 or heavier, and the TL;DR was the densest of them:
+   *
+   *     li     600   the whole line, every word of it
+   *     span   600   inherited, and the markup wraps each line in one
+   *     strong  800   the label inside that
+   *     ::before 800  the arrow marker as well
+   *
+   * A "bold" label inside a line that is already semibold is not emphasis, it
+   * is two weights that a reader cannot tell apart, and a summary block set
+   * entirely in semibold shouts its way past the definition it is summarising.
+   * Emphasis only exists relative to something that is NOT emphasised.
+   *
+   * SO THE LINE RECEDES TO THE BODY WEIGHT AND ONLY THE LABEL IS STRONG. The
+   * `strong` in each bullet is the label ("What it is:", "How it works:") and
+   * that is genuinely the scannable half, so it keeps its emphasis and now has
+   * something to be emphatic against. --t-w-body rather than a literal 400,
+   * because the weight of body copy is a token this site already owns.
+   *
+   * THE ARROW COMES DOWN WITH IT. It is a marker, not a word: at 800 it was
+   * heavier than every heading on the page, including the h1. --t-w-h3 is the
+   * display weight the rest of the scale tops out at, and a 700 arrow beside a
+   * 400 line is still unmistakably a marker. */
   .gl-article :global(.gl-tldr li) {
     display: flex;
     gap: 0.75rem;
     font-size: var(--t-body);
-    font-weight: 600;
+    font-weight: var(--t-w-body);
     color: var(--c-text);
     margin: 0;
   }
   .gl-article :global(.gl-tldr li::before) {
     content: '\2192';
     color: var(--c-verified);
-    font-weight: 800;
+    font-weight: var(--t-w-h3);
   }
+  /* THE STANDFIRST IS A SENTENCE, NOT A HEADING, AND 700 WAS MAKING IT ONE.
+     Same owner report. It is set at --t-h4 over body copy at --t-lede, so the
+     size alone already separates it by 1.04 and the weight was carrying the
+     rest of the distinction at the same 700 the h2 above it uses. A standfirst
+     that matches its own heading's weight reads as a second heading. --t-w-body
+     leaves the size and the --c-text fill doing the work, which is what every
+     other lede on this site does. */
   .gl-article :global(.gl-lead) {
     font-size: var(--t-h4);
-    font-weight: 700;
+    font-weight: var(--t-w-body);
     color: var(--c-text);
     line-height: 1.5;
   }

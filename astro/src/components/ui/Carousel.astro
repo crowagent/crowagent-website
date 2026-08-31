@@ -186,8 +186,12 @@ const CIRC = 81.681;
  * so a derived path that does not exist stops the build rather than 404ing for
  * a reader. That is the same contract the sitemap generator uses.
  */
-const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
-  src.replace(/\.png(\?|$)/, `${width === null ? '' : `-${width}w`}.${ext}$1`);
+/* Declared in data/crowmark-screens.ts beside the assets it names. See the
+   ladder note further down this file for why it moved. */
+import { variant, avifSrcset as avifSrcsetFor } from '../../data/crowmark-screens';
+
+/** This component's slides carry their own master width, so bind it here. */
+const avifSrcset = (s: Slide) => avifSrcsetFor(s.src, s.width);
 
 /*
  * ── RESOLUTION, NOT ONLY FORMAT (A-93) ──────────────────────────────────────
@@ -234,15 +238,24 @@ const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
  * 12,541 KB to 17,831 KB against a 14,336 KB budget, 55% of the growth being
  * WebP nobody would fetch.
  */
-const LADDER = [400, 600, 800, 1200] as const;
-const MAX_OF_MASTER = 0.7;
-const rungsFor = (masterWidth: number) => LADDER.filter((w) => w <= masterWidth * MAX_OF_MASTER);
-
-const avifSrcset = (s: Slide) =>
-  [
-    ...rungsFor(s.width).map((w) => `${variant(s.src, 'avif', w)} ${w}w`),
-    `${variant(s.src, 'avif', null)} ${s.width}w`,
-  ].join(', ');
+/* ── THE LADDER MOVED TO data/crowmark-screens.ts, 2026-08-31 ───────────────
+ *
+ * It was declared here, and `sections/WorkstationTour.astro` therefore had
+ * none: that section shipped the full 2x master at every viewport, 440,673 B
+ * into a 314px box at 390, because the mechanism lived inside one consumer and
+ * the next consumer could not see it. The rungs are a fact about the sixteen
+ * drawn screens, which is what that module records, so it is stated there and
+ * both components import it.
+ *
+ * THIS COMPONENT IS STILL GENERIC AND THE COUPLING IS REAL RATHER THAN
+ * INVENTED. Every call site of this carousel renders slides from that registry
+ * (`/`, `/crowmark`, `/crowmark-buyers`), and the LADDER describes files
+ * `scripts/build-product-screens.mjs` writes for exactly those assets. A
+ * component that took its ladder from nowhere would be pretending to serve
+ * images that do not exist.
+ *
+ * `variant` COMES FROM THERE TOO, so the derivative naming is written once. The
+ * whole of the ladder's reasoning, and the 0.7 measurement, is in that file. */
 
 /*
  * THE STAGE RATIO, AND WHY A SLIDE IS EITHER FULL-BLEED OR INSET.
