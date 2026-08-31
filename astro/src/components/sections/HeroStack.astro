@@ -867,10 +867,61 @@ const CHECKED = SAMPLES.map((s) => {
       padding-block-end: 0.12em;
       margin-block-end: calc(var(--stack-2) - 0.12em);
     }
+
+    /* -- THE SAME P0 THIS FILE ALREADY WARNS ABOUT, RECURRED ---------------
+     *
+     * The note on `.hero__prove` below says this site "has already shipped a
+     * P0 in which an inherited -webkit-text-fill-color made text invisible".
+     * IT HAPPENED AGAIN, IN THIS COMPONENT, CAUSED BY THE TWO SPANS ADDED FOR
+     * THE HEADLINE REVEAL. Measured in Chromium at 1440 on 2026-08-31:
+     * `Qualify.` and `Draft.` computed to background-image NONE, background-clip
+     * border-box and -webkit-text-fill-color rgba(0, 0, 0, 0), so they had a
+     * transparent fill and NOTHING OF THEIR OWN TO PAINT WITH. Frames captured
+     * at 450ms and 1000ms show the eyebrow, the standfirst and both buttons
+     * fully rendered above and below an EMPTY headline, with only `Prove it.`
+     * appearing, alone, on the right.
+     *
+     * WHY THE PARENT'S GRADIENT DID NOT REACH THEM. `background-clip: text` on
+     * the h1 paints inside the h1's own box. The reveal gives each span a
+     * `transform` and a `filter`, and either one promotes the span to its own
+     * compositing layer with its own coordinate space, so the parent's clipped
+     * paint does not cross into it. `.hero__prove` never showed the fault
+     * because it declares its own `background-image`, which is exactly the
+     * shape the other two were missing.
+     *
+     * THE RULE THE NOTE BELOW ALREADY STATES IS THE FIX: readable by default,
+     * transparent only where the paint is GUARANTEED to arrive. A span that
+     * inherits a transparent fill must carry its own background or it is
+     * invisible, and adding an animation to it is what turns "works today"
+     * into a blank headline.
+     *
+     * VISUALLY IDENTICAL ONCE SETTLED, which is why this is a paint fix and not
+     * a design change: --grad-heading is a VERTICAL ramp, so where a span sits
+     * horizontally cannot change it, and the tile is the same 1.06em line box.
+     * The ramp now travels WITH each word as it rises rather than the word
+     * moving through a ramp pinned to the parent, which is the better reading
+     * of the effect in any case. */
+    .hero__title > span:not(.hero__prove) {
+      background-image: var(--grad-heading);
+      background-size: 100% 1.06em;
+      background-repeat: repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* :not(.hero__prove) IS LOAD BEARING AND WAS ADDED AFTER LOOKING. Written
+     * as a bare `> span` this rule is 0,1,1 and BEATS `.hero__prove` at 0,1,0,
+     * so it silently repainted `Prove it.` from its teal to violet ramp to the
+     * plain heading white. Caught by comparing the settled frame against the
+     * capture taken before the fix. The rule must SUPPLY what the two spans
+     * lacked and touch nothing that already worked. */
   }
 
   @supports (height: 1lh) {
-    .hero__title { background-size: 100% 1lh; }
+    .hero__title,
+    .hero__title > span { background-size: 100% 1lh; }
   }
 
   @media (forced-colors: active) {

@@ -518,36 +518,39 @@
    * its spans has to re-run it, because all three touch the same mechanism. */
   --hero-land-floor: 0.06;
   --hero-land-lift:  calc(var(--stack-2) * 2.5);
-  --hero-land-blur:  10px;
-  --hero-land-dur:   calc(var(--m-beat) * 3.5);  /* three and a half beats */
-  --hero-land-step:  calc(var(--m-beat) / 2);    /* 300ms between phrases */
+  --hero-land-blur:  5px;   /* 5 not 10: at 83px display type a 10px blur
+                              reads as a low resolution smear rather than an
+                              optical bloom, and the whole point is that the
+                              word arrives sharp. */
+  --hero-land-dur:   calc(var(--m-beat) * 1.3);   /* 780ms */
+  --hero-land-step:  calc(var(--m-beat) / 5);     /* 120ms between phrases */
 
-  /* -- THE HOLD, AND IT IS THE WHOLE REASON THE REVEAL READS AT ALL --------
+  /* -- THE HOLD WAS TUNING AN ANIMATION NOBODY COULD SEE ------------------
    *
-   * MEASURED ON THE BUILD BEFORE THIS CHANGE, sampling the three spans from
-   * first paint: phrase one was ALREADY at 0.89 opacity and 1.13px blur by
-   * the first frame anyone could sample, and all three were FINISHED AT
-   * 910ms. The owner's verdict was that there is no reveal there. The numbers
-   * agree with them. The animation was correct and it was OVER before a
-   * reader's eye arrived.
+   * CORRECTED 2026-08-31. This block previously argued for a 420ms hold from
+   * linear.app's 1200ms, and the argument was sound about the wrong thing.
+   * TWO OF THE THREE PHRASES WERE NEVER PAINTING AT ALL: `Qualify.` and
+   * `Draft.` had a transparent fill inherited from the h1 and no background of
+   * their own, so the reveal was choreographing INVISIBLE TEXT. The paint fix
+   * is in HeroStack.astro and the note there carries the measurement.
    *
-   * linear.app, DRIVEN AND CAPTURED rather than described, holds its six
-   * spans at opacity 0 and blur(10px) for roughly 1200ms and only then
-   * reveals them. THE HOLD IS THE EFFECT. Without it a reveal is
-   * indistinguishable from the page having simply rendered.
+   * WITH THE WORDS ACTUALLY ON SCREEN THE HOLD BECOMES THE DEFECT. The
+   * standfirst and both buttons run `sv-land-row` at delay 0 over 900ms, so a
+   * 420ms hold plus a 2100ms duration finished the headline at 3120ms, TWO AND
+   * A QUARTER SECONDS AFTER THE BUTTONS UNDER IT. The reader met a filled page
+   * with a hole where the title goes, which is what the owner reported twice.
    *
-   * 420ms RATHER THAN LINEAR'S 1200, and the difference is a constraint
-   * rather than a preference. Their headline is NEVER an LCP candidate,
-   * confirmed in docs/HERO-ANIMATION-RESEARCH.md where their mobile LCP is a
-   * Sign up button at 7,412ms, so they may hold as long as they like. OURS IS
-   * THE CANDIDATE, so the hold is bounded by what LCP tolerates. `backwards`
-   * fill holds the span at --hero-land-floor through it, which is 0.06 and
-   * NOT zero, and zero is the one value the research proved removes the
-   * element from candidacy in 7 of 7 runs.
+   * 80ms hold, 120ms step, 780ms duration lands the three phrases at 860, 980
+   * and 1100ms against the row's 900ms, so the headline leads and the hero
+   * settles as one movement instead of the title trailing the furniture.
    *
-   * The note beside --hero-land-floor requires the LCP run to be repeated by
-   * anything that adds a delay to phrase one. This does. It was re-run. */
-  --hero-land-hold:  420ms;
+   * THE LCP CONSTRAINT THAT SHAPED THE OLD VALUES NO LONGER BINDS, and it was
+   * measured rather than assumed: 7 cold runs per variant put the h1 at 0 of 7
+   * as the LCP element in every variant INCLUDING with the animation removed.
+   * The candidate is PRE.hmt__src, the hero demo clause block, at 34,832 px2.
+   * --hero-land-floor stays at 0.06 anyway, because it costs nothing and the
+   * research behind it stands for any page where the h1 IS the candidate. */
+  --hero-land-hold:  80ms;
 
   /* The stagger is a DELAY here rather than a distance, because on a clock a
      delay is the thing a scroll timeline does not have. A sixth of a beat is
