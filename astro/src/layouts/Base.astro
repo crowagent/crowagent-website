@@ -217,6 +217,35 @@ const pageClass = `pg-${
       site.webmanifest is deliberately NOT linked: it does not exist in the
       legacy root either, so linking one would 404.
     */}
+    <!-- == THE HERO FACES, DISCOVERED AT THE START RATHER THAN AFTER CSSOM ==
+       ~
+       ~ MEASURED 2026-08-31 at 1512 with the font response delayed: the hero
+       ~ headline laid out in the fallback, the reveal animation RAN AND
+       ~ FINISHED on it, and the real face arrived afterwards and reflowed the
+       ~ line. Span positions moved 314,632,873 to 300,631,882, so every word
+       ~ shifted under a blurred compositing layer that had already been
+       ~ rasterised. The owner photographed the result: a stale half drawn copy
+       ~ of the headline in the fallback face, sitting left of the real one.
+       ~
+       ~ THESE FILES WERE REFERENCED ONLY FROM CSS, so the browser could not
+       ~ know they existed until the stylesheet had been fetched and parsed.
+       ~ Preload moves discovery to the first bytes of the document, which is
+       ~ why it fixes a paint fault as well as being faster.
+       ~
+       ~ `crossorigin` IS REQUIRED AND IS NOT OPTIONAL EVEN SAME ORIGIN. Fonts
+       ~ are fetched in CORS mode, so a preload without it is a SECOND, separate
+       ~ fetch: the file downloads twice and the swap it was meant to prevent
+       ~ still happens. That failure is silent and looks like the preload simply
+       ~ not working.
+       ~
+       ~ ONLY THE TWO FACES ABOVE THE FOLD. Jakarta 700 is the headline, 12.2 kB.
+       ~ Inter-var is the standfirst and the buttons, 48.3 kB. Jakarta 600 and
+       ~ 800 and JetBrains Mono are deliberately NOT preloaded: preloading a
+       ~ face the first screen does not use spends bandwidth competing with the
+       ~ two that it does. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/Assets/fonts/PlusJakartaSans-700.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/Assets/fonts/Inter-var.woff2" />
+
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {/*
       favicon.ico, ADDED 2026-08-05 FROM THE OWNER'S BRAND PACK v5. It is the
@@ -300,6 +329,7 @@ const pageClass = `pg-${
       It is what lets a page-sized stylesheet live in src/styles/ and still be
       unable to reach any other route. */}
   <body class={pageClass}>
+
     {/* The page grain. One element, in the layout, so every route gets it and
         no page can forget it. See the .sv-page-grain note below for why the
         glass needs it. aria-hidden and pointer-events: none. It is texture. */}
