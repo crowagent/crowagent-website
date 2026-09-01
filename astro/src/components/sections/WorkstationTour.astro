@@ -559,10 +559,43 @@ const TOUR_VARS = `--wt-hairline:${HAIRLINE}px;--wt-stage-max:${STAGE_MAX_BLOCK}
     color: var(--c-tour-accent);
   }
 
+  /* ── A-230. A CAPTION STOPS WEARING A HEADING RUNG ──────────────────────
+   *
+   * MEASURED AT 1440 ON THE HOME PAGE, 2026-09-01. Three roles rendered at
+   * 30px: an h2 at w700, an h3 at w700, and this paragraph at w400. Weight and
+   * leading still told them apart, so nothing was illegible; what had gone was
+   * SIZE as a signal, and a reader scanning by size read a figure caption as a
+   * heading.
+   *
+   * THE SCALE IS NOT WHAT MOVED, AND THAT IS THE POINT. --t-h3 has seventeen
+   * consumers including the base `h3` rule in tokens.css, so retuning the rung
+   * would have moved every heading on the site to fix one caption. The owner
+   * has just closed A-200 with the scale judged acceptable. Measured section by
+   * section, the outline is intact everywhere: every section on / steps 40px to
+   * 30px or 40px to 20.9px, and no section holds an h2 and an h3 at one size.
+   * The h2 and h3 that share 30px are four sections apart, and
+   * scripts/check-design-system.js documents a heading one tier down as the
+   * convention rather than a defect. So exactly ONE role at that rung was in
+   * the wrong place: this one, the only non-heading there.
+   *
+   * --t-lede AND --font-body, WHICH IS THE SITE'S EXISTING RECIPE FOR THIS.
+   * `.section__head .section__standfirst` in styles/headings.css is already
+   * --font-body at --t-lede: a sentence that introduces a block without being
+   * a heading, which is what a caption under a drawing is. Nothing new is
+   * invented and no token is added.
+   *
+   * IT ALSO RETIRES A RULE RATHER THAN ADDING ONE. The 767px branch below used
+   * to reset this to --t-h4, under a note saying a section-level heading size
+   * over four lines was "what made this read as a wall of text" on a 390px
+   * screen. That diagnosis was right and it was only ever applied to mobile.
+   * Below 767px --t-h4 and --t-lede both sit on their 1.15rem floor, so the
+   * override became a no-op the moment this line changed, and a declaration
+   * that cannot change anything is removed rather than left to be read as a
+   * decision. */
   .wt__desc {
     margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--t-h3);
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
     /* [R262-D-73] Was declared twice (`--lh-tight` then `--lh-body`), so the
        first was dead the moment it was written. `--lh-body` is the one that has
        always applied and is the correct value for a wrapping description, so the
@@ -781,13 +814,6 @@ const TOUR_VARS = `--wt-hairline:${HAIRLINE}px;--wt-stage-max:${STAGE_MAX_BLOCK}
          foot of a ramp that had to start above the first glyph. */
       padding: var(--stack-2);
       background: none;
-    }
-
-    /* A section-level heading size over four lines on a 390px screen is the
-       other half of what made this read as a wall of text. --t-h4 is the tier
-       for a heading inside a card, which is what this now is. */
-    .wt__desc {
-      font-size: var(--t-h4);
     }
 
     /* THE CONTROL ROW WAS WRAPPING INTO A SHAPE NOBODY CHOSE. `space-between`

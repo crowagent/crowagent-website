@@ -319,20 +319,30 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
           <div class="ps__stage">
             <div class="ps__frame">
               {/*
-                653, MEASURED ON THE BUILT PAGE, NOT DERIVED FROM THE STYLESHEET.
+                610, MEASURED ON THE BUILT PAGE, NOT DERIVED FROM THE STYLESHEET.
                 Carousel's default stage width is the measure-capped one that
                 /crowmark and /crowmark-buyers render at. This call site is not
-                measure-capped: the carousel sits in the 7fr column of a 7fr/5fr
+                measure-capped: the carousel sits in the first column of a 6fr/5fr
                 stage grid inside the showcase panel, so at a 1440 viewport the
-                frame comes out 653px wide against the 965px the default was
+                frame comes out 610px wide against the 965px the default was
                 declaring. That gap made the browser fetch the 1200w candidate
-                and decode 964px for a 653px slot, a 1.48x oversample, while 834
-                and 390 were already landing at 1.02x and 1.14x.
+                and decode 964px for a 610px slot, while 834 and 390 were already
+                landing at 1.02x and 1.14x.
+
+                653 UNTIL 2026-09-01, AND IT MOVED BECAUSE THE COLUMN DID. The
+                split went 7fr/5fr to 6fr/5fr under A-197 item 4 (the argument and
+                the seven-split measurement are beside `.ps__panels` below), so
+                the stage re-measured at 610.00 on the built page. This number
+                feeds `sizes` and nothing else, and a `sizes` that names a width
+                the page does not render is the exact defect that comment
+                describes, so it is re-measured rather than left. The rung the
+                browser picks is unchanged: 610 and 653 both land on 800w at
+                dpr 1 and on the master at dpr 2, so no extra byte is fetched.
               */}
-              <Carousel slides={[s.slide]} path={s.path} label={s.label} stageMaxPx={653} />
+              <Carousel slides={[s.slide]} path={s.path} label={s.label} stageMaxPx={610} />
             </div>
 
-            <div class="surface surface--flat ps__note">
+            <div class="surface surface--flat surface--sunk ps__note">
               <p class="meta ps__kicker">{s.kicker}</p>
 
               <h3 class="ps__h">{s.title}</h3>
@@ -356,7 +366,7 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
     <div class="ps__ghost" aria-hidden="true">
       {
         STAGES.map((s) => (
-          <div class="surface surface--flat ps__note">
+          <div class="surface surface--flat surface--sunk ps__note">
             <p class="meta ps__kicker">{s.kicker}</p>
             <h3 class="ps__h">{s.title}</h3>
             <p class="card__body ps__p">{s.body}</p>
@@ -510,9 +520,55 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
    * of sitting at its own height inside it, and the `min-content` floor is
    * what stops a 1fr row shrinking below the content when the ghost is the
    * tallest item. */
+  /* ── 6fr/5fr, NOT 7fr/5fr, 2026-09-01 (A-197 item 4) ─────────────────────
+   *
+   * Owner instruction to complete the product mockups. A-188 closed the same
+   * complaint as disproved on the grounds that the images are present and serve
+   * at full byte length, which is TRUE and is a fact about the FILES. What is on
+   * the screen is a different question, and this is the answer to it, measured
+   * at 1440 by walking all five slides:
+   *
+   *   the panel                     1232 x 839
+   *   the screenshot inside it       653 x 408, 26% of the panel's area
+   *   bare stage under the frame     146px, on EVERY slide
+   *   bare card under the copy       300 / 187 / 29 / 108 / 194px
+   *
+   * Slide one is the one every reader lands on and it is the worst of the five:
+   * 300px of empty card in a 656px card, 46% of it. That is what "the mockups
+   * are not finished" is describing, and no check on a file's byte length can
+   * see it.
+   *
+   * THE CAUSE IS THE SPLIT, AND IT IS ARITHMETIC RATHER THAN TASTE. A 16:10
+   * picture gets SHORTER as its column narrows and a column of prose gets
+   * TALLER, so the two sides of this row cross at exactly one ratio and 7:5 is
+   * not it: the picture column ran 146px short of the copy column, and the copy
+   * column was tall because it was the narrower of the two.
+   *
+   * MEASURED ACROSS SEVEN SPLITS on the built page, every slide, at 1440.
+   * 6fr/5fr is the knee: past it the picture keeps shrinking and the card's
+   * dead space starts growing again (11fr/10fr gives a 586px picture and a
+   * WORSE 231px tail).
+   *
+   *   split      picture   stage slack   worst card tail   panel height
+   *   7fr 5fr      653         146            300              839
+   *   13fr 10fr    632         132            273              812
+   *   5fr 4fr      621         108            247              786
+   *   6fr 5fr      610          73            204              743
+   *   11fr 10fr    586          62            231              717
+   *
+   * WHAT IT COSTS AND WHAT IT BUYS. The screenshot gives up 43px of width, 6.6%.
+   * It buys back half the stage slack, a third of the worst card's dead space,
+   * 96px off the panel, and an improvement on every one of the five slides
+   * rather than an average: the tails go 300/187/29/108/194 to 204/118/29/65/152.
+   *
+   * NOTHING RECORDED IS REVERSED. The five cards are still one size at any width
+   * (the ghost below still measures the tallest), both columns still START on
+   * the same line, and no shadow arrives. Only the ratio between the two columns
+   * moves. Below 56rem this rule does not apply at all: the two stack, and the
+   * split has never had any bearing there. */
   .ps__panels {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
     grid-template-rows: minmax(min-content, 1fr);
     gap: 28px;
   }
@@ -607,8 +663,16 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
    * deepening; #03040A before it, which was the concept's value), and it is
    * what makes this read as a panel cut into the showcase rather than as a card
    * laid on it. `surface--flat` gives the same glass with no cast shadow, for
-   * the same reason. `background-color` alone; the border, radius and padding
-   * stay surfaces.css's. */
+   * the same reason.
+   *
+   * THE FILL MOVED OUT OF THIS BLOCK ON 2026-09-01, A-219. It was written here
+   * as `background-color: var(--c-floor)` and `.hir__step` in HowItRuns.astro
+   * wrote the identical declaration under a comment making the identical
+   * argument. Both now wear `surface--sunk` from styles/surfaces.css, which
+   * holds the floor fill and cancels the glass blur `.surface` sets, since a
+   * backdrop filter over an opaque fill returns the fill and costs a
+   * compositing pass to do it. The border, radius and padding stay
+   * surfaces.css's, as they always did. */
   /* ── THE SURFACE IS THE CONSTANT AND THE CONTENT SITS AT THE TOP OF IT ────
    *
    * Owner, 2026-08-31: all five cards the same size. They are, because the row
@@ -633,7 +697,6 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
        clamp(20px, 2.4vw, 28px), which is 28px at 1440 against a card's 34px.
        Padding only; the radius stays `.surface`'s. */
     padding: var(--blk-pad-sm);
-    background-color: var(--c-floor);
   }
 
   .ps__kicker {

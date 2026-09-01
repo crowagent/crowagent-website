@@ -564,8 +564,18 @@ const MEASURE = `(() => {
      * carrying an illustration would otherwise be excused on the strength of the
      * picture rather than the words.
      *
-     * '.section__body' IS EXCLUDED, mirroring the stylesheet, so a <dl> beside a
-     * '.lead' cannot drag the lead left. NO BACKTICKS: see the warning above. */
+     * '.section__body' IS EXCLUDED, mirroring the stylesheet. Its original
+     * argument was that a <dl> beside a '.lead' must not drag the lead left, and
+     * on 2026-09-01 the owner put '.lead' on the left axis deliberately, so that
+     * half of the argument is spent. The exclusion stays on the half that is
+     * still true: a section body is a SLOT holding heterogeneous content, not a
+     * card, so it should not adopt an axis from whichever child happens to be
+     * first. NO BACKTICKS: see the warning above.
+     *
+     * THE THIRTEEN NAMES OF 2026-09-01 ARE HERE TOO. This is the third statement
+     * of the list, as the note above says, and the note also records what
+     * happens when one of the three is missed: 28 blocks on 120 route instances
+     * reported red, every one a card the stylesheet had just corrected. */
     if (
       !el.matches('.section__body') &&
       ['table', 'form', 'fieldset', 'dl', 'pre',
@@ -573,6 +583,9 @@ const MEASURE = `(() => {
        '.faq-item__a', '.card__body', '.item__body', '.pair__body', '.cap__body',
        '.principles__body', '.conn__note', '.role__p', '.note', '.tl__p',
        '.hir__p', '.in__aside', '.compare', '.plans__trial',
+       '.lead', '.faq__a', '.sec-faq-a', '.cmp-intro', '.sec-say', '.sec-prose',
+       '.gx-def', '.gl-def', '.rt__detail', '.pg__p', '.reach__body',
+       '.cards__body', '.cat__body', '.spec__quote',
       ].some((t) => el.querySelector(':scope > ' + t))
     ) continue;
 
@@ -1033,11 +1046,23 @@ const MEASURE_LEFT = `window.__measureLeft = () => {
      Range rectangles. .lead and .section__standfirst are deliberately still
      absent and .pg__p is deliberately deferred; alignment.css states why for
      each. */
+  /* Thirteen names were added on 2026-09-01, on two owner instructions: the
+     centred body copy that "looks like up side down pyramid structure", and FAQ
+     answers on the product pages specifically. Each is a leaf paragraph measured
+     at MORE than A-16's three painted line boxes at 1440, from .gx-def at
+     thirteen lines down to .spec__quote at four. .lead is among them, which
+     closes the exclusion the 2026-08-31 note above raised for the owner to
+     decide. .section__standfirst is still absent and still deliberate: it sits
+     in .section__head, so left aligning it would drag the eyebrow and the <h2>
+     with it and rewrite a section header on fifteen routes. alignment.css states
+     the argument and the count beside the rule this string mirrors. */
   const BODIES =
     '.prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, ' +
     '.card__body, .item__body, .pair__body, .cap__body, .principles__body, ' +
     '.conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, ' +
-    '.plans__trial';
+    '.plans__trial, .lead, .faq__a, .sec-faq-a, .cmp-intro, .sec-say, ' +
+    '.sec-prose, .gx-def, .gl-def, .rt__detail, .pg__p, .reach__body, ' +
+    '.cards__body, .cat__body, .spec__quote';
 
   /* MIRRORS styles/alignment.css RULE 4, ONE BOX ONE AXIS, BY HAND, and the two
      must be edited together like the two constants above. Owner instruction of

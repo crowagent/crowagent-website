@@ -488,7 +488,23 @@ const STOPS: Stop[] = [
       {
         STOPS.map((s) => (
           <li class="surface surface--panel spine__stop" style={`--accent: ${s.accent}`}>
-            <span class="meta spine__tag">{s.tag}</span>
+            {/* `chip`, NOT `meta`, FROM 2026-09-01 (A-197 item 2). The owner
+                calls these the statutory figure REFERENCE PILLS and asked for a
+                hover glow on them. Measured first: they were not pills. The
+                computed box was background transparent, border 0px none, radius
+                0px, padding 0px, 36.4 x 16.25 at 1440. A glow needs an object to
+                sit on, so the label becomes the shared pill recipe rather than a
+                bare meta line, which is also the honest classification:
+                styles/labels.css defines `.chip` as "a small pill stating a
+                state or a REFERENCE on an item", and s.52 is a reference.
+
+                THE RECIPE IS NOT RESTATED HERE, WHICH IS THE POINT. The padding,
+                the rule, the pill radius and the tracking all come from
+                labels.css, so this adds no twelfth pill geometry for
+                check-treatments.js to find. What this file still says is the
+                COLOUR, which that gate deliberately keeps outside every
+                fingerprint because hue carries meaning on this site. */}
+            <span class="chip spine__tag">{s.tag}</span>
             {/*
               THE FIGURE IS THE CONTENT HERE, WHICH IS WHY IT TAKES THE NUMERAL
               RECIPE AND THE HEADING ABOVE IT DOES NOT MOVE. specs/
@@ -1038,6 +1054,11 @@ const STOPS: Stop[] = [
      a sentence fragment, which is the whole reason it can be this short. */
   .spine__tag {
     color: var(--accent);
+    /* The pill's rule takes the instrument's own accent instead of the neutral
+       --c-border the shared recipe rests at, so the reference reads as one
+       object in one colour rather than as coloured text inside a grey outline.
+       Colour only: the geometry is still entirely labels.css's. */
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   }
 
   .spine__value {
@@ -1458,7 +1479,9 @@ const STOPS: Stop[] = [
   .spine__label {
     transition:
       color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
       border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
       filter var(--dur) var(--ease);
   }
 
@@ -1500,9 +1523,39 @@ const STOPS: Stop[] = [
 
     .spine__stop:hover { border-top-color: var(--c-text); }
 
+    /* ── THE PILL GLOWS, 2026-09-01 (A-197 item 2) ────────────────────────
+     *
+     * Owner instruction. What was here was the two lines below, a brightness
+     * filter and a text-shadow on a label with no box, so the "glow" was a
+     * halo around four mono glyphs. Now that the reference is a pill the glow
+     * is the pill: its rule goes to the full accent, a wash of the same accent
+     * arrives inside it, and the light spreads outside the box.
+     *
+     * THREE SIGNALS, ONE COLOUR, AND NONE OF THEM IS COLOUR ALONE. Rule, fill
+     * and spread all move together and the hue never changes, which is the
+     * same rule `.spine__stop`'s hover already keeps: teal, violet and teal
+     * stay exactly where the 2026-08-31 accent decision put them, and what
+     * changes is how much light is on them.
+     *
+     * IT IS KEYED ON THE STOP AND NOT ON THE PILL. The pill is 36 x 28px inside
+     * a card the reader is already pointing at, and a glow that only answers a
+     * pointer landing on those 36px would be a target nobody finds. Hovering
+     * the figure lights its instrument, which is the association the section is
+     * making.
+     *
+     * NOTHING MOVES. No transform and no size change, so there is nothing here
+     * for prefers-reduced-motion to still: the transition block above reads
+     * --dur, and styles/tokens.css sets --dur to 0.01ms under that query, so a
+     * reader who has asked for stillness gets the lit state instantly rather
+     * than not at all. */
     .spine__stop:hover .spine__tag {
       filter: brightness(1.35);
       text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
+      border-color: var(--accent);
+      background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent) 38%, transparent);
     }
 
     /* The numeral is painted through a gradient clipped to the glyph, so its

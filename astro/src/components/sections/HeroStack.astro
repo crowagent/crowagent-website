@@ -151,6 +151,14 @@
  */
 import Button from '../ui/Button.astro';
 import { analyse } from '../../lib/tender-matrix';
+/*
+ * THE SAME TWO FORMATTERS THE LIVE TERMINAL USES, 2026-09-01. They live in
+ * src/scripts/hero-terminal.ts rather than here because the browser half needs
+ * them too, and a prepared example that described its result in one vocabulary
+ * while the reader's own text was described in another would read as two
+ * different products. See that file's header for the argument.
+ */
+import { readLine, matchLine } from '../../scripts/hero-terminal';
 
 /**
  * ── THE HERO CHECK: THREE CLAUSES, AND THE ENGINE REALLY RAN ON THEM ───────
@@ -261,13 +269,8 @@ const CHECKED = SAMPLES.map((s) => {
   const m = analyse(s.text);
   return {
     ...s,
-    lines: m ? m.lines : 0,
-    rows: m ? m.rows.length : 0,
-    deadlines: m ? m.deadlineCount : 0,
-    limits: m ? m.limitCount : 0,
-    weightings: m ? m.weightingCount : 0,
-    total: m ? m.weightingTotal : 0,
-    confidence: m ? m.weightingConfidence : 'none',
+    read: m ? readLine(m) : '',
+    match: m ? matchLine(m) : '',
   };
 });
 ---
@@ -503,18 +506,8 @@ const CHECKED = SAMPLES.map((s) => {
             <div class="hmt__pane" id={`hmt-p-${s.id}`}>
               <pre class="hmt__src">{s.text}</pre>
               <ol class="hmt__steps">
-                <li><b>Read</b> {s.lines} lines</li>
-                <li>
-                  <b>Match</b>{" "}
-                  {[
-                    `${s.rows} ${s.rows === 1 ? "requirement" : "requirements"} stated`,
-                    s.deadlines > 0 && `${s.deadlines} closing date`,
-                    s.limits > 0 && `${s.limits} response limit`,
-                    s.weightings > 0 && `${s.weightings} weightings totalling ${s.total}%`,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </li>
+                <li><b>Read</b> {s.read}</li>
+                <li><b>Match</b> {s.match}</li>
                 <li><b>Hold</b> {s.note}</li>
               </ol>
             </div>
@@ -670,7 +663,40 @@ const CHECKED = SAMPLES.map((s) => {
      violet at 0.26 put a second hue back, and deleting the field outright left
      the right half of the hero flat and the composition one-sided. 70%/0.22 is
      the one that lifts the high-right corner and stops. */
+  /* ── THE KEY LIGHT IS THE ONE THAT MOVES WITH THE SCROLL, 2026-09-01 ───────
+   *
+   * OWNER DECISION, AND IT REPLACED SOMETHING. A cursor tracking spotlight was
+   * built here earlier the same day and taken out again on the owner's ruling:
+   * "can we have something better style instead of mouse focus in hero
+   * section". What ships instead is scroll driven CSS, because it reaches
+   * every reader rather than only the ones holding a mouse, it runs on the
+   * compositor rather than on a pointer listener, and it costs no JavaScript
+   * at all. The rule, the keyframes and the two guards are in
+   * styles/motion.css, which scripts/check-motion.js rule 1 makes the ONE file
+   * allowed to declare a scroll driven timeline. Only the AMPLITUDE is here.
+   *
+   * TWO AMPLITUDES, DECLARED WHERE THE COMPOSITION IS, exactly as `--par` is on
+   * the wash twenty lines up and for the reason tokens.css states beside it:
+   * a per rig speed is what stops every layer moving as one sheet. `--par: 48px`
+   * travels the WHOLE wash; these two travel THIS FIELD INSIDE IT, so the
+   * violet source high left and the achromatic key high right no longer move in
+   * lockstep and the hero reads as two planes rather than one lit panel. That
+   * differential is the whole effect.
+   *
+   * IT IS THE `<i>` AND NOT THE `<b>`, WHICH IS NOT AN ACCIDENT. tokens.css
+   * drifts `[data-field] > b` on `transform`, and a second animation on the
+   * same property replaces the first rather than composing with it. The <i> is
+   * the one field in this rig with a free transform, which is the same reason
+   * the shared parallax goes on the wrapper rather than on the fields.
+   *
+   * NOTHING ABOUT THE STATIC COMPOSITION MOVES. The geometry, the fill and the
+   * 0.22 opacity argued at length below are untouched, and the animation
+   * touches `transform` and nothing else, so a browser without scroll driven
+   * timelines and a reader who has asked for reduced motion both get exactly
+   * the hero that shipped this morning. */
   .hero__amb--2 {
+    --hero-key-par: 40px;
+    --hero-key-sweep: 4%;
     width: 605px; height: 605px;
     top: 29px; left: 835px;
     opacity: 0.22;
@@ -1593,16 +1619,97 @@ const CHECKED = SAMPLES.map((s) => {
      control role, which is what a selected control is. */
   #hmt-a:checked ~ .hmt__tabs label[for="hmt-a"],
   #hmt-b:checked ~ .hmt__tabs label[for="hmt-b"],
-  #hmt-c:checked ~ .hmt__tabs label[for="hmt-c"] {
+  #hmt-c:checked ~ .hmt__tabs label[for="hmt-c"],
+  #hmt-own:checked ~ .hmt__tabs label[for="hmt-own"] {
     border-color: var(--c-interactive);
     color: var(--c-text);
   }
 
   #hmt-a:focus-visible ~ .hmt__tabs label[for="hmt-a"],
   #hmt-b:focus-visible ~ .hmt__tabs label[for="hmt-b"],
-  #hmt-c:focus-visible ~ .hmt__tabs label[for="hmt-c"] {
+  #hmt-c:focus-visible ~ .hmt__tabs label[for="hmt-c"],
+  #hmt-own:focus-visible ~ .hmt__tabs label[for="hmt-own"] {
     outline: 3px solid var(--c-interactive);
     outline-offset: 3px;
+  }
+
+  /* ══ THE FOURTH TAB, 2026-09-01, OWNER INSTRUCTION (A-197 item six) ════════
+   *
+   * The tab, its radio and its pane are all CREATED BY
+   * src/scripts/hero-terminal.ts and exist in no served HTML. That is the whole
+   * no-script contract of this block restated at the stylesheet: with scripting
+   * off there is no fourth tab, no box and nothing that looks like an input and
+   * does nothing. These rules match nothing at all until the module has run.
+   *
+   * THE RADIO CARRIES ITS OWN CLASS AND NOT `.hmt__radio`. The autoplay
+   * advancer in the script block at the foot of this file collects that class
+   * and rotates through it, and an unattended reader must never be rotated into
+   * an empty box. Same off-screen-but-focusable treatment, stated by grouping
+   * with the rule that owns it rather than by a second copy of it. */
+  .hmt__own {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #hmt-own:checked ~ .hmt__panes #hmt-p-own {
+    display: grid;
+  }
+
+  /* ── THE ONE PANE WITH A DIFFERENT TRACK, AND THE REASON IS THE TEXTAREA ──
+   *
+   * `.hmt__pane` sizes its single column to `max-content`, which is right for a
+   * quotation: the track is as wide as the widest line and no wider. A textarea
+   * has no content to be sized by. Its intrinsic width is the `cols` default,
+   * around 20 characters, so it would land as a small box in the middle of a
+   * 1,064px hero.
+   *
+   * So this pane states a track instead of deriving one. --measure-prose is the
+   * token this site already uses for one column of reading width, `min()` keeps
+   * it inside the hero at 390 and 320, and `justify-content: center` from the
+   * shared rule centres it. The caption, the box and the verdict all stretch
+   * into the same track, so all three share one left edge exactly as the
+   * prepared examples do. */
+  #hmt-p-own {
+    grid-template-columns: min(100%, var(--measure-prose));
+  }
+
+  .hmt__cap {
+    margin: 0;
+    color: var(--c-text-muted);
+  }
+
+  /* ── THE BOX IS THE SITE'S ONE TEXTAREA, AND THIS RULE IS THE FACE ONLY ───
+   *
+   * It carries `.field__input.field__input--area` from styles/forms.css, so its
+   * 140px height, its corner, its fill, its border, its border transition and
+   * its focus ring are the same object the contact form, the partner form and
+   * the compliance matrix all draw. THIS BLOCK DECLARED ALL OF THOSE ITSELF
+   * FIRST, and scripts/check-treatments.js failed the build on it in one run:
+   * "textarea, 2 recipes", the site's on three routes and a second one here.
+   * That gate is RULE 0-C in executable form and it was right.
+   *
+   * WHAT IS LEFT IS THE FACE, AND IT IS NOT DECORATION. The three prepared
+   * clauses above are <pre> in --font-mono at --t-micro because their line
+   * breaks are what the engine segments on. A reader typing their own clause is
+   * feeding the same engine the same kind of text, and reading their input in
+   * the body face beside three quotations in the mono face would say the two
+   * are different kinds of thing. The face is not part of what
+   * check-treatments fingerprints for a control, which is height, corner and
+   * border, so this changes nothing about how many recipes the site has.
+   *
+   * `text-align: start` IS THE TAG'S RULE, NOT AN OVERRIDE OF THE PAGE'S. The
+   * owner's centring rule of 2026-08-03 is about text that is READ. This is
+   * text being TYPED, and a caret that jumps to a new x position on every
+   * character is a defect rather than a style. alignment.css already grants
+   * exactly this to every field on the site, through `main form`, and the only
+   * reason it does not reach here is that a hero is not a form. */
+  .hmt__in {
+    text-align: start;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
   }
 
   /* The clause, as it was fed to the engine. `pre` because the line breaks are
@@ -1790,9 +1897,66 @@ const CHECKED = SAMPLES.map((s) => {
 </style>
 
 <script>
-  /* Advance on `animationend` only. The two switches that turn autoplay off,
-     reduced motion and the narrow breakpoint, live in the stylesheet and are
-     not restated here, so they cannot drift apart from it. */
+  /* ── THE HERO TERMINAL, OWNER INSTRUCTION 2026-09-01, A-197 ────────────────
+   *
+   * It lives in src/scripts/ rather than in this block, and it is one exported
+   * function called once. The reason is not tidiness: the terminal's two
+   * formatters are ALSO called from this component's frontmatter at build time,
+   * so the module has to be importable from both halves of the file, and a rule
+   * written in an inline island cannot be. See hero-terminal.ts.
+   *
+   * IT CANNOT LEAVE THE PAGE WORSE THAN IT FOUND IT. It creates every element
+   * it needs and touches none that were served, so if this block is blocked,
+   * throws or never loads, the hero is exactly the hero the HTML describes.
+   *
+   * THIS IS THE ONLY SCRIPT THE HERO RUNS, AND THE AMBIENT MOTION IS NOT IN IT.
+   * A cursor tracking spotlight was built here on 2026-09-01 and REMOVED the
+   * same day on the owner's decision, in favour of scroll driven CSS. What
+   * replaced it is `hero-key-drift` in styles/motion.css: no listener, no
+   * custom property written from script, and no main thread work at all. */
+  import { initHeroTerminal } from '../../scripts/hero-terminal';
+
+  initHeroTerminal();
+
+  /* ── THE ROTATION ENDS ON THE READER'S OWN TAB. IT DOES NOT LOOP. ─────────
+   *
+   * Advance on `animationend` only. The two switches that turn autoplay off,
+   * reduced motion and the narrow breakpoint, live in the stylesheet and are
+   * not restated here, so they cannot drift apart from it.
+   *
+   * WHY THE FOURTH TAB IS NOT IN THE CYCLE, WHICH WAS MISSING AND IS THE WHOLE
+   * REASON THIS READ AS A DEFECT. Owner, 2026-09-01, on the live page: "hero
+   * animation auto switch is not covering Your own text, why?" The first three
+   * tabs are PREPARED CLAUSES with a result the engine computed at build time,
+   * so each one has something to show the moment it appears. The fourth is the
+   * READER'S OWN INPUT and it starts empty. Rotating into it mid cycle would
+   * put an empty box and an empty verdict on screen for seven seconds, which
+   * demonstrates nothing, and the dwell bar would then fill a second time over
+   * a pane that has no answer to give.
+   *
+   * SO IT IS THE DESTINATION RATHER THAN A STOP ON THE ROUTE. Obligations,
+   * Weightings, A figure with no gate, and then one last advance onto "Your own
+   * text", where it STAYS. The demo finishes by handing over. A reader who
+   * looked away for twenty seconds comes back to an invitation rather than to
+   * the same three examples going round again.
+   *
+   * THE DWELL BAR STILL RUNS ON a, b AND c ONLY, and that is deliberate rather
+   * than an omission: a progress bar on the fourth tab would fill and then
+   * change nothing, which is a promise the component does not keep. The
+   * stylesheet is therefore UNCHANGED and the whole of this behaviour is the
+   * one branch below. It is also what makes the ending free: no dwell on the
+   * fourth tab means no further `animationend`, so the rotation is over whether
+   * or not `data-auto` is read again.
+   *
+   * NOTHING TAKES FOCUS. `.focus()` is deliberately not called on the box.
+   * Moving focus while somebody is reading is a change of context under WCAG
+   * 3.2 and is a worse defect than the one this fixes. The tab is selected and
+   * the reader decides whether to type.
+   *
+   * NO `setInterval`, STILL. The dwell bar IS the timer. That is what makes the
+   * reduced-motion and narrow-width switches free: where the animation does not
+   * run, no `animationend` fires and autoplay simply never happens, without
+   * this script knowing either rule exists. */
   (() => {
     const hmt = document.querySelector('.hmt');
     if (!hmt) return;
@@ -1809,7 +1973,20 @@ const CHECKED = SAMPLES.map((s) => {
       if (hmt.getAttribute('data-auto') === 'off') return;
       const i = radios.findIndex((r) => r.checked);
       if (i < 0) return;
-      radios[(i + 1) % radios.length].checked = true;
+
+      /*
+       * The reader's tab is queried here rather than captured above, so this
+       * cannot depend on whether hero-terminal.ts happened to run first. If it
+       * never ran, `own` is null and the rotation ENDS on the third clause
+       * instead of looping, which is the same promise made twice over.
+       */
+      const own = hmt.querySelector<HTMLInputElement>('#hmt-own');
+      const next = radios[i + 1] ?? own;
+      if (!next) return;
+      next.checked = true;
+      /* The handover is the end of the demo, and saying so makes the terminal
+         state assertable rather than merely implied by an absent animation. */
+      if (next === own) stop();
     });
   })();
 </script>
