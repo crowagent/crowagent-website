@@ -249,14 +249,19 @@ module.exports = defineConfig({
      * that project. A descriptor reports hover:none and pointer:coarse on WebKit
      * with no CDP session at all, verified above. Moving that describe block on
      * to it is a spec change, so it is not made here. */
+    /* A-245, 2026-09-01. nav-dropdown.spec.js joins these two. The note above
+       said moving that describe block here was a spec change and so was not made
+       at the time. The spec change is now made, so the projects follow it. The
+       WebKit row is the one that matters: it is the engine the touch defect is
+       most likely to bite on and the engine the test never ran on. */
     {
       name: 'mobile-chromium',
-      testMatch: '**/accessibility.spec.js',
+      testMatch: ['**/accessibility.spec.js', '**/nav-dropdown.spec.js'],
       use: { ...devices['iPhone 13'], browserName: 'chromium' },
     },
     {
       name: 'mobile-webkit',
-      testMatch: '**/accessibility.spec.js',
+      testMatch: ['**/accessibility.spec.js', '**/nav-dropdown.spec.js'],
       use: { ...devices['iPhone 13'], browserName: 'webkit' },
     },
     {

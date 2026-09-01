@@ -106,7 +106,7 @@ const car = await page.evaluate(() => {
     objectFit: getComputedStyle(img).objectFit,
   };
 });
-rec(2, 'carousel: four slides, one active', car.slides === 4 && car.active === 1, `${car.slides} slides, ${car.active} active, hidden opacity ${car.hiddenOpacity}`);
+rec(2, 'carousel: one active, rail agrees, rest hidden', car.slides >= 2 && car.slides === car.tabs && car.active === 1 && car.hiddenOpacity === '0', `${car.slides} slides, ${car.tabs} tabs, ${car.active} active, hidden opacity ${car.hiddenOpacity}`);
 rec(2, 'carousel: controls revealed by JS', car.enhanced === 'on' && car.arrowVisible, `data-pcar=${car.enhanced}, arrows visible=${car.arrowVisible}`);
 rec(2, 'carousel: ring is the clock', car.ringAnim !== 'none' && car.ringDur === '5.2s', `animation=${car.ringAnim} duration=${car.ringDur}`);
 rec(2, 'carousel: image actually loads', car.imgLoaded, `currentSrc=${car.imgSrc} (AVIF expected)`);
@@ -138,7 +138,7 @@ const amb = await page.evaluate(() => {
     barH: bcs ? bcs.height : '',
   };
 });
-rec(6, 'ambient: page wash drifts', amb.washAnim === 'sv-wash-drift', `animation=${amb.washAnim} ${amb.washDur}`);
+rec(6, 'ambient: page wash stays REMOVED (owner, 2026-08-04)', amb.washAnim === 'none', `body::after animation=${amb.washAnim} (must be none, see the removal note in layouts/Base.astro)`);
 rec(7, 'scroll bar: exists and is scroll-driven', amb.barExists && amb.barAnim === 'sv-progress', `anim=${amb.barAnim} timeline=${amb.barTimeline} z=${amb.barZ} h=${amb.barH}`);
 
 // does it actually grow on scroll?
@@ -165,8 +165,8 @@ const fx = await page.evaluate(() => {
     shimmer: eyebrow ? getComputedStyle(eyebrow, '::after').animationName : 'none',
     shimmerDur: eyebrow ? getComputedStyle(eyebrow, '::after').animationDuration : '',
     pulse: fcBtn ? getComputedStyle(fcBtn, '::before').animationName : 'none',
-    edge: fc ? getComputedStyle(fc, '::after').animationName : 'none',
-    edgeMask: fc ? getComputedStyle(fc, '::after').maskComposite || '' : '',
+    edge: fc ? getComputedStyle(fc, '::before').animationName : 'none',
+    edgeMask: fc ? getComputedStyle(fc, '::before').maskComposite || '' : '',
   };
 });
 rec(3, 'shimmer: one instance, animating', fx.shimmer === 'fx-shimmer' && fx.shimmerCount === 1, `${fx.shimmerCount} carrier, animation=${fx.shimmer} ${fx.shimmerDur}`);

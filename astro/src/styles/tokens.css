@@ -3348,6 +3348,51 @@
    per page taking the padding as real layout; that is the correct behaviour for
    a link that was already a block.
    ========================================================================== */
+/*
+   THE SELECTOR LIST WIDENED 2026-09-01, A-243. styles/links.css had already
+   measured three shapes this rule stepped over, and its note asked the next
+   hand on this file to merge them here rather than keep a second copy of the
+   same 4px in another stylesheet. It deferred because this file was held open
+   at the time. It is not held now, so the fork is closed instead of grown.
+
+   WHAT WAS MISSING, each measured on the built site at 390:
+
+     a link that IS a card heading      233x23, 125.6x23 on /resources, /tools.
+                                        A heading was never in the container
+                                        list, so a whole card title was under
+                                        the floor.
+     a link one phrasing wrapper deep   154.2x20, li > strong > a on
+                                        /accessibility. The child combinator
+                                        steps straight over the wrapper. Proof
+                                        it is one population and not two: the
+                                        sibling link in that same list computes
+                                        identically at 96.7x28 and differs only
+                                        by being a direct child.
+     a link in a row of links           34x24 and 59x24 on /sectors/highways/,
+                                        found by check-render once A-243 made it
+                                        measure targets at 390 as well as 1440.
+                                        .sec-final-links is a flex row whose
+                                        children are each the whole of their own
+                                        target, so nothing constrains their
+                                        height and the inline exception of
+                                        SC 2.5.8 does not reach them.
+
+   THE 4px IS NOT RE OPENED. It is the value this rule already argued for above,
+   and the headroom argument is the reason: 3px put a link at exactly 24.00 and
+   made the gate flake either side of the floor as the web font settled.
+
+   .btn IS EXCLUDED for the reason links.css states: a button owns its padding
+   and already clears the floor, so adding to it grows a control nobody asked to
+   grow.
+   ========================================================================== */
 :is(p, li, dd, dt, td, th, figcaption, blockquote) > a {
+  padding-block: 4px;
+}
+
+/* The two shapes links.css measured and this selector stepped over. They are
+   additions beside the rule above rather than edits to it, so a link that has
+   taken this padding since A-83 keeps taking exactly what it took before. */
+:is(h1, h2, h3, h4, h5, h6) > a:not(.btn),
+:is(p, li, dd, dt, td, th, figcaption, blockquote) > :is(strong, em, b, i, span) > a:not(.btn) {
   padding-block: 4px;
 }

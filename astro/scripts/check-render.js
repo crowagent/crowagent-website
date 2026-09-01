@@ -639,48 +639,7 @@ const MEASURE = `(() => {
    *
    * Grouped by signature rather than listed, because one component repeated
    * across 43 routes is one defect. */
-  const tiny = [];
-  for (const el of document.querySelectorAll('a, button, summary, [role="button"]')) {
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    if (r.width >= 24 && r.height >= 24) continue;
-    /* THE EXEMPTION IS A SEMANTIC TEST, NOT A TAG LIST. A first pass listed the
-     * tags that usually hold flowing text and missed two real cases: a link
-     * inside a <span> mid-sentence on /contact, and nine inside a <div> on
-     * /sectors. What 2.5.8 actually excuses is a target sitting IN text, so the
-     * test is whether the link's own parent also holds a text node worth
-     * reading. That reaches any wrapper, including ones nobody has written yet. */
-    /* CORRECTED 2026-08-04, A-83. The note above says the exemption is a
-     * semantic test and not a tag list, and the first clause WAS a tag list —
-     * an el.closest() over p, li, dd and friends — which short-circuited the
-     * semantic test written directly beneath it. NO BACKTICKS IN THIS COMMENT:
-     * this function is serialised into a template literal, so one backtick ends
-     * the string and the next line parses as code. That cost one build.
-     * So a <p> or <dd> whose ENTIRE content is the
-     * link was excused for being "in flowing text" when there was no flowing
-     * text in it at all.
-     *
-     * That is not what 2.5.8 excuses. The exception is for a target whose size
-     * is CONSTRAINED BY THE LINE-HEIGHT OF NON-TARGET TEXT — enlarging it would
-     * break the line it sits in. A link alone in its own paragraph has no line
-     * to break, so nothing constrains it and the 24px floor applies.
-     *
-     * Measured cost of the hole: three standalone links on /about — the two
-     * "See the … side" CTAs, each in a <p> of their own, and the contact email
-     * alone in a <dd> — all 20px tall, all excused, on a gate whose stated job
-     * is exactly this. Found by a mobile pass at 390, not by the gate.
-     *
-     * The container is now required to hold text BESIDES the target. */
-    const container = el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body');
-    const textBesides = (node) =>
-      node ? node.textContent.replace(el.textContent, '').trim().length > 3 : false;
-    const par = el.parentElement;
-    const inFlowingText =
-      textBesides(container) ||
-      (par && [...par.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3));
-    if (inFlowingText) continue;
-    tiny.push({ selector: sig(el), size: r.width.toFixed(0) + 'x' + r.height.toFixed(0) });
-  }
+  const tiny = window.__measureTiny();
 
   /* ── BUTTON WIDTH PARITY ───────────────────────────────────────────────
    *
@@ -1013,6 +972,67 @@ const MEASURE = `(() => {
  * different question from the stylesheet.
  *
  * NO BACKTICKS IN THIS BLOCK — same constraint as MEASURE above. */
+/* ── TARGET SIZE, MEASURED AT EVERY WIDTH ───────────────────────
+ *
+ * A-243. This rule used to run inside MEASURE, which is evaluated at 1440
+ * only, and 1440 is the one width where these targets pass. A target that
+ * clears 24px on a desktop and drops under it on a phone is the case SC 2.5.8
+ * exists for, so the gate was blind to its own subject. The block below is the
+ * SAME code, moved rather than copied, and installed the way MEASURE_LEFT is
+ * so both widths ask one question. See the note above MEASURE_LEFT: two
+ * implementations of one rule is worth nothing.
+ *
+ * NO BACKTICKS IN THIS BLOCK, same constraint as MEASURE and MEASURE_LEFT. */
+const MEASURE_TINY = `window.__measureTiny = () => {
+  const sig = (el) => {
+    const cls = [...el.classList].filter((c) => !/^astro-/.test(c));
+    return el.tagName.toLowerCase() + (cls.length ? '.' + cls.join('.') : '');
+  };
+  const tiny = [];
+  for (const el of document.querySelectorAll('a, button, summary, [role="button"]')) {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    if (r.width >= 24 && r.height >= 24) continue;
+    /* THE EXEMPTION IS A SEMANTIC TEST, NOT A TAG LIST. A first pass listed the
+     * tags that usually hold flowing text and missed two real cases: a link
+     * inside a <span> mid-sentence on /contact, and nine inside a <div> on
+     * /sectors. What 2.5.8 actually excuses is a target sitting IN text, so the
+     * test is whether the link's own parent also holds a text node worth
+     * reading. That reaches any wrapper, including ones nobody has written yet. */
+    /* CORRECTED 2026-08-04, A-83. The note above says the exemption is a
+     * semantic test and not a tag list, and the first clause WAS a tag list —
+     * an el.closest() over p, li, dd and friends — which short-circuited the
+     * semantic test written directly beneath it. NO BACKTICKS IN THIS COMMENT:
+     * this function is serialised into a template literal, so one backtick ends
+     * the string and the next line parses as code. That cost one build.
+     * So a <p> or <dd> whose ENTIRE content is the
+     * link was excused for being "in flowing text" when there was no flowing
+     * text in it at all.
+     *
+     * That is not what 2.5.8 excuses. The exception is for a target whose size
+     * is CONSTRAINED BY THE LINE-HEIGHT OF NON-TARGET TEXT — enlarging it would
+     * break the line it sits in. A link alone in its own paragraph has no line
+     * to break, so nothing constrains it and the 24px floor applies.
+     *
+     * Measured cost of the hole: three standalone links on /about — the two
+     * "See the … side" CTAs, each in a <p> of their own, and the contact email
+     * alone in a <dd> — all 20px tall, all excused, on a gate whose stated job
+     * is exactly this. Found by a mobile pass at 390, not by the gate.
+     *
+     * The container is now required to hold text BESIDES the target. */
+    const container = el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body');
+    const textBesides = (node) =>
+      node ? node.textContent.replace(el.textContent, '').trim().length > 3 : false;
+    const par = el.parentElement;
+    const inFlowingText =
+      textBesides(container) ||
+      (par && [...par.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3));
+    if (inFlowingText) continue;
+    tiny.push({ selector: sig(el), size: r.width.toFixed(0) + 'x' + r.height.toFixed(0) });
+  }
+  return tiny;
+}`;
+
 const MEASURE_LEFT = `window.__measureLeft = () => {
   const out = [];
   const sig = (el) => {
@@ -1227,6 +1247,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
 /* Installed once, re-run on every navigation, so the alignment walk is available
    both to MEASURE at 1440 and to the phone pass below. */
 await page.addInitScript(MEASURE_LEFT);
+await page.addInitScript(MEASURE_TINY);
 
 const all = routesOf(DIST);
 const violations = [];
@@ -1462,13 +1483,20 @@ for (const route of all) {
   collectLeft(measured.left, 1440);
   await page.setViewportSize({ width: 390, height: 844 });
   collectLeft(await page.evaluate('window.__measureLeft()'), 390);
+  /* A-243. The target rule runs here too. The viewport is already at 390 for
+     the alignment pass, so this is a second evaluate and not a second load. */
+  for (const t of await page.evaluate('window.__measureTiny()')) {
+    const key = t.selector + '   ' + t.size + ' at 390';
+    if (!tinyTargets.has(key)) tinyTargets.set(key, new Set());
+    tinyTargets.get(key).add(route);
+  }
   await page.setViewportSize({ width: 1440, height: 1200 });
 }
 
 await browser.close();
 server.close();
 
-console.log(`render: ${all.length} route(s) measured at 1440, and again at 390 for alignment`);
+console.log(`render: ${all.length} route(s) measured at 1440, and again at 390 for alignment and target size`);
 /* THE SCOPE, PRINTED EVERY RUN. Chrome is not measured, and a reader of this
    output is entitled to know that without reading the source — an exclusion
    nobody can see is indistinguishable from a rule nobody wrote.

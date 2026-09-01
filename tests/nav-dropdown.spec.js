@@ -171,36 +171,44 @@ for (const menu of MENUS) {
     test.use({ viewport: { width: 1440, height: 900 }, hasTouch: true });
 
     /*
-     * 2026-08-05 (O-16). Chromium only, for the reason the test body already
-     * explains: Playwright has no first-class hover emulation, so reporting a
-     * non-hover pointer goes through CDP's Emulation.setEmulatedMedia, and
-     * `context.newCDPSession()` throws on Firefox and WebKit. Without this
-     * guard the test contributed two failures per non-Chromium engine whose
-     * message was about CDP, not about touch.
+     * THE WEBKIT GAP, CLOSED 2026-09-01 (A-245).
      *
-     * This is a real coverage gap and should be named as one rather than
-     * papered over: the defect being guarded against — a menu no touch user
-     * can open — is most likely to bite on iOS, which is WebKit. The behaviour
-     * is verified on the Chromium engine only. Closing it properly needs
-     * Playwright to grow hover emulation, or a device-descriptor-based mobile
-     * project.
+     * This block used to skip on every engine but Chromium, because the only
+     * way it knew to report a non-hover pointer was CDP Emulation.setEmulatedMedia
+     * and `context.newCDPSession()` throws on Firefox and WebKit. Its own note
+     * called that a real coverage gap and said why it mattered: the defect being
+     * guarded against, a menu no touch user can open, is most likely to bite on
+     * iOS, which is WebKit. So the one engine the test most needed was the one
+     * engine it never ran on.
+     *
+     * The remedy the note asked for already exists in playwright.config.js. A
+     * device descriptor reports hover:none and pointer:coarse natively, on any
+     * engine, with no CDP session at all. So CDP is now the FALLBACK for a
+     * project without a descriptor, rather than the only path, and the skip
+     * fires only when neither route is open.
+     *
+     * The canHover assertion below is what makes this safe. If a descriptor ever
+     * stops reporting a coarse pointer, this fails loudly instead of passing
+     * while emulating nothing, which is the failure mode a skip would hide.
      */
     test.skip(
-      ({ browserName }) => browserName !== 'chromium',
-      'hover-media emulation needs CDP, which only Chromium exposes',
+      ({ browserName, isMobile }) => browserName !== 'chromium' && !isMobile,
+      'a non-hover pointer needs either CDP (Chromium) or a mobile device descriptor',
     );
 
-    test('tap opens and closes it', async ({ page, context }) => {
-      const cdp = await context.newCDPSession(page);
-      // Playwright has no first-class hover emulation, so this goes through CDP.
-      // Without it the page still reports (hover: hover) and the test would pass
-      // while the real defect — a menu no touch user can open — survived.
-      await cdp.send('Emulation.setEmulatedMedia', {
-        features: [
-          { name: 'hover', value: 'none' },
-          { name: 'pointer', value: 'coarse' },
-        ],
-      });
+    test('tap opens and closes it', async ({ page, context, isMobile }) => {
+      if (!isMobile) {
+        // No descriptor on this project, so emulate. Without this the page still
+        // reports (hover: hover) and the test would pass while the real defect,
+        // a menu no touch user can open, survived.
+        const cdp = await context.newCDPSession(page);
+        await cdp.send('Emulation.setEmulatedMedia', {
+          features: [
+            { name: 'hover', value: 'none' },
+            { name: 'pointer', value: 'coarse' },
+          ],
+        });
+      }
       await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 
       const canHover = await page.evaluate(
