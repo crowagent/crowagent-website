@@ -198,7 +198,34 @@ const BUDGETS = {
      an actionable number, rather than raised to make a red gate quiet. Whether
      to spend that 2 KB or to record an exception with a ceiling is the owner's
      call and is deliberately not taken here. */
-  htmlPerRoute: 18 * KB,
+  /* ── RAISED TO 26 KB ON OWNER INSTRUCTION, 2026-09-01. ────────────────────
+
+     The owner was shown "110.9 KB against a 100.0 KB budget" and asked why the
+     budget was so low and who set it. BOTH FIGURES WERE STALE and I repeated
+     them without checking this file, which had already replaced that budget the
+     day before. The 100 KB never existed by then, and the real position was
+     20.0 KB brotli against 18 KB, over by 2 KB rather than by 10.9 KB.
+
+     THEIR INSTRUCTION WAS "lets keep max 150KB", GIVEN IN THE OLD UNIT because
+     that is the unit they were shown. 150 KB of RAW bytes at this site's
+     measured 5.7 to 1 brotli ratio is 26 KB compressed, so 26 KB is the faithful
+     translation of the decision rather than a number of mine. Recorded this way
+     so the arithmetic is auditable and nobody later reads 26 as arbitrary.
+
+     WHAT IT COSTS: the gate no longer binds on any current route. Worst is the
+     home page at 20.0 KB, so there is 6 KB of headroom, and the previous state
+     of one route failing by 2 KB is gone. That is the owner's call to make and
+     they made it knowing the site sits 39 percent under the web median.
+
+     THE SECOND HALF OF THE INSTRUCTION IS THE IMPORTANT HALF: "you must find
+     other ways to improve performance and not just by limit the budget". Agreed,
+     and `criticalPath` below is where that lives. Measured on the home page,
+     brotli: 104.0 KB of the 170 KB budget, of which THE TWO PRELOADED WOFF2 ARE
+     59.1 KB, 57 PERCENT OF EVERYTHING BLOCKING FIRST PAINT, against 20.0 KB of
+     document. Trimming HTML was never the lever. Font subsetting is, and it is
+     also the most likely thing to move /tools 80, /pricing 79 and /signup 72
+     towards the 85 floor. */
+  htmlPerRoute: 26 * KB,
 
   /* ── CRITICAL PATH PER ROUTE. NEW 2026-08-31. ─────────────────────────────
 
@@ -233,7 +260,17 @@ const BUDGETS = {
      That is close to byte-neutral by construction and is the reason the anchor
      is a CLASS rather than `[data-page='/crowmark']`, which would have cost
      9 bytes a selector against 6.3 KB of headroom. */
-  cssTotal: 200 * KB,
+  /* ── RAISED 200 to 220 KB ON OWNER INSTRUCTION, 2026-09-01 ────────────────
+     Owner: "why cant we give some extra room for size in test so slight
+     increase of page will be acceptable". Measured 205.9 KB, so the old figure
+     was failing on a 2.95 percent overshoot, which is noise rather than a
+     regression and had been red for days without anybody choosing to spend it.
+     220 leaves about 7 percent of headroom above today.
+     THE TRADE IS STATED RATHER THAN HIDDEN: a budget with slack becomes a
+     budget at the slack level, so this is room to absorb ordinary drift, not
+     room to spend. The measured number is written here so the next reader can
+     see how much of the gap is already used. */
+  cssTotal: 220 * KB,
 
   /* 15 KB, replacing a ratchet of zero. A-73, owner decision, 2026-08-04, and
      ADR 0010 is the record.
@@ -291,12 +328,32 @@ const BUDGETS = {
      rather than absorbed. A jsTotal EXCEPTION was written earlier the same day
      and is deleted by this change, because an exception records a breach and
      this is a decision. */
-  jsTotal: 23 * KB,
+  /* ── RAISED 23 to 36 KB, 2026-09-01, AND THE REASON IS THE ONE THIS FILE
+     ALREADY GAVE THREE PARAGRAPHS ABOVE. "jsTotal sums the files in the build
+     rather than the bytes any one reader receives, and the gap between those
+     two numbers is entirely one route's island."
+     Measured 32.5 KB. The growth is a SECOND island: the hero micro terminal
+     imports the tender matrix engine, 9,462 B, behind a dynamic import fired on
+     FOCUS. A reader who scrolls past the hero downloads none of it, and neither
+     does Lighthouse. So this line went up while what a reader pays did not move,
+     which is the same inversion A-73 rewrote this gate to stop rewarding.
+     jsShared below is the number that describes a typical reader, and it is the
+     one kept tight. 36 leaves roughly 11 percent above today. A THIRD island
+     appearing is a real change in shape and should be argued here rather than
+     absorbed. */
+  jsTotal: 36 * KB,
 
   /* Every route loads this. It is the number that describes what a typical
      reader actually downloads, and the one that must stay small. 9,282 B
      measured 2026-08-06, so this is under a kilobyte of headroom on purpose. */
-  jsShared: 10 * KB,
+  /* RAISED 10 to 12 KB, 2026-09-01. Measured 10.6 KB, a 6 percent overshoot.
+     THIS IS THE ONE THAT STAYS TIGHT, because unlike jsTotal it describes what
+     EVERY reader downloads on EVERY route, so a kilobyte here is paid 46 times
+     over. 12 is deliberately the smallest of the three raises: enough that
+     ordinary drift does not turn the gate red, not enough to hide a new
+     sitewide script. Anything that pushes past 12 is a new thing on every page
+     and should be argued rather than absorbed. */
+  jsShared: 12 * KB,
 
   /* The heaviest single route's own island, which only a visitor to that route
      requests. The Tender Compliance Matrix is the site's one interactive tool
@@ -736,6 +793,93 @@ function judge(key, subject, actual, budget) {
   }
 }
 
+/*
+ * ── THE criticalPath BUDGET MEASURED NOTHING FOR A DAY ───────────────────────
+ *
+ * It was added on 2026-08-31 with a paragraph explaining that it is "the budget
+ * that actually predicts the experience", a derivation from web.dev, and a
+ * measured position of 104.0 KB against 170. Every word of that was true and
+ * NOT ONE LINE OF CODE READ THE VALUE. `BUDGETS.criticalPath` appeared exactly
+ * once in this file, in the object literal, and never in a judge() call or in
+ * the report. It could not fail, and it never printed, so the only place the
+ * number existed was in the comment that introduced it.
+ *
+ * That is the signature defect this repository keeps finding: a control that
+ * reaches nothing, sitting inside a file whose whole subject is controls that
+ * reach nothing. The budget's own comment even predicted the work it was
+ * supposed to drive, font subsetting, and the fonts were re-cut on 2026-09-01
+ * with this gate still blind to the result.
+ *
+ * WHAT THE CRITICAL PATH IS TAKEN TO BE, stated because it is a choice and the
+ * number means nothing without it. Per document:
+ *   + the document itself, brotli
+ *   + every same-origin stylesheet the head links, brotli
+ *   + every font the head PRELOADS, at its own byte length and never
+ *     recompressed, because woff2 is already a compressed container and brotli
+ *     over it would report a number smaller than the browser downloads
+ *   + every same-origin script the document references, brotli
+ * A font that is NOT preloaded is deliberately excluded: it is discovered from
+ * CSS after the stylesheet parses and does not block the first paint.
+ *
+ * HOW IT CAN BE WRONG: it reads the emitted HTML rather than driving a browser,
+ * so a resource only a script requests is invisible to it, and it counts a
+ * deferred module script that a browser would not block on. Both make the
+ * number too LARGE rather than too small, which is the direction a budget is
+ * allowed to be wrong in.
+ */
+const LOCAL_HREF = /<link\b[^>]*>/gi;
+const criticalPaths = [];
+for (const r of routes) {
+  const html = fs.readFileSync(r.full, 'utf8');
+  const headEnd = html.search(/<\/head>/i);
+  const head = headEnd === -1 ? html : html.slice(0, headEnd);
+  let bytes = r.wire;
+  const parts = [{ what: 'document', bytes: r.wire }];
+  const seen = new Set();
+  const addLocal = (url, mode, what) => {
+    if (!url || isOffOrigin(url) || url.startsWith('data:')) return;
+    const clean = decodeURIComponent(url.split('?')[0].split('#')[0]);
+    if (!clean.startsWith('/')) return;
+    if (seen.has(clean)) return;
+    seen.add(clean);
+    const full = path.join(DIST, clean.slice(1).split('/').join(path.sep));
+    if (!fs.existsSync(full)) {
+      /* A referenced file that is not in the build is a broken reference, and
+         check-links.js owns that. Silence here would understate the path, so
+         it is recorded as a zero with its name attached rather than skipped. */
+      parts.push({ what: `${what} MISSING ${clean}`, bytes: 0 });
+      return;
+    }
+    const raw = fs.readFileSync(full);
+    const n = mode === 'raw' ? raw.length : zlib.brotliCompressSync(raw).length;
+    bytes += n;
+    parts.push({ what: `${what} ${clean}`, bytes: n });
+  };
+
+  LOCAL_HREF.lastIndex = 0;
+  let tag;
+  while ((tag = LOCAL_HREF.exec(head))) {
+    const t = tag[0];
+    const href = (t.match(/\bhref\s*=\s*["']([^"']+)["']/i) || [])[1];
+    if (/rel\s*=\s*["']?stylesheet/i.test(t)) addLocal(href, 'brotli', 'css');
+    else if (/rel\s*=\s*["']?modulepreload/i.test(t)) addLocal(href, 'brotli', 'js');
+    else if (/rel\s*=\s*["']?preload/i.test(t) && /as\s*=\s*["']?font/i.test(t)) {
+      addLocal(href, 'raw', 'font');
+    }
+  }
+  SCRIPT_TAG.lastIndex = 0;
+  let s;
+  while ((s = SCRIPT_TAG.exec(html))) {
+    if (isDataScript(s[1])) continue;
+    addLocal(srcOf(s[1]), 'brotli', 'js');
+  }
+  criticalPaths.push({ rel: r.rel, bytes, parts });
+}
+criticalPaths.sort((a, b) => b.bytes - a.bytes);
+for (const c of criticalPaths) {
+  judge(`criticalPath:${c.rel}`, `/${c.rel} critical path`, c.bytes, BUDGETS.criticalPath);
+}
+
 for (const r of routes) judge(`htmlPerRoute:${r.rel}`, `/${r.rel}`, r.wire, BUDGETS.htmlPerRoute);
 for (const i of images) judge(`singleImage:${i.rel}`, i.rel, i.size, BUDGETS.singleImage);
 judge('cssTotal:all', `CSS total (${cssFiles} files)`, cssTotal, BUDGETS.cssTotal);
@@ -841,6 +985,16 @@ if (heaviestRoute) {
   console.log(
     `    heaviest route ${kb(BUDGETS.jsRouteMax).padStart(9)}   ${kb(heaviestRoute.size)} requested by 1 of ${routeCount} routes`
   );
+}
+{
+  const w = criticalPaths[0];
+  const home = criticalPaths.find((c) => c.rel === 'index.html') || w;
+  console.log(
+    `  Critical path    ${kb(BUDGETS.criticalPath).padStart(9)}   worst ${kb(w.bytes)} (/${w.rel}), home ${kb(home.bytes)}   document + head CSS + preloaded fonts + scripts`
+  );
+  for (const p of home.parts) {
+    console.log(`      ${kb(p.bytes).padStart(9)}  ${p.what}`);
+  }
 }
 console.log(`  Any single image ${kb(BUDGETS.singleImage).padStart(9)}   largest ${kb(images[0].size)} (${images[0].rel})`);
 console.log(`  Whole build      ${mb(BUDGETS.wholeBuild).padStart(9)}   ${mb(buildTotal)}`);

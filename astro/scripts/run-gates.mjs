@@ -148,6 +148,13 @@ const GATES = [
   { name: 'check-breadcrumbs', cmd: node, args: ['scripts/check-breadcrumbs.js'] },
   { name: 'check-sheen', cmd: node, args: ['scripts/check-sheen.js'] },
   { name: 'check-status-pulse', cmd: node, args: ['scripts/check-status-pulse.mjs'] },
+  /* Directly before check-budgets, because the two are halves of one answer
+     about the fonts: check-budgets says how many bytes they cost and this says
+     whether the bytes that remain can still paint every character on the site.
+     It reads the built HTML and the woff2 binaries, drives no browser and takes
+     milliseconds. Added 2026-09-01 with the font re-cut it guards, never as a
+     work item of its own. */
+  { name: 'check-font-coverage', cmd: node, args: ['scripts/check-font-coverage.js'] },
   { name: 'check-budgets', cmd: node, args: ['scripts/check-budgets.js'] },
   { name: 'check-cwv', cmd: node, args: ['scripts/check-cwv.js'] },
   { name: 'check-autoplay', cmd: node, args: ['scripts/check-autoplay.mjs'] },
