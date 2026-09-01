@@ -306,75 +306,22 @@ import Section from '../layout/Section.astro';
      are still there; they belong to `.surface` sitewide and removing them is a
      separate decision. */
 
-  /* ╔═══════════════════════════════════════════════════════════════════════╗
-     ║  OWNER OVERRIDE, 2026-08-31. ELEVATION ON THE PROOF-GATE CARDS ONLY.  ║
-     ║  TO REVERT: DELETE THIS ONE RULE BLOCK. NOTHING ELSE CHANGED.         ║
-     ╚═══════════════════════════════════════════════════════════════════════╝
-
-     THE RULING THIS REVERSES, AND THE SCOPE OF THE REVERSAL. styles/
-     surfaces.css records an owner fidelity ruling of 2026-08-05 that
-     `surface--panel` and `surface--flat` CAST NOTHING, matching
-     concepts/homepage-v2.html. That ruling STANDS EVERYWHERE ELSE ON THE SITE
-     and is not touched by this block. The owner reopened it for these two
-     cards alone, in these words: "I want to check shadows on the proof-gate
-     cards so do it once and we will revert if i dont like it."
-
-     SO IT IS WRITTEN TO BE THROWN AWAY. One rule, one property, one selector
-     that names only this section. No edit to surfaces.css, no new modifier
-     class, no change to any shared recipe, and nothing anywhere else in the
-     tree depends on it. Deleting these lines returns the page exactly to the
-     2026-08-05 ruling with no other file to put back.
-
-     IT SETS THE KNOB RATHER THAN A box-shadow, AND THAT IS THE WHOLE REASON IT
-     IS TOKEN-CLEAN. surfaces.css declares `box-shadow: var(--surface-shadow)`
-     once on `.surface` and has each recipe state the knob instead of restating
-     the property: --shadow-card on a plain card, `none` on --panel and --flat.
-     Setting --surface-shadow here spends that mechanism as designed. It also
-     means this rule declares NO paint, NO radius and NO padding, so
-     scripts/check-design-system.js rule 3, which fires on those three together,
-     stays out of this block by construction.
-
-     --shadow-panel RATHER THAN A NEW TOKEN. It already exists in tokens.css as
-     `var(--gloss-inset), 0 24px 60px rgba(2, 4, 10, 0.45)`, it is the elevation
-     this design system already means by "a panel that sits above the page", and
-     these are the two largest cards on the route. RULE 0-C asks for a central
-     token rather than an invented local value, and the central token for this
-     job was already written. No new token was added, so there is none to remove
-     on revert.
-
-     THE BLUR HALF OF THE AUDIT ITEM DOES NOT REACH THESE CARDS, AND THIS
-     PARAGRAPH USED TO SAY OTHERWISE. It read: "`.surface` already declares
-     `backdrop-filter: var(--blur-glass)` inside an @supports guard in
-     surfaces.css, so it is computing on these cards today. It draws nothing,
-     and that is by design rather than by oversight". The first sentence was a
-     CLAIM and it was wrong, which is the more useful half of the finding: a
-     comment describing a cost is not evidence that the cost is being paid.
-
-     MEASURED ON THE BUILT PAGE, 2026-08-31, at 1440. Computed `backdrop-filter`
-     on both .pg__card elements is `none`. `.surface--panel` in surfaces.css
-     resets it to none a few lines under the @supports block that sets it, and
-     every card here carries `surface--panel`, so the blur is cancelled before
-     it can be rasterised. There is no GPU work to remove and nothing to fix.
-
-     THE REASONING BELOW STANDS AND IS WHY THE RESET IS RIGHT. --c-panel is
-     opaque and a backdrop filter over an opaque fill returns the same fill, so
-     the filter could only ever cost a recomposite and return nothing.
-     components/nav/NavDropdown.astro records the same measurement from the
-     other direction, 21 of 21 cards on /pricing. Making it VISIBLE would mean
-     turning these two cards translucent, which is a contrast risk this system
-     has already been bitten by once (`.in__chip` measured 4.03:1 against the
-     4.5:1 SC 1.4.3 requires) and a per-scroll-frame recomposite on the largest
-     objects on the page. The elevation below is the part that changes what a
-     reader sees, so it is the only part done here.
-
-     WHERE THE FINDING IS STILL LIVE, RECORDED HERE BECAUSE IT IS NOT LIVE HERE.
-     The same measurement counted 20 elements on / computing a non-none
-     backdrop-filter, 14 of them over a fully opaque background colour. Those
-     are in surfaces.css and in components this file does not own. This card is
-     not one of them. */
-  .pg__card {
-    --surface-shadow: var(--shadow-panel);
-  }
+  /* [A-199] THE SHADOW TRIAL WAS RUN AND THE OWNER REVERTED IT, 2026-09-01.
+     It was built as instructed, measured, and shown as a before and after
+     pair at 1440. THE OWNER COULD NOT SEE A DIFFERENCE, WHICH IS THE RESULT
+     RATHER THAN A FAILURE TO LOOK: the change moved 285,557 px of the crop
+     and the MAXIMUM CHANNEL DELTA WAS 17 OF 255, against controls of 0 px.
+     The reason is structural. `--shadow-panel` drops `rgba(2, 4, 10, 0.45)`,
+     which IS `--c-floor`, onto a section whose ground is `rgb(5, 8, 20)`, so
+     it casts the page colour onto the page. `--shadow-card`, with pure black
+     stops, also peaks at 17 of 255 over a tighter area, so NEITHER CENTRAL
+     TOKEN GIVES VISIBLE DEPTH ON THIS NEAR-BLACK GROUND and a visible one
+     would need a new token, which reopens the 2026-08-05 no-shadow ruling for
+     every other surface.
+     THE 2026-08-05 RULING THEREFORE STANDS UNCHANGED: `surface--panel` and
+     `surface--flat` cast nothing. Depth on these cards is carried instead by
+     the top-lit gradient ramp added the same day, which took the card head
+     from 1.060 to 1.173 against `--c-bg` without any shadow at all. */
 
   /* THE STANDING REFUSAL. A rule above it and air around it, and nothing else:
      the argument for this block is in the markup, and its whole visual job is

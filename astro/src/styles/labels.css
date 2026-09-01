@@ -495,17 +495,27 @@ thead th,
    * showed all four hues, which is exactly why these two looked wrong beside
    * them and nothing else did.
    *
-   * `width: fit-content` RATHER THAN `justify-self: start`, because
-   * `justify-self` is a grid property and does nothing in a flex row, and the
-   * blockifying parent here is grid on /crowmark and flex elsewhere. One
-   * property that holds in block, flex and grid is one rule instead of three.
+   * THE FIX IS NOT ON THIS RECIPE, AND THE ATTEMPT THAT WAS IS RECORDED HERE
+   * BECAUSE THE FILE HAD ALREADY WARNED AGAINST IT.
    *
-   * IT IS A NO-OP WHERE NOTHING WAS WRONG, which is why it is safe to state on
-   * the shared recipe. An inline-block box is already shrink-to-fit, so
-   * fit-content resolves to the width it already had. Site scan at 1440 across
-   * 13 routes: 20 blockified capsules, 17 of them differing from their glyph run
-   * only by this recipe's own horizontal padding, and 3 genuinely stretched. */
-  width: fit-content;
+   * I added `width: fit-content` here on 2026-09-01. The paragraph directly
+   * above this rule already said not to: "inline-block, NOT width:fit-content on
+   * a block. The capsule has to hug its text AND be centred by its parent's
+   * text-align." I wrote a new comment underneath an existing warning without
+   * reading it, which is the same failure this file keeps recording about
+   * others.
+   *
+   * IT BROKE 20 INSTANCES AND WAS MEASURED DOING SO. On `.related__card` the
+   * eyebrow is a full width block whose TEXT is centred by the parent. Shrinking
+   * the box to its content moved it to the block start, so the capsule sat 11 to
+   * 21px off the centre line on 20 route instances and `check-render.js` failed.
+   * With `width: auto` restored, all four measured cards return to offset 0.
+   *
+   * THE STRETCHING IS A PROPERTY OF THE PARENT, SO THE REMEDY BELONGS THERE.
+   * Only three capsules in the estate were genuinely stretched, all of them
+   * direct children of a grid card, and a grid card that does not want to
+   * stretch its children says so with `justify-items`. Fixing it on the shared
+   * recipe reaches 20 innocent instances to correct 3. */
   margin-block-end: var(--stack-1);
   padding: 0.5rem 0.85rem;
   border: 1px solid var(--c-border);
@@ -568,6 +578,47 @@ thead th,
   }
 }
 
+/* ── A CAPSULE INSIDE A GRID CARD MUST NOT STRETCH (A-226, second attempt) ───
+ *
+ * THE DEFECT. A grid or flex parent BLOCKIFIES its children, so `inline-block`
+ * on a direct child of a grid card computes to `block` and the capsule stretches
+ * to the whole track. `background-clip: text` then paints `--grad-spectrum`
+ * across that stretched box and the glyphs sit in the first slice of it.
+ * MEASURED at 1440 on /crowmark: a 531px box around a 119px glyph run, so the
+ * label sampled 22 percent of the ramp and showed the teal end only, while the
+ * other eighteen eyebrows on the page sampled 63 to 95 percent.
+ *
+ * MY FIRST FIX WAS `width: fit-content` ON THE SHARED RECIPE AND IT WAS WRONG.
+ * It reached 20 innocent instances to correct 3: on `.related__card` the eyebrow
+ * is a full width block whose TEXT is centred by the parent, so shrinking the
+ * box moved it to the block start and `check-render.js` failed on 20 route
+ * instances. The paragraph above this rule had already warned against exactly
+ * that, and I wrote underneath it without reading it.
+ *
+ * WHY `.card >` AND NOT A BARE `.eyebrow`. `justify-self` is inert unless the
+ * element is a grid item, which makes it tempting to state universally. IT IS
+ * NOT SAFE UNIVERSALLY. Measured across seven routes, capsules sit in ten
+ * distinct contexts and TWO of them are grid: four are `grid` with a left
+ * aligned parent, which is this defect, and THREE are `grid` with a CENTRED
+ * parent, `.bs__station` on the home page, which a bare `justify-self: start`
+ * would drag off centre. That is the same regression as the first attempt in a
+ * different place.
+ *
+ * `.bs__station` is an `<li>` in BothSides.astro and carries no `.card` class,
+ * so scoping to `.card >` reaches the four that are wrong and none of the three
+ * that are right. The remaining 84 capsules are in block, flex, list-item or
+ * table-cell parents, where the property does nothing at all.
+ *
+ * IT TARGETS THE CAPSULE, NOT THE CARD, and that distinction was measured too.
+ * `justify-items: start` on the card itself would have been simpler and would
+ * have been wrong: `.card__h`, `.card__body` and `.card__aside` fill their box,
+ * so they RELY on the stretch, and shrinking them changes where their text
+ * wraps. */
+.card > .eyebrow,
+.card > .chip {
+  justify-self: start;
+}
+
 /* ── AN EYEBROW THAT IS ALSO A MARKER ────────────────────────────────────────
  *
  * RESTORED WITH THE GRADIENT (A-173), because it is what stops the gradient
@@ -628,13 +679,13 @@ thead th,
  * NO COLOUR. See the file header: a chip's hue is its meaning. */
 .chip {
   display: inline-block;
-  /* Same blockification, same remedy, see the note on `.eyebrow` above. A chip
-     has no gradient, so a stretched one is not unreadable, it is just a pill
-     drawn across a whole card: MEASURED on /crowmark, the "Recommended" chip
-     was 321px around a 97px word, while the identical chip on /pricing sat at
-     122px because its parent is not a grid. Two widths for one object is the
-     thing this file exists to stop. */
-  width: fit-content;
+  /* Withdrawn with the same line on `.eyebrow` above, for the same reason: the
+     stretching is the parent grid's doing and the remedy belongs there, not on
+     the shared recipe. The observation stands and is kept so the fix has a
+     target: MEASURED on /crowmark, the "Recommended" chip was 321px around a
+     97px word, while the identical chip on /pricing sat at 122px because its
+     parent is not a grid. Two widths for one object is the thing this file
+     exists to stop. */
   padding: 0.3rem 0.7rem;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-pill);

@@ -250,6 +250,39 @@ summary::after {
   line-height: 1;
   color: var(--c-interactive);
   transition: transform var(--dur) var(--ease);
+
+  /* ── THE MARK SAT FLUSH AGAINST THE ROW'S TRAILING EDGE ──────────────────
+   *
+   * OWNER REPORT 2026-09-01, made three times and correct each time: "if you
+   * click on + or x button then it wont work", and "this + and x is the issue
+   * in all the places in website and things are so inconsistent".
+   *
+   * MEASURED, because the row itself is 60px tall and fully clickable, so the
+   * control looked sound and a first pass could not reproduce it. The mark's
+   * BOX was 13 to 15 by 21px and the summary carried `padding-right: 0`, so the
+   * glyph ended flush with the summary's right edge and its centre sat about
+   * 7px from the boundary. A click that drifts rightwards by more than that
+   * lands on `.section__body` and nothing happens. Swept at 1440: 0 to 5px of
+   * drift toggles, 8px does not. THAT IS THE INCONSISTENCY. A pointer that
+   * lands a few pixels right of centre, or moves while the button is down,
+   * silently does nothing on a control that is visibly under the cursor.
+   *
+   * IT WAS ALSO UNDER THE MINIMUM TARGET SIZE, on all 36 marks on the site,
+   * every one of them 13 to 15px wide against the 24px floor of WCAG 2.5.8.
+   * The row being clickable does not satisfy that: the mark is what a reader
+   * aims at, so the mark is the target.
+   *
+   * A MINIMUM BOX RATHER THAN A BIGGER GLYPH. The ink stays exactly the size it
+   * was, `font-size` is untouched, and the box grows around it and centres it.
+   * That buys clickable slack on BOTH sides of the mark, so a drift in either
+   * direction still lands on the summary, and it takes the target to 24px
+   * without changing a single rendered letterform. The row keeps its own 44px
+   * floor, which still owns the row height. */
+  box-sizing: content-box;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  display: grid;
+  place-items: center;
 }
 
 details[open] > summary::after {

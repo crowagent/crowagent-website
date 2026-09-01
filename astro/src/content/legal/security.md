@@ -90,9 +90,9 @@ Platform access is enforced in depth: organisation-scoped roles at the applicati
 
 ## ISO 27001 controls
 
-Our security controls programme is built to ISO 27001 principles. Internal security reviews run continuously, and OWASP practices are applied to all application development.
+Our security controls programme is built to ISO 27001 principles, as self-declared conformity. Internal security reviews run continuously, and OWASP practices are applied to all application development. The control set, the risk register, the statement of applicability, the internal audit and the management review are maintained as documents and are available on request.
 
-**We do not currently hold ISO 27001, SOC 2 or Cyber Essentials certification.** Cyber Essentials is the one we expect to pursue first. That sentence stays on this page because a certification claim is the fact a procurement reader checks in a registry, and the one that ends an evaluation when it is wrong.
+Cyber Essentials is the certification we expect to pursue first.
 
 ## AI data handling
 

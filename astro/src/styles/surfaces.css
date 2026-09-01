@@ -506,6 +506,52 @@
      looking at. See the note beside `--surface-shadow` on `.surface`. */
   .surface--flat { --surface-shadow: none; }
 
+  /* ── A-219. A CARD CUT INTO A SURFACE, AND THE BLUR IT CANCELS ──────────
+   *
+   * MEASURED ON THE RUNNING SITE, 2026-09-01, at 1440. Twenty elements on `/`
+   * computed a non-none `backdrop-filter`. Fifteen of them had a FULLY OPAQUE
+   * own background-colour, so the browser rasterised a blur of a backdrop the
+   * fill then covered completely. A backdrop filter forces a separate
+   * compositing pass and a readback of what is behind on every paint, so
+   * fifteen of them were buying a cost and returning nothing.
+   *
+   * Alpha was read by PAINTING each computed background-colour onto a canvas
+   * and reading the pixel, not by a regex. That distinction is the finding: the
+   * original count of fourteen was one short because `.hir__step--refused`
+   * resolves to `color(srgb 0.056 0.058 0.105)`, which carries no alpha slot,
+   * and a regex looking for `rgba(` reads it as translucent. The canvas cannot
+   * make that mistake, and it returns UNPARSED for a name it does not know
+   * rather than silently reporting opaque.
+   *
+   * IT IS NOT ON `surface--flat`, AND THAT IS THE MEASUREMENT NOT A TASTE.
+   * The obvious fix was to cancel the filter on `surface--flat`, since all
+   * fifteen wore it. Measured across all nineteen routes, `surface--flat` has
+   * nineteen instances and only fifteen are opaque: the four `.trust__row`
+   * elements on `/pricing/` sit on the translucent `--c-card` at alpha 0.05 and
+   * their glass is real. Cancelling on the modifier would have taken a
+   * deliberate treatment off a page nobody was looking at.
+   *
+   * SO THE RECIPE IS WHAT IS NAMED. `.hir__step` and `.ps__note` were both
+   * setting `background-color: var(--c-floor)` in their own scoped styles, with
+   * near-identical comments saying the same thing: a card cut INTO the panel
+   * that holds it, filled with the page's deepest step, so it reads as set in
+   * rather than laid on. That is one recipe written twice, which is the drift
+   * this file's own instruction at the top warns about, and the same instruction
+   * forbids a component restating `backdrop-filter`. Both halves therefore
+   * belong here: the fill and the cancel travel together, because it is the
+   * opaque fill that makes the filter pointless. A future sunk card gets both
+   * by wearing one class and cannot reintroduce the cost by accident.
+   *
+   * A COMPONENT MAY STILL RE-TINT IT. `.hir__step--refused` paints
+   * `color-mix(--c-refused 7%, --c-floor)` over this, and an Astro scoped style
+   * is unlayered so it wins. That is fine and is the point: the tint stays
+   * opaque, so the cancel below is still correct for it. */
+  .surface--sunk {
+    background-color: var(--c-floor);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   /* OPACITY IS THE DIFFERENCE, NOT SHAPE. This modifier used to set
      --radius-panel as well, which put a 16px block in the same grid as 20px
      cards on /crowmark-buyers and made it read as a card somebody had not
@@ -539,8 +585,45 @@
    * Written with the `background` shorthand deliberately, so background-color
    * resets to transparent exactly as the concept's does. Every stop is a token,
    * so the ramp follows the palette rather than restating it. */
+  /* ── AND THE HEAD OF IT IS LIT, 2026-09-01 (A-197 item 1) ────────────────
+   *
+   * Owner instruction to build luminous depth and the surface ladder. The
+   * argument, the numbers and what the A-187 measurement missed are all beside
+   * --grad-panel-lit in styles/tokens.css; the short version is that the page
+   * paints THREE resting values whose adjacent contrast ratios are 1.026 and
+   * 1.060, so a card differs from the ground by an amount a display barely
+   * resolves. The card's head now sits at --c-lit and falls to --c-panel by
+   * 58%, which takes the top of a card from 1.060 to 1.202 against --c-bg while
+   * leaving its foot exactly where it was.
+   *
+   * `background-image` ALONE, NEVER THE SHORTHAND, for the reason the note
+   * below this one records at length: the shorthand resets background-color to
+   * transparent, which is precisely how six deltas appeared the last time a
+   * ramp was applied here. The flat --c-panel fill above still paints
+   * underneath, so a browser that cannot render the gradient gets the card the
+   * site shipped yesterday rather than a transparent box.
+   *
+   * IT DOES NOT REACH `surface--ramp`, WHICH IS THE SPLIT THE NOTE BELOW
+   * DEFENDS. That modifier is declared after this rule and sets its own
+   * `background-image`, so a panel that HOLDS cards keeps sinking into the page
+   * at its foot and a card that IS a card gets the light on its head. The
+   * concept's own split, unchanged, now expressed at both ends instead of one.
+   *
+   * WRITTEN HERE AND NOT AS A :root TOKEN, which is the same call
+   * `.spine__stop::before` makes and for the same reason: a custom property's
+   * var()s are substituted where it is DECLARED, so a gradient token on :root
+   * bakes the dark pair in and inherits finished. layouts/Article.astro rebinds
+   * --c-panel to #ffffff for the blog pane, so a baked token would have painted
+   * a near-black ramp down a white card the first time a panel appeared in an
+   * article. Both stops are tokens, so this still follows the palette; it simply
+   * resolves in the scope of the element instead of the scope of the root.
+   *
+   * NO SHADOW IS ADDED. The owner's 2026-08-05 fidelity ruling that
+   * `surface--panel` and `surface--flat` cast nothing is untouched: this is
+   * paint on the surface, not a shadow under it. */
   .surface--panel {
     background: var(--c-panel);
+    background-image: linear-gradient(180deg, var(--c-lit) 0%, var(--c-panel) 58%);
     /* The knob, not `box-shadow`, for the reason given on `surface--flat`. */
     --surface-shadow: none;
     -webkit-backdrop-filter: none;
@@ -1979,7 +2062,20 @@
      * the concept's approach would have led to. A face without the features
      * simply renders its defaults.
      */
-    font-variant-numeric: slashed-zero tabular-nums lining-nums;
+    /* ── TWO OF THE THREE WERE REMOVED 2026-09-01, OWNER DECISION ────────────
+     * MEASURED AGAINST THE FONT BINARIES, not against the intent above: NONE of
+     * the three families on this site carries a `zero` or an `lnum` feature, so
+     * `slashed-zero` and `lining-nums` have never done anything on any page.
+     * The paragraph above describes what they WOULD do, and it is correct about
+     * that, which is exactly why it survived: a declaration that states a real
+     * intent reads as working code.
+     * `tabular-nums` STAYS and is the one that was always doing the work. The
+     * faces do carry it, and it is what stops stacked statutory figures drifting
+     * by glyph, which is the alignment this recipe exists for.
+     * The last line above, "a face without the features simply renders its
+     * defaults", was the thing that made this invisible. It is true, and it
+     * means the absence is silent, so nobody looks. */
+    font-variant-numeric: tabular-nums;
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {

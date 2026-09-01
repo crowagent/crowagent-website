@@ -440,9 +440,29 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   },
   { term: 'ICO registered', detail: 'Registered with the UK regulator.', mark: 'verified' },
   {
+    /* OWNER DECISION 2026-09-01, and it reverses how this row was marked.
+       Their words: "i asked not explicit mention about certifications status
+       but you are still doing the same, this is so negative hence you must
+       fix". Related decision the same day on A-218: publish ISO 27001 as SELF
+       DECLARED CONFORMITY, which is a real and legitimate position, distinct
+       from certification, which only an accredited body can issue.
+
+       WHY THE MARK MOVES FROM `refused` TO `verified`, since two earlier owner
+       rulings warned against a teal tick here (A-104 item 9, "an unbacked badge
+       is WORSE than the cards it replaces", and A-114). Read those rulings for
+       what they actually object to: a tick that SAID verified sitting four
+       lines from small print that said not certified, on the same claim. The
+       contradiction was the defect, not the colour. The claim below no longer
+       mentions certification at all, so there is nothing for a tick to
+       contradict, and what it does state is evidenced: an eight document ISMS
+       pack exists and is held as the company record.
+
+       WHAT IS STILL FORBIDDEN, unchanged: this site must never say CERTIFIED,
+       never imply an accredited audit, and never carry a certification badge or
+       logo. Conformity is ours to declare. Certification is not. */
     term: 'ISO 27001 controls',
-    detail: 'We follow ISO 27001 controls. We are not certified yet.',
-    mark: 'refused',
+    detail: 'Our security programme is built to the ISO 27001 control set.',
+    mark: 'verified',
   },
 ];
 ---
@@ -1192,7 +1212,15 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
       }
 
       .trust__card:not(.trust__card--refused) .trust__term::before {
-        animation: dot-settle linear both;
+        /* Longhand, for the reason recorded on `[data-field]` in
+           styles/tokens.css: lightningcss merges `animation-timeline` into the
+           `animation` shorthand and Chrome rejects the merged declaration, so
+           these dots have never settled in production. The `@supports` gate
+           above cannot catch it, because the feature is supported and it is the
+           EMITTED syntax that is invalid. */
+        animation-name: dot-settle;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: --trust-row;
         animation-range: entry 12% entry 52%;
       }

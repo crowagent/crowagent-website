@@ -1410,54 +1410,66 @@
      * the correct failure direction: a component that has already been
      * choreographed keeps its choreography, and everything else gets the
      * default. No exception list, and nothing to keep in step. */
-    main > *:not(script, style, template):not(:only-child):first-child
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
-    main > *:only-child > *:not(script, style, template):first-child
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
-    main > *:not(script, style, template):not(:only-child):first-child
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field])
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
-    main > *:only-child > *:not(script, style, template):first-child
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field])
-      > *:not(script, style, template, b, i, [aria-hidden], [data-field]) {
+    main > *:not(:where(script, style, template)):not(:only-child):first-child
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field])),
+    main > *:only-child > *:not(:where(script, style, template)):first-child
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field])),
+    main > *:not(:where(script, style, template)):not(:only-child):first-child
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field]))
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field])),
+    main > *:only-child > *:not(:where(script, style, template)):first-child
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field]))
+      > *:not(:where(script, style, template, b, i, [aria-hidden], [data-field])) {
       /* Reset rather than defaulted, for the inheritance reason on --arrive-i:
          a custom property set on a row would otherwise be inherited by the row
          inside it and both would sit on the same phase.
 
-         ── AND THIS RESET SILENTLY WINS AGAINST THE PHASES IT IS RESETTING ───
-         ── OPEN DEFECT, RECORDED 2026-08-31, NOT FIXED IN THIS PASS ─────────
+         ── THIS RESET USED TO BEAT THE PHASES IT WAS RESETTING. A-216, FIXED ──
+         ── 2026-09-01, AND THE FIX IS `:where()` RATHER THAN A BUMP ──────────
 
-         MEASURED ON THE BUILT PAGE AT 1440, HEAD, before any change today:
-         EVERY row of the homepage hero computes --land-i: 0 and
-         --land-depth: 0s, so all six rows run at animation-delay 0 and the
-         entire six phase stagger below, plus the half step lead, contributes
-         nothing on any of the thirteen routes.
+         THE DEFECT, MEASURED ON THE BUILT PAGE AT 1440 BEFORE THE FIX: every
+         row of the first block computed `--land-i: 0` and `--land-depth: 0s` on
+         every route, so the six phase stagger below and the half step lead
+         contributed nothing anywhere. Read off five routes:
 
-         THE CAUSE IS SPECIFICITY, NOT ORDER. This selector is
-         `main` + `*:not(script, style, template)` + `:not(:only-child)` +
-         `:first-child` + a child `*:not(..., [data-field])`, and `:not()` takes
-         the specificity of its most specific argument, so `[data-field]`
-         contributes a class column. That is (0,3,2). The phase rules are
-         `main > *:not(:only-child):first-child :nth-child(6n + 2)`, which is
-         (0,3,1). This rule outranks all five of them by one type selector and
-         its reset is what every row ends up with. The lead rule at (0,2,1)
-         loses by more.
+             /          section.hero      div.hero__inner   i=0  delay 0s
+             /about/    div.hero          section.section   i=0  delay 0s
+             /pricing/  section.section   div.section__body i=0  delay 0s
+             /contact/  section.section   div.section__head i=0  delay 0s
+             /sectors/  header.sec-hero   div.sec-wrap      i=0  delay 0s
 
-         IT IS VISIBLE IN THE SPANS, WHICH IS WHAT MAKES IT PROVABLE RATHER THAN
-         ARGUED: `#hero-title > span:nth-child(2)` sits one level deeper than
-         this selector can reach, so it is NOT reset, and it computes
-         --land-i: 1. The phase rules work everywhere this reset does not.
+         THE CAUSE WAS SPECIFICITY, NOT ORDER. `:not()` takes the specificity of
+         its most specific argument, so `[data-field]` inside those exclusion
+         lists contributed a CLASS column each. This selector scored (0,3,2)
+         against the phase rules' (0,3,1) and outranked all five of them; the
+         lead rule at (0,2,1) lost by more. Nothing about the source order was
+         wrong and moving these rules would not have helped.
 
-         WHY IT IS NOT FIXED HERE. Making the phases win is one bump on five
-         selectors, and it would hand a real 100ms per row stagger to the first
-         block of all thirteen routes at once, which is a visible change to
-         twelve pages that nobody asked about in a session with three other
-         agents in the tree. It belongs in its own change with its own look.
+         THE FIX MAKES THE EXCLUSIONS FREE INSTEAD OF MAKING THE PHASES HEAVIER.
+         `:where()` has zero specificity by definition, and `:not(:where(...))`
+         therefore matches exactly what `:not(...)` matched while contributing
+         nothing. This selector is now (0,2,1) and every phase rule wins by a
+         class column, which is the relationship the block was written to have.
+         The alternative, adding a token to five phase selectors to outscore
+         this one, would have left the next reader with two selectors whose
+         only relationship is a number that has to stay ahead.
 
-         THE HERO DOES NOT WAIT FOR IT. §THE HERO CHOREOGRAPHY above states
-         every one of its delays outright and reads neither --land-i nor
-         --land-depth, so fixing or deleting this stagger cannot move the
-         homepage by a millisecond in either direction. */
+         `!important` WAS NOT USED AND WOULD HAVE BEEN THE WRONG FIX. It would
+         have won the cascade while leaving the reason unstated, and the next
+         exclusion added to this list would have needed one too.
+
+         IT WAS PROVABLE FROM INSIDE THE PAGE ALL ALONG, WHICH IS WHAT MADE IT A
+         DEFECT RATHER THAN A GUESS: `#hero-title > span:nth-child(2)` sits one
+         level deeper than this selector reaches, so it was never reset, and it
+         computed `--land-i: 1` while every row above it computed 0.
+
+         THE HOMEPAGE HERO IS UNAFFECTED IN BOTH DIRECTIONS. §THE HERO
+         CHOREOGRAPHY above states every one of its delays outright, on
+         `*:has(> #hero-title)` selectors that score (1,0,0) because `:has()`
+         also takes its most specific argument and that argument is an id. It
+         reads neither --land-i nor --land-depth, so this fix cannot move it by
+         a millisecond. Measured after the change to confirm it, rather than
+         argued. */
       --land-i: 0;
       --land-depth: 0ms;
       animation-name: sv-land-row;
@@ -1476,11 +1488,12 @@
     /* Six phases, capped by modulo exactly as the arrival's are. A hero with
        nine rows does not put the ninth eight steps behind the first.
 
-       THESE FIVE RULES REACH NOTHING TODAY. They are (0,3,1) against a reset at
-       (0,3,2), so every row takes 0 and no row takes a phase. The measurement,
-       the arithmetic and the reason it is left standing rather than fixed in
-       this pass are all at that reset. Read them before believing this block
-       does anything. */
+       THESE FIVE RULES REACHED NOTHING UNTIL 2026-09-01 (A-216). They are
+       (0,3,1), and the reset above scored (0,3,2) and beat all five, so every
+       row took 0. The reset is now (0,2,1) and these win by a class column.
+       NOT ONE CHARACTER OF THIS BLOCK CHANGED: the fix is entirely in the
+       reset's exclusion lists, which is the whole argument for making the
+       exclusions free rather than making these heavier. */
     main > *:not(:only-child):first-child :nth-child(6n + 2),
     main > *:only-child > *:first-child :nth-child(6n + 2) { --land-i: 1; }
     main > *:not(:only-child):first-child :nth-child(6n + 3),
@@ -2147,8 +2160,133 @@
   @supports (animation-timeline: scroll(root)) {
     @media (prefers-reduced-motion: no-preference) {
       .sv-progress {
-        animation: sv-progress linear;
+        /* Longhand for the same reason recorded on `[data-field]` in
+           tokens.css: lightningcss merges `animation-timeline` into the
+           `animation` shorthand and Chrome rejects the merged declaration
+           outright, so this bar has never moved in production. The `@supports`
+           gate could not catch it, because the feature IS supported and it is
+           the emitted syntax that is invalid. */
+        animation-name: sv-progress;
+        animation-timing-function: linear;
         animation-timeline: scroll(root);
+      }
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * §THE HERO KEY LIGHT, A SECOND PLANE INSIDE ONE RIG. Owner decision,
+ * 2026-09-01, A-197.
+ *
+ * WHAT IT REPLACED, BECAUSE THE REPLACEMENT IS THE ARGUMENT. A cursor tracking
+ * spotlight was built in HeroStack.astro on 2026-09-01, measured, and taken out
+ * again the same day on the owner's ruling: "can we have something better style
+ * instead of mouse focus in hero section". Scroll driven CSS is better on three
+ * counts that are not matters of taste. It reaches every reader rather than only
+ * the ones holding a mouse, so a phone and a keyboard get the effect too. It
+ * runs on the COMPOSITOR, because `view()` is a timeline rather than a listener,
+ * so there is no pointermove handler, no rAF, no rect cache and no main thread
+ * work of any kind. And it costs ZERO bytes of JavaScript against the spotlight's
+ * 791 built bytes, on a homepage that is over its own payload budget.
+ *
+ * WHAT IT DOES. It travels the achromatic key light high right against the
+ * scroll, vertically and horizontally, while the violet source high left stays
+ * where it is. Two planes, one section, and the differential between them is
+ * the entire effect. `.hero__wash` is supposed to be travelling too, on the
+ * shared `sv-parallax` at `--par: 48px` from tokens.css, which would make it
+ * three rates rather than two. IT IS NOT, AND THE REASON IS MEASURED AND IS NOT
+ * THIS RULE'S FAULT. See the next paragraph, because it is the more important
+ * finding on this page.
+ *
+ * ── EVERY SCROLL DRIVEN ANIMATION IN THE BUILT SITE IS DEAD, AND THE CAUSE ──
+ *    IS THE MINIFIER. MEASURED 2026-09-01, NOT INFERRED.
+ *
+ * lightningcss merges `animation-timeline` INTO the `animation` shorthand. The
+ * source `animation: sv-parallax linear both; animation-timeline: view();` is
+ * emitted as `animation: linear both sv-parallax view()`, and CHROME REJECTS
+ * THAT WHOLE DECLARATION: the shorthand does not accept a timeline value, so
+ * the animation-name goes with it. Read off the built page in a real browser,
+ * `getComputedStyle(.hero__wash).animationName` is `none` and
+ * `animationTimeline` is `auto`. `CSS.supports('animation', 'linear both k
+ * view()')` returns FALSE while `CSS.supports('animation-timeline', 'view()')`
+ * returns TRUE, which is the whole of it in two lines.
+ *
+ * THREE FEATURES ARE AFFECTED AND ALL THREE ARE SILENTLY OFF IN PRODUCTION:
+ * `[data-field]` sv-parallax, the ambient parallax on EVERY section sitewide
+ * (tokens.css); `.sv-progress`, the scroll progress bar in this file; and the
+ * `--trust-row` dots on /about. None of them errors, none of them warns, and
+ * every gate stays green, because a dropped declaration is indistinguishable
+ * from a rule nobody wrote.
+ *
+ * THE FIX IS THE LONGHAND FORM, AND IT IS WHY THIS RULE IS WRITTEN THE LONG
+ * WAY. `animation-name`, `animation-timing-function` and `animation-fill-mode`
+ * as separate declarations survive lightningcss untouched, confirmed by
+ * grepping the emitted `Base.*.css`. The same one line change repairs the other
+ * three, but they are outside this task's file set and are reported as their
+ * own row rather than fixed in passing.
+ *
+ * WHY IT IS HERE AND NOT IN THE COMPONENT. scripts/check-motion.js rule 1 makes
+ * this file the one place a scroll driven timeline may be declared, and the
+ * reason is written at the head of it: eleven overlapping motion systems, two of
+ * which were found by that gate rather than by reading the code. Only the two
+ * AMPLITUDES live in HeroStack.astro, beside the composition they belong to and
+ * in the same idiom as `--par`.
+ *
+ * TRANSFORM AND NOTHING ELSE. No opacity, so the 0.22 that HeroStack.astro
+ * argues for against five rendered candidates is untouched; no width, height,
+ * top or margin, so nothing here can reach layout. The element is already
+ * blurred and screen blended, which puts it on its own raster layer, so a
+ * translate is a layer move rather than a repaint of a 90px blur.
+ *
+ * @supports    Chrome and Edge 115+, Firefox 132+, Safari 18+, and the roughly
+ *              one reader in six outside that gets the static field that ships
+ *              today. The fallback is not a degraded version of this, it IS the
+ *              designed composition, which is the only fallback this file
+ *              accepts.
+ * @media       Reduced motion never enters the block, so there is nothing to
+ *              reset and no second declaration that could drift from it.
+ * ══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      /* ── A NAMED TIMELINE, AND `view()` WOULD HAVE BEEN SILENTLY FROZEN ────
+       *
+       * MEASURED, NOT REASONED ABOUT. The first build of this rule used a bare
+       * `animation-timeline: view()` on the field itself. On the built page the
+       * animation was correctly wired, `animationName` read `hero-key-drift`
+       * and `animationTimeline` read `view()`, and the transform NEVER CHANGED:
+       * -4.9px at scroll 0 and -4.9px at scroll 420, frozen at a progress of
+       * 0.56 forever.
+       *
+       * THE CAUSE IS `overflow: hidden`. `view()` measures the element against
+       * its nearest SCROLL CONTAINER, and an `overflow: hidden` box IS a scroll
+       * container even though nothing can scroll it. `.hero__wash` is
+       * `overflow: hidden` (it is the horizontal overflow guard for the orbs)
+       * and `.hero` is `overflow: hidden` for the same reason, so a field
+       * inside them is measured against a box that never moves and its progress
+       * is a constant. Nothing errors and nothing warns: it looks exactly like
+       * an animation that is running.
+       *
+       * SO THE TIMELINE IS DECLARED ON `.hero`, WHOSE OWN SCROLLPORT IS THE
+       * DOCUMENT, and the field reads it BY NAME. A named timeline is resolved
+       * by walking up the ancestors, so the two `overflow: hidden` boxes in
+       * between are no longer in the question. This is the same construction
+       * pages/about.astro already uses for the `--trust-row` dots, and it is
+       * reused rather than reinvented.
+       *
+       * `:has(#hero-title)` narrows it to the homepage hero. `.hero` is a class
+       * three other routes also use, and a named timeline they never reference
+       * would be dead weight on every one of them. */
+      .hero:has(#hero-title) {
+        view-timeline-name: --hero-band;
+        view-timeline-axis: block;
+      }
+
+      .hero__amb--2 {
+        animation-name: hero-key-drift;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --hero-band;
       }
     }
   }
@@ -2162,5 +2300,25 @@
   }
   to {
     transform: scaleX(1);
+  }
+}
+
+/* Travels one amplitude down and across to one amplitude up and across over the
+   whole time the hero is in view, which is the same shape `sv-parallax` uses in
+   tokens.css and is deliberately not a new idea. Both ends carry a translation,
+   so this is a TRAVEL and not an entrance: check-motion.js rule 2 reads a
+   keyframe that resolves to the resting state as an arrival, and an ambient
+   field that arrives is the defect this whole file exists to stop.
+
+   The fallbacks in the two var() calls are not decoration. A field that opts
+   into this without setting an amplitude gets a small honest travel rather than
+   an invalid declaration, which for a transform resolves to no transform at all
+   and would look exactly like a rule nobody wrote. */
+@keyframes hero-key-drift {
+  from {
+    transform: translate3d(calc(-1 * var(--hero-key-sweep, 3%)), var(--hero-key-par, 30px), 0);
+  }
+  to {
+    transform: translate3d(var(--hero-key-sweep, 3%), calc(-1 * var(--hero-key-par, 30px)), 0);
   }
 }
