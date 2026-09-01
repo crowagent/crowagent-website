@@ -1,5 +1,5 @@
 // @ts-check
-const { defineConfig } = require('@playwright/test');
+const { defineConfig, devices } = require('@playwright/test');
 
 /**
  * Playwright configuration — CrowAgent marketing site.
@@ -173,6 +173,96 @@ module.exports = defineConfig({
       name: 'webkit',
       use: { browserName: 'webkit' },
       testIgnore: ['**/visual-regression/**', '**/cross-browser/**'],
+    },
+
+    /* ── DEVICE EMULATION, WHICH THIS FILE HAD NONE OF ────────────────────────
+     *
+     * Until 2026-09-01 the only viewport statement in this file was the bare
+     * `1280x720` in `use` above, and not one project named a `devices[...]`
+     * descriptor. So every mobile assertion in this suite was A RESIZED DESKTOP
+     * WINDOW. `hasTouch`, `isMobile`, the device pixel ratio and the user agent
+     * all stayed at their desktop values whatever width a test asked for, which
+     * means `(pointer: coarse)`, `(any-pointer: coarse)` and `(hover: none)`
+     * NEVER MATCHED. There are 30 such rules in 14 files under astro/src.
+     *
+     * That is flaw 1 of the audit method corrected in tests/ui-audit/harness.js
+     * on 2026-08-31, living on inside the tracked suite. It cuts both ways: a
+     * correct mobile rule reads as broken, and a real touch defect hides.
+     *
+     * WHAT IT COST, MEASURED. `.wt__dot` in WorkstationTour.astro is 44x44 under
+     * `@media (pointer: coarse)` and 36x24 on a tablet without it. Its own
+     * comment says so and says it was measured "with hasTouch and isMobile set,
+     * which is the only way to make (pointer: coarse) match". Nothing in this
+     * file could reproduce that state, so the tablet case it describes has never
+     * been under test here.
+     *
+     * THE DESCRIPTORS ARE THE SAME ONES tests/ui-audit/harness.js USES, on
+     * purpose, so there is one convention for what "mobile" and "tablet" mean on
+     * this repository rather than two. iPhone 13 for mobile, iPad (gen 7) for
+     * tablet. If those ever need to change, they change in both places or the
+     * harness and the suite start describing different devices by the same word.
+     *
+     * `browserName` IS SET EXPLICITLY AND IS NOT REDUNDANT. Both descriptors
+     * carry `defaultBrowserType: 'webkit'`, so spreading one without a
+     * browserName silently runs the project on WebKit. Chromium is named where
+     * chromium is meant, which is also what the harness does: it launches
+     * chromium and hands the iPhone descriptor to newContext.
+     *
+     * NO MOBILE FIREFOX PROJECT, and the reason is a hard limitation rather than
+     * a preference: Playwright does not support `isMobile` on Firefox, so a
+     * mobile-firefox project errors at context creation rather than emulating.
+     *
+     * SCOPED TO accessibility.spec.js, AND THE SCOPE IS THE COST CONTROL. These
+     * projects run on the ONE spec that never resizes itself, so its result at a
+     * device is unambiguous. It is 13 route tests, so the three projects below
+     * add 39 test runs to a bare `npx playwright test`, not a copy of the whole
+     * suite.
+     *
+     * PROVED GREEN BEFORE WIRING, on 2026-09-01, both engines, against the built
+     * tree: all 13 routes emulate correctly (vw=390, coarse=true, hover=false on
+     * chromium AND on webkit) and 12 of 13 report zero serious or critical axe
+     * violations under the same tag set the spec asks for. The thirteenth,
+     * /glossary/ppn-002/, returns 404 and fails the spec's own status assertion.
+     * That is a STALE CORPUS ENTRY and it fails identically on the three desktop
+     * projects that already exist: the page was deleted and retargeted to
+     * /glossary/ppn-026 on 2026-08-30, which _redirects records, and this spec's
+     * PAGES list was never updated. It is not caused by these projects and it is
+     * not fixed by them.
+     *
+     * WHAT A PROJECT CANNOT FIX, STATED SO NOBODY TRIES. responsive.spec.js,
+     * sweep-6x6.spec.js, sitewide.spec.js, keyboard-and-reflow.spec.js,
+     * astro-contact.spec.js and the visual-regression sweep all step a SINGLE
+     * context through mobile AND desktop widths with page.setViewportSize().
+     * `hasTouch` and `isMobile` are CONTEXT properties and setViewportSize does
+     * not touch them, so putting one of those specs in a mobile project would
+     * make its 1440 and 1920 rows report `pointer: coarse` as well, which is
+     * wrong in the other direction and worse than the defect. Those specs need a
+     * context per device, the way harness.js builds one, and that is a change to
+     * the spec bodies rather than to this file.
+     *
+     * WHAT IT UNBLOCKS. nav-dropdown.spec.js reaches a coarse pointer through
+     * CDP Emulation.setEmulatedMedia and therefore skips on Firefox and WebKit,
+     * and its own comment names the gap and the remedy: "the defect being
+     * guarded against, a menu no touch user can open, is most likely to bite on
+     * iOS, which is WebKit ... Closing it properly needs Playwright to grow hover
+     * emulation, or a device-descriptor-based mobile project." mobile-webkit is
+     * that project. A descriptor reports hover:none and pointer:coarse on WebKit
+     * with no CDP session at all, verified above. Moving that describe block on
+     * to it is a spec change, so it is not made here. */
+    {
+      name: 'mobile-chromium',
+      testMatch: '**/accessibility.spec.js',
+      use: { ...devices['iPhone 13'], browserName: 'chromium' },
+    },
+    {
+      name: 'mobile-webkit',
+      testMatch: '**/accessibility.spec.js',
+      use: { ...devices['iPhone 13'], browserName: 'webkit' },
+    },
+    {
+      name: 'tablet-chromium',
+      testMatch: '**/accessibility.spec.js',
+      use: { ...devices['iPad (gen 7)'], browserName: 'chromium' },
     },
 
     // U-10 Layer 3 — visual regression (Chromium only).

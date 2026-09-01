@@ -203,3 +203,63 @@ blockquote > a,
 :where(p, li, dd, dt, td, th, figcaption, blockquote) a:where(.btn, [class*='btn--']) {
   text-decoration: none;
 }
+
+/* ── A TARGET THAT IS NOT IN A SENTENCE IS A TARGET. WCAG 2.2 SC 2.5.8 ───────
+ *
+ * styles/tokens.css already decided this and its comment carries the whole
+ * argument: an inline link standing alone in its container has no surrounding
+ * text constraining its height, so 2.5.8's inline exception does not reach it,
+ * and 4px of BLOCK padding is the one treatment that grows the hit area without
+ * growing the line box. That rule is
+ *
+ *     :is(p, li, dd, dt, td, th, figcaption, blockquote) > a { padding-block: 4px }
+ *
+ * and it is a DIRECT CHILD selector, so it reaches neither of the two shapes
+ * below. Measured on the built site at 390 with a real iPhone 13 descriptor on
+ * 2026-09-01, denominator 45 of 45 routes: FOUR targets under the 24px floor on
+ * the whole site, and all four are one of these two shapes.
+ *
+ *   233x23, 125.6x23, 233x23   a link that IS a card's h3, on /resources and
+ *                              /tools. A heading is not in that selector list.
+ *   154.2x20                   li > Email > strong > a to hello@crowagent.ai on
+ *                              /accessibility. One phrasing wrapper deep, so the
+ *                              direct-child combinator steps straight over it.
+ *
+ * THE SECOND IS THE OMISSION THIS FILE ALREADY CORRECTED ONCE, forty lines up.
+ * "A LINK INSIDE EMPHASIS IS STILL A LINK INSIDE TEXT" widened the UNDERLINE to
+ * reach through phrasing content on 2026-08-04 and the padding was never widened
+ * with it. Proof they are one population and not two: the two links in that same
+ * ul compute IDENTICALLY except for this padding. 96.7x28 on "contact form"
+ * against 154.2x20 on the mailto, same face, same 16px, same 24.8px line box,
+ * same underline. The only difference either browser or gate can see is that one
+ * is a direct child of the li and one is not.
+ *
+ * WHY HERE AND NOT IN tokens.css, WHICH IS THE RIGHT HOME. That file is held by
+ * another agent tonight. The 4px is ITS decided value and not a second opinion:
+ * tokens.css records that 3px put a /compare link at exactly 24.00 and made
+ * check-render flake either side of the floor as the web font settled, and that
+ * 4px lands the two populations on 26 and 28 where neither can round wrong.
+ * These two selectors belong in that rule's list, and merging them is the fix
+ * the next hand on tokens.css should make. Stated so the duplicate is a known
+ * one rather than a silent fork.
+ *
+ * .btn IS EXCLUDED the same way the decoration exclusion above excludes it. A
+ * button owns its own padding and already clears the floor, so adding to it
+ * would grow a control nobody asked to grow. Measured first: 0 of the 4
+ * heading-child links on the site carry a btn class today, so the exclusion
+ * changes nothing now and stops the next one being wrong.
+ *
+ * THE INK DOES NOT MOVE, which is the property that makes padding the right
+ * tool and min-block-size the wrong one. min-block-size does nothing at all to
+ * a non-replaced inline box, and inline-flex would pull the link out of the line
+ * it sits in, which is correct for a card heading and wrong for a mailto in a
+ * sentence, and no selector can tell those apart. Padding is correct for both.
+ * Re-measured after landing on all 45 routes: heights 23 to 31 and 20 to 28, no
+ * route changed document height, and no route moved the y of its first heading
+ * or paragraph. */
+:is(h1, h2, h3, h4, h5, h6) > a:not(.btn, [class*='btn--']),
+:where(p, li, dd, dt, td, th, figcaption, blockquote)
+  > :where(strong, b, em, i, u, s, mark, small, span, abbr, cite, q, dfn, sub, sup, time, data, ins, del, bdi, bdo, ruby, var, samp, kbd)
+  a:not(.btn, [class*='btn--']) {
+  padding-block: 4px;
+}

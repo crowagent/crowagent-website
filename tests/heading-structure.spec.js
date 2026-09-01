@@ -45,7 +45,10 @@ const ROUTES = [
   '/sectors/',
   '/sectors/construction/',
   '/glossary/',
-  '/glossary/ppn-002/',
+  // 2026-09-01: was /glossary/ppn-002, deleted and retargeted to ppn-026 on
+  // 2026-08-30 (_redirects:225). This list was never updated, so the h1 assertion
+  // was running against a 404.
+  '/glossary/ppn-026/',
 ];
 
 for (const route of ROUTES) {

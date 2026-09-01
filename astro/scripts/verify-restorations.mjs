@@ -221,11 +221,52 @@ rec(4, 'shine: sweeps on hover', swept,
 const glass = await page.evaluate(() => {
   const read = (sel) => {
     const el = document.querySelector(sel);
-    if (!el) return { missing: true };
+    if (!el) return { missing: true, sel };
     const cs = getComputedStyle(el);
-    return { bf: cs.backdropFilter || cs.webkitBackdropFilter, bg: cs.backgroundColor };
+    return { sel, cls: el.className, bf: cs.backdropFilter || cs.webkitBackdropFilter, bg: cs.backgroundColor };
   };
-  return { mega: read('.ca-mega'), cmdk: read('.cmdk__panel'), nav: read('.ca-nav'), surface: read('.surface') };
+  const bf = (el) => { const c = getComputedStyle(el); return c.backdropFilter || c.webkitBackdropFilter; };
+  const all = [...document.querySelectorAll('.surface')];
+  return {
+    mega: read('.ca-mega'),
+    cmdk: read('.cmdk__panel'),
+    nav: read('.ca-nav'),
+    /* ── ITEM 5 WAS MEASURING A PANEL AND REPORTING IT AS GLASS ─────────────
+     *
+     * This read `.surface` bare. MEASURED on / at 1440, 2026-09-01: there are 23
+     * elements carrying `.surface` and exactly ONE of them is glass. The other
+     * 22 wear a modifier that cancels the filter ON PURPOSE. The FIRST in
+     * document order is `.surface--panel.surface--pad.pg__card`, and
+     * styles/surfaces.css says of that modifier, in as many words, "an opaque
+     * panel rather than glass", then sets `backdrop-filter: none` on it. So
+     * `document.querySelector('.surface')` returned the one element on the page
+     * guaranteed to answer `none`, and the assertion read `none !== 'none'`,
+     * which is false.
+     *
+     * IT HAS NEVER PASSED, AND IT WAS NOT THE BLUR WORK THAT BROKE IT. The
+     * cancel on `.surface--panel` predates tonight, so this line was red before
+     * it and red after it, and its subject line, "existing surfaces untouched",
+     * was reporting on an element that is deliberately not a surface with glass.
+     * That is this file's own cautionary lesson, the one every gate that cites it
+     * quotes: a rule that reads the style engine can be pointed at the wrong
+     * element and still sound authoritative.
+     *
+     * THE SELECTOR IS STRUCTURAL AND NOT A CLASS NAME. `.surface` with no
+     * `surface--` modifier IS the base recipe, which is the thing the assertion
+     * is about. Naming `.fc` (the one element that matches today) would tie a
+     * general claim to one component and go stale the moment the homepage
+     * changes. Today it resolves to `.fc.surface` at blur(16px) saturate(1.6),
+     * the same value the mega menu and the palette carry.
+     *
+     * ABSENCE IS NOW A FAILURE. `read()` returns `{missing:true}` when nothing
+     * matches, so `glass.surface.bf` was `undefined` and `undefined !== 'none'`
+     * is TRUE. Had every surface on / taken a modifier, this line would have
+     * flipped from permanently red to VACUOUSLY GREEN without anyone touching
+     * it, which is the worse of the two failures. The census below is printed
+     * with the result so the denominator is visible rather than inferred. */
+    surface: read('.surface:not([class*="surface--"])'),
+    surfaceCensus: { total: all.length, glass: all.filter((el) => bf(el) !== 'none').length },
+  };
 });
 /*
  * `color-mix(in srgb, var(--c-panel) 82%, transparent)` computes to
@@ -239,7 +280,16 @@ const translucent = (bg) => {
 };
 rec(5, 'glass: mega menu frosted AND translucent', glass.mega.bf !== 'none' && translucent(glass.mega.bg), `filter=${glass.mega.bf} bg=${glass.mega.bg}`);
 rec(5, 'glass: command palette frosted AND translucent', glass.cmdk.bf !== 'none' && translucent(glass.cmdk.bg), `filter=${glass.cmdk.bf} bg=${glass.cmdk.bg}`);
-rec(5, 'glass: existing surfaces untouched', glass.surface.bf !== 'none', `card filter=${glass.surface.bf}`);
+rec(
+  5,
+  'glass: a base surface still frosts',
+  !glass.surface.missing && glass.surface.bf !== 'none',
+  glass.surface.missing
+    ? `NOTHING MATCHED ${glass.surface.sel} on /, so there was no base surface to measure`
+    : `${glass.surface.sel} -> .${String(glass.surface.cls).trim().split(/\s+/).join('.')} filter=${glass.surface.bf}` +
+      `  (${glass.surfaceCensus.glass} of ${glass.surfaceCensus.total} .surface elements on / carry glass;` +
+      ` the rest wear a modifier that cancels it by design)`,
+);
 
 /* ── REDUCED MOTION: everything must go still ──────────────────────────── */
 const rm = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });

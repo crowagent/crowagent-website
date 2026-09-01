@@ -47,11 +47,19 @@ const PAGES = [
   { name: 'Glossary index',   path: '/glossary/' },
   // A-128, 2026-08-05: '/tools/ppn-002-calculator/' removed. The page is deleted by
   // owner instruction, so the route now 301s and this test would have swept the
-  // redirect TARGET while claiming to cover the calculator — the same "green on
+  // redirect TARGET while claiming to cover the calculator, the same "green on
   // nothing" failure recorded in the 2026-08-01 note above, which is why it is
-  // replaced with a real route rather than just dropped. /glossary/ppn-002 is that
-  // target and was previously uncovered.
-  { name: 'PPN 002 glossary', path: '/glossary/ppn-002/' },
+  // replaced with a real route rather than just dropped.
+  //
+  // 2026-09-01: AND THEN THE REPLACEMENT ROUTE WAS DELETED TOO. /glossary/ppn-002
+  // was retargeted to /glossary/ppn-026 on 2026-08-30, which _redirects records at
+  // its line 225, and this list was never updated. So for two days this entry
+  // asserted a 200 on a 404 and failed on every project, which is the LOUD version
+  // of the defect the note above describes and therefore the survivable one. The
+  // quiet version is what the note was written about: had the spec only run axe and
+  // not asserted status, a 404 page scores clean and the route would have reported
+  // PASS while covering nothing. The status assertion is what made this findable.
+  { name: 'PPN 026 glossary', path: '/glossary/ppn-026/' },
   { name: 'Tools index',      path: '/tools/' },
 ];
 
