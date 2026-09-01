@@ -1,4 +1,89 @@
 import { defineConfig } from 'astro/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Serve `/Assets/...` from the repository root DURING DEV ONLY.
+ *
+ * THE DEFECT. `Assets/` lives one directory above this project, so the dev
+ * server has never been able to see it: Astro serves `public/`, which holds
+ * seven favicons and nothing else. Every product screenshot on the site is
+ * referenced as `/Assets/shots/figma-v2/<name>-light.png`, so in dev every one
+ * of them 404s and every carousel renders an empty frame. The owner reported it
+ * as "all the carousels broken", and all the carousels is exactly right: there
+ * is one cause and it is underneath all of them.
+ *
+ * PRODUCTION WAS NEVER AFFECTED, which is why this survived so long. The
+ * `build:deploy` chain runs `scripts/copy-assets.js` after `astro build`, and
+ * that step copies every referenced asset into `dist`. So the built artefact has
+ * always been correct and only the development view was blind. A defect that
+ * appears only in dev still costs a working day every time somebody trusts what
+ * they are looking at.
+ *
+ * IT MIRRORS `copy-assets.js` RATHER THAN INVENTING A SECOND RULE. That script
+ * resolves a reference as `path.join(REPO_ROOT, ref)` and strips any `?v=` cache
+ * query. This resolves the same way from the same root, so dev and the build
+ * agree on where an asset lives. If they ever disagree, an image works in one
+ * and not the other, which is worse than it failing in both.
+ *
+ * `apply: 'serve'` keeps it out of the build entirely. It adds no file to
+ * `dist`, changes no output byte, and cannot mask a missing asset at build time:
+ * `copy-assets.js` still fails the build on a reference it cannot resolve.
+ */
+const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ASSET_ROOT = path.join(REPO_ROOT, 'Assets');
+
+const CONTENT_TYPES = {
+  '.avif': 'image/avif',
+  '.css': 'text/css',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.js': 'text/javascript',
+  '.mp4': 'video/mp4',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webm': 'video/webm',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+};
+
+function serveRepoAssetsInDev() {
+  return {
+    name: 'crowagent-serve-repo-assets-in-dev',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url ?? '';
+        if (!url.startsWith('/Assets/')) return next();
+
+        // Drop the cache-busting query the references carry, the same way
+        // copy-assets.js does before resolving.
+        const clean = decodeURIComponent(url.split('?')[0]);
+        const target = path.join(REPO_ROOT, clean.replace(/^\//, ''));
+
+        // Refuse anything that escapes Assets/. A dev server still binds to the
+        // network here (`--host`), so a traversal would hand out arbitrary files
+        // from the machine.
+        const resolved = path.resolve(target);
+        if (resolved !== ASSET_ROOT && !resolved.startsWith(ASSET_ROOT + path.sep)) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
+
+        if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) return next();
+
+        const type = CONTENT_TYPES[path.extname(resolved).toLowerCase()];
+        if (type) res.setHeader('Content-Type', type);
+        res.setHeader('Cache-Control', 'no-cache');
+        fs.createReadStream(resolved).pipe(res);
+      });
+    },
+  };
+}
 
 // The binding constraint on this migration is that not one URL changes.
 // `format: 'directory'` emits /crowmark/index.html, which Cloudflare Pages
@@ -257,6 +342,8 @@ export default defineConfig({
   // dist. If it IS ever restored, set explicit `targets` and re-verify in `dist/`
   // — never in `src/`, which is what made this invisible for eight days.
   vite: {
+    // Dev only, see the note at the head of this file. Adds nothing to `dist`.
+    plugins: [serveRepoAssetsInDev()],
     css: {
       postcss: { plugins: [] },
     },

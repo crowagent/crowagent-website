@@ -478,6 +478,34 @@ thead th,
  * in miniature. */
 .eyebrow {
   display: inline-block;
+  /* ── A CAPSULE MUST SHRINK TO ITS TEXT IN EVERY FORMATTING CONTEXT ────────
+   *
+   * OWNER REPORT 2026-09-01: the "You are here" and "The other side" eyebrows
+   * on /crowmark "are not gradient". The gradient was in fact applied. What was
+   * wrong is the BOX, and the box is what decides how much of the ramp the
+   * letters ever touch.
+   *
+   * A GRID OR FLEX PARENT BLOCKIFIES ITS CHILDREN. `display: inline-block` on a
+   * direct child of a grid container computes to `block`, so the capsule
+   * stretched to the whole track. `background-clip: text` paints
+   * `--grad-spectrum` across that stretched box, and the glyphs then sit in the
+   * first slice of the ramp. MEASURED at 1440: box 531px against a 119px glyph
+   * run, so the label sampled 22 percent of the gradient and showed the teal
+   * end only. Every other eyebrow on the page sampled 63 to 95 percent and
+   * showed all four hues, which is exactly why these two looked wrong beside
+   * them and nothing else did.
+   *
+   * `width: fit-content` RATHER THAN `justify-self: start`, because
+   * `justify-self` is a grid property and does nothing in a flex row, and the
+   * blockifying parent here is grid on /crowmark and flex elsewhere. One
+   * property that holds in block, flex and grid is one rule instead of three.
+   *
+   * IT IS A NO-OP WHERE NOTHING WAS WRONG, which is why it is safe to state on
+   * the shared recipe. An inline-block box is already shrink-to-fit, so
+   * fit-content resolves to the width it already had. Site scan at 1440 across
+   * 13 routes: 20 blockified capsules, 17 of them differing from their glyph run
+   * only by this recipe's own horizontal padding, and 3 genuinely stretched. */
+  width: fit-content;
   margin-block-end: var(--stack-1);
   padding: 0.5rem 0.85rem;
   border: 1px solid var(--c-border);
@@ -600,6 +628,13 @@ thead th,
  * NO COLOUR. See the file header: a chip's hue is its meaning. */
 .chip {
   display: inline-block;
+  /* Same blockification, same remedy, see the note on `.eyebrow` above. A chip
+     has no gradient, so a stretched one is not unreadable, it is just a pill
+     drawn across a whole card: MEASURED on /crowmark, the "Recommended" chip
+     was 321px around a 97px word, while the identical chip on /pricing sat at
+     122px because its parent is not a grid. Two widths for one object is the
+     thing this file exists to stop. */
+  width: fit-content;
   padding: 0.3rem 0.7rem;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-pill);
