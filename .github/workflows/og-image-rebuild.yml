@@ -1,28 +1,43 @@
 name: OG image rebuild — issue #108
 
-# Rebuilds Assets/og/*.png whenever a commit on main touches:
-#   - any *.html (titles / descriptions feed the OG renderer)
-#   - changelog.xml (per-release OG cards)
-#   - scripts/generate-og-images.js (renderer logic)
-#   - crowagent-brand-tokens.css (brand colours)
+# MANUAL ONLY SINCE 2026-09-01. THE `push` TRIGGER IS GONE, AND THE JOB BELOW
+# CANNOT SUCCEED ON A RUNNER AS IT STANDS. Read both halves before using it.
 #
-# After a successful render, commits the resulting PNGs back to main so the
-# Cloudflare Pages deployment hash includes them. CrowAgent.ai is a static
-# site with no build step on the CDN, so the PNGs MUST be present in the
-# git tree before Pages picks them up.
+# WHY THE TRIGGER WENT. It read:
+#     push: { branches: [main], paths: ['**/*.html', 'scripts/generate-og-images.js',
+#             'crowagent-brand-tokens.css'] }
+# `dist/` and `astro/dist/` are both gitignored, so by 2026-09-01 the only tracked
+# files `**/*.html` could still match were the FROZEN LEGACY TREE and
+# `status/*.html`. Editing a local status board page therefore rebuilt the OG
+# cards and auto-committed them to `main`, and a commit on `main` IS a production
+# Cloudflare Pages deploy. A board edit could ship a release. Nothing about that
+# was intended and nobody chose it.
 #
-# Cost discipline (Rule 0): this workflow only runs on `main` AND only when
-# the trigger paths above actually changed. It never runs on PRs to avoid
-# wasting Actions minutes on preview-only branches.
+# (changelog.xml was a fourth trigger path, removed the same day. The file does
+# not exist in this repository, so the path could never match and the per-release
+# cards it claimed to rebuild were never rebuilt by it.)
+#
+# WHY IT CANNOT RUN HERE ANY MORE. `scripts/generate-og-images.js` now reads the
+# SHIPPING pages in `astro/dist` rather than the frozen root HTML, which is what
+# fixed the stale card titles. `astro/dist` is gitignored, so a fresh runner
+# checkout does not have it, and the generator fails loudly rather than rendering
+# a card from nothing. Making this job work would mean adding an `astro build`
+# step, which is new billable minutes on every trigger and is a cost decision for
+# the owner, not a side effect of a re-pointing change.
+#
+# HOW OG CARDS ARE REGENERATED NOW: locally, as part of the release, in this
+# order, because `astro build` WIPES dist.
+#     cd astro && npm run build:deploy     # produces astro/dist
+#     cd .. && npm run build:og:force      # reads astro/dist, writes Assets/og
+#     cd astro && node scripts/copy-assets.js   # copies the cards back into dist
+# Then commit `Assets/og`. That is one local command chain against a build the
+# release already has to produce, and it costs nothing.
+#
+# `workflow_dispatch` is kept rather than deleted so the mechanism and its
+# permissions survive for whoever decides what this should become. Dispatching it
+# TODAY will fail at "Render OG images" with a message naming the missing build.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '**/*.html'
-      - 'changelog.xml'
-      - 'scripts/generate-og-images.js'
-      - 'crowagent-brand-tokens.css'
   workflow_dispatch:
 
 permissions:

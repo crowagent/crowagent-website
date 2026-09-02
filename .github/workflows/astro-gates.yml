@@ -14,16 +14,41 @@ name: Astro gates
 #
 # ── WHAT ALREADY RAN, AND WHY THIS DOES NOT DUPLICATE IT ─────────────────────
 #
-# Four workflows existed and none of them touches the Astro tree:
-#   quality-gate.yml   builds the LEGACY root tree (`node scripts/build-dist.js`)
-#                      and runs jest, Lighthouse, axe, Pa11y and linkinator over
-#                      the `dist/` that produces.
-#   lighthouse-ci.yml  Lighthouse against the legacy build.
-#   robots-guard.yml   robots.txt.
-#   smoke-test.yml     a 15-minute cron against the LIVE site.
-# Cloudflare Pages builds the legacy tree too: build command `npm run build` at
-# the repo root, output directory `dist/`. So the Astro chain has never run in
-# CI and does not run at deploy time either.
+# That was written on 2026-08-04. THE OTHER FOUR WORKFLOWS IT DESCRIBED ARE NOW
+# TWO, and the last sentence of the original paragraph was already wrong by
+# 2026-08-05. Corrected 2026-09-01.
+#
+# WHAT IT SAID: quality-gate.yml built the LEGACY root tree
+# (`node scripts/build-dist.js`) and ran jest, Lighthouse, axe, Pa11y and
+# linkinator over the `dist/` that produced. lighthouse-ci.yml ran Lighthouse
+# against the same legacy build. And it said "Cloudflare Pages builds the legacy tree
+# too: build command `npm run build` at the repo root, output directory `dist/`".
+#
+# THE DEPLOY SOURCE MOVED TO `astro/dist` ON 2026-08-05. Measured against
+# production on 2026-09-01: `/pricing` 308s to `/pricing/` and returns 200,
+# `/pricing.html` returns 404, and `/search-index.json` returns 200. Directory
+# routes and a served search index are Astro build outputs. The legacy root tree
+# has neither and nothing serves it.
+#
+# quality-gate.yml AND lighthouse-ci.yml ARE DELETED (2026-09-01). Both fired on
+# every push and every pull request to main, both built and audited the legacy
+# tree end to end, and both audited `/pricing.html` and `/contact.html`, URLs
+# production answers with 404. Both had failed on EVERY run since 2026-08-05,
+# 18 consecutive red runs each, and in quality-gate that failure landed on the
+# Lighthouse step, which SKIPPED axe, Pa11y, linkinator, npm audit and Snyk
+# behind it. So the last month of them measured the wrong artefact, blocked
+# nothing, and still billed roughly 4 runs a week each. Branch protection on
+# main carries no `required_status_checks` at all, so neither was ever required
+# to merge.
+#
+# The two that remain are robots-guard.yml and smoke-test.yml, both push-only
+# plus workflow_dispatch, both cheap, and both watching the LIVE site rather
+# than a tree. og-image-rebuild.yml is workflow_dispatch only.
+#
+# THIS WORKFLOW IS THEREFORE THE ONLY CI THAT MEASURES WHAT SHIPS. A gap the
+# owner should know about rather than discover: no Lighthouse, axe or Pa11y run
+# in CI against the Astro site. Adding one is new billable minutes and is an
+# owner cost decision, not something to slip in here.
 #
 # ── RUNTIME, MEASURED ────────────────────────────────────────────────────────
 #
@@ -100,9 +125,16 @@ jobs:
         working-directory: astro
     steps:
       # The whole repository, not a sparse checkout: the gates reach outside the
-      # Astro project on purpose. copy-assets.js reads ../../Assets,
-      # check-vendor-logos.js reads Assets/brand/integrations/LOGO-PROVENANCE.md,
-      # and check-content-parity.js diffs against the legacy HTML at the root.
+      # Astro project on purpose. copy-assets.js reads ../../Assets and
+      # check-vendor-logos.js reads Assets/brand/integrations/LOGO-PROVENANCE.md.
+      #
+      # The third reason given here was "check-content-parity.js diffs against
+      # the legacy HTML at the root". CORRECTED 2026-09-01: it does not, and has
+      # not since 2026-08-05. Read in the script's own header, not assumed from
+      # this comment. Both parity gates now compare against committed snapshots,
+      # `content-parity.baseline.json` and `seo-parity.baseline.json`, which is
+      # why they stopped decaying as pages were written that had no legacy twin.
+      # No gate in this chain reads the legacy root HTML.
       - uses: actions/checkout@v4
 
       # 24 because that is the version the 233 s reference run was measured on.
@@ -157,12 +189,16 @@ jobs:
       # minifier is Vite's esbuild default. The incident was in the LEGACY chain's
       # `build:css:legacy`, which this workflow does not run.)
       #
-      # THE DEPLOY CANNOT SEE ANY OF THIS. Cloudflare Pages builds the legacy root
-      # tree with `npm run build` at the repository root; this workflow deploys
-      # nothing. quality-gate.yml, lighthouse-ci.yml and og-image-rebuild.yml each
-      # run their own root `npm ci` and are untouched. The root package.json and
-      # the root postcss.config.mjs are also untouched: they still describe the
-      # legacy tree, which still uses them.
+      # THE DEPLOY CANNOT SEE ANY OF THIS, and it never could. That was true when
+      # written and stays true: this workflow deploys nothing. The rest of the
+      # original paragraph is CORRECTED 2026-09-01. It said "Cloudflare Pages
+      # builds the legacy root tree with `npm run build` at the repository root",
+      # which stopped being true on 2026-08-05: Pages now builds `astro/` with
+      # `npm run build:deploy` and publishes `astro/dist`. It also named
+      # quality-gate.yml and lighthouse-ci.yml as running their own root `npm ci`.
+      # Both are deleted. og-image-rebuild.yml still declares a root `npm ci` and
+      # is workflow_dispatch only. The root package.json and the root
+      # postcss.config.mjs are untouched: they still describe the legacy tree.
       - name: Install dependencies
         run: npm ci
 
