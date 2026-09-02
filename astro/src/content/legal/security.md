@@ -54,7 +54,7 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 - Supporting services may process metadata in the EU (PostHog EU Cloud, Sentry EU).
 - Web application rendering runs on Vercel in London (lhr1).
 - Other processors operate under Standard Contractual Clauses (SCCs).
-- No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy) for the full sub-processor list.
+- No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy/) for the full sub-processor list.
 
 <dl class="deflist"> <dt id="sub-processors">Metadata sub-processors</dt> <dd> <dl class="deflist deflist--ledger"> <dt>PostHog</dt> <dd>EU</dd> <dt>Sentry</dt> <dd>SCC</dd> <dt>Brevo</dt> <dd>EU</dd> <dt>Cloudflare</dt> <dd>SCC</dd> <dt>Calendly</dt> <dd>SCC</dd> <dt>Stripe</dt> <dd>SCC</dd> </dl> </dd> </dl>
 
@@ -134,8 +134,8 @@ CrowAgent targets 99.5% monthly uptime, with independent public status monitorin
 
 Everything above is what we can evidence today, including the gaps. If it clears your bar, the next step is access to a live workspace. If it does not, tell us which control is missing and we will say plainly whether it is on the roadmap.
 
-[Request access](/contact?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
+[Request access](/contact/?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
 
 ICO-registered data controller. EU data residency. AES-256 at rest, TLS 1.3 in transit. Built to ISO 27001 controls.
 
-[Privacy Policy](/privacy) [Sub-processors](#sub-processors) [Status Page](https://status.crowagent.ai)
+[Privacy Policy](/privacy/) [Sub-processors](#sub-processors) [Status Page](https://status.crowagent.ai)

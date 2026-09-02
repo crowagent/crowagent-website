@@ -29,7 +29,7 @@ One date decides which edition you are answering, and it is not the date you wri
 
 > **PPN 026** was published on 5 August 2026 and applies to central government procurements commenced on or after 1 January 2027, at 1 million pounds inc VAT or above, with a minimum social value weighting of 10% from 1 million pounds inc VAT to 5 million and 20% at 5 million pounds inc VAT or above. Procurements commenced before 1 January 2027 fall under the previous edition of the Social Value Model. The minimum is a floor rather than a cap, so check the weighting published in each tender rather than assuming it.
 
-Every figure above is published beside its primary source, with the date and a link to GOV.UK, on our [sources page](/sources).
+Every figure above is published beside its primary source, with the date and a link to GOV.UK, on our [sources page](/sources/).
 
 ---
 
@@ -37,4 +37,4 @@ Every figure above is published beside its primary source, with the date and a l
 
 CrowMark for Suppliers drafts your PPN 026 social value answer from your own submitted bids, then tracks the evidence for each commitment after award.
 
-[Request access](/contact?enquiry=limited-access#contact-form)
+[Request access](/contact/?enquiry=limited-access#contact-form)

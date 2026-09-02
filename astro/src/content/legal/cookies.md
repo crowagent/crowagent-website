@@ -15,7 +15,7 @@ We follow the Privacy and Electronic Communications Regulations (PECR) for stora
 
 ## 2. Every cookie we use
 
-**This website, crowagent.ai, sets nothing.** No cookies, no local storage, no session storage, and no requests to anyone else. There is no consent banner on it because there is nothing to ask you about, and no analytics because none is installed. You can confirm all of that yourself in about ten seconds. The [cookie preferences](/cookie-preferences) page shows you how.
+**This website, crowagent.ai, sets nothing.** No cookies, no local storage, no session storage, and no requests to anyone else. There is no consent banner on it because there is nothing to ask you about, and no analytics because none is installed. You can confirm all of that yourself in about ten seconds. The [cookie preferences](/cookie-preferences/) page shows you how.
 
 The table below is the **CrowMark platform**, the signed-in application you reach at a separate address. Items marked **Consent-gated** are not set unless you agree in the platform's own consent banner. Where a row names no expiry, the item lasts for the browser session and is gone when you close it.
 
@@ -53,10 +53,10 @@ The platform will work perfectly for your core tasks. You will still be able to 
 
 ## 6. How to change your choices
 
-**On this website there is nothing to change**, because nothing is set. The [cookie preferences](/cookie-preferences) page sets that out category by category and shows you how to confirm it for yourself.
+**On this website there is nothing to change**, because nothing is set. The [cookie preferences](/cookie-preferences/) page sets that out category by category and shows you how to confirm it for yourself.
 
 Inside the platform, the consent banner appears the first time you use it and your choice can be changed at any time from the same control. You can also block or delete cookies in your browser settings, though on the platform that may sign you out and interrupt the secure session.
 
-[See what this site stores](/cookie-preferences) [Privacy Policy](/privacy)
+[See what this site stores](/cookie-preferences/) [Privacy Policy](/privacy/)
 
 <aside role="region" aria-label="Corporate information" class="legal-aside"> <div class="legal-aside__card"> <p class="eyebrow legal-aside__label">Corporate Information</p> <p>CrowAgent Ltd</p> <p>Companies House No. 17076461<br>Registered in England &amp; Wales</p> <!-- A11Y-2026-08-05 (WCAG 1.3.1), O-25: this carried role="region" with NO accessible name. A region without a name is not exposed as a landmark at all, and declaring the role also suppressed the implicit `complementary` role the bare <aside> would have had, so the element was worse off named nothing than it would have been with no role attribute. aria-label added rather than the role removed, because the card is a named aside in the design. The comment previously here described an unnamed <nav> landmark, which is not this element and not this page's defect; it was a stale paste. --> </div> </aside>

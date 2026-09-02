@@ -1,5 +1,5 @@
 ---
-title: "CrowMark vs CleanTender: an honest UK bid software comparison"
+title: "CrowMark vs CleanTender: bid software, honestly"
 description: "CrowMark against CleanTender: a sector-agnostic bid suite versus a soft-FM specialist. Both publish prices, so the question is scope."
 ogDescription: "CrowMark against CleanTender: a sector-agnostic bid suite versus a soft-FM specialist. Both publish prices, so the question is scope."
 articleDescription: "CleanTender is a soft-FM specialist with Pro at £99/month. CrowMark is a sector-agnostic bid suite from £49/month with figure-grounding and social value maths. A sourced, balanced comparison."
@@ -74,7 +74,7 @@ faq:
 </picture>
 <figcaption>The post-award evidence tracker in CrowMark, shown as a drawn representation. The coverage figures on screen are part of the drawing.</figcaption>
 </figure>
-<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
+<p>CrowMark publishes its pricing. Starter is <a href="/pricing/?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
 <p>Both tools publish their prices, so you can compare directly. CleanTender is free to browse and &pound;99 per month on Pro. CrowMark is &pound;49 per month on Starter and &pound;149 per month on Pro. For a soft-FM supplier, CleanTender Pro at &pound;99 sits between CrowMark's two paid tiers, and the deciding factor is scope rather than price: CleanTender covers soft FM deeply, CrowMark covers every sector plus deterministic social value and post-award delivery.</p>
@@ -145,14 +145,14 @@ faq:
 <ol>
 <li>CleanTender pricing (free tier, Pro &pound;99/month or &pound;990/year), curated soft-FM feed, 0 to 100 qualification scan in under 30 seconds, Selection Questionnaire sections and sector vocabulary, Compliance Vault, and target of 4 to 12 bids a year. CleanTender, "7 Best AI Tender Software for UK Contracts (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-tender-software" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-tender-software</a></li>
 <li>CleanTender soft-FM scope and free contract-directory access. CleanTender, "AI Bid Management Software: Best UK Options (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-bid-management-software-uk" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-bid-management-software-uk</a></li>
-<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026 and Procurement Act 2023 s.52 / s.71. Bid-fit marking noted as in development, not released (first party). CrowAgent, <a href="/crowmark">CrowMark product page</a>.</li>
-<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing?product=mark">Pricing</a>.</li>
+<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026 and Procurement Act 2023 s.52 / s.71. Bid-fit marking noted as in development, not released (first party). CrowAgent, <a href="/crowmark/">CrowMark product page</a>.</li>
+<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing/?product=mark">Pricing</a>.</li>
 </ol>
 </div>
 
 <h2 id="related">Related comparisons</h2>
 <div class="cmp-relgrid">
-<a class="cmp-relcard" href="/compare/crowmark-vs-autogenai">CrowMark vs AutogenAI &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-mytender-io">CrowMark vs mytender.io &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid">CrowMark vs SwiftBid &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-autogenai/">CrowMark vs AutogenAI &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-mytender-io/">CrowMark vs mytender.io &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid/">CrowMark vs SwiftBid &rarr;</a>
 </div>

@@ -84,7 +84,7 @@ The same avoidable errors recur when SMEs approach frameworks and DPS for the fi
 4. **Slow response to mini-competitions.** Underestimating how quickly call-off timescales move and losing winnable work to a slower internal approval process rather than a weaker bid.
 5. **Ignoring rate card and catalogue accuracy.** Letting Digital Marketplace listings or framework pricing schedules go stale, which costs direct-award opportunities that never reach a formal competition.
 
-If you are new to public sector bidding altogether, our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract) covers where to look beyond frameworks and how the SQ and ITT stages work, and our [guide to writing a method statement that scores](/blog/method-statement-that-scores) applies directly to the technical response you will submit at both the framework application stage and every mini-competition that follows.
+If you are new to public sector bidding altogether, our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract/) covers where to look beyond frameworks and how the SQ and ITT stages work, and our [guide to writing a method statement that scores](/blog/method-statement-that-scores/) applies directly to the technical response you will submit at both the framework application stage and every mini-competition that follows.
 
 ## Frequently asked questions
 
@@ -120,5 +120,5 @@ No. Frameworks and DPS are structured in lots by size, specialism or geography s
 
 CrowMark pulls Contracts Finder and Find a Tender every day, so framework refreshes, DPS entry points and mini-competitions land in front of you rather than getting missed in a crowded inbox.
 
-[Request access](/contact?enquiry=limited-access#contact-form)
-[See CrowMark →](/crowmark)
+[Request access](/contact/?enquiry=limited-access#contact-form)
+[See CrowMark →](/crowmark/)

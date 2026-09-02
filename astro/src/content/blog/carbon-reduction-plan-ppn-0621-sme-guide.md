@@ -114,4 +114,4 @@ If the tender falls under PPN 06/21 (central government contracts over 5 million
 
 A Carbon Reduction Plan usually fails on a missing field rather than on its arithmetic: an unstated Scope 3 category, an absent director sign-off, a link that does not resolve. CrowMark for Suppliers checks a response against what the tender documents actually ask for, and shows you the wording each check was read from.
 
-[See CrowMark →](/crowmark)
+[See CrowMark →](/crowmark/)

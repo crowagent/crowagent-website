@@ -58,6 +58,49 @@
  * breadcrumb item and sitemap URL against the tree that was actually built. If
  * Astro ever changes how it emits 404, or a second flat route appears, that gate
  * fails rather than this assumption quietly going stale.
+ *
+ * ── THE ANCHOR GRAPH IS GOVERNED BY THE SAME RULE, R28-WEB-SLASH ────────────
+ *
+ * WHAT THIS FILE FIXED IN 2026-08-12 AND WHAT IT LEFT BEHIND. It corrected
+ * every address the site PUBLISHES about itself, the canonical, the og:url, the
+ * sitemap and the structured data. It did not reach a single `href`, because an
+ * authored anchor never calls it. So from that day the site declared
+ * `https://crowagent.ai/about/` as its canonical while every link to that page
+ * on all 46 documents said `/about`.
+ *
+ * MEASURED LIVE ON 2026-09-01, with `fetch(url, { redirect: 'follow' })` so the
+ * hop is a fact rather than an inference: 44 of the 48 distinct internal link
+ * targets answered 308 before reaching the page, and those 48 targets are drawn
+ * 2,490 times across the 46 built documents. Nothing was broken and nothing
+ * 404d, which is exactly why it survived. `scripts/check-links.js` asks whether
+ * a link RESOLVES and deliberately accepts either spelling, so a redirecting
+ * link is invisible to it. Every internal click cost a round trip, and every
+ * internal link passed its authority through a redirect rather than into the
+ * page.
+ *
+ * THE ANCHORS NOW CARRY THE SERVED FORM, 277 of them across 66 files. The
+ * trailing slash is authored into the href itself rather than routed through
+ * this function, because they live in literal markup, markdown and typed data,
+ * where a function call cannot go. This module stays the source of truth for
+ * what the served form IS.
+ * What keeps the two in step is the built output: the route set is read out of
+ * `dist`, never out of source, so a flat emitted file such as `llms.txt` or
+ * `/404` can never be handed a slash it does not answer 200 on.
+ *
+ * THE THREE CLASSES THAT DELIBERATELY DID NOT MOVE, each because a slash there
+ * would be noise or a defect rather than a fix:
+ *
+ *   Seo `path` props and breadcrumb `path` values reach this function, and it
+ *     normalises either spelling to the same URL. Slashing them would change no
+ *     emitted byte. Breadcrumb `path` values DID move, because Breadcrumb.astro
+ *     also renders them as `href={c.path}`, which makes them anchors as well.
+ *   `activeRoutes` in data/nav.ts are route PREFIXES, matched by Nav.astro's
+ *     `isActive`, which strips a trailing slash from both sides before
+ *     comparing. They are keys, not addresses.
+ *   `_redirects` destinations. 65 of the 87 rules point at a bare directory
+ *     route, so a legacy inbound URL takes a 301 and then a 308. That is real
+ *     and it is measured, but it is a separate change to a file whose own
+ *     header records a redirect-loop incident, and it belongs in its own row.
  */
 import { SITE } from '../data/site';
 

@@ -77,7 +77,7 @@ The errors that cost suppliers private sector opportunities are different in emp
 4. **Weak or unprepared references.** Naming referees who are not briefed and ready to take a call, undermining a strong written response when the buyer follows up.
 5. **Assuming public sector rules apply.** Citing statutory obligations, transparency requirements or social value weightings that simply do not bind a private buyer, which can read as a mismatch between your understanding and the process you are actually in.
 
-If your organisation bids across both public and private work, the core writing discipline transfers directly: our guide to [writing a method statement that actually scores](/blog/method-statement-that-scores) covers the structure, evidence and risk content that strengthens a response in either sector. And if you are still building your public sector pipeline alongside private work, our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract) explains where public opportunities are advertised and how that process differs from what is described here.
+If your organisation bids across both public and private work, the core writing discipline transfers directly: our guide to [writing a method statement that actually scores](/blog/method-statement-that-scores/) covers the structure, evidence and risk content that strengthens a response in either sector. And if you are still building your public sector pipeline alongside private work, our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract/) explains where public opportunities are advertised and how that process differs from what is described here.
 
 ## Frequently asked questions
 
@@ -110,5 +110,5 @@ Yes, where you can do so appropriately. Private sector buyers often run informal
 
 CrowMark drafts RFP, RFI, PQQ and SQ answers grounded in your own submitted bids, so the same disciplined evidence you need for a public tender strengthens your private sector responses too.
 
-[Request access](/contact?enquiry=limited-access#contact-form)
-[See CrowMark →](/crowmark)
+[Request access](/contact/?enquiry=limited-access#contact-form)
+[See CrowMark →](/crowmark/)

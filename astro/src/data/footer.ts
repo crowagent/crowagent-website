@@ -197,51 +197,51 @@ export const FOOTER = {
     {
       title: 'Product',
       links: [
-        { label: 'CrowMark for Suppliers', href: '/crowmark' },
-        { label: 'CrowMark for Buyers', href: '/crowmark-buyers' },
-        { label: 'Pricing', href: '/pricing' },
-        { label: 'Integrations', href: '/integrations' },
+        { label: 'CrowMark for Suppliers', href: '/crowmark/' },
+        { label: 'CrowMark for Buyers', href: '/crowmark-buyers/' },
+        { label: 'Pricing', href: '/pricing/' },
+        { label: 'Integrations', href: '/integrations/' },
         { label: 'Sectors', href: '/sectors/' },
         /* WAS the PPN 002 calculator until 2026-08-04, when the owner removed
            that tool. This row is the free-tool row rather than that one tool's
            row, so it names the free tool the site actually has now. */
-        { label: 'Tender Compliance Matrix', href: '/tools/tender-compliance-matrix', chip: 'Free' },
+        { label: 'Tender Compliance Matrix', href: '/tools/tender-compliance-matrix/', chip: 'Free' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { label: 'Resources hub', href: '/resources' },
-        { label: 'Blog', href: '/blog' },
-        { label: 'Compare CrowMark', href: '/compare' },
-        { label: 'FAQ', href: '/faq' },
-        { label: 'Procurement Glossary', href: '/glossary' },
+        { label: 'Resources hub', href: '/resources/' },
+        { label: 'Blog', href: '/blog/' },
+        { label: 'Compare CrowMark', href: '/compare/' },
+        { label: 'FAQ', href: '/faq/' },
+        { label: 'Procurement Glossary', href: '/glossary/' },
         /*
          * Added 2026-08-02, and NOT a legacy row: /sources did not exist on the
          * live site. It is the page every figure on the homepage now points at,
          * so it has to be reachable from somewhere other than the two homepage
          * links, or the site's provenance lives on one page's scroll depth.
          */
-        { label: 'Sources', href: '/sources' },
-        { label: 'Changelog', href: '/changelog' },
+        { label: 'Sources', href: '/sources/' },
+        { label: 'Changelog', href: '/changelog/' },
       ],
     },
     {
       title: 'Company',
       links: [
-        { label: 'About', href: '/about' },
-        { label: 'Roadmap', href: '/roadmap' },
-        { label: 'Contact', href: '/contact' },
-        { label: 'Partners', href: '/partners' },
+        { label: 'About', href: '/about/' },
+        { label: 'Roadmap', href: '/roadmap/' },
+        { label: 'Contact', href: '/contact/' },
+        { label: 'Partners', href: '/partners/' },
       ],
     },
     {
       title: 'Legal',
       links: [
-        { label: 'Security', href: '/security' },
-        { label: 'Privacy', href: '/privacy' },
-        { label: 'Terms', href: '/terms' },
-        { label: 'Cookies', href: '/cookies' },
+        { label: 'Security', href: '/security/' },
+        { label: 'Privacy', href: '/privacy/' },
+        { label: 'Terms', href: '/terms/' },
+        { label: 'Cookies', href: '/cookies/' },
         /*
          * Accessibility statement. It lives in the `legal` collection and is
          * served by [legal].astro like the other four, so it needs no route of
@@ -250,7 +250,7 @@ export const FOOTER = {
          * statement: public sector buyers look for this link in the footer,
          * which is the one place every page carries.
          */
-        { label: 'Accessibility', href: '/accessibility' },
+        { label: 'Accessibility', href: '/accessibility/' },
         /*
          * "Cookie preferences" IS NOT LISTED HERE, and its absence is the fix.
          * It was in this column AND in `bottomLinks` below, so the identical
@@ -277,6 +277,6 @@ export const FOOTER = {
 
   bottomLinks: {
     status: { label: 'Status', href: 'https://status.crowagent.ai' } as FooterLink,
-    cookiePreferences: { label: 'Cookie preferences', href: '/cookie-preferences' } as FooterLink,
+    cookiePreferences: { label: 'Cookie preferences', href: '/cookie-preferences/' } as FooterLink,
   },
 } as const;

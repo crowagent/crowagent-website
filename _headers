@@ -75,8 +75,13 @@
 #      §18 of CLAUDE.md (production smoke methodology). Origin-only
 #      header; the Cloudflare proxy strips it before the response
 #      reaches the browser (per RFC 3040).
-#   5. CSP `manifest-src 'self'` added explicitly. The marketing site
-#      ships `/manifest.json` for the PWA shim; without an explicit
+#   5. CSP `manifest-src 'self'` added explicitly. CORRECTED 2026-09-01: this
+#      said the marketing site "ships /manifest.json for the PWA shim". It does
+#      not. https://crowagent.ai/manifest.json returns 404, because
+#      astro/scripts/copy-cf-config.js publishes only _headers, _redirects,
+#      robots.txt, llms.txt and llms-full.txt. The directive itself is kept: it
+#      is correct policy for a manifest the site may one day ship, and removing
+#      a CSP directive is a live-header change with no benefit. Without an explicit
 #      `manifest-src` directive Chrome falls back to default-src which
 #      is `'self'` so the rule was already satisfied transitively, but
 #      Firefox enforces the explicit directive — adding it removes the
@@ -290,7 +295,35 @@
   # every clean-URL page was edge+browser cached for 4 HOURS and site changes
   # took up to 4h to appear (2026-06-03 fix). Versioned/immutable assets
   # restore their 1-year edge cache via their own rules further down.
-  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60
+  # [R28-CSP-BLOCKS-A-RUNTIME-INJECTED-SCRIPT-ON-EVERY-LIVE-PAGE-01, owner
+  # decision 2026-09-02] `no-transform` is APPENDED to the value above, never
+  # added as a second `Cache-Control:` line. Cloudflare Pages CONCATENATES a
+  # header when an earlier rule already set it, which is the measured 2026-08-01
+  # bug recorded further down this file where a stylesheet carried two
+  # conflicting cdn-cache-control values and which one wins is undefined.
+  #
+  # WHY: Cloudflare does not inject JavaScript Detections when the origin
+  # response carries no-transform. The block above records this as the one
+  # remedy that lives in this file and says it is an owner decision. The owner
+  # took it on 2026-09-02, after a measurement the earlier note did not have.
+  #
+  # THE COST THAT NOTE WARNED ABOUT IS NOT A REAL COST HERE. It said this
+  # suppresses the cf.bot_management.js_detection.passed signal. Measured
+  # 2026-09-02: reading that signal needs Enterprise Bot Management and this is
+  # a Free zone, so it is available to nothing. Bot Fight Mode, the only feature
+  # that consumed it, is already off (fight_mode: false, read from the zone).
+  # The flag bot_management.enable_js stayed true after Bot Fight Mode was
+  # switched off, which is why turning BFM off measured no change at all.
+  #
+  # SCOPE: this rides on the /* catch-all, so it reaches HTML at clean URLs.
+  # /js/*, /styles.min.css, /scripts.min.js and /Assets/* each UNSET
+  # Cache-Control before setting their own, so no asset inherits it. Verified
+  # against this file rather than assumed.
+  #
+  # NOT YET MEASURED, and it can only be checked after a deploy: whether
+  # no-transform affects content-encoding on the 116 KB HTML document. Check
+  # `content-encoding: br` survives on the first fetch after this ships.
+  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60, no-transform
   Surrogate-Control: max-age=300
   # 2026-08-01: the 2026-06-03 fix above cut the TTL but set the wrong header,
   # so it only ever half-worked. MEASURED after shipping a new homepage: `/`,
@@ -311,7 +344,12 @@
 
 # --- HTML pages: short cache, revalidate on edge ---
 /*.html
-  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60
+  # [R28-CSP 2026-09-02] `no-transform` matches the /* catch-all above. This
+  # rule does NOT unset Cache-Control first, so Cloudflare Pages concatenates
+  # the two values and a request for a .html path receives both. Carrying the
+  # same directive in each keeps them from disagreeing, which is the failure the
+  # unset comment further down this file documents.
+  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60, no-transform
   CDN-Cache-Control: no-store
 
 # --- [R2.2 F-042] JS modules + page CSS: keep the CDN EDGE warm; browser still

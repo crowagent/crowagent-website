@@ -84,7 +84,7 @@ Strip away the legal architecture and the practical checklist for a small bid te
 - **Keep exclusion declarations clean.** Accurate declarations, current filings, and checked subcontractors protect your eligibility.
 - **Deliver what you promised.** On larger contracts, published KPIs make performance visible to future buyers.
 
-If you want a deeper walk-through of the scored social-value element that MAT now foregrounds, our [complete PPN 026 social value guide](/blog/ppn-026-social-value-guide) covers the weightings, the dates and what a buyer scores. You may also find our [procurement glossary](/glossary) useful for the terms that appear in tender packs.
+If you want a deeper walk-through of the scored social-value element that MAT now foregrounds, our [complete PPN 026 social value guide](/blog/ppn-026-social-value-guide/) covers the weightings, the dates and what a buyer scores. You may also find our [procurement glossary](/glossary/) useful for the terms that appear in tender packs.
 
 ## Frequently asked questions
 
@@ -121,5 +121,5 @@ Yes. Section 12 requires contracting authorities to have regard to the particula
 
 Under MAT, social value sits inside the award test. CrowMark helps you plan and draft a TOMs-aligned PPN 026 social value response so a scored section becomes a strength, not an afterthought.
 
-[See CrowMark →](/crowmark)
-[Read the PPN 026 guide →](/blog/ppn-026-social-value-guide)
+[See CrowMark →](/crowmark/)
+[Read the PPN 026 guide →](/blog/ppn-026-social-value-guide/)

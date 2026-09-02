@@ -45,7 +45,7 @@ The **Find a Tender** service publishes higher-value public sector opportunities
 
 **Contracts Finder** has traditionally carried lower-value opportunities, including central government contracts from 12,000 pounds, along with details of some awarded contracts. For a first-time bidder this is often the more useful of the two, because smaller contracts tend to have less incumbent competition and give you a chance to build a public sector track record before you chase larger work.
 
-Under the Procurement Act 2023, which went live on 24 February 2025, opportunities and notices are drawn together through the **Central Digital Platform**. Register your organisation there early so your core details are ready to reuse, and if you want the wider context on how the new regime works, read our [Procurement Act 2023 guide for SME bidders](/blog/procurement-act-2023-sme-guide).
+Under the Procurement Act 2023, which went live on 24 February 2025, opportunities and notices are drawn together through the **Central Digital Platform**. Register your organisation there early so your core details are ready to reuse, and if you want the wider context on how the new regime works, read our [Procurement Act 2023 guide for SME bidders](/blog/procurement-act-2023-sme-guide/).
 
 ## How to read a tender
 
@@ -90,7 +90,7 @@ Almost every central government tender now includes a scored **social value** se
 
 Social value asks what wider benefit your delivery of the contract will bring: local employment and skills, support for smaller businesses in your supply chain, environmental improvements, and community wellbeing. Strong answers are specific and measurable. Rather than promising to "support the local community", commit to a defined number of apprenticeships, work-experience placements or volunteering hours tied to the contract, and describe how you will evidence delivery afterwards. Buyers mark commitments they can hold you to, not good intentions.
 
-For a full walk-through of the weightings, the evidence a buyer expects and the measurement framework, read our [complete PPN 026 social value guide](/blog/ppn-026-social-value-guide). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
+For a full walk-through of the weightings, the evidence a buyer expects and the measurement framework, read our [complete PPN 026 social value guide](/blog/ppn-026-social-value-guide/). It is the part of a first bid where a well-prepared SME can out-score a larger, complacent competitor.
 
 ## Common first-timer mistakes
 
@@ -139,5 +139,5 @@ No. Use a bid or no-bid decision to weigh fit, capacity, the strength of any inc
 
 Social value carries at least 10 percent of the score on in-scope contracts. CrowMark for Suppliers helps you plan and draft a TOMs-aligned social value response, so your first bid has a real answer to the section that carries at least 10 percent of the marks.
 
-[See CrowMark →](/crowmark)
-[Compare CrowMark →](/compare)
+[See CrowMark →](/crowmark/)
+[Compare CrowMark →](/compare/)

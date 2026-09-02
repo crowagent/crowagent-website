@@ -107,6 +107,36 @@
 #    though the `/*` splat is rule 126 and therefore dead. The splat is kept as
 #    belt-and-braces, and now sits inside the honoured range.
 #
+# 7. A DESTINATION IS A URL AND CARRIES ITS TRAILING SLASH. R28-WEB-SLASH,
+#    2026-09-01. Point 2 says CF canonicalises towards whichever form is backed
+#    by a file, and since the 2026-08-05 move to a directory build that means it
+#    ADDS the slash. That applies to the destination of a rule exactly as it
+#    applies to a fresh request, so a rule pointing at a bare directory route
+#    hands the visitor a 301 and then a 308.
+#
+#    MEASURED LIVE 2026-09-01 with fetch and redirect: 'manual', hop by hop:
+#      /products        301 -> /crowmark   308 -> /crowmark/   200
+#      /legal/security  301 -> /security   308 -> /security/   200
+#    65 of the 87 rules behaved that way. Every one of them, and only the
+#    destination column, now carries the slash. Rule count is unchanged at 87.
+#
+#    THIS IS NOT THE 2026-05-06 REGRESSION AND IT IS THE OPPOSITE OF IT. Block 3
+#    forbids a rule that STRIPS the slash from a directory-backed route, because
+#    that fights CF's slash-ADDING and ping-pongs. Adding it AGREES with CF, so
+#    there is no second party to disagree and no loop is possible. The evidence
+#    that the target is right is not an argument: for all 65 rules the final 200
+#    URL production already resolves to was fetched and compared, and it equals
+#    the new destination in 65 cases out of 65. The change deletes a hop CF was
+#    performing anyway and can land nowhere new.
+#
+#    NOTHING WITH A 200 OR 404 STATUS WAS TOUCHED. Those targets are FILES, not
+#    URLs, so /tools/index.html and /404.html keep their exact spelling. The
+#    file-versus-URL distinction is the whole rule here.
+#
+#    WHEN YOU ADD A RULE: write the destination in the form the server answers
+#    200 on. For a directory-backed page that is the slashed form. For the one
+#    flat route, /404, it is the bare form, per point 2.
+#
 # BEFORE APPENDING ANY RULE: add it ABOVE the `/*` splat at the bottom, never
 # after. To verify, run:
 #   awk '/^\/\*[[:space:]]+\/404\.html/{f=1;next} f && /^\//{print NR": "$0}' _redirects
@@ -201,12 +231,12 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /start-trial                  https://app.crowagent.ai/signup                              302
 /sign-in                      https://app.crowagent.ai/login                               302
 /get-crowmark                 https://app.crowagent.ai/marketplace?highlight=crowmark      302
-/get-cyber-essentials         /crowmark                                                    301
-/get-crowcash                 /crowmark                                                    301
+/get-cyber-essentials         /crowmark/                                                   301
+/get-crowcash                 /crowmark/                                                   301
 # RETARGETED 2026-07-30: was `-> /products`, which is itself a 301 to /crowmark.
 # A chained 301 both dilutes the signal and slows de-indexing, and /products has
 # had no page on disk since TM-REMEDIATION-001.
-/get-crowagent-core           /crowmark                                                    301
+/get-crowagent-core           /crowmark/                                                   301
 
 # ── 6. PPN 002 CALCULATOR — WITHDRAWN 2026-08-04 ────────────────────────────
 # Owner instruction, 2026-08-04: "remove PPN 002 calculator page completly also
@@ -283,13 +313,13 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # subject, which is the soft-404 outcome argued against above. Block 7 used to
 # hold two 200-rewrites guarding this same URL for the opposite reason, and they
 # are deleted with the page they were guarding.
-/tools/ppn-002-calculator/methodology     /glossary/ppn-026                                301
-/tools/ppn-002-calculator/methodology/    /glossary/ppn-026                                301
-/tools/ppn-002-calculator                 /glossary/ppn-026                                301
-/tools/ppn-002-calculator/                /glossary/ppn-026                                301
-/tools-ppn002-calculator-methodology      /glossary/ppn-026                                301
-/tools/ppn002-calculator/methodology      /glossary/ppn-026                                301
-/tools/ppn002-calculator                  /glossary/ppn-026                                301
+/tools/ppn-002-calculator/methodology     /glossary/ppn-026/                               301
+/tools/ppn-002-calculator/methodology/    /glossary/ppn-026/                               301
+/tools/ppn-002-calculator                 /glossary/ppn-026/                               301
+/tools/ppn-002-calculator/                /glossary/ppn-026/                               301
+/tools-ppn002-calculator-methodology      /glossary/ppn-026/                               301
+/tools/ppn002-calculator/methodology      /glossary/ppn-026/                               301
+/tools/ppn002-calculator                  /glossary/ppn-026/                               301
 
 # ── 7. RETIRED METHODOLOGY PAGES ────────────────────────────────────────────
 # Thirteen separate rules once pointed retired-tool methodology URLs at /tools.
@@ -303,9 +333,9 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # emit — the exact defect check-links.js records under "A RULE IS NOT A
 # DESTINATION". That URL is now an explicit 301 in block 6, ABOVE this splat,
 # because the splat's destination (/tools) is the wrong subject for it.
-/tools/*/methodology          /tools    301
-/tools-*-methodology.html     /tools    301
-/tools-*-methodology          /tools    301
+/tools/*/methodology          /tools/   301
+/tools-*-methodology.html     /tools/   301
+/tools-*-methodology          /tools/   301
 
 # ── 8. /products — THE HUB IS GONE ──────────────────────────────────────────
 # TM-REMEDIATION-001 (2026-07-28): products/index.html is DELETED. Its entire
@@ -321,9 +351,9 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # nothing exists under products/ on disk, so a splat cannot shadow a live path.
 # /products/ is kept explicit rather than left to the splat because it was a real
 # 200 URL and was still referenced in the Cmd+K palette index until today.
-/products                     /crowmark                                                    301
-/products/                    /crowmark                                                    301
-/products/*                   /crowmark                                                    301
+/products                     /crowmark/                                                   301
+/products/                    /crowmark/                                                   301
+/products/*                   /crowmark/                                                   301
 
 # ── 9. PARKED PRODUCT PAGES ─────────────────────────────────────────────────
 # WHY: a UK trade mark conflict (TM-REMEDIATION-001, 2026-07-28). The public site
@@ -348,12 +378,12 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # trailing-slash form was a redirect, never a 200, and nothing can have indexed it.
 # Contrast block 10, where the parked surfaces WERE directories and their
 # trailing-slash form was the served URL, so it is kept.
-/crowagent-core               /crowmark                                                    301
-/crowcyber                    /crowmark                                                    301
-/crowcash                     /crowmark                                                    301
-/crowesg                      /crowmark                                                    301
-/csrd                         /crowmark                                                    301
-/csrd-checker                 /crowmark                                                    301
+/crowagent-core               /crowmark/                                                   301
+/crowcyber                    /crowmark/                                                   301
+/crowcash                     /crowmark/                                                   301
+/crowesg                      /crowmark/                                                   301
+/csrd                         /crowmark/                                                   301
+/csrd-checker                 /crowmark/                                                   301
 
 # ── 10. PARKED FREE TOOLS ───────────────────────────────────────────────────
 # These 301 to the tools hub rather than /crowmark: someone who wanted a
@@ -362,29 +392,29 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # directory (/tools/<slug>/index.html) and CF Pages ADDS the trailing slash for
 # directories, so /tools/<slug>/ was the form that actually returned 200 and is
 # therefore the form crawlers hold.
-/tools/csrd-applicability-checker         /tools    301
-/tools/csrd-applicability-checker/        /tools    301
-/tools/cyber-essentials-readiness         /tools    301
-/tools/cyber-essentials-readiness/        /tools    301
-/tools/late-payment-calculator            /tools    301
-/tools/late-payment-calculator/           /tools    301
-/tools/vsme-materiality-light             /tools    301
-/tools/vsme-materiality-light/            /tools    301
-/tools/csrd-checker                       /tools    301
+/tools/csrd-applicability-checker         /tools/   301
+/tools/csrd-applicability-checker/        /tools/   301
+/tools/cyber-essentials-readiness         /tools/   301
+/tools/cyber-essentials-readiness/        /tools/   301
+/tools/late-payment-calculator            /tools/   301
+/tools/late-payment-calculator/           /tools/   301
+/tools/vsme-materiality-light             /tools/   301
+/tools/vsme-materiality-light/            /tools/   301
+/tools/csrd-checker                       /tools/   301
 # Retired free property tool 2026-07-17, with the Core product.
 # RETARGETED 2026-07-30: was `-> /products`, a chained 301. Now points at the hub,
 # consistent with every other parked tool above.
 # DELETED 2026-07-30: /tools/mees-risk-snapshot/methodology,
 # /tools-mees-risk-snapshot-methodology and its .html twin — all three are already
 # covered by the three dynamic rules in block 7.
-/tools/mees-risk-snapshot                 /tools    301
-/tools/mees-risk-snapshot/                /tools    301
+/tools/mees-risk-snapshot                 /tools/   301
+/tools/mees-risk-snapshot/                /tools/   301
 
 # ── 11. RETIRED LIVE TRACKERS ───────────────────────────────────────────────
 # The MEES tracker went with the Core product (2026-07-17); the Cyber Essentials
 # tracker was parked with CrowCyber (2026-07-28). Nothing exists under intel/ on
 # disk, so one splat safely replaces the four rules that were here.
-/intel/*                      /crowmark                                                    301
+/intel/*                      /crowmark/                                                   301
 
 # ── 12. /legal AND /docs ────────────────────────────────────────────────────
 # SEO-004 (2026-07-27) — the two real 404s in Search Console's "Not found (404)"
@@ -399,12 +429,12 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 #   /docs                — no documentation site exists on this domain and no HTML
 #                          in this repo links to it.
 # RETARGETED 2026-07-30: /docs and /docs/* pointed at /products, a chained 301.
-/legal/security.html          /security                                                    301
-/legal/security               /security                                                    301
-/legal                        /privacy                                                     301
-/legal/*                      /privacy                                                     301
-/docs                         /crowmark                                                    301
-/docs/*                       /crowmark                                                    301
+/legal/security.html          /security/                                                   301
+/legal/security               /security/                                                   301
+/legal                        /privacy/                                                    301
+/legal/*                      /privacy/                                                    301
+/docs                         /crowmark/                                                   301
+/docs/*                       /crowmark/                                                   301
 
 # ── 13. BLOG CATEGORY PAGES ─────────────────────────────────────────────────
 # SEO-002 WITHDRAWN 2026-07-29. These used to be 200-rewrites to /blog/index.html
@@ -417,7 +447,7 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # CONSOLIDATED 2026-07-30: five identical rules (mees-epc, ppn-002, csrd-esg,
 # cyber-essentials, regulatory-updates) became one splat. There is no
 # blog/category/ directory on disk, so it cannot shadow a live path.
-/blog/category/*              /blog                                                        301
+/blog/category/*              /blog/                                                       301
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RETIRED CONTENT — extensionless forms only
@@ -453,29 +483,29 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 #
 # NOTHING HERE SAYS GOV.UK WITHDREW, REPLACED OR SUPERSEDED PPN 002. It did not.
 # Renaming our own URL is an editorial decision about this site.
-/blog/ppn-002-guide                       /blog/ppn-026-social-value-guide                 301
-/blog/ppn-002-social-value-explained      /blog/ppn-026-social-value-guide                 301
-/blog/social-value-themes-explained       /blog/ppn-026-social-value-guide                 301
-/blog/ppn-002-social-value-guide          /blog/ppn-026-social-value-guide                 301
+/blog/ppn-002-guide                       /blog/ppn-026-social-value-guide/                301
+/blog/ppn-002-social-value-explained      /blog/ppn-026-social-value-guide/                301
+/blog/social-value-themes-explained       /blog/ppn-026-social-value-guide/                301
+/blog/ppn-002-social-value-guide          /blog/ppn-026-social-value-guide/                301
 
 # ── 15. PARKED BLOG POSTS (TM-REMEDIATION-001, 2026-07-28) ──────────────────
-/blog/csrd-omnibus-i-2026                 /blog                                            301
-/blog/cyber-essentials-v3-3-danzell-2026  /blog                                            301
-/blog/mfa-mandatory-2026                  /blog                                            301
-/blog/ppn-014-cyber-essentials-guide      /blog                                            301
+/blog/csrd-omnibus-i-2026                 /blog/                                           301
+/blog/cyber-essentials-v3-3-danzell-2026  /blog/                                           301
+/blog/mfa-mandatory-2026                  /blog/                                           301
+/blog/ppn-014-cyber-essentials-guide      /blog/                                           301
 
 # ── 16. RETIRED CORE-DOMAIN BLOG POSTS (2026-07-17) ─────────────────────────
 # The property/energy posts were deleted with the Core product.
-/blog/brown-discount-commercial-property-values           /blog                            301
-/blog/epc-band-commercial-property-guide                  /blog                            301
-/blog/epc-register-explained                              /blog                            301
-/blog/mees-band-c-2028                                    /blog                            301
-/blog/mees-commercial-property-guide                      /blog                            301
-/blog/mees-compliance-checklist-commercial-property       /blog                            301
-/blog/mees-exemptions-guide                               /blog                            301
-/blog/mees-fine-exposure-calculator-guide                 /blog                            301
-/blog/retrofit-cost-calculator-guide                      /blog                            301
-/blog/what-is-retrofit-assessment-cost                    /blog                            301
+/blog/brown-discount-commercial-property-values           /blog/                           301
+/blog/epc-band-commercial-property-guide                  /blog/                           301
+/blog/epc-register-explained                              /blog/                           301
+/blog/mees-band-c-2028                                    /blog/                           301
+/blog/mees-commercial-property-guide                      /blog/                           301
+/blog/mees-compliance-checklist-commercial-property       /blog/                           301
+/blog/mees-exemptions-guide                               /blog/                           301
+/blog/mees-fine-exposure-calculator-guide                 /blog/                           301
+/blog/retrofit-cost-calculator-guide                      /blog/                           301
+/blog/what-is-retrofit-assessment-cost                    /blog/                           301
 
 # ── 17. RETIRED GLOSSARY ENTRIES ────────────────────────────────────────────
 # /glossary/csrd was parked 2026-07-28; the three property/energy terms went with
@@ -513,12 +543,12 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # still sits in the current Procurement Act 2023 collection. This is an editorial
 # decision about what this site publishes, and no rule or sentence anywhere may
 # be read as a claim about the status of the note itself.
-/glossary/ppn-002             /glossary/ppn-026                                            301
-/glossary/ppn-002/            /glossary/ppn-026                                            301
-/glossary/csrd                /glossary                                                    301
-/glossary/epc-rating          /glossary                                                    301
-/glossary/mees-compliance     /glossary                                                    301
-/glossary/si-2015-962         /glossary                                                    301
+/glossary/ppn-002             /glossary/ppn-026/                                           301
+/glossary/ppn-002/            /glossary/ppn-026/                                           301
+/glossary/csrd                /glossary/                                                   301
+/glossary/epc-rating          /glossary/                                                   301
+/glossary/mees-compliance     /glossary/                                                   301
+/glossary/si-2015-962         /glossary/                                                   301
 
 # ── 17b. LEGACY FAVICON PATH ────────────────────────────────────────────────
 # Measured 2026-07-30: /favicon.ico returned 404. No .ico file has ever existed

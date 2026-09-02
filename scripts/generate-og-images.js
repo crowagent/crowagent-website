@@ -18,11 +18,17 @@
  * canonical values come from crowagent-brand-tokens.css §:root and CLAUDE.md
  * §10 ("Brand & Design System"). If you change one, change both.
  *
- * Slug discovery:
- *   - Static page list (homepage, pricing, about, etc.) — explicit below.
- *   - Blog posts: every blog/*.html (excluding blog/index.html) is auto-picked;
- *     <title> tag drives the headline, <meta name="description"> drives subtitle.
- *   - Changelog: every <item> in changelog.xml gets one OG image keyed by guid.
+ * Slug discovery: EVERY BUILT PAGE IN `astro/dist`.
+ *   One card per built route. The route path becomes the slug, the page's own
+ *   <title> drives the headline and its <meta name="description"> the subtitle.
+ *   There is no hand-maintained page list, so a new route cannot be forgotten
+ *   and a deleted route cannot keep rendering.
+ *
+ *   THE BUILD IS A PRECONDITION. `astro/dist` is gitignored, absent from a clean
+ *   checkout, and `astro build` wipes it, so run the build first:
+ *     cd astro && npm run build:deploy
+ *   This script fails loudly when the directory is missing or empty. It never
+ *   renders a card from nothing and never quietly emits a shorter list.
  *
  * Second output: ARTICLE HERO artwork.
  *   The same satori pipeline also renders the in-page hero image for blog posts
@@ -30,7 +36,7 @@
  *   plus the 400/600/800/1200w webp ladder the blog index srcset expects. See
  *   ARTICLE_HEROES below for why this exists and why the artwork carries no text.
  *
- * Usage:
+ * Usage (build `astro/dist` first, see the note above):
  *   node scripts/generate-og-images.js                    Render all images
  *   node scripts/generate-og-images.js --slug=pricing     Render single slug
  *   node scripts/generate-og-images.js --check            Dry-run, list output
@@ -40,7 +46,7 @@
  * Exit codes:
  *   0  success (or check completed)
  *   1  missing dependency (run `npm install` first)
- *   2  filesystem error
+ *   2  filesystem error, missing build, or a failed page-set assertion
  *   3  render error
  */
 
@@ -87,84 +93,161 @@ const MARK_BARS = Object.freeze([
   { height: 29.75, from: "#22c55e", to: "#3b82f6" },
 ]);
 
-// ---------- explicit static page list ----------
+// ---------- the page set: the BUILT Astro site ----------
 
-// Each entry names the page it depicts; the title and subtitle are read FROM that
-// page at render time, exactly as the blog and glossary discovery below already do.
+// THE SOURCE IS `astro/dist`, NOT THE LEGACY ROOT HTML. Changed 2026-09-01.
 //
-// This used to be a hand-maintained copy table, and it drifted badly. Measured
-// 2026-07-30, before this change: `pricing.png` — a card that gets shared publicly
-// — read "CrowMark from £99/mo - CSRD Checker free", while pricing.html has sold
-// Starter £49 / Pro £149 / Portfolio quoted since R2.6. £99 was not any tier. The
-// homepage card advertised "PPN 002, Cyber Essentials and CSRD compliance", a
-// portfolio framing dropped when Core was switched off and CrowCyber went Phase 2.
-// A duplicate of page copy will always drift; reading the page cannot.
+// This generator used to mine <title> and <meta description> out of the frozen
+// root pages (index.html, pricing.html, crowmark.html and the rest) plus a
+// hand-written list of which ones to read. Those pages stopped being served on
+// 2026-08-05, when the Cloudflare Pages deploy source moved to `astro/dist`, and
+// they have not been edited since. The CARDS did not stop shipping:
+// astro/scripts/copy-assets.js copies every referenced `/Assets/og/*.png` into
+// the build, so the live site kept serving cards whose words came from a page
+// nobody can visit. Anyone sharing a link in Slack or on LinkedIn saw the frozen
+// copy.
 //
-// `fallbackTitle` covers only the case where a page has no <title>, which the
-// render would otherwise fill with the bare word "CrowAgent".
-const STATIC_PAGES = [
-  { slug: "index",     page: "index.html",       fallbackTitle: "CrowAgent" },
-  { slug: "pricing",   page: "pricing.html" },
-  { slug: "about",     page: "about.html" },
-  { slug: "contact",   page: "contact.html" },
-  { slug: "faq",       page: "faq.html" },
-  { slug: "crowmark",  page: "crowmark.html",    product: "crowmark" },
-  { slug: "roadmap",   page: "roadmap.html" },
-  { slug: "resources", page: "resources.html" },
-  // Added 2026-07-30: integrations.html was borrowing Assets/og/resources.png,
-  // so every share of the integrations page showed the resources card.
-  { slug: "integrations", page: "integrations.html" },
-  // Added 2026-07-30. crowmark-buyers.html was sharing crowmark.png, so a buyer-side
-  // share showed the supplier card; changelog.html was falling back to the generic
-  // og-image.png. Both are distinct pages with distinct audiences.
-  { slug: "crowmark-buyers", page: "crowmark-buyers.html", product: "crowmark" },
-  { slug: "changelog",       page: "changelog.html" },
-  { slug: "partners",  page: "partners.html" },
-  { slug: "security",  page: "security.html" },
-  { slug: "privacy",   page: "privacy.html" },
-  { slug: "terms",     page: "terms.html" },
-  { slug: "cookies",   page: "cookies.html" },
-  { slug: "blog",      page: "blog/index.html",  product: "blog" },
-];
+// Measured 2026-09-01 against the built pages, before this change:
+//   roadmap.png     headline read "Roadmap". The page now ships
+//                   "CrowMark roadmap | Shipped, in flight and next"
+//   glossary-index  subtitle named "PPN 002". The page now names PPN 026 and
+//                   PPN 017, and PPN 002 is retired vocabulary across the site
+//   crowmark.png    subtitle described daily notice tracking. The page now leads
+//                   on drafting cited answers and evidencing delivery. This is
+//                   the most-referenced card on the site: 9 built pages use it.
+// A copy of the copy always drifts. Reading the artefact that ships cannot.
+//
+// THE BUILD IS A PRECONDITION. `astro/dist` is gitignored and `astro build`
+// wipes it, so ordering matters and absence is a hard error, never a skip.
+const DIST_RELATIVE = path.join("astro", "dist");
+// Written into every message, so a failure reads the same on Windows and Linux.
+const DIST_LABEL = "astro/dist";
 
-// Slugs this generator used to emit for pages that no longer exist: `demo`,
-// `csrd`, `crowcyber`, `crowcash`, `crowesg`. Verified 2026-07-30 — none has a
-// page, and no HTML on the site references their PNG. They were still being
-// rendered every run, so four of them shipped cards quoting prices for products
-// that were decommissioned or never launched (CrowCyber "from £99/mo", CrowCash
-// "from £79/mo"). Removed from the list rather than regenerated. Deleting the
-// stale PNGs themselves is a separate call for the owner, since anyone who shared
-// one of those URLs in the past still resolves it today.
-const RETIRED_SLUGS = Object.freeze(["demo", "csrd", "crowcyber", "crowcash", "crowesg"]);
+// Built routes that get no card, with the reason. 404 is the only one: it has a
+// real <title>, so it would render happily, but a social card for "Page not
+// found" is a card for a URL nobody shares on purpose.
+const EXCLUDED_ROUTES = Object.freeze(["404.html"]);
 
-// Read a static page's own <title> / meta description so the card cannot drift
-// from the page it represents. A missing page is a hard error: silently skipping
-// would leave a stale PNG in place and report success.
-function loadStaticPages(repoRoot) {
-  return STATIC_PAGES.map((entry) => {
-    const abs = path.join(repoRoot, entry.page);
-    if (!fs.existsSync(abs)) {
+// A slug is a PUBLIC filename: once a page references `/Assets/og/<slug>.png` it
+// cannot be renamed without breaking that page. Derivation joins the route
+// segments with "-", so `glossary/toms-framework/index.html` becomes
+// `glossary-toms-framework`. This table names the single route where that rule
+// disagrees with what already ships: astro/src/pages/glossary/index.astro and
+// astro/src/content/glossary/ppn-026.md both point at
+// /Assets/og/glossary-index.png, so the glossary index keeps that name.
+const SLUG_OVERRIDES = Object.freeze({ glossary: "glossary-index" });
+
+// Every built .html under a directory, returned as forward-slash paths relative
+// to that directory so the slug derivation is identical on Windows and Linux.
+function listBuiltPages(dist) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.html$/i.test(entry.name)) {
+        out.push(path.relative(dist, full).split(path.sep).join("/"));
+      }
+    }
+  };
+  walk(dist);
+  return out.sort();
+}
+
+// "index.html" -> "index", "pricing/index.html" -> "pricing",
+// "glossary/toms-framework/index.html" -> "glossary-toms-framework".
+function routeToSlug(route) {
+  const parts = route.split("/");
+  const stem = parts.pop().replace(/\.html$/i, "");
+  const segments = stem === "index" ? parts : [...parts, stem];
+  const derived = segments.length === 0 ? "index" : segments.join("-");
+  return SLUG_OVERRIDES[derived] ?? derived;
+}
+
+// Read the built site. Every failure here is loud, because the failure mode this
+// replaced was silence: a generator that finds nothing and reports success.
+function loadBuiltPages(repoRoot) {
+  const dist = path.join(repoRoot, DIST_RELATIVE);
+  if (!fs.existsSync(dist)) {
+    throw new Error(
+      `${DIST_LABEL} does not exist, so there are no shipping pages to read. ` +
+        "It is gitignored and absent from a clean checkout, and `astro build` wipes it. " +
+        "Build it first:  cd astro && npm run build:deploy",
+    );
+  }
+  const routes = listBuiltPages(dist).filter((r) => !EXCLUDED_ROUTES.includes(r));
+  if (routes.length === 0) {
+    throw new Error(
+      `${DIST_LABEL} exists but contains no .html files. A half-written or wiped build ` +
+        "renders nothing while looking like a success. Rebuild:  cd astro && npm run build:deploy",
+    );
+  }
+
+  const pages = [];
+  const claimedBy = new Map();
+  for (const route of routes) {
+    const slug = routeToSlug(route);
+    // Two routes collapsing onto one slug would silently drop a card, which is
+    // the exact shrink this file is meant to make impossible.
+    if (claimedBy.has(slug)) {
       throw new Error(
-        `STATIC_PAGES entry "${entry.slug}" points at ${entry.page}, which does not exist. ` +
-          `Remove the entry (and consider whether Assets/og/${entry.slug}.png should still ship).`,
+        `Two built routes derive the same slug "${slug}": ${claimedBy.get(slug)} and ${route}. ` +
+          "One card would overwrite the other. Add a SLUG_OVERRIDES entry.",
       );
     }
-    const html = fs.readFileSync(abs, "utf8");
-    const full = extractTitle(html) ?? entry.fallbackTitle ?? "CrowAgent";
-    // Static page <title>s follow the site convention "Subject | Description"
-    // ("CrowMark | Find UK tenders, draft grounded answers, prove delivery"). The
-    // card puts the subject in the large headline and the meta description in the
-    // subtitle, so take the leading segment. Verified against all 14 static titles
-    // 2026-07-30. Deliberately NOT applied to blog or glossary titles, which are
-    // free-form headlines that may legitimately contain a pipe.
+    claimedBy.set(slug, route);
+
+    const html = fs.readFileSync(path.join(dist, route), "utf8");
+    const full = extractTitle(html);
+    if (!full) {
+      throw new Error(
+        `Built page ${route} has no <title>, so its card would read the bare word "CrowAgent". ` +
+          "Give the page a title in astro/src rather than a fallback here.",
+      );
+    }
+    // Built titles follow "Subject | Description | CrowAgent". extractTitle drops
+    // the trailing brand segment. The card puts the subject in the headline and
+    // the meta description in the subtitle, so take the leading segment of what
+    // is left. Verified against all 46 built titles 2026-09-01, headline by
+    // headline, not asserted from the shape of the convention.
     const headline = full.split("|")[0].trim() || full;
-    return {
-      slug: entry.slug,
+    pages.push({
+      slug,
+      route,
       title: headline,
       subtitle: extractMetaDescription(html) ?? "",
-      product: entry.product ?? null,
-    };
-  });
+      // A post is a post: "blog" is the right default under blog/ when the topic
+      // matches nothing. Everywhere else an unmatched page gets the plain
+      // CrowAgent badge rather than being mislabelled.
+      product: inferProduct(slug, route.startsWith("blog/") ? "blog" : null),
+    });
+  }
+
+  // The count assertion. A generator that emits fewer cards than there are pages
+  // is the failure this project keeps hitting, and it never announces itself.
+  if (pages.length !== routes.length) {
+    throw new Error(
+      `Built ${routes.length} route(s) but produced ${pages.length} page entr(ies). ` +
+        "Something was dropped between discovery and the page list.",
+    );
+  }
+  return pages;
+}
+
+// Every `/Assets/og/<slug>.png` the BUILT site actually asks for. The generated
+// set must cover this exactly: a page referencing a card nothing renders ships a
+// broken image on every social share, and no gate outside this one can see it.
+function referencedCardSlugs(repoRoot) {
+  const dist = path.join(repoRoot, DIST_RELATIVE);
+  const wanted = new Map();
+  for (const route of listBuiltPages(dist)) {
+    const html = fs.readFileSync(path.join(dist, route), "utf8");
+    for (const ref of html.match(/\/Assets\/og\/[A-Za-z0-9._%-]+\.png/g) ?? []) {
+      const slug = path.basename(ref).replace(/\.png$/i, "");
+      if (!wanted.has(slug)) wanted.set(slug, route);
+    }
+  }
+  return wanted;
 }
 
 // ---------- helpers ----------
@@ -286,96 +369,16 @@ function inferProduct(slug, fallback = null) {
   return fallback;
 }
 
-// Discover blog posts. Exclude index (already in STATIC_PAGES).
-function discoverBlogPages(repoRoot) {
-  const dir = path.join(repoRoot, "blog");
-  if (!fs.existsSync(dir)) return [];
-  const out = [];
-  for (const entry of fs.readdirSync(dir)) {
-    if (!entry.endsWith(".html")) continue;
-    if (entry === "index.html") continue; // covered by STATIC_PAGES "blog"
-    const slug = `blog-${entry.replace(/\.html$/i, "")}`;
-    const html = fs.readFileSync(path.join(dir, entry), "utf8");
-    const title = extractTitle(html) ?? "CrowAgent blog";
-    const subtitle = extractMetaDescription(html) ?? "Regulatory intelligence and compliance guides";
-    // A post is a post: "blog" is the right default when the topic matches nothing.
-    out.push({ slug, title, subtitle, product: inferProduct(entry, "blog") });
-  }
-  return out;
-}
-
-// Discover glossary entries. Pattern: glossary/{name}.html → slug glossary-{name}.
-// Index is rendered separately as glossary-index.
-function discoverGlossaryPages(repoRoot) {
-  const dir = path.join(repoRoot, "glossary");
-  if (!fs.existsSync(dir)) return [];
-  const out = [];
-  for (const entry of fs.readdirSync(dir)) {
-    if (!entry.endsWith(".html")) continue;
-    const stem = entry.replace(/\.html$/i, "");
-    const slug = stem === "index" ? "glossary-index" : `glossary-${stem}`;
-    const html = fs.readFileSync(path.join(dir, entry), "utf8");
-    const title = extractTitle(html) ?? "CrowAgent glossary";
-    const subtitle = extractMetaDescription(html) ?? "Regulatory term definitions";
-    // A glossary entry is not a blog post; unmatched topics get the CrowAgent badge.
-    out.push({ slug, title, subtitle, product: inferProduct(entry, null) });
-  }
-  return out;
-}
-
-// Discover intel tracker pages. Pattern: intel/{name}/index.html → slug intel-{name}.
-function discoverIntelPages(repoRoot) {
-  const dir = path.join(repoRoot, "intel");
-  if (!fs.existsSync(dir)) return [];
-  const out = [];
-  for (const entry of fs.readdirSync(dir)) {
-    const sub = path.join(dir, entry, "index.html");
-    if (!fs.existsSync(sub)) continue;
-    const slug = `intel-${entry}`;
-    const html = fs.readFileSync(sub, "utf8");
-    const title = extractTitle(html) ?? "CrowAgent intel";
-    const subtitle = extractMetaDescription(html) ?? "Regulatory intelligence tracker";
-    out.push({ slug, title, subtitle, product: inferProduct(entry, null) });
-  }
-  return out;
-}
-
-// Discover products hub page (products/index.html) → slug products.
-function discoverProductsPage(repoRoot) {
-  const p = path.join(repoRoot, "products", "index.html");
-  if (!fs.existsSync(p)) return [];
-  const html = fs.readFileSync(p, "utf8");
-  return [{
-    slug: "products",
-    title: extractTitle(html) ?? "CrowAgent Products",
-    subtitle: extractMetaDescription(html) ?? "Sustainability compliance products",
-    product: null,
-  }];
-}
-
-// Discover changelog entries. Each <item><guid>...</guid> drives the slug.
-function discoverChangelogPages(repoRoot) {
-  const xmlPath = path.join(repoRoot, "changelog.xml");
-  if (!fs.existsSync(xmlPath)) return [];
-  const xml = fs.readFileSync(xmlPath, "utf8");
-  const items = [];
-  const itemRe = /<item>([\s\S]*?)<\/item>/g;
-  let match;
-  while ((match = itemRe.exec(xml)) !== null) {
-    const inner = match[1];
-    const guid = /<guid[^>]*>([^<]+)<\/guid>/i.exec(inner)?.[1]?.trim();
-    const title = /<title>([\s\S]*?)<\/title>/i.exec(inner)?.[1]?.trim();
-    const description = /<description>([\s\S]*?)<\/description>/i.exec(inner)?.[1]?.trim();
-    if (!guid || !title) continue;
-    items.push({
-      slug: guid,
-      title: decodeEntities(title),
-      subtitle: description ? decodeEntities(description) : "Product and website updates",
-      product: "changelog",
-    });
-  }
-  return items;
-}
+// The five per-tree discovery functions that used to live here are gone, and so
+// is the changelog.xml reader. They walked `blog/`, `glossary/`, `intel/`,
+// `products/` and `changelog.xml` at the REPOSITORY ROOT, the frozen legacy
+// tree, and the routes they knew about no longer match what ships:
+// blog/ppn-002-social-value-guide is now blog/ppn-026-social-value-guide,
+// glossary/ppn-002 is now glossary/ppn-026, `intel/` and `products/` were never
+// built by the Astro site at all, and changelog.xml does not exist in this
+// repository and has not since before the file was first read. One walk over the
+// built routes replaces all six, and it cannot go stale against the site because
+// it IS the site.
 
 // ---------- JSX (as React.createElement) ----------
 //
@@ -563,18 +566,27 @@ function buildOgTree({ title, subtitle, product }) {
 // PER-SLUG, DETERMINISTIC. Geometry is seeded from the slug, so two posts can never be
 // handed the same field, and re-running produces byte-identical output (which matters:
 // /Assets/* is served immutable and build-dist.js fails on unversioned content drift).
+//
+// STATUS, MEASURED 2026-09-01 AND NOT ACTED ON HERE: the shipping site no longer
+// references either of these two files. Both posts now carry a photograph in
+// `astro/dist`. frameworks-and-dps-explained uses office-files-on-shelves and
+// find-first-public-sector-contract uses its own ladder, so the generated
+// artwork is output nothing reads. The `page` paths below were re-pointed from
+// the frozen root HTML to the built routes so this file has no legacy reader
+// left, and the artwork keeps rendering. Whether to retire it is an owner call,
+// not one taken in a re-pointing change.
 const ARTICLE_HEROES = [
   // Frameworks and DPS: an explainer about framework agreements, dynamic purchasing
   // systems and call-off competitions. None of the seven photographs depicts that
   // subject, and every one of them is already the honest match for another post.
-  { slug: "frameworks-and-dps-explained", page: "blog/frameworks-and-dps-explained.html" },
+  { slug: "frameworks-and-dps-explained", page: "astro/dist/blog/frameworks-and-dps-explained/index.html" },
   // Finding your first public sector contract. This one nearly shipped a photograph.
   // `mfa-mandatory-2026.jpg` is catalogued as "person holding smartphone while using
   // laptop" and passes as tender research at thumbnail size — but opened at full width
   // the laptop screen is unmistakably an IDE full of source code. A guide to searching
   // Find a Tender illustrated by a developer writing software is a wrong-subject photo,
   // so it gets artwork instead and the photograph is retired from the blog.
-  { slug: "find-first-public-sector-contract", page: "blog/find-first-public-sector-contract.html" },
+  { slug: "find-first-public-sector-contract", page: "astro/dist/blog/find-first-public-sector-contract/index.html" },
 ];
 
 // Palettes, so two generated heroes listed on one page (blog/index.html lists both)
@@ -874,28 +886,25 @@ async function main() {
   const heroDir = path.join(repoRoot, "Assets", "blog-photos");
   fs.mkdirSync(heroDir, { recursive: true });
 
-  // Surface stale cards rather than leaving them to a code comment. These slugs
-  // are no longer rendered, so without this the PNGs would just sit in Assets/og
-  // and keep shipping, which is how they went unnoticed in the first place.
-  const stale = RETIRED_SLUGS.filter((s) => fs.existsSync(path.join(outDir, `${s}.png`)));
-  if (stale.length > 0) {
-    structuredLog("warn", "Retired OG cards still present on disk", {
-      operation: "audit-retired-slugs",
-      slugs: stale,
-      note: "No page and no HTML reference. They are no longer regenerated; deleting them is an owner decision because previously shared URLs still resolve.",
+  // Build the full page list from the built site. Every failure inside is a
+  // statement about the ARTEFACT (absent, empty, untitled page, colliding slug),
+  // not a crash, so it exits 2 with the message and no stack trace. A stack
+  // buries the one line that says what to do.
+  let built;
+  try {
+    built = loadBuiltPages(repoRoot);
+  } catch (error) {
+    structuredLog("error", "Cannot read the built site", {
+      operation: "load-built-pages",
+      dist: DIST_LABEL,
+      error: error instanceof Error ? error.message : String(error),
     });
+    process.exit(2);
   }
 
-  // Build the full page list.
-  const pages = [
-    ...loadStaticPages(repoRoot),
-    ...discoverBlogPages(repoRoot),
-    ...discoverGlossaryPages(repoRoot),
-    ...discoverIntelPages(repoRoot),
-    ...discoverProductsPage(repoRoot),
-    ...discoverChangelogPages(repoRoot),
-  ].map((p) => ({
+  const pages = built.map((p) => ({
     slug: p.slug,
+    route: p.route,
     // Title budget is 72, not 90, because the HEADLINE is what overflows the card.
     // Measured off the rendered PNGs, not estimated: the headline sets at 76px and
     // wraps at roughly 24 characters per line, the subtitle at 30px and roughly 68.
@@ -912,17 +921,80 @@ async function main() {
     // before and after by reading both PNGs. Nothing was cut off the canvas, but the
     // layout had lost every bit of its breathing room.
     //
-    // Titles come from changelog.xml as well as from page <title> tags, which is why
-    // measuring only the HTML missed it. The longest HTML title in use is 66
-    // characters (blog/social-value-portal-vs-crowmark) and is unaffected.
+    // That 84-character title came from changelog.xml, a source this generator no
+    // longer has. The longest headline in the built site is 47 characters
+    // ("Facilities Management Bid Software"), measured 2026-09-01 across all 46
+    // routes, so nothing currently clips. The budget stays because a title is one
+    // copy edit away from needing it.
     //
     // An earlier attempt shortened the SUBTITLE when the headline was long. That
     // was the wrong lever: at 68 characters per line, cutting 140 to 116 dropped
     // words without dropping a line, so it lost information and bought no space.
     title: clip(p.title, 72, "CrowAgent"),
     subtitle: clip(p.subtitle, 140, ""),
-    product: p.product ?? inferProduct(p.slug, null),
+    product: p.product,
   }));
+
+  // ── ASSERTION 1: every card the built site asks for is one this run can emit.
+  //
+  // Negative case, and the reason this is not decoration: five built pages point
+  // at /Assets/og/crowmark.png, /Assets/og/glossary-index.png,
+  // /Assets/og/glossary-toms-framework.png, /Assets/og/integrations.png and
+  // /Assets/og/roadmap.png. Rename a route, or change the slug rule, and one of
+  // those cards stops being rendered while the page keeps requesting it. The
+  // result is a broken image on every social share of that page, and nothing else
+  // in the build looks at it: copy-assets.js only fails on an asset that is
+  // MISSING FROM DISK, and a stale PNG from a previous run is still on disk.
+  const emitted = new Set(pages.map((p) => p.slug));
+  const uncovered = [...referencedCardSlugs(repoRoot)].filter(([slug]) => !emitted.has(slug));
+  if (uncovered.length > 0) {
+    structuredLog("error", "Built pages reference OG cards this run cannot emit", {
+      operation: "assert-referenced-cards-covered",
+      uncovered: uncovered.map(([slug, route]) => `${slug}.png (first referenced by ${route})`),
+      hint: "Add a SLUG_OVERRIDES entry so the route that owns the card derives that slug, or change the reference in astro/src.",
+    });
+    process.exit(2);
+  }
+
+  // ── ASSERTION 2: the page count is the route count.
+  //
+  // loadBuiltPages already refuses a duplicate slug and an untitled page, so this
+  // is the outer statement of the same contract: what got processed equals what
+  // was found. A generator that quietly emits fewer cards than there are pages is
+  // the failure this file exists to make impossible, and it never announces
+  // itself. The old run printed "Complete" with a total of whatever it happened
+  // to find.
+  const routeCount = listBuiltPages(path.join(repoRoot, DIST_RELATIVE)).filter(
+    (r) => !EXCLUDED_ROUTES.includes(r),
+  ).length;
+  if (pages.length !== routeCount) {
+    structuredLog("error", "Page count does not match the built route count", {
+      operation: "assert-page-count",
+      pages: pages.length,
+      routes: routeCount,
+    });
+    process.exit(2);
+  }
+
+  // Surface cards on disk that no built page produces. This replaces a
+  // hand-written RETIRED_SLUGS list, which could only ever name the orphans
+  // somebody remembered: `demo`, `csrd`, `crowcyber`, `crowcash`, `crowesg`. The
+  // set is derived now, so a route rename orphans a card and says so on the next
+  // run. It is a WARNING, not a failure: deleting a PNG is an owner decision,
+  // because a URL somebody shared last year still resolves to it today.
+  const orphans = fs
+    .readdirSync(outDir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith(".png"))
+    .map((e) => e.name.replace(/\.png$/i, ""))
+    .filter((slug) => !emitted.has(slug));
+  if (orphans.length > 0) {
+    structuredLog("warn", "OG cards on disk with no built page behind them", {
+      operation: "audit-orphan-cards",
+      count: orphans.length,
+      slugs: orphans,
+      note: "No route renders these. They are not regenerated and, being unreferenced, copy-assets.js does not ship them. Deleting them is an owner decision.",
+    });
+  }
 
   const filtered = heroesOnly ? [] : slugFilter ? pages.filter((p) => p.slug === slugFilter) : pages;
   if (slugFilter && !heroesOnly && filtered.length === 0) {
@@ -1014,6 +1086,32 @@ async function main() {
     }
   }
 
+  // ── ASSERTION 3: every page processed has a card on disk afterwards.
+  //
+  // `rendered` and `skipped` are counters, and a counter agreeing with itself is
+  // not evidence that a file exists. The negative case is a write that threw
+  // somewhere the catch above did not reach, or a `skipped` page whose PNG was
+  // deleted between the existence check and here. Assert the FILES.
+  if (rendered + skipped !== filtered.length) {
+    structuredLog("error", "Processed count does not match the page list", {
+      operation: "assert-processed-count",
+      rendered,
+      skipped,
+      expected: filtered.length,
+    });
+    process.exit(3);
+  }
+  const absent = filtered
+    .map((p) => p.slug)
+    .filter((slug) => !fs.existsSync(path.join(outDir, `${slug}.png`)));
+  if (absent.length > 0) {
+    structuredLog("error", "Pages were processed but their cards are not on disk", {
+      operation: "assert-cards-written",
+      slugs: absent,
+    });
+    process.exit(3);
+  }
+
   // Article hero artwork. Same skip rule as the OG cards: the slug is the cache key,
   // so an existing file is treated as current unless --force.
   let heroesRendered = 0;
@@ -1034,7 +1132,7 @@ async function main() {
     }
     // A hero standing in for a photograph must belong to a post that exists. Without
     // this the generator would happily ship artwork for a deleted slug — the exact
-    // failure the RETIRED_SLUGS audit above exists to catch on the OG side.
+    // failure the orphan-card audit above exists to catch on the OG side.
     const pagePath = path.join(repoRoot, hero.page);
     if (!fs.existsSync(pagePath)) {
       structuredLog("error", "Article hero points at a page that does not exist", {

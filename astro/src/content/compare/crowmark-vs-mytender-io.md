@@ -1,5 +1,5 @@
 ---
-title: "CrowMark vs mytender.io: an honest UK bid software comparison"
+title: "CrowMark vs mytender.io: bid software, honestly"
 description: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
 ogDescription: "CrowMark against mytender.io: published pricing and figure-grounding versus a private-cloud drafting platform. Every figure sourced and dated."
 articleDescription: "CrowMark publishes pricing from £49/month and adds figure-grounding and social value maths. mytender.io is a UK AI tender-writing platform that does not publish a price. A sourced, balanced comparison."
@@ -75,7 +75,7 @@ faq:
 <figcaption>The buyer-side social value requirement in CrowMark, shown as a drawn representation. The criteria, weightings and evidence requirements on screen are part of the drawing.</figcaption>
 </figure>
 <p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. On security, it uses EU data residency, AES-256 encryption at rest and TLS 1.3 in transit.</p>
-<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
+<p>CrowMark publishes its pricing. Starter is <a href="/pricing/?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
 <p>The pricing models are different in kind, not just in number. CrowMark states &pound;49 and &pound;149 per month in public, on a page anyone can read without a demo. mytender.io keeps its tiers behind a demo or the dashboard. Both of us open an account through a conversation, but only one of us makes you have it before you know the price. If knowing the cost up front is part of how you evaluate software, CrowMark gives you that immediately. If you prefer to see a tailored quote after a walkthrough, mytender.io's model fits that.</p>
@@ -147,14 +147,14 @@ faq:
 <li>mytender.io founders, University of Southampton origin, Fuel Ventures pre-seed, Virtual Private Cloud and public-sector tender portal partnership. Future Worlds, "mytender.io: AI-driven bid writing platform", 21 May 2025. <a href="https://futureworlds.com/mytender-io-ai-driven-bid-writing-platform/" target="_blank" rel="noopener noreferrer">futureworlds.com/mytender-io-ai-driven-bid-writing-platform</a></li>
 <li>mytender.io pricing shown on request, one-month refundable period. mytender.io Terms &amp; Conditions and Capterra listing, accessed 26 July 2026. <a href="https://www.capterra.com/p/10031061/mytender-io/" target="_blank" rel="noopener noreferrer">capterra.com/p/10031061/mytender-io</a></li>
 <li>mytender.io positioning, content-library drafting, SharePoint / Salesforce / Google Drive integrations, no own discovery feed, target of 10+ bids a year. CleanTender, "7 Best AI Tender Software for UK Contracts (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-tender-software" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-tender-software</a></li>
-<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026, Procurement Act 2023 s.52 / s.71, and security posture (first party). CrowAgent, <a href="/crowmark">CrowMark product page</a>.</li>
-<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing?product=mark">Pricing</a>.</li>
+<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026, Procurement Act 2023 s.52 / s.71, and security posture (first party). CrowAgent, <a href="/crowmark/">CrowMark product page</a>.</li>
+<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing/?product=mark">Pricing</a>.</li>
 </ol>
 </div>
 
 <h2 id="related">Related comparisons</h2>
 <div class="cmp-relgrid">
-<a class="cmp-relcard" href="/compare/crowmark-vs-autogenai">CrowMark vs AutogenAI &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-cleantender">CrowMark vs CleanTender &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid">CrowMark vs SwiftBid &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-autogenai/">CrowMark vs AutogenAI &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-cleantender/">CrowMark vs CleanTender &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid/">CrowMark vs SwiftBid &rarr;</a>
 </div>

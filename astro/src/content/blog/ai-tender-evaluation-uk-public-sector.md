@@ -98,4 +98,4 @@ No source is cited for how widely UK contracting authorities use automated or AI
 
 Whether a buyer checks your response by software or by hand, the checks are against what the tender documents state. Paste your tender text into the free Tender Compliance Matrix and it returns the obligations, numbered questions, response limits and weightings the wording states, each with the line it was read from. No account, no upload, no email.
 
-[Open the Tender Compliance Matrix →](/tools/tender-compliance-matrix)
+[Open the Tender Compliance Matrix →](/tools/tender-compliance-matrix/)

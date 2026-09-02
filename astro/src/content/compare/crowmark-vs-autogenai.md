@@ -1,7 +1,7 @@
 ---
-title: "CrowMark vs AutogenAI: an honest UK bid software comparison"
-description: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine that quotes on request. Every figure sourced."
-ogDescription: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine that quotes on request. Every figure sourced."
+title: "CrowMark vs AutogenAI: bid software, honestly"
+description: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine sold on request. Every figure sourced."
+ogDescription: "CrowMark against AutogenAI: published SME pricing from £49 a month versus an enterprise engine sold on request. Every figure sourced."
 articleDescription: "CrowMark is an SME bid suite with published pricing from £49/month. AutogenAI is an enterprise engine that does not publish a price. A sourced, balanced comparison for UK bidding teams."
 publishDate: 2026-07-26
 updatedDate: 2026-07-26
@@ -73,7 +73,7 @@ faq:
 <figcaption>Tender questions on a contract in CrowMark, shown as a drawn representation. The panel at the top is the product&rsquo;s own standing notice about what a draft may be grounded in and who has to approve it.</figcaption>
 </figure>
 <p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. It is built for the supplier side of UK public-sector procurement, not for enterprise-wide proposal automation across every sector.</p>
-<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
+<p>CrowMark publishes its pricing. Starter is <a href="/pricing/?product=mark">&pound;49 per month</a> for 1 user, Pro is &pound;149 per month for 5 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. Setting it up needs a card, held securely by Stripe and never stored by us.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
 <p>This is the clearest difference between the two. CrowMark states its numbers in public: &pound;49 and &pound;149 per month, on a page anyone can read without a sales call. Access itself is by request, so you book a demo before an account is opened, but the price is not what the call is for. AutogenAI publishes no price and sells through a quote-on-request enterprise process. For a small supplier that wants to know the cost before committing time, published pricing matters, and CrowMark gives it. For an enterprise procurement team used to negotiated contracts, a quote-based model is normal and AutogenAI's scale may justify it.</p>
@@ -145,14 +145,14 @@ faq:
 <li>AutogenAI pricing and positioning (enterprise, on request; bid teams of 5+; no built-in tender discovery; Procurement Act 2023 alignment). CleanTender, "7 Best AI Tender Software for UK Contracts (2026)", 29 April 2026. <a href="https://cleantender.co.uk/resources/comparisons/ai-tender-software" target="_blank" rel="noopener noreferrer">cleantender.co.uk/resources/comparisons/ai-tender-software</a></li>
 <li>AutogenAI listing showing no vendor-published price. GetApp UK, AutogenAI, accessed 26 July 2026. <a href="https://www.getapp.co.uk/software/2072629/autogenai" target="_blank" rel="noopener noreferrer">getapp.co.uk/software/2072629/autogenai</a></li>
 <li>AutogenAI $39.5m Series B (Salesforce Ventures, Spark Capital, Blossom Capital) and $65.3m total investment. FinSMEs, 6 December 2023. <a href="https://www.finsmes.com/2023/12/autogenai-raises-39-5m-in-series-b-funding.html" target="_blank" rel="noopener noreferrer">finsmes.com/2023/12/autogenai-raises-39-5m-in-series-b-funding.html</a></li>
-<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026 and Procurement Act 2023 s.52 / s.71 (first party). CrowAgent, <a href="/crowmark">CrowMark product page</a>.</li>
-<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing?product=mark">Pricing</a>.</li>
+<li>CrowMark capabilities, figure-grounding, PPN 017, PPN 026 and Procurement Act 2023 s.52 / s.71 (first party). CrowAgent, <a href="/crowmark/">CrowMark product page</a>.</li>
+<li>CrowMark pricing: Starter &pound;49/month, Pro &pound;149/month, Portfolio contact sales (first party). CrowAgent, <a href="/pricing/?product=mark">Pricing</a>.</li>
 </ol>
 </div>
 
 <h2 id="related">Related comparisons</h2>
 <div class="cmp-relgrid">
-<a class="cmp-relcard" href="/compare/crowmark-vs-mytender-io">CrowMark vs mytender.io &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-cleantender">CrowMark vs CleanTender &rarr;</a>
-<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid">CrowMark vs SwiftBid &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-mytender-io/">CrowMark vs mytender.io &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-cleantender/">CrowMark vs CleanTender &rarr;</a>
+<a class="cmp-relcard" href="/compare/crowmark-vs-swiftbid/">CrowMark vs SwiftBid &rarr;</a>
 </div>

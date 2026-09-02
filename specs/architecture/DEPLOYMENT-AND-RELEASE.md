@@ -11,6 +11,33 @@ recurring cost beyond the domain itself; this is a binding constraint on every
 architectural decision in this repo (`MODERNISATION-ARCHITECTURE.md` §2 rejects
 Next.js/Vercel partly on this basis).
 
+**Build output directory: `astro/dist`. Build command: `npm run build:deploy`, run inside
+`astro/`.** Corrected 2026-09-01. This section described the LEGACY chain (`dist/` produced
+by `npm run build` at the repository root) long after it stopped being what ships. The
+deploy source moved to the Astro build on 2026-08-05.
+
+Measured against production on 2026-09-01, rather than read off a dashboard:
+
+| URL | Status |
+|---|---|
+| `https://crowagent.ai/pricing` | 308 to `/pricing/`, which returns 200 |
+| `https://crowagent.ai/pricing.html` | **404** |
+| `https://crowagent.ai/search-index.json` | 200 |
+
+Directory routes are the Astro build's shape, extension-ful routes were the legacy tree's,
+and `search-index.json` is emitted only by the Astro build. The legacy root HTML is a
+frozen baseline. Nothing serves it.
+
+`npm run build:deploy` is the shorter of the two Astro chains: four source guards, a
+type-check, `astro build`, then the three steps that EMIT files (`copy-assets.js`,
+`copy-cf-config.js`, `build-sitemap.js`) and the four cheap non-browser gates that guard
+the artefact (sitemap routes, pricing parity, brand drift, CSP required origins). The
+roughly 20 browser-driving gates live in `npm run build` and are certification, run on a
+developer machine before a push, not on the deploy.
+
+The paragraph below is retained as HISTORY. It records why the Pages project stopped
+publishing the repository root, which is a different question from what it publishes now.
+
 **Build output directory: `dist/`.** This was **not always true**. Before 2026-07-29 the
 Pages project published the repository root, which shipped 135 files under `.dev-tools/`,
 70 under `tests/`, 35 under `scripts/`, 14 under `specs/`, plus `package.json` and the
@@ -22,9 +49,11 @@ actually deployed. Verified live at the time: `/tests/accessibility.spec.js` and
 rules in place. The only real fix was pointing the Pages build output directory at
 `dist/`, enabled 2026-07-29.
 
-**Build command:** `npm run build`, which runs `node scripts/build-dist.js`. Full detail
-of what that script does and guards against is in `TESTING-AND-QUALITY-GATES.md` §2;
-this document covers the deployment-facing consequences, not the build mechanics.
+**Legacy build command (HISTORY, no longer the deploy):** `npm run build` at the
+repository root, which runs `node scripts/build-dist.js`. Full detail of what that script
+does and guards against is in `TESTING-AND-QUALITY-GATES.md` §2. It produced the `dist/`
+described above and has not been the deploy since 2026-08-05. The current command is
+`npm run build:deploy` inside `astro/`.
 
 ## 2. Rollback
 

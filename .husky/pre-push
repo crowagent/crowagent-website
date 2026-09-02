@@ -1,11 +1,34 @@
 #!/bin/sh
 # CrowAgent pre-push gate (see /ENGINEERING-STANDARDS.md §3).
-# Website build is a no-op (assets pre-built & committed) so the gate is the test suite.
-# Override for emergencies: SKIP_PREPUSH_TESTS=1 git push
-if [ "${SKIP_PREPUSH_TESTS:-}" = "1" ]; then
-  echo "pre-push: tests SKIPPED via SKIP_PREPUSH_TESTS=1"
-  exit 0
-fi
-echo "pre-push: running jest unit tests..."
-npm test || { echo "pre-push BLOCKED: tests failed. Fix locally before pushing (or SKIP_PREPUSH_TESTS=1 to override)."; exit 1; }
-echo "pre-push: tests passed."
+#
+# THIS GATE IS DELIBERATELY EMPTY AS OF 2026-09-01. It ran `npm test`, the jest
+# suite, and that suite tests a tree nobody serves.
+#
+# MEASURED, not assumed. jest.config.js declares a coverage floor over exactly
+# four files: scripts.js, cookie-banner.js, js/cookie-banner.js and
+# service-worker.js. The live site is built from astro/ and ships as astro/dist.
+# Across all 46 built pages, the count of references to any of those four files
+# is ZERO. The negative result was available and would have been obvious: a
+# nonzero count for any one of them would have kept the gate. There was none.
+#
+# So every push paid a jest run with coverage instrumentation to protect code
+# that the site stopped loading on 2026-08-05, when the Cloudflare Pages deploy
+# source moved to astro/dist. The suite itself still passes and is untouched. It
+# is simply not a gate on anything that ships, and a gate that reaches nothing is
+# worse than no gate, because it is believed.
+#
+# WHAT ACTUALLY GUARDS A PUSH NOW: `npm run build` inside astro/, which runs the
+# full gate chain (facts, English, links, SEO and content parity, design system,
+# palette roles, motion, CSP, render, plus the browser gates). Run it before you
+# push. A push to main IS a production Cloudflare deploy, so it is worth the time.
+#
+# NOT WIRED IN HERE ON PURPOSE. Putting that chain in this hook would turn a free
+# local convenience into a several-minute block on every push, and wiring a gate
+# is an owner decision under RULE 0-G, not a side effect of removing a stale one.
+# The cheapest useful candidate, if the owner wants one, is
+# `node astro/scripts/check-facts.js` at about 135 ms, because a check-facts
+# violation FAILS the Cloudflare deploy and is the one class of error that costs
+# a real production build to discover.
+#
+# To run the old suite by hand: npm test
+exit 0

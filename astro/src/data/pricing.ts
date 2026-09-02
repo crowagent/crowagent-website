@@ -122,7 +122,7 @@ export const PLANS: Plan[] = [
     body:
       '1 user and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic social value calculation, and branded PDF or DOCX export.',
     cta: 'Request access',
-    href: '/contact?enquiry=limited-access#contact-form',
+    href: '/contact/?enquiry=limited-access#contact-form',
   },
   {
     name: 'Pro',
@@ -136,7 +136,7 @@ export const PLANS: Plan[] = [
     body:
       '5 users and 750 AI credits a month, plus post-award delivery tracking, monthly social value reports, and advisory checks on the section 52 indicators and the section 71 assessment.',
     cta: 'Request access',
-    href: '/contact?enquiry=limited-access#contact-form',
+    href: '/contact/?enquiry=limited-access#contact-form',
     recommended: true,
   },
   {
@@ -154,7 +154,7 @@ export const PLANS: Plan[] = [
     body:
       '10 users included, more by arrangement, and 3,000 AI credits a month, branded exports, and a named account contact for high-volume bidding teams.',
     cta: 'Contact sales',
-    href: '/contact?product=crowmark&tier=portfolio',
+    href: '/contact/?product=crowmark&tier=portfolio',
   },
 ];
 

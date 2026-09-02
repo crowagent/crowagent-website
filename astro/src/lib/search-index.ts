@@ -84,8 +84,22 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
     }
   }
 
-  // Content collections. Each entry is a real built route, so anything in here
-  // is guaranteed to resolve.
+  /*
+   * Content collections. Each entry is a real built route, so anything in here
+   * is guaranteed to resolve.
+   *
+   * THE TRAILING SLASH IS PART OF THE ADDRESS, R28-WEB-SLASH. Every collection
+   * entry becomes a `<id>/index.html` under `build.format: 'directory'`, so
+   * Cloudflare answers 200 on the slashed form and 308 on the bare one. This
+   * line built `/blog/<id>` with no slash, and command-palette.ts writes the
+   * value straight into `window.location.href` and into a real anchor, so
+   * choosing any of the 21 collection results cost the reader a redirect before
+   * the page began to load. The 23 nav and footer entries above carry their
+   * slash from the authored data and need nothing here.
+   *
+   * It is appended rather than authored into `entry.id` because the id is the
+   * content file's name and is used elsewhere as an identity, not an address.
+   */
   for (const [id, section] of Object.entries(COLLECTION_SECTIONS)) {
     const entries = await getCollection(id as 'blog');
     for (const entry of entries) {
@@ -94,7 +108,7 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
       const prefix = id === 'legal' ? '' : `${id}/`;
       add({
         title: (data.heading as string) ?? (data.title as string) ?? entry.id,
-        href: `/${prefix}${entry.id}`,
+        href: `/${prefix}${entry.id}/`,
         section,
         hint: data.description as string | undefined,
       });

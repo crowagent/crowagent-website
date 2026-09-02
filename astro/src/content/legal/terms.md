@@ -99,7 +99,7 @@ Use of the CrowAgent platform is conditional on staying within the boundaries be
 
 ## 7. Data Processing
 
-Personal data is processed in accordance with our [Privacy Policy](/privacy). For B2B customers who require a Data Processing Agreement under Article 28 UK GDPR, request a copy using the buttons below.
+Personal data is processed in accordance with our [Privacy Policy](/privacy/). For B2B customers who require a Data Processing Agreement under Article 28 UK GDPR, request a copy using the buttons below.
 
 [Request DPA](mailto:legal@crowagent.ai?subject=DPA%20Request) [Contact Support](mailto:support@crowagent.ai)
 

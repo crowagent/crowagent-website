@@ -39,7 +39,10 @@ const { defineConfig, devices } = require('@playwright/test');
  *
  *   LEGACY  http://127.0.0.1:8092  — the repo root. Extension-ful routes
  *           (/contact.html), nav + footer + cookie banner injected by JS.
- *           This is what production deploys today.
+ *           THIS IS NOT WHAT PRODUCTION DEPLOYS. That line said it was, and it
+ *           stopped being true on 2026-08-05, when the Cloudflare Pages deploy
+ *           source moved to astro/dist. Corrected 2026-09-01. Its server is now
+ *           OFF by default, see the webServer block below.
  *   ASTRO   http://127.0.0.1:8095  — astro/dist. Directory routes (/contact/),
  *           server-rendered nav and footer, no cookie banner because it loads
  *           no third-party script and sets no cookie. This is the rebuild, and
@@ -101,13 +104,33 @@ module.exports = defineConfig({
     ignoreHTTPSErrors: true,
   },
   webServer: [
-    {
-      // LEGACY tree — repo root.
-      command: 'npx serve . -l 8092',
-      url: 'http://127.0.0.1:8092/index.html',
-      reuseExistingServer: true,
-      timeout: 60000,
-    },
+    // LEGACY tree, the repo root. OFF BY DEFAULT SINCE 2026-09-01.
+    //
+    // This entry used to start unconditionally, so every Playwright invocation
+    // in this repository booted a static server over the WHOLE repository root
+    // (node_modules, .git, specs, status boards and all) to serve a tree that
+    // has not been deployed since 2026-08-05. Five specs still target it and
+    // they are untouched:
+    //   tests/contact-consent.spec.js
+    //   tests/parity.spec.js                       (the legacy half of the diff)
+    //   tests/cross-browser/sf46-p3g-smoke.spec.js
+    //   tests/visual-regression/expanded-vrt-2026-05-22.spec.js
+    //   tests/visual-regression/sf46-p3f-baselines.spec.js
+    // Run any of them with CA_LEGACY_SERVER=1 and this server starts as before.
+    //
+    // Gated rather than deleted, deliberately. Whether the legacy tree stays is
+    // an owner decision, and deleting the only way to serve it would take that
+    // decision by making the five specs unrunnable.
+    ...(process.env.CA_LEGACY_SERVER === '1'
+      ? [
+          {
+            command: 'npx serve . -l 8092',
+            url: 'http://127.0.0.1:8092/index.html',
+            reuseExistingServer: true,
+            timeout: 60000,
+          },
+        ]
+      : []),
     {
       // ASTRO tree — the built rebuild. Deliberately serves astro/dist and
       // does NOT build it: a build here would race the agents working in

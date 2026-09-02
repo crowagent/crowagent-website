@@ -102,21 +102,21 @@ const PRODUCTS: NavMenu = {
       items: [
         {
           label: 'CrowMark for Suppliers',
-          href: '/crowmark',
+          href: '/crowmark/',
           description: 'Respond to tenders, RFPs, RFIs and questionnaires',
           accent: 'mark',
           icon: 'dot',
         },
         {
           label: 'CrowMark for Buyers',
-          href: '/crowmark-buyers',
+          href: '/crowmark-buyers/',
           description: 'Read the responses you receive, against the requirements you published',
           accent: 'teal',
           icon: 'dot',
         },
         {
           label: 'Compare CrowMark',
-          href: '/compare',
+          href: '/compare/',
           description: 'How it stacks up against other bid tools',
           accent: 'teal',
           icon: 'grid',
@@ -159,28 +159,28 @@ const RESOURCES: NavMenu = {
       items: [
         {
           label: 'Tender Compliance Matrix',
-          href: '/tools/tender-compliance-matrix',
+          href: '/tools/tender-compliance-matrix/',
           description: 'Paste tender text, read back the requirements it states',
           accent: 'mark',
           icon: 'dot',
         },
         {
           label: 'Free tools hub',
-          href: '/tools',
+          href: '/tools/',
           description: 'No account, no email gate',
           accent: 'teal',
           icon: 'arrow',
         },
         {
           label: 'PPN 026 explained',
-          href: '/glossary/ppn-026',
+          href: '/glossary/ppn-026/',
           description: 'The next edition of the Social Value Model, and the dates',
           accent: 'teal',
           icon: 'grid',
         },
         {
           label: 'Procurement glossary',
-          href: '/glossary',
+          href: '/glossary/',
           description: 'UK bidding and tendering terms in plain English',
           accent: 'teal',
           icon: 'book',
@@ -201,10 +201,10 @@ export const NAV = {
 
   /** Flat top-level links, rendered after the dropdowns. */
   topLinks: [
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'FAQ', href: '/faq' },
-    { label: 'About', href: '/about' },
+    { label: 'Pricing', href: '/pricing/' },
+    { label: 'Blog', href: '/blog/' },
+    { label: 'FAQ', href: '/faq/' },
+    { label: 'About', href: '/about/' },
   ] as NavLink[],
 
   actions: {
@@ -214,7 +214,7 @@ export const NAV = {
     } as NavLink,
     cta: {
       label: 'Request access',
-      href: '/contact?enquiry=limited-access#contact-form',
+      href: '/contact/?enquiry=limited-access#contact-form',
     } as NavLink,
   },
 };

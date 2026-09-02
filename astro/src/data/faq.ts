@@ -83,7 +83,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'How do I sign up?',
         answer:
           'Book a demo, or request access, and once we have agreed the plan that fits you can create your account. There is no self-serve signup. Creating the account needs a card, held securely by Stripe and never stored by us, and you can start scoring bids or preparing your evidence as soon as you sign in.',
-        link: { label: 'Request access', href: '/contact?enquiry=limited-access#contact-form' },
+        link: { label: 'Request access', href: '/contact/?enquiry=limited-access#contact-form' },
       },
       {
         // The question itself is replaced, not just its answer. A question that
@@ -137,7 +137,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'Is CrowMark ready to use?',
         answer:
           'CrowMark is live and in daily use, with more being added. Tender discovery from Contracts Finder and Find a Tender, document ingestion, grounded answer drafting, deterministic social value calculation, delivery tracking and Procurement Act 2023 s.52 and s.71 KPI checks all work today. See the CrowMark page for what each stage covers.',
-        link: { label: 'CrowMark page', href: '/crowmark' },
+        link: { label: 'CrowMark page', href: '/crowmark/' },
       },
     ],
   },
@@ -157,7 +157,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // separate offer with its own limits and it reads as one.
         answer:
           "CrowMark's plans are Starter, Pro and Portfolio. Access is offered by request rather than self-serve signup, and annual billing saves 10%.",
-        link: { label: 'See current pricing', href: '/pricing' },
+        link: { label: 'See current pricing', href: '/pricing/' },
       },
       {
         // ── A-174, OWNER INSTRUCTION 2026-08-05: "why free trial 14 days is
@@ -221,7 +221,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'Is there a free trial?',
         answer:
           'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for 1 user, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
-        link: { label: 'Request a trial', href: '/contact?enquiry=limited-access#contact-form' },
+        link: { label: 'Request a trial', href: '/contact/?enquiry=limited-access#contact-form' },
       },
       {
         question: 'Can I cancel anytime?',
@@ -254,7 +254,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'What happens when my AI credits run out?',
         answer:
           'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over. Purchased top-up credits do.',
-        link: { label: 'See the credit prices', href: '/pricing#ai-credits' },
+        link: { label: 'See the credit prices', href: '/pricing/#ai-credits' },
       },
       {
         question: 'How is a spreadsheet counted when I upload one?',
@@ -287,7 +287,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'Is my data secure?',
         answer:
           'Yes. We use Supabase (PostgreSQL) with Row Level Security on all tables. All data is encrypted in transit (TLS) and at rest. We are protected by Cloudflare (DDoS, Bot Fight Mode, SSL Full Strict). Authentication uses Supabase Auth with optional TOTP MFA. CrowAgent Ltd is registered with the ICO as a data controller and we are GDPR compliant.',
-        link: { label: 'See our Security page for full details', href: '/security' },
+        link: { label: 'See our Security page for full details', href: '/security/' },
       },
     ],
   },

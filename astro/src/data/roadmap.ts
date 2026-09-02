@@ -58,12 +58,12 @@ export const PHASES: Phase[] = [
       {
         title: 'CrowMark for Suppliers',
         body: 'Contracts Finder and Find a Tender refreshed daily, tender document ingestion, answer drafting grounded in your own submitted bids, deterministic social-value calculation, post-award delivery evidence, and Procurement Act 2023 s.52 and s.71 KPI checks.',
-        href: '/crowmark',
+        href: '/crowmark/',
       },
       {
         title: 'CrowMark for Buyers',
         body: 'Build and publish requirements against a deterministic social value rubric, then locate the evidence for each one across every response received, quoted verbatim or dropped. CrowMark organises. Your evaluation panel scores.',
-        href: '/crowmark-buyers',
+        href: '/crowmark-buyers/',
       },
     ],
   },
@@ -151,7 +151,7 @@ export const AI_LIVE: { heading: string; body: string; link?: { label: string; h
   {
     heading: 'Two models, two jobs',
     body: "Customer-facing drafting (CrowMark bid narratives) runs on Google Gemini. Heavier reasoning and analysis tasks run on Anthropic's Claude. Both are used as data sub-processors under signed DPAs. Your prompts are not used to train their foundation models. The full list is on the",
-    link: { label: 'privacy page', href: '/privacy' },
+    link: { label: 'privacy page', href: '/privacy/' },
   },
   {
     heading: 'Grounded in the source law',

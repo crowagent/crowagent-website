@@ -49,6 +49,33 @@ decision for you.
    other Cloudflare HTML transform on this zone, so you would be trading a silent telemetry report
    for weaker bot detection on a site whose forms are already protected by Turnstile.
 
+**AMENDED 2026-09-01. THE PRICE OF OPTION 1 WENT UP, AND THAT IS THE ONLY THING THAT CHANGED.**
+Re-measured live against `https://crowagent.ai`, and re-filed since as R2.8 row
+`R28-CSP-BLOCKS-A-RUNTIME-INJECTED-SCRIPT-ON-EVERY-LIVE-PAGE-01`. The diagnosis above still holds
+exactly as written and nothing in it needs correcting. What is new:
+
+- **It is now a standing audit FAIL, not just a Sentry report.** `npm run audit:release:live` scores
+  Lighthouse best-practices **92 on every one of the 12 live routes** against a **95** threshold,
+  from `errors-in-console` plus `inspector-issues`, and both trace to this one refusal. The same
+  routes score **100** locally, because the dist server sends no headers, so no build-time gate can
+  ever see this and only a live audit can. Option 1 no longer costs nothing. It costs a permanent
+  red release audit, which is the condition under which a gate stops being read.
+- **The refusal is a single event per page, confirmed in a real browser.** One
+  `securitypolicyviolation`, `script-src-elem`, `kInlineViolation`, at line 150 of the served
+  document, which is the Cloudflare bootstrap. Nothing else on the page is refused.
+- **The impossibility of a hash is now proved four ways rather than three.** Four consecutive fetches
+  of `/` gave four different SHA-256 values for that script. Also worth recording so nobody repeats
+  it: comparing the served HTML against a single hash captured from one audit run reports a FALSE
+  ABSENCE, and reads as proof of a runtime injection that does not exist. The script is in the served
+  markup, edge-injected before it reaches the browser.
+- **`'unsafe-inline'` would not even work, quite apart from being forbidden.** Under CSP3 a browser
+  ignores `'unsafe-inline'` whenever a hash or nonce is present, so admitting this script that way
+  means DELETING all 17 hashes first. There is no version of this where the policy is widened a
+  little.
+- **The row cannot be closed from the repository.** Both remaining options are yours: a zone setting
+  in the Cloudflare dashboard, or a `_headers` change whose effect cannot be verified without a
+  production deploy. No CSP change was made and none should be.
+
 **Why I did not just do option 2.** It is a one-line change in `_headers` and I could have made it
 look like a tidy fix. It is not a CSP change, it is a change to how much bot signal Cloudflare
 collects for this zone, and I cannot verify the effect without a production deploy. Recorded, argued,

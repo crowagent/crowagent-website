@@ -39,7 +39,7 @@ Strip away the tender jargon and a method statement answers one question: how, s
 
 Method statements appear under different labels depending on the buyer and sector: quality questions, technical responses, delivery plans, or simply "method statement" on construction and works contracts, where the term originated as a health and safety document describing how a task would be carried out safely. In modern tendering the term has broadened to cover any scored narrative response describing your delivery approach, whether the contract is facilities management, professional services, IT, or works.
 
-Under the [Procurement Act 2023](/blog/procurement-act-2023-sme-guide), contracts are awarded on the basis of the Most Advantageous Tender, not simply the lowest price. That makes the method statement one of the places where a smaller supplier without the lowest day rate can still win, because quality and delivery approach sit inside the award test on equal footing with cost.
+Under the [Procurement Act 2023](/blog/procurement-act-2023-sme-guide/), contracts are awarded on the basis of the Most Advantageous Tender, not simply the lowest price. That makes the method statement one of the places where a smaller supplier without the lowest day rate can still win, because quality and delivery approach sit inside the award test on equal footing with cost.
 
 ## What evaluators are marking against
 
@@ -100,7 +100,7 @@ The same avoidable errors recur across method statement responses that under-sco
 6. **Exceeding or padding to the word limit.** Either losing content an evaluator never sees, or diluting strong points with repetition to fill space.
 7. **Inconsistency with the rest of the bid.** A method statement that promises a delivery model your pricing schedule or your social value response does not support, which a careful evaluator will notice and mark down as a coherence risk.
 
-Every one of these is fixable with a disciplined drafting and review process, not a bigger team. If you want the wider context on how quality sits inside the overall award decision, read our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract), which covers how the SQ and ITT stages fit together and where social value sits alongside quality in the score.
+Every one of these is fixable with a disciplined drafting and review process, not a bigger team. If you want the wider context on how quality sits inside the overall award decision, read our guide to [finding and winning your first UK public sector contract](/blog/find-first-public-sector-contract/), which covers how the SQ and ITT stages fit together and where social value sits alongside quality in the score.
 
 ## Frequently asked questions
 
@@ -134,5 +134,5 @@ Only as a starting point, never as a final answer. Every buyer asks the question
 
 CrowMark drafts answers from your organisation's own submitted bids, refuses to print a figure your data does not contain, and carries a PPN 017 AI-transparency disclosure on every draft, so the evidence in your method statement is real.
 
-[Request access](/contact?enquiry=limited-access#contact-form)
-[See CrowMark →](/crowmark)
+[Request access](/contact/?enquiry=limited-access#contact-form)
+[See CrowMark →](/crowmark/)

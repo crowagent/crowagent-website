@@ -12,10 +12,10 @@ definedTermDescription: "Themes, Outcomes and Measures, the standard UK scoring 
 sidebarKicker: "Related term"
 sidebarTitle: "PPN 026"
 sidebarBody: "The next edition of the Social Value Model, and the separate framework central government scores against."
-sidebarHref: "/glossary/ppn-026"
+sidebarHref: "/glossary/ppn-026/"
 sidebarCta: "Read PPN 026 →"
 productCardBody: "Maps your contract to the TOMs measures you are eligible for, and to the National TOMs proxy values behind them."
-readMoreHref: "/blog/ppn-026-social-value-guide"
+readMoreHref: "/blog/ppn-026-social-value-guide/"
 readMoreLabel: "Social value scoring guide"
 readMoreBody: "the weightings, TOMs measure selection, scoring methodology and worked examples."
 ctaHeading: "Structure your social value to the TOMs framework"
@@ -48,11 +48,11 @@ ctaSub: "CrowMark maps your contract to the TOMs measures you are eligible for a
 <ul>
 <li><strong>Who publishes it:</strong> the Social Value Portal, with the Local Government Association and the National Social Value Taskforce. It is not a Cabinet Office instrument.</li>
 <li><strong>Proxy values:</strong> <strong>National TOMs 2023-24</strong> is a widely cited edition. Use the edition the buyer names.</li>
-<li><strong>Relationship to the <a href="/glossary/ppn-026">Social Value Model</a>:</strong> they are separate frameworks. The central government model is a Cabinet Office instrument, published as a Procurement Policy Note and applying to central government procurement. TOMs is required by many buyers outside central government, particularly local authorities, NHS bodies and housing associations.</li>
+<li><strong>Relationship to the <a href="/glossary/ppn-026/">Social Value Model</a>:</strong> they are separate frameworks. The central government model is a Cabinet Office instrument, published as a Procurement Policy Note and applying to central government procurement. TOMs is required by many buyers outside central government, particularly local authorities, NHS bodies and housing associations.</li>
 <li><strong>Evidence:</strong> each measure requires documented evidence (contracts, pay records, delivery reports) retained for audit.</li>
 <li><strong>Scoring:</strong> measure quantity &times; National TOMs proxy &rarr; monetary social value. Where a buyer applies PPN 026, the minimum weighting is a share of the evaluation score and is not derived from a monetised TOMs total.</li>
 <li><strong>Buyer discretion:</strong> buyers choose which TOMs measures to score. Under PPN 026 they cannot go below the minimum social value weighting, only above it.</li>
 </ul>
 
 <h2 id="how-we-help">How CrowAgent uses this term</h2>
-<p><a href="/crowmark">CrowMark</a> stores its social value measures in the database, never hardcoded. The catalogue is curated, 19 measures aligned to National TOMs conventions and mapped to the edition of the Social Value Model the buyer names, which every draft records. It is not a full National TOMs implementation. When a contract profile is submitted, deterministic rules surface the eligible measures, and the arithmetic runs in code with every number traceable to its source.</p>
+<p><a href="/crowmark/">CrowMark</a> stores its social value measures in the database, never hardcoded. The catalogue is curated, 19 measures aligned to National TOMs conventions and mapped to the edition of the Social Value Model the buyer names, which every draft records. It is not a full National TOMs implementation. When a contract profile is submitted, deterministic rules surface the eligible measures, and the arithmetic runs in code with every number traceable to its source.</p>

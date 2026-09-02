@@ -174,4 +174,4 @@ If you are not satisfied with our response to a data protection request, you hav
 
 ICO Website: [ico.org.uk/make-a-complaint](https://ico.org.uk/make-a-complaint/) | Helpline: 0303 123 1113 | Post: Information Commissioner’s Office, Wycliffe House, Water Lane, Wilmslow, Cheshire SK9 5AF.
 
-[Security](/security) [Sub-processors](#sub-processors) [Cookie Policy](/cookies)
+[Security](/security/) [Sub-processors](#sub-processors) [Cookie Policy](/cookies/)
