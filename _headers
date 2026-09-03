@@ -46,6 +46,13 @@
 #   + app.crowagent.ai (signup/login + future first-party contact endpoint);
 #   base-uri locked to self; worker-src locked to self; object-src none;
 #   frame-ancestors none. All required directives now present per audit.
+# - 2026-09-03 (R281-PARTNERS-ENQUIRY-DECISION-01): formspree.io dropped from
+#   form-action and the Railway API host added instead. /partners now POSTs to
+#   the platform's `POST /api/v1/partners/enquiry` (crowagent-platform repo),
+#   not Formspree. See PartnerForm.astro's header for the full change. The
+#   host was already in connect-src (DEF-001), so this is only the fallback
+#   path for a native (non-JS) form submission, form-action is not consulted
+#   for the fetch() the form's own script makes.
 # - upgrade-insecure-requests: force HTTPS on any accidental http:// asset reference.
 # - report-to + report-uri (legacy compat): violations posted to platform endpoint.
 #
@@ -275,7 +282,7 @@
   # analytics. They stay named here because the permission must already be in
   # place on the day injection is switched back on; the gate asserts they are
   # permitted, which is still true and still what is wanted.
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cloudflareinsights.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cloudflareinsights.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai https://crowagent-platform-production.up.railway.app; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff

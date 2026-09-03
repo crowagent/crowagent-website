@@ -64,11 +64,19 @@
  *   app.crowagent.ai/api/notify          NOT VERIFIED. NotifySchema is
  *       { email, source } and never reads a token. web/app/api/notify/route.ts,
  *       line 54. Logged as OA-32.
- *   formspree.io/f/xbdpkaol              NOT VERIFIED, and cannot be: Formspree
- *       does not call Cloudflare's siteverify. Logged as OA-09.
+ *   .../api/v1/partners/enquiry          VERIFIED AS EVIDENCE, NOT AS A GATE.
+ *       `PartnerEnquiryRequest` (api/app/routers/partners.py, crowagent-platform
+ *       repo) accepts `turnstile_token` and, when `CLOUDFLARE_TURNSTILE_SECRET`
+ *       is set on the API, calls Cloudflare's siteverify and records the
+ *       outcome in `partner_enquiries.turnstile_verified`. A failed, timed out
+ *       or unconfigured check is stored as false and never refuses the
+ *       enquiry (R281-PARTNERS-ENQUIRY-CONSENT-01, 2026-09-03). Formerly
+ *       formspree.io, replaced 2026-09-03 (R281-PARTNERS-ENQUIRY-DECISION-01,
+ *       OA-08), where the token could not be verified at all, logged as OA-09.
  *
- * Do not describe the second and third as protected. They are client-side
- * friction until their endpoint verifies the token.
+ * Do not describe the second as protected, and describe the third only as
+ * recorded. A token is client-side friction until its endpoint refuses on a
+ * failed check, and only the first one does.
  */
 
 interface Props {

@@ -138,19 +138,16 @@ const CONTEXT = {
  * the problem is known, is a decision rather than an oversight, and is visible
  * on every single build until somebody settles it.
  */
-const KNOWN_BLOCKED = {
-  'form-action https://formspree.io':
-    'OA-08 / OA-09 / OA-31. The partner form posts here and the shipped CSP forbids it, ' +
-    'so partner enquiries have been refused by the browser since commit 911fbc5b on ' +
-    '2026-06-02. Restoring the origin re-opens an undisclosed-until-2026-08-02 US ' +
-    'transfer; moving to a first-party endpoint on app.crowagent.ai fixes this AND ' +
-    'OA-09 (nothing verifies the Turnstile token Formspree receives). That is an ' +
-    'owner decision, recorded in OWNER-ACTIONS.md, not one to take inside a gate.',
-  'connect-src https://formspree.io':
-    'Same decision as the form-action entry above. Listed separately because the two ' +
-    'directives govern different submission paths and either one alone leaves the form ' +
-    'working in only half of them.',
-};
+/**
+ * CLOSED 2026-09-03 (R281-PARTNERS-ENQUIRY-DECISION-01, OA-08). The two
+ * formspree.io entries this list used to carry are gone: PartnerForm.astro no
+ * longer posts there at all, it posts to the platform's own
+ * `POST /api/v1/partners/enquiry` (crowagent-platform repo), which is already
+ * permitted by both `form-action` and `connect-src` in `_headers`. Nothing in
+ * this build references formspree.io any more, so an entry for it here would
+ * itself be the stale-exception case this gate's own comment warns about.
+ */
+const KNOWN_BLOCKED = {};
 
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {

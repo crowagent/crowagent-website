@@ -120,7 +120,8 @@ const REQUIRED = [
       'Where the leads go. Every form on this site posts with fetch(form.action) after ' +
       'preventDefault, so connect-src is the directive that decides whether an enquiry ' +
       'leaves the page. Losing it discards submissions silently, which is the precise ' +
-      'shape of the formspree.io regression recorded in check-csp.js KNOWN_BLOCKED.',
+      'shape of the formspree.io regression check-csp.js used to record in KNOWN_BLOCKED ' +
+      'before it closed 2026-09-03 (R281-PARTNERS-ENQUIRY-DECISION-01).',
   },
   {
     directive: 'form-action',
@@ -129,6 +130,24 @@ const REQUIRED = [
       'The same endpoint on the no-JavaScript path, where the browser performs a native ' +
       'submit. An origin permitted by only one of connect-src and form-action is a form ' +
       'that works in exactly one of the two situations, and nothing on the page says so.',
+  },
+  {
+    directive: 'connect-src',
+    origin: 'https://crowagent-platform-production.up.railway.app',
+    reason:
+      'R281-PARTNERS-ENQUIRY-DECISION-01, 2026-09-03. PartnerForm.astro posts here via ' +
+      'fetch(form.action), replacing the formspree.io submission that check-csp.js ' +
+      'KNOWN_BLOCKED used to record as refused by this exact directive. Losing this entry ' +
+      'reproduces that regression against a different host: every partner enquiry silently ' +
+      'refused by the browser with no non-2xx response for any gate to notice.',
+  },
+  {
+    directive: 'form-action',
+    origin: 'https://crowagent-platform-production.up.railway.app',
+    reason:
+      'The same endpoint on the no-JavaScript path. See the connect-src entry above: an ' +
+      'origin permitted by only one of the two directives is a form that works in exactly ' +
+      'one of the two situations.',
   },
 ];
 

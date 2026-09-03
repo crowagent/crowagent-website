@@ -2,36 +2,68 @@
 /**
  * PartnerForm: the partner enquiry form.
  *
- * ⚠️ THIS FORM POSTS TO A THIRD PARTY THAT THE PRIVACY POLICY DOES NOT NAME.
+ * POSTS TO THE PLATFORM API, NOT A THIRD PARTY. Until 2026-09-03 this posted to
+ * https://formspree.io/f/xbdpkaol, an undisclosed third party recipient per the
+ * privacy policy (UK GDPR Art. 13(1)(e)) and an undocumented US transfer
+ * (Ch. V), logged as website item OA-08. Owner decision 2026-09-03
+ * (R281-PARTNERS-ENQUIRY-DECISION-01): point the form at the platform's own
+ * `POST /api/v1/partners/enquiry` instead (`api/app/routers/partners.py:111`
+ * in the platform repo). That closes the disclosure gap and the US transfer
+ * at once: the enquiry now lands first party in the `partner_enquiries`
+ * Supabase table, and CrowAgent ops is alerted by email from the same request.
  *
- * The endpoint is https://formspree.io/f/xbdpkaol, carried over from the legacy
- * page. It receives name, company, role, email, PHONE and free text. As of
- * 2026-08-02 `privacy.html` contains ZERO occurrences of "Formspree", while the
- * consent line on this very form promises processing "in line with the Privacy
- * Policy". That is an undisclosed recipient (UK GDPR Art. 13(1)(e)) and an
- * undocumented US transfer (Ch. V).
+ * ENDPOINT is `https://crowagent-platform-production.up.railway.app`, the same
+ * Railway host the platform's own production frontend calls
+ * (`NEXT_PUBLIC_API_URL` in `web/.env.example`), so this form reaches the
+ * identical backend the app does rather than a second copy of it. The route is
+ * PUBLIC (`/api/v1/partners/enquiry` is in `EXEMPT_PATHS`,
+ * `api/app/middleware/auth.py`, no JWT required), rate limited to 5 requests
+ * per hour per caller, and `https://crowagent.ai` / `https://www.crowagent.ai`
+ * were already in the API's CORS allowlist (`_always_allowed` in
+ * `api/app/main.py`) and already in this site's own `connect-src` in
+ * `_headers`, so reaching it needed no CORS or CSP change.
  *
- * This is logged as OA-08 and is a CUTOVER BLOCKER for this page: it must be
- * resolved (by naming Formspree in the policy, or by moving the endpoint to
- * app.crowagent.ai) before /partners goes live on the new site. Porting it
- * unchanged does not make it worse, but shipping it knowingly would.
+ * PAYLOAD IS THE API'S OWN TEN FIELDS, NOTHING MORE: `name`, `company`,
+ * `role`, `email`, `phone`, `partner_type`, `description`, `consent_text`,
+ * `consented_at`, `turnstile_token`, matching `PartnerEnquiryRequest`
+ * exactly. Same reasoning as OA-04 on the contact form and OA-32 on the
+ * newsletter form: a field the schema does not declare is not invented on
+ * the wire.
  *
- * WHAT IS BETTER HERE THAN ON THE LEGACY FORM:
- *   - consent is RECORDED, not merely collected: the payload carries the answer,
- *     the exact wording agreed to, and an ISO timestamp, because Art. 7(1) is
- *     about being able to demonstrate what was consented to
- *   - the Turnstile token is sent rather than checked and discarded (still not a
- *     real defence (see OA-09), but at least it is in the record)
+ * [R281-PARTNERS-ENQUIRY-CONSENT-01, 2026-09-03] CLOSED the consent gap this
+ * comment used to describe. `PartnerEnquiryRequest` now carries
+ * `consent_text` (required, the visible consent sentence verbatim) and
+ * `consented_at` (required, ISO timestamp at submit), lawful basis evidence
+ * under UK GDPR Art. 7(1), and stores both in `partner_enquiries`
+ * (`supabase/migrations/20269000000004_r281_partner_enquiries_consent_evidence.sql`,
+ * platform repo). `turnstile_token` is sent too: the API best-effort
+ * verifies it against Cloudflare's `/siteverify` when
+ * `CLOUDFLARE_TURNSTILE_SECRET` is configured and records the outcome in
+ * `turnstile_verified`, but a rejected, timed-out or unconfigured check
+ * never refuses the enquiry, consent evidence stands on its own regardless.
+ * The consent checkbox stays REQUIRED client-side.
+ *
+ * WHAT IS STILL BETTER HERE THAN ON THE LEGACY FORM:
  *   - errors are wired with aria-describedby and aria-invalid, and every error
  *     has text; the legacy blur handler revealed empty spans
  *   - the submit button is never left disabled by a rejection
+ *   - success is read from the response, never assumed: a non-2xx answer shows
+ *     a plain error rather than a false "sent" message
  *
- * FIELD NAMES ARE A WIRE CONTRACT with whatever reads the Formspree inbox.
- * Rename a label freely; never rename a `name`.
+ * FIELD NAMES ARE A WIRE CONTRACT with `PartnerEnquiryRequest`. Rename a label
+ * freely. Never rename a `name` attribute without checking the Pydantic model.
  */
 import Turnstile from './Turnstile.astro';
 import '../../styles/forms.css';
 import Button from '../ui/Button.astro';
+
+/**
+ * The Railway host the platform's own frontend calls (`NEXT_PUBLIC_API_URL`
+ * in `web/.env.example`). See the file header for why this is the target
+ * rather than `app.crowagent.ai`: the platform's Next.js app has no BFF route
+ * for this form to go through, so this posts straight to the FastAPI route.
+ */
+const API_ENDPOINT = 'https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry';
 
 interface Field {
   name: string;
@@ -102,18 +134,14 @@ const PARTNER_TYPES = [
   { value: 'NHS/Public Sector Advisor', label: 'NHS / Public Sector Advisor' },
   { value: 'Other', label: 'Other' },
 ];
-
-const CONSENT_TEXT =
-  'I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry, in line with the Privacy Policy.';
 ---
 
 <form
   id="partnerForm"
   class="form"
   method="POST"
-  action="https://formspree.io/f/xbdpkaol"
+  action={API_ENDPOINT}
   novalidate
-  data-consent-text={CONSENT_TEXT}
 >
   <div class="form__pot" aria-hidden="true">
     <label for="pt-website">Website</label>
@@ -178,12 +206,16 @@ const CONSENT_TEXT =
     <p class="field__help" id="pt-description-help">Optional. Up to 200 characters.</p>
   </div>
 
-  {/* ⚠️ The widget is real and the token is sent, but NOTHING VERIFIES IT.
-      Formspree does not call Cloudflare's /siteverify, so this is client-side
-      friction and not a defence: a bot POSTing straight to the Formspree
-      endpoint never runs any of this. OA-09. It is rendered from the same
-      component as the contact form's for consistency of behaviour and wording,
-      NOT because it provides the same protection. */}
+  {/* [R281-PARTNERS-ENQUIRY-CONSENT-01, 2026-09-03] The token IS sent now and
+      the API best-effort verifies it against Cloudflare's /siteverify
+      (`app.services.turnstile.verify_turnstile_with_status`,
+      `api/app/routers/partners.py`, platform repo) when
+      `CLOUDFLARE_TURNSTILE_SECRET` is configured, recording the outcome in
+      `turnstile_verified`. It never gates the enquiry either way: consent
+      evidence (consent_text/consented_at) is the lawful basis record, this
+      is a bot-abuse signal. `Turnstile.astro`'s own header comment carries
+      the authoritative per-endpoint verified/unverified table, update that
+      alongside this one rather than trusting this note in isolation. */}
   <Turnstile id="pt" />
 
   <div class="field field--consent">
@@ -280,10 +312,6 @@ const CONSENT_TEXT =
         ok = false;
       }
 
-      /* Cloudflare's own input name. Read, not re-derived. See the note above. */
-      const tsToken =
-        form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? null;
-
       if (!ok) {
         const firstBad = [...REQUIRED, 'pt-consent'].find(
           (id) => $(`${id}-err`)?.hidden === false
@@ -298,35 +326,43 @@ const CONSENT_TEXT =
       btn.textContent = 'Sending...';
       status.hidden = true;
 
-      const fd = new FormData();
-      for (const [id, name] of [
-        ['pt-name', 'name'],
-        ['pt-company', 'company'],
-        ['pt-role', 'role'],
-        ['pt-email', 'email'],
-        ['pt-phone', 'phone'],
-        ['pt-type', 'partner_type'],
-        ['pt-description', 'description'],
-      ] as const) {
-        fd.append(name, val(id));
-      }
-      fd.append('_subject', `New Partner Enquiry: ${val('pt-company')}`);
+      /* Exactly the ten fields `PartnerEnquiryRequest` declares
+         (`api/app/routers/partners.py`), nothing more. Optional fields go
+         through as `null` rather than an empty string when blank, matching
+         the model's `str | None`. */
+      const orNull = (s: string) => (s.length ? s : null);
 
-      /* Consent RECORDED, not just collected. The wording matters more than the
-         boolean: what has to be evidenced under Art. 7(1) is what the person
-         agreed TO. If the label is reworded, reword data-consent-text with it. */
-      fd.append('gdpr_consent', 'yes');
-      fd.append('gdpr_consent_text', form.dataset.consentText ?? '');
-      fd.append('gdpr_consent_at', new Date().toISOString());
-      if (tsToken) fd.append('cf-turnstile-response', tsToken);
+      /* [R281-PARTNERS-ENQUIRY-CONSENT-01] The visible consent sentence,
+         verbatim, is the lawful basis record (UK GDPR Art. 7(1)), read from
+         the DOM rather than retyped so it can never drift from what the
+         reader actually saw. Whitespace is collapsed: the source markup
+         wraps the sentence across lines for readability, textContent keeps
+         the raw indentation and newlines. */
+      const consentSpan = consent.closest('.consent')?.querySelector('span');
+      const consentText = (consentSpan?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
       fetch(form.action, {
         method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: fd,
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: val('pt-name'),
+          company: val('pt-company'),
+          role: val('pt-role'),
+          email: val('pt-email'),
+          phone: orNull(val('pt-phone')),
+          partner_type: orNull(val('pt-type')),
+          description: orNull(val('pt-description')),
+          consent_text: consentText,
+          consented_at: new Date().toISOString(),
+          turnstile_token:
+            form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ||
+            null,
+        }),
         signal: AbortSignal.timeout(10000),
       })
         .then((r) => {
+          // Success ONLY on a 2xx. A non-2xx (422 validation, 429 rate limit,
+          // 500 DB error) falls through to the plain error below.
           if (!r.ok) throw new Error(String(r.status));
           form.reset();
           setError('pt-consent', false);
