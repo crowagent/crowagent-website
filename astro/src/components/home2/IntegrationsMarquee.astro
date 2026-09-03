@@ -1,0 +1,211 @@
+---
+/**
+ * HOME 2.0: THE INTEGRATIONS MARQUEE.
+ *
+ * One row of chips scrolling at 40px per second, with the track duplicated once
+ * so the loop never shows a seam.
+ *
+ * ── THREE OF THE BOARD'S EIGHT CHIPS ARE NOT ON THIS SITE AND ARE DROPPED ──
+ *
+ * The Figma board lists Xero, HubSpot and Salesforce. Measured by grep across
+ * src on 2026-09-03: not one of the three appears anywhere on this site, in any
+ * page, component or data file. A logo strip is a claim about what a product
+ * connects to, and it is the kind of claim a buyer checks, so a name that
+ * appears nowhere else cannot go on the homepage. The five the board names that
+ * DO exist are kept, and the list is completed from src/data/integrations.ts,
+ * which is the file the live /integrations page and the live homepage chip grid
+ * both read.
+ *
+ * TEXT CHIPS, NOT LOGO FILES. scripts/check-vendor-logos.js fails the build on
+ * any mark served without a row in Assets/brand/integrations/LOGO-PROVENANCE.md
+ * naming the vendor, the source URL, the retrieval date and the brand
+ * permission relied on. Setting a name in the site's own type asserts nothing
+ * about a trade mark and needs no such row.
+ *
+ * ── THE LOOP IS ONE KEYFRAME ON translateX AND NO JAVASCRIPT ───────────────
+ *
+ * The travel is exactly one track width, from 0 to -100 percent, so the copy
+ * arrives where the original left and the seam never shows. It is a loop rather
+ * than an arrival, and it starts at zero displacement rather than at a hidden
+ * offset, so scripts/check-motion.js rule 2 can read it as one. The `aria-hidden`
+ * is on the duplicate half only, so a screen reader hears the list once. Pause on
+ * hover and on focus-within is CSS. Under reduced motion the animation does not
+ * exist and the chips wrap into a static grid, which is the same information at
+ * rest.
+ */
+const CHIPS = [
+  'Microsoft 365',
+  'SharePoint',
+  'OneDrive for Business',
+  'Google Workspace',
+  'Confluence Cloud',
+  'Microsoft Entra ID',
+  'Okta',
+  'Contracts Finder',
+  'Find a Tender',
+];
+---
+
+<section class="h2mq" aria-labelledby="h2mq-title">
+  {/* Same split as the proof strip. The heading carries the outline at the
+      heading tier, the kicker carries the look. */}
+  <h2 class="visually-hidden" id="h2mq-title">Your evidence already exists. We read it where it lives.</h2>
+  <p class="h2mq__kicker" aria-hidden="true">
+    Your evidence already exists. We read it where it lives.
+  </p>
+
+  <div class="h2mq__viewport">
+    <ul class="h2mq__track">
+      {CHIPS.map((c) => <li class="h2mq__chip">{c}</li>)}
+    </ul>
+    {/* The seam filler. Identical content, hidden from assistive technology so
+        the list is announced once. */}
+    <ul class="h2mq__track" aria-hidden="true">
+      {CHIPS.map((c) => <li class="h2mq__chip">{c}</li>)}
+    </ul>
+  </div>
+
+  <p class="h2mq__note">
+    <a href="/integrations/">Every connector, with the exact scope it is granted.</a>
+  </p>
+</section>
+
+<style>
+  .h2mq {
+    padding-block: var(--sec-pad-y-sm);
+  }
+
+  .h2mq__kicker {
+    margin: 0 0 var(--space-8);
+    padding-inline: var(--gutter);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 500;
+    line-height: var(--lh-tight);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    text-align: center;
+  }
+
+  /* ── THE GAP IS ON THE CHIP, NOT BETWEEN THE TRACKS ─────────────────────
+   *
+   * A duplicated track loops seamlessly only if it travels exactly its own
+   * width. With `gap` between the two tracks that distance is
+   * `-100% - var(--space-3)`, and scripts/check-motion.js failed the build on
+   * it, correctly: its rule 2 reads the two ends of a keyframe to decide
+   * whether it is an entrance, and its parser cannot see a translate inside a
+   * `calc()`, so it read the end state as "no translate" and the loop as an
+   * arrival that resolves to rest. That is the same shape as the pattern that
+   * has twice left content on this site permanently invisible, and a gate that
+   * cannot tell the two apart should fail.
+   *
+   * Moving the gap onto the chip's own trailing margin makes one track's width
+   * include its own trailing space, so the travel is exactly -100%, the loop is
+   * seamless, and both ends of the keyframe are plain values a reader and a
+   * parser can both check. The rule was answered rather than exempted. */
+  .h2mq__viewport {
+    display: flex;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      rgb(0 0 0) 80px,
+      rgb(0 0 0) calc(100% - 80px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      rgb(0 0 0) 80px,
+      rgb(0 0 0) calc(100% - 80px),
+      transparent 100%
+    );
+  }
+
+  .h2mq__track {
+    display: flex;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .h2mq__chip {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-block-size: 38px;
+    padding-inline: 16px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-card);
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: var(--lh-tight);
+    color: var(--c-text-sub);
+    white-space: nowrap;
+    /* The row's gap, carried by the chip so one track's width includes its own
+       trailing space. See the note on .h2mq__viewport. */
+    margin-inline-end: var(--space-3);
+  }
+
+  .h2mq__note {
+    margin: var(--space-6) 0 0;
+    padding-inline: var(--gutter);
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    color: var(--c-text-muted);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .h2mq__track {
+      /* 40px per second. One full cycle is exactly one track width, which is
+         where the duplicate begins, so the seam never shows. The duration is
+         derived rather than picked: nine chips at roughly 160px each including
+         their 12px trailing margin is about 1,550px, and 1,550 at 40px per
+         second is about 39 seconds. */
+      animation: h2mq-run 39s var(--m-ease-travel) infinite;
+      animation-play-state: var(--h2mq-state, running);
+    }
+
+    .h2mq:hover,
+    .h2mq:focus-within {
+      --h2mq-state: paused;
+    }
+  }
+
+  /* Exactly one track width, so the copy arrives where the original left and
+     the seam never shows. Both ends are plain values. */
+  @keyframes h2mq-run {
+    from { transform: translateX(0%); }
+    to   { transform: translateX(-100%); }
+  }
+
+  /* Reduced motion: a static wrapped grid. The duplicate half is removed rather
+     than left stacked, because two copies of one list with no movement reads as
+     a mistake. */
+  @media (prefers-reduced-motion: reduce) {
+    .h2mq__viewport {
+      -webkit-mask-image: none;
+      mask-image: none;
+      max-width: var(--measure);
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+    }
+
+    .h2mq__track[aria-hidden='true'] {
+      display: none;
+    }
+
+    .h2mq__track {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .h2mq__chip {
+      margin-block-end: var(--space-3);
+    }
+  }
+</style>

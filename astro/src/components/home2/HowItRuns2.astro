@@ -1,0 +1,248 @@
+---
+/**
+ * HOME 2.0: FIVE STAGES, AND ONE OF THEM IS A REFUSAL.
+ *
+ * A rail with five nodes. Horizontal from 62rem, stacked below it.
+ *
+ * ── THE LIGHT RUNS LEFT TO RIGHT, AND THE REST STATE IS THE LIT RAIL ───────
+ *
+ * The rail is painted at full length and the nodes at full contrast before any
+ * animation exists. `data-lit` then runs a light along it once. If the observer
+ * in scripts/motion.ts never fires, if the module is blocked, or if the reader
+ * has asked for reduced motion, the drawing is finished and merely still. That
+ * inversion is the repository's rule: nothing here can leave a stage unlit,
+ * because unlit is not a state any element is ever put into.
+ *
+ * Refuse is the one node with a colour of its own. It is the differentiator and
+ * the only stage whose job is to remove work, so it carries the verified teal
+ * while the other four are the muted rail ink.
+ */
+import Section from '../layout/Section.astro';
+
+interface Stage {
+  n: string;
+  name: string;
+  body: string;
+  accent?: boolean;
+}
+
+const STAGES: Stage[] = [
+  {
+    n: '01',
+    name: 'Find',
+    body: 'Contracts Finder, Find a Tender and the portals you already watch, in one deduplicated list.',
+  },
+  {
+    n: '02',
+    name: 'Qualify',
+    body: 'Fit, deadline, value and weighting. A no at this stage saves a week.',
+  },
+  {
+    n: '03',
+    name: 'Draft',
+    body: 'Answers grounded in your own library and in the published tender text.',
+  },
+  {
+    n: '04',
+    name: 'Refuse',
+    body: 'Any figure with no source in your evidence stops here and is not drafted.',
+    accent: true,
+  },
+  {
+    n: '05',
+    name: 'Evidence',
+    body: 'Every claim traced back to the page it came from, ready for the panel.',
+  },
+];
+---
+
+<Section
+  eyebrow="How it runs"
+  title="Five stages, and one of them is a refusal."
+  standfirst="The gate is not a filter bolted on at the end. It sits between the draft and the person who signs it, and it is the only stage whose job is to remove work rather than produce it."
+  id="how-it-runs"
+  class="h2run"
+>
+  <div class="h2run__rig" data-lit data-lit-threshold="0.25">
+    <div class="h2run__rail" aria-hidden="true">
+      <i class="h2run__rail-lit"></i>
+    </div>
+
+    <ol class="h2run__list">
+      {
+        STAGES.map((s, i) => (
+          <li class="h2run__stage" style={`--stage-i: ${i}`} data-accent={s.accent ? 'on' : undefined}>
+            <span class="h2run__node">
+              <span class="h2run__n">{s.n}</span>
+            </span>
+            <h3 class="h2run__name">{s.name}</h3>
+            <p class="h2run__body">{s.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Section>
+
+<style>
+  .h2run__rig {
+    position: relative;
+  }
+
+  .h2run__list {
+    display: grid;
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .h2run__stage {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'node name'
+      'node body';
+    column-gap: var(--space-4);
+    row-gap: 2px;
+    align-items: start;
+    text-align: left;
+  }
+
+  .h2run__node {
+    grid-area: node;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--c-border);
+    background-color: var(--c-raised);
+    color: var(--c-text-muted);
+  }
+
+  .h2run__n {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+
+  [data-accent='on'] .h2run__node {
+    border-color: color-mix(in srgb, var(--c-teal) 55%, transparent);
+    background-color: color-mix(in srgb, var(--c-teal) 14%, transparent);
+    color: var(--c-teal);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--c-teal) 30%, transparent);
+  }
+
+  .h2run__name {
+    grid-area: name;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    color: var(--c-text);
+  }
+
+  [data-accent='on'] .h2run__name {
+    color: var(--c-teal);
+  }
+
+  .h2run__body {
+    grid-area: body;
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  /* The rail is drawn only where the row is a row. Below 62rem the stages
+     stack and each node carries its own connector instead. */
+  .h2run__rail {
+    display: none;
+  }
+
+  @media (max-width: 61.999rem) {
+    .h2run__stage:not(:last-child) .h2run__node::after {
+      content: '';
+      position: absolute;
+      inline-size: 1px;
+      block-size: var(--space-6);
+      margin-block-start: 40px;
+      background-color: var(--c-border);
+    }
+
+    .h2run__node {
+      position: relative;
+    }
+  }
+
+  @media (min-width: 62rem) {
+    .h2run__list {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+
+    .h2run__stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'node'
+        'name'
+        'body';
+      row-gap: var(--stack-1);
+      justify-items: center;
+      text-align: center;
+    }
+
+    .h2run__body {
+      max-width: 22ch;
+    }
+
+    .h2run__rail {
+      display: block;
+      position: absolute;
+      inset-block-start: 20px;
+      inset-inline: 10%;
+      block-size: 1px;
+      background-color: var(--c-border);
+      overflow: hidden;
+    }
+
+    .h2run__rail-lit {
+      display: block;
+      block-size: 100%;
+      background-image: var(--grad-rule);
+      transform-origin: 0 50%;
+    }
+  }
+
+  /* ── THE LIGHT. Rest is the finished rail, so nothing can be left dark ──── */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .h2run__rail-lit {
+      animation: h2run-sweep calc(var(--m-beat) * 2) var(--m-ease-travel) 1;
+    }
+
+    [data-lit='on'] .h2run__node {
+      animation: h2run-glow var(--m-beat) var(--m-ease-land)
+        calc(var(--stage-i, 0) * var(--m-beat) * 0.4) 1;
+    }
+  }
+
+  /* Scale, never translate, so this is not the entrance check-motion rule 2
+     centralises. It ends at the full rail, which is also where it rests. */
+  @keyframes h2run-sweep {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* Adds light and takes it away again. Rest state before and after. */
+  @keyframes h2run-glow {
+    0%   { box-shadow: 0 0 0 color-mix(in srgb, var(--c-teal) 0%, transparent); }
+    45%  { box-shadow: 0 0 26px color-mix(in srgb, var(--c-teal) 42%, transparent); }
+    100% { box-shadow: 0 0 0 color-mix(in srgb, var(--c-teal) 0%, transparent); }
+  }
+</style>

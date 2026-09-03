@@ -1,0 +1,623 @@
+---
+/**
+ * HOME 2.0: ONE TENDER, FROM NOTICE TO EVIDENCE.
+ *
+ * Five stages of the same contract, drawn as dark-theme schematics in HTML and
+ * CSS rather than as screenshots, inside one bezel. A supplier and buyer toggle
+ * changes the words, and five stage pills drive the carousel.
+ *
+ * ── NO SCREENSHOTS, AND THAT IS A DECISION RATHER THAN A SHORTCUT ──────────
+ *
+ * A schematic built from the site's own tokens is theme-correct by
+ * construction, weighs nothing, scales to any width, and cannot go stale the
+ * next time the product's chrome moves. A PNG of a dark interface on a dark
+ * page is the one thing this site has repeatedly got wrong, and there is no
+ * asset here to get wrong.
+ *
+ * ── THE TOGGLE SWAPS TEXT, IT DOES NOT HIDE A SECOND COPY ──────────────────
+ *
+ * Every swappable string ships as the SUPPLIER wording in the markup, with the
+ * buyer wording alongside it on `data-buyer`. The script writes one into
+ * `textContent` and back again. So a reader with no JavaScript, a blocked
+ * module or a thrown error gets the complete supplier tour rather than two
+ * stacked copies or an empty panel, which is what any hide-one-of-two
+ * arrangement degrades to.
+ *
+ * ── THE PILLS AND THE CAROUSEL TALK THROUGH ONE EVENT EACH WAY ─────────────
+ *
+ * `h2car:goto` in, `h2car:change` out. Neither component reaches into the
+ * other's markup, so the carousel stays the same component the proof carousel
+ * uses and this file adds no second scroller.
+ */
+import Section from '../layout/Section.astro';
+import Carousel2 from './Carousel2.astro';
+
+interface Row {
+  label: string;
+  state: 'done' | 'active' | 'todo';
+}
+
+interface Stage {
+  id: string;
+  pill: string;
+  crumb: string;
+  crumbBuyer: string;
+  heading: string;
+  headingBuyer: string;
+  body: string;
+  bodyBuyer: string;
+  chips: string[];
+  meter: string;
+  meterBuyer: string;
+  fill: number;
+  nav: string;
+  rows: Row[];
+}
+
+const ROWS_BASE: Row[] = [
+  { label: '3.1 Account management', state: 'done' },
+  { label: '3.2 Method statement', state: 'active' },
+  { label: '3.3 Delivery timetable', state: 'todo' },
+  { label: '3.4 Social value', state: 'todo' },
+  { label: '3.5 Carbon reduction', state: 'todo' },
+  { label: '4.1 Pricing schedule', state: 'todo' },
+];
+
+const STAGES: Stage[] = [
+  {
+    id: 'discover',
+    pill: 'Discover',
+    nav: 'Contracts',
+    crumb: 'Notices · 412 matched this week',
+    crumbBuyer: 'Requirements · 14 published',
+    heading: 'Highways maintenance framework',
+    headingBuyer: 'Highways maintenance framework',
+    body: 'Contracts Finder, Find a Tender and the portals you already watch, in one deduplicated list scored against the work you actually win.',
+    bodyBuyer: 'Publish the requirement once and it carries its own evidence questions into every response you receive.',
+    chips: ['Contracts Finder', 'Find a Tender'],
+    meter: '412 notices read, 9 worth your week',
+    meterBuyer: '14 requirements published, each with its evidence question',
+    fill: 42,
+    rows: ROWS_BASE,
+  },
+  {
+    id: 'bid-or-no-bid',
+    pill: 'Bid or no bid',
+    nav: 'Contracts',
+    crumb: 'Qualification · fit 74 percent',
+    crumbBuyer: 'Scope · locked before responses open',
+    heading: 'Two requirements you cannot evidence yet',
+    headingBuyer: 'Weighting fixed before a response is read',
+    body: 'Fit, deadline, value and weighting in one view. The deadline falls inside your close period, and a no here saves a week.',
+    bodyBuyer: 'Scope, weighting and the evidence each question asks for, hashed before a single response is opened and re-derivable afterwards.',
+    chips: ['Deadline in 8 days', 'Two gaps'],
+    meter: '74% · 2 of 9 requirements unevidenced',
+    meterBuyer: 'Weighting locked · digest recorded',
+    fill: 74,
+    rows: ROWS_BASE,
+  },
+  {
+    id: 'draft',
+    pill: 'Draft',
+    nav: 'Highways framework',
+    crumb: 'Highways maintenance framework · Draft · 14 answers · due in 8 days',
+    crumbBuyer: 'Highways maintenance framework · 14 responses received',
+    heading: '3.2 Method statement',
+    headingBuyer: '3.2 Method statement',
+    body: 'Our account manager, named in Appendix B, has held the same role on two frameworks of comparable value since 2022. Method statement runs to 412 words against the 500 permitted.',
+    bodyBuyer: "Every figure in the response located in the supplier's own attachments, with the page it came from beside it.",
+    chips: ['Appendix B, p.4', 'Case study 07'],
+    meter: '86% · 3 of 3 figures sourced',
+    meterBuyer: '86% · 3 of 3 figures located',
+    fill: 86,
+    rows: ROWS_BASE,
+  },
+  {
+    id: 'evaluate',
+    pill: 'Evaluate',
+    nav: 'Evidence',
+    crumb: 'Evaluation · criteria applied to the draft',
+    crumbBuyer: 'Evaluation · evidence located per criterion',
+    heading: 'Where this answer is thin',
+    headingBuyer: 'Where this response is silent',
+    body: 'The published criteria, applied to your draft before you send it, so a weak answer is rewritten rather than scored.',
+    bodyBuyer: 'The panel scores. The engine locates the evidence for each criterion and says plainly where a response is silent.',
+    chips: ['Criterion 3', 'Criterion 5'],
+    meter: '2 answers below the weighting they carry',
+    meterBuyer: '2 responses silent on criterion 5',
+    fill: 62,
+    rows: ROWS_BASE,
+  },
+  {
+    id: 'after-award',
+    pill: 'After award',
+    nav: 'Reports',
+    crumb: 'Commitments · 31 carried into contract',
+    crumbBuyer: 'Commitments · 31 tracked against the award',
+    heading: 'Every claim becomes a commitment',
+    headingBuyer: 'Every commitment traces to its response',
+    body: 'Each claim in the winning bid carries a page reference and a review date into delivery, so the next bid starts from what was actually done.',
+    bodyBuyer: 'Commitments carried into contract management, each one traceable to the response that made it.',
+    chips: ['Review 12 months', 's.71'],
+    meter: '31 commitments, each with its source page',
+    meterBuyer: '31 commitments, each with its response',
+    fill: 100,
+    rows: ROWS_BASE,
+  },
+];
+
+const NAV = [
+  'Home',
+  'Contracts',
+  'Highways framework',
+  'Answer library',
+  'Evidence',
+  'Reports',
+  'Settings',
+];
+---
+
+<Section
+  eyebrow="The workstation"
+  title="One tender, from notice to evidence."
+  standfirst="Five screens along the same contract. Switch sides to read it as the buyer who publishes it rather than the supplier who answers it."
+  id="workstation"
+  class="h2tour"
+  bleed
+>
+  <div class="h2tour__controls">
+    <div class="h2tour__side" role="group" aria-label="Read this as">
+      <button class="h2tour__sidebtn" type="button" data-h2-side="supplier" aria-pressed="true">
+        Supplier
+      </button>
+      <button class="h2tour__sidebtn" type="button" data-h2-side="buyer" aria-pressed="false">
+        Buyer
+      </button>
+    </div>
+
+    <div class="h2tour__pills" role="group" aria-label="Choose a stage" data-h2-pills>
+      {
+        STAGES.map((s, i) => (
+          <button
+            class="h2tour__pill"
+            type="button"
+            data-h2-pill={i}
+            aria-current={i === 0 ? 'true' : 'false'}
+          >
+            {s.pill}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="h2tour__bezel">
+    <Carousel2 label="One tender, from notice to evidence" count={STAGES.length} fit="single" interval={6000} class="h2tour__car">
+      {
+        STAGES.map((s, i) => (
+          <div
+            class="h2ws"
+            role="group"
+            aria-label={`${i + 1} of ${STAGES.length}`}
+            id={`h2-stage-${s.id}`}
+          >
+            <div class="h2ws__chrome">
+              <span class="h2ws__lights" aria-hidden="true"><i /><i /><i /></span>
+              <span class="h2ws__crumb" data-buyer={s.crumbBuyer}>{s.crumb}</span>
+            </div>
+
+            <div class="h2ws__grid">
+              <nav class="h2ws__nav" aria-label={`${s.pill} navigation, illustrative`}>
+                <ul class="h2ws__navlist">
+                  {NAV.map((n) => (
+                    <li class="h2ws__navitem" data-on={n === s.nav ? 'yes' : undefined}>
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <ol class="h2ws__answers">
+                {s.rows.map((r) => (
+                  <li class="h2ws__answer" data-state={r.state}>
+                    <span class="h2ws__status" aria-hidden="true" />
+                    {r.label}
+                  </li>
+                ))}
+              </ol>
+
+              <div class="h2ws__editor">
+                <p class="h2ws__h" data-buyer={s.headingBuyer}>{s.heading}</p>
+                <p class="h2ws__p" data-buyer={s.bodyBuyer}>{s.body}</p>
+
+                <p class="h2ws__chips">
+                  {s.chips.map((c) => (
+                    <span class="h2ws__chip">{c}</span>
+                  ))}
+                </p>
+
+                <p class="h2ws__meter">
+                  <span class="h2ws__bar" aria-hidden="true">
+                    <span class="h2ws__bar-fill" style={`--h2-fill: ${s.fill}%`} />
+                  </span>
+                  <span class="h2ws__meter-text" data-buyer={s.meterBuyer}>{s.meter}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </Carousel2>
+  </div>
+</Section>
+
+<style>
+  .h2tour__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-block-end: var(--space-8);
+    padding-inline: var(--gutter);
+  }
+
+  .h2tour__side {
+    display: inline-flex;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-card);
+  }
+
+  .h2tour__sidebtn,
+  .h2tour__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--btn-h-sm);
+    padding-inline: 18px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    color: var(--c-text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .h2tour__sidebtn[aria-pressed='true'] {
+    background-color: var(--c-interactive);
+    color: var(--c-bg);
+  }
+
+  .h2tour__pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .h2tour__pill {
+    border: 1px solid var(--c-border);
+  }
+
+  .h2tour__pill[aria-current='true'] {
+    border-color: color-mix(in srgb, var(--c-teal) 46%, transparent);
+    background-color: color-mix(in srgb, var(--c-teal) 12%, transparent);
+    color: var(--c-teal);
+  }
+
+  @media (hover: hover) {
+    .h2tour__sidebtn:hover,
+    .h2tour__pill:hover {
+      color: var(--c-text);
+    }
+  }
+
+  .h2tour__sidebtn:focus-visible,
+  .h2tour__pill:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  /* The bezel. A device frame with its own control row is exactly what
+     --radius-frame-lg was added for, so no new radius is invented here. */
+  .h2tour__bezel {
+    max-width: var(--measure);
+    margin-inline: auto;
+    padding: clamp(10px, 1.6vw, 20px);
+    border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+    border-radius: var(--radius-frame-lg);
+    background-color: var(--c-panel);
+    box-shadow:
+      var(--gloss-inset),
+      0 30px 90px -30px color-mix(in srgb, var(--c-violet-deep) 55%, transparent);
+  }
+
+  /* Inside the bezel the gutter is the bezel's own padding, so the track needs
+     none of its own. Both the padding and the scroll padding go to zero
+     together, which is the pairing the carousel's header note is about. */
+  .h2tour__car :global(.h2car__track) {
+    padding-inline: 0;
+    scroll-padding-inline-start: 0;
+  }
+
+  /* ── THE SCHEMATIC ───────────────────────────────────────────────────── */
+  .h2ws {
+    border-radius: var(--radius-frame);
+    border: 1px solid var(--c-border);
+    background-color: var(--c-floor);
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .h2ws__chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-block-end: 1px solid var(--c-border);
+    background-color: var(--c-raised);
+  }
+
+  .h2ws__lights {
+    display: inline-flex;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+  }
+
+  .h2ws__lights i {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: var(--radius-pill);
+  }
+
+  .h2ws__lights i:nth-child(1) { background: var(--c-chrome-close); }
+  .h2ws__lights i:nth-child(2) { background: var(--c-chrome-minimise); }
+  .h2ws__lights i:nth-child(3) { background: var(--c-chrome-maximise); }
+
+  .h2ws__crumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-text-sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .h2ws__grid {
+    display: grid;
+    gap: 1px;
+    background-color: var(--c-border);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 48rem) {
+    .h2ws__grid {
+      grid-template-columns: 8.5rem minmax(0, 0.9fr) minmax(0, 1.5fr);
+    }
+  }
+
+  .h2ws__nav,
+  .h2ws__answers,
+  .h2ws__editor {
+    background-color: var(--c-floor);
+    padding: var(--space-4);
+  }
+
+  .h2ws__nav {
+    display: none;
+  }
+
+  @media (min-width: 48rem) {
+    .h2ws__nav {
+      display: block;
+    }
+  }
+
+  .h2ws__navlist,
+  .h2ws__answers {
+    margin: 0;
+    list-style: none;
+  }
+
+  .h2ws__navlist {
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .h2ws__navitem {
+    padding: 7px 9px;
+    border-radius: var(--radius-chip);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-text-muted);
+  }
+
+  .h2ws__navitem[data-on='yes'] {
+    background-color: color-mix(in srgb, var(--c-teal) 12%, transparent);
+    color: var(--c-teal);
+  }
+
+  .h2ws__answers {
+    display: grid;
+    gap: 2px;
+    align-content: start;
+  }
+
+  .h2ws__answer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 7px 9px;
+    border-radius: var(--radius-chip);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-text-muted);
+  }
+
+  .h2ws__answer[data-state='active'] {
+    background-color: color-mix(in srgb, var(--c-text) 7%, transparent);
+    color: var(--c-text);
+  }
+
+  .h2ws__status {
+    inline-size: 6px;
+    block-size: 6px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-text-muted);
+  }
+
+  .h2ws__answer[data-state='done'] .h2ws__status {
+    background-color: var(--c-verified);
+  }
+
+  .h2ws__answer[data-state='active'] .h2ws__status {
+    background-color: var(--c-amber);
+  }
+
+  .h2ws__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    color: var(--c-text);
+  }
+
+  .h2ws__p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+
+  .h2ws__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+  }
+
+  .h2ws__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--c-teal) 34%, transparent);
+    background-color: color-mix(in srgb, var(--c-teal) 12%, transparent);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-teal);
+  }
+
+  .h2ws__meter {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 0;
+  }
+
+  .h2ws__bar {
+    flex: 1 1 auto;
+    min-inline-size: 60px;
+    block-size: 4px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--c-text) 12%, transparent);
+    overflow: hidden;
+  }
+
+  .h2ws__bar-fill {
+    display: block;
+    block-size: 100%;
+    inline-size: var(--h2-fill, 100%);
+    border-radius: var(--radius-pill);
+    background-image: var(--grad-rule);
+  }
+
+  .h2ws__meter-text {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-verified);
+  }
+
+  @media (max-width: 47.999rem) {
+    .h2ws__meter {
+      flex-wrap: wrap;
+    }
+
+    .h2ws__meter-text {
+      flex: 1 1 100%;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Two jobs and no more. Swap the copy set, and keep the stage pills and the
+   * carousel pointing at the same slide. Both fail safe: with this module gone
+   * the tour reads as the supplier tour and the carousel keeps its own dots.
+   */
+  function initTour(): void {
+    const controls = document.querySelector<HTMLElement>('[data-h2-pills]');
+    const car = document.querySelector<HTMLElement>('.h2tour__car');
+    const sideButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-h2-side]'),
+    );
+
+    if (sideButtons.length) {
+      /* Captured once, from the markup, so "supplier" is whatever the page
+         actually shipped rather than a second copy of it in this file. */
+      const swaps = Array.from(document.querySelectorAll<HTMLElement>('[data-buyer]')).map(
+        (el) => ({ el, supplier: el.textContent ?? '', buyer: el.dataset.buyer ?? '' }),
+      );
+
+      for (const button of sideButtons) {
+        button.addEventListener('click', () => {
+          const side = button.dataset.h2Side;
+          for (const other of sideButtons) {
+            other.setAttribute('aria-pressed', String(other === button));
+          }
+          for (const s of swaps) {
+            s.el.textContent = side === 'buyer' ? s.buyer : s.supplier;
+          }
+        });
+      }
+    }
+
+    if (!controls || !car) return;
+    const pills = Array.from(controls.querySelectorAll<HTMLButtonElement>('[data-h2-pill]'));
+
+    pills.forEach((pill, i) => {
+      pill.addEventListener('click', () => {
+        car.dispatchEvent(new CustomEvent('h2car:goto', { detail: { index: i } }));
+      });
+    });
+
+    car.addEventListener('h2car:change', (event: Event) => {
+      const index = (event as CustomEvent<{ index: number }>).detail?.index ?? 0;
+      pills.forEach((p, i) => p.setAttribute('aria-current', i === index ? 'true' : 'false'));
+    });
+  }
+
+  initTour();
+</script>

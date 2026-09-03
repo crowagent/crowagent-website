@@ -1,0 +1,251 @@
+---
+/**
+ * HOME 2.0: WATCH IT REFUSE A FIGURE.
+ *
+ * Five step cards and the refusal that closes them. The steps light in sequence
+ * when the section reaches the viewport, on `data-lit`, and the lit state is
+ * the state they rest in, so a reader who never gets the light gets the
+ * finished trace rather than four dim boxes.
+ *
+ * ── THE FIGURE IS ILLUSTRATIVE AND THE PAGE SAYS SO ────────────────────────
+ *
+ * £27,450 is a per job, per year proxy value used to show the mechanism. It is
+ * NOT a National TOMs proxy and it is not a figure this company publishes.
+ * pages/sources.astro already records the homepage's £27,000 and £108,000 as
+ * illustrative placeholders for exactly this reason, and the caption below says
+ * the same thing in print.
+ *
+ * ── 05 IS "NOT REACHED", WHICH IS THE WHOLE POINT ──────────────────────────
+ *
+ * Cite is dimmed rather than absent. A step that is missing reads as a step the
+ * product does not have. A step that is present and explicitly not reached
+ * reads as the engine stopping, which is the argument the section exists to
+ * make.
+ */
+import Section from '../layout/Section.astro';
+
+interface Step {
+  n: string;
+  name: string;
+  body: string;
+  tone: 'done' | 'stopped' | 'unreached';
+}
+
+const STEPS: Step[] = [
+  {
+    n: '01',
+    name: 'Retrieve',
+    body: 'Clause 4.1 and your last three pricing schedules.',
+    tone: 'done',
+  },
+  {
+    n: '02',
+    name: 'Ground',
+    body: 'Every figure matched to a page in your own evidence.',
+    tone: 'done',
+  },
+  {
+    n: '03',
+    name: 'Compute',
+    body: '£27,450 per year appears in no source you hold.',
+    tone: 'stopped',
+  },
+  {
+    n: '04',
+    name: 'Check',
+    body: 'Refused. Drafting stops here until a source is attached.',
+    tone: 'stopped',
+  },
+  {
+    n: '05',
+    name: 'Cite',
+    body: 'Not reached.',
+    tone: 'unreached',
+  },
+];
+---
+
+<Section
+  eyebrow="The signature moment"
+  title="Watch it refuse a figure."
+  standfirst="A generative tool would have written a number and moved on. This one shows the five steps it took, and where it stopped."
+  id="refusal-trace"
+  class="h2rt"
+>
+  <div class="h2rt__rig" data-lit data-lit-threshold="0.25">
+    <ol class="h2rt__steps">
+      {
+        STEPS.map((s, i) => (
+          <li class="h2rt__step" data-tone={s.tone} style={`--step-i: ${i}`}>
+            <p class="h2rt__n">{s.n}</p>
+            <h3 class="h2rt__name">{s.name}</h3>
+            <p class="h2rt__body">{s.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="h2rt__out">
+      <span class="h2rt__badge">Refused</span>
+      <span class="h2rt__out-text">
+        "£27,450 per year in social value" is not in your evidence. The draft
+        carries the clause and an empty, highlighted field. A person signs off
+        the number, or it does not go in.
+      </span>
+    </p>
+
+    <p class="h2rt__caption">
+      An illustrative figure, used to show the mechanism. It is not a published
+      proxy value.
+    </p>
+  </div>
+</Section>
+
+<style>
+  .h2rt__steps {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__steps {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+  }
+
+  .h2rt__step {
+    padding: var(--space-4);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background-color: var(--c-card);
+    text-align: left;
+  }
+
+  .h2rt__n {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--c-text-muted);
+  }
+
+  .h2rt__name {
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    color: var(--c-text);
+  }
+
+  .h2rt__body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.5;
+    color: var(--c-text-sub);
+  }
+
+  [data-tone='done'] .h2rt__n,
+  [data-tone='done'] .h2rt__name {
+    color: var(--c-teal);
+  }
+
+  [data-tone='done'] {
+    border-color: color-mix(in srgb, var(--c-teal) 34%, transparent);
+  }
+
+  [data-tone='stopped'] .h2rt__n,
+  [data-tone='stopped'] .h2rt__name {
+    color: var(--c-amber);
+  }
+
+  [data-tone='stopped'] {
+    border-color: color-mix(in srgb, var(--c-amber) 34%, transparent);
+  }
+
+  /* Dimmed by INK, not by opacity. --c-text-muted clears 4.5:1 on this ground,
+     which a 55 percent alpha over the same colour would not. */
+  [data-tone='unreached'] .h2rt__name,
+  [data-tone='unreached'] .h2rt__body {
+    color: var(--c-text-muted);
+  }
+
+  [data-tone='unreached'] {
+    background-color: transparent;
+  }
+
+  .h2rt__out {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 0;
+    padding: var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--c-amber) 26%, transparent);
+    border-radius: var(--radius-chip);
+    background-color: color-mix(in srgb, var(--c-amber) 10%, transparent);
+    text-align: left;
+  }
+
+  .h2rt__badge {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-amber);
+    color: var(--c-bg);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .h2rt__out-text {
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  .h2rt__caption {
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    color: var(--c-text-muted);
+    text-align: center;
+  }
+
+  /* ── THE SEQUENCE. Adds light and takes it back. Rest is the finished card ─ */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .h2rt__step {
+      animation: h2rt-lift var(--m-beat) var(--m-ease-land)
+        calc(var(--step-i, 0) * var(--m-beat) * 0.35) 1;
+    }
+
+    [data-lit='on'] .h2rt__badge {
+      animation: h2rt-settle calc(var(--m-beat) / 2) var(--m-ease-land)
+        calc(var(--m-beat) * 2.2) 1;
+    }
+  }
+
+  /* Starts and ends at zero displacement, so this is a pulse rather than the
+     entrance scripts/check-motion.js rule 2 centralises. */
+  @keyframes h2rt-lift {
+    0%   { transform: translateY(0); box-shadow: none; }
+    45%  { transform: translateY(-5px); box-shadow: var(--shadow-card); }
+    100% { transform: translateY(0); box-shadow: none; }
+  }
+
+  @keyframes h2rt-settle {
+    0%   { transform: translateY(0); }
+    40%  { transform: translateY(-4px); }
+    100% { transform: translateY(0); }
+  }
+</style>
