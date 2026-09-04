@@ -1,0 +1,262 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  [R282-MANDATE-01] RELEASE, DEPLOYMENT AND ENVIRONMENTS. Written 2026-09-04 on
+  owner instruction: "document all the end to end release, deployment and
+  environment details and instructions and how to guide".
+
+  This page is a fragment injected by index.html (see the views array there). It
+  carries NO style block, NO script element and NO colour literal, per the
+  injected document contract in check-board-contract.js. The canonical text it
+  summarises is crowagent-platform/docs/ENVIRONMENT-PROMOTION-MANDATE.md and
+  RULE 0-P in ENGINEERING-STANDARDS.md. If this page and that document ever
+  disagree, the document wins and this page is wrong.
+
+  EVERY FACT HERE WAS MEASURED on 2026-09-03 and 2026-09-04 against the live
+  Vercel, Railway, Supabase, Stripe and GitHub consoles and APIs, and the
+  measurement is named beside the figure.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div class="dochead">
+  <p class="kicker">Release and environments</p>
+  <p class="title">Local to staging to production, one direction, one path</p>
+  <p class="lede">Code reaches production only by promotion. It is built and proven on staging at
+  the same commit, recorded in a ledger, and pushed by one script that refuses to run without a
+  verified record, a green billing audit and the owner's approval text. No push by hand, no
+  dashboard deploy, no merge button.</p>
+  <p class="dated">Measured 4 September 2026 from the Vercel REST API, the Railway API and CLI,
+  both Supabase projects, the Stripe API and the GitHub CLI. First production promotion through
+  this path: commit <code>ca75732d</code>, 4 September 00:33 UTC.</p>
+</div>
+
+<div class="kpi">
+  <div><b>3</b><span>environments: local, staging, production. Nothing else exists</span></div>
+  <div><b>$0</b><span>extra per month for staging. Vercel custom environment on the plan already paid for</span></div>
+  <div><b>13 of 13</b><span>billing leak checks green at the last production promotion</span></div>
+  <div><b>0</b><span>scheduled GitHub workflows left running. Seven were disabled on 3 September</span></div>
+</div>
+
+<div class="callout good">
+  <b>Why staging costs nothing and cannot start billing by accident.</b> The staging front end is a
+  Vercel custom environment with no branch tracking, so no git push can ever build it. Both Vercel
+  projects sit on a fixed Standard build machine with Elastic and on-demand concurrency off, and
+  Vercel bills Standard builds only when one of those is on. The audit fails the moment either is
+  switched on.
+</div>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#rel-envs">The three environments</a></li>
+    <li><a href="#rel-staging">How to promote to staging</a></li>
+    <li><a href="#rel-production">How to promote to production</a></li>
+    <li><a href="#rel-vars">Environment variables, who holds what</a></li>
+    <li><a href="#rel-guardrails">The guardrails and what each one measures</a></li>
+    <li><a href="#rel-runbooks">Cutover runbooks and the rules of the road</a></li>
+  </ol>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-envs"><span class="n">Section 1</span>The three environments</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Environment</th><th>Front end</th><th>Database</th><th>API</th><th>Stripe</th><th>Who uses it</th></tr></thead>
+  <tbody>
+    <tr><td><b>Local</b></td><td><code>next dev</code> on 3000, <code>next start</code> on 3001</td><td>Supabase staging <code>ipgrnwvfnumgvnxkpxsc</code></td><td>Railway <code>crowagent-platform-staging</code></td><td>sandbox, test mode</td><td>agents, engineers</td></tr>
+    <tr><td><b>Staging</b></td><td><code>staging.app.crowagent.ai</code>, Vercel custom environment <code>staging</code> on <code>crowagent-platform-web</code></td><td>Supabase staging</td><td>Railway staging service</td><td>sandbox, test mode</td><td>beta testers in one of five beta tenants, every automated test, every experiment</td></tr>
+    <tr><td><b>Production</b></td><td><code>app.crowagent.ai</code>, Vercel production</td><td>Supabase production <code>gujtuecjzfiqsdnzgyvo</code></td><td>Railway <code>crowagent-platform</code></td><td>LIVE since 4 September</td><td>the four platform accounts in one organisation, and paying customers</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="sm">Both front ends are invitation only. The same access lock runs on both, against its own
+database: a new sign in is admitted only from the key member allowlist, a valid invite row, or an
+existing account. Everyone else lands on the invite required page. Google and Microsoft sign in are
+configured on both Supabase projects. Staging shows the beta banner and carries
+<code>X-Robots-Tag: noindex</code> with a <code>Disallow: /</code> robots file. Production shows no
+beta label and no test mode copy, because <code>NEXT_PUBLIC_CA_ENV=production</code> and the
+secret key is live.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-staging"><span class="n">Section 2</span>How to promote to staging</h2>
+
+<p>Run from <code>crowagent-platform/</code> on <code>main</code>. Only committed code travels: the
+script exports <code>HEAD</code> with <code>git archive</code> into a scratch directory, so a dirty
+working tree is refused.</p>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Commit the work.</b>
+  <span>Every change on local <code>main</code>, by pathspec, never <code>git add .</code>. The tree
+  must be clean apart from untracked files.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b><code>pnpm staging:promote</code></b>
+  <span>Runs <code>scripts/staging/promote-staging.mjs</code>: export HEAD, <code>vercel pull
+  --environment=staging</code>, <code>vercel deploy --archive=tgz --target=staging</code>. Vercel
+  builds it on the fixed Standard machine with the production install command, which is the deploy
+  rehearsal RULE 0-D asks for. No GitHub Actions minute, no push, no git deployment. Takes about
+  five minutes.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>The script proves the surface before it records anything.</b>
+  <span>Deployment READY in the <code>staging</code> custom environment with no git metadata, then
+  <code>https://staging.app.crowagent.ai/login</code> answers 200 with <code>x-ca-env: staging</code>
+  and <code>x-robots-tag: noindex</code>. Only then is a line appended to
+  <code>scripts/staging/promotions.jsonl</code> with <code>verified: false</code>.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>Prove the change on staging, targeted.</b>
+  <span>The e2e gates that cover the change, run against the staging URL, for example
+  <code>BASE_URL=https://staging.app.crowagent.ai npx playwright test e2e/&lt;file&gt; --project=chromium
+  --no-deps</code>. RULE 0-T: the files that cover it, one invocation, never the whole suite.
+  Beta testers do their pass here.</span>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <b><code>pnpm staging:verify --sha &lt;full sha&gt; --by "&lt;who&gt;" --note "&lt;what was proven&gt;"</code></b>
+  <span>Marks the ledger record verified. The note names the evidence. Without this the production
+  script will not run.</span>
+</div></div>
+
+<div class="callout bad">
+  <b>Two traps measured on the first day.</b> A prebuilt upload built on this Windows machine
+  (<code>--prebuilt</code>) answered <code>MIDDLEWARE_INVOCATION_FAILED</code> on every route with no
+  log, so the default is a source upload and Linux builds it. And Vercel Authentication treats a
+  custom environment domain as a preview, so it was gating staging behind a Vercel login. It is now
+  off on the web project, and the $150 a month password add on is never enabled.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-production"><span class="n">Section 3</span>How to promote to production</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>The owner approves, in words that name the commit.</b>
+  <span>One approval is one push. The approval text must contain the first seven characters of
+  the sha being promoted. A standing "yes" from an earlier message is not an approval.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b><code>pnpm prod:promote --approval "&lt;owner text containing the sha7&gt;"</code></b>
+  <span>Runs <code>scripts/staging/promote-production.mjs</code>. It aborts on the first failed
+  precondition, in this order: clean tree, on <code>main</code>, a verified staging record for the
+  product tip (for a merge commit that is the second parent, and commits that touch only the
+  ledger, the hook, docs or root markdown are walked back over, because they cannot change the
+  artefact), the live billing leak audit, then the approval text.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>It prints the cost before it spends anything.</b>
+  <span>Which workflows fire on a push to <code>main</code> (four today), whether the portal
+  builds (only for a merge tip or a change under <code>apps/portal</code> or <code>packages</code>),
+  and that Railway redeploys three services. Then it runs the one <code>git push origin
+  main</code> with <code>CA_PUSH_APPROVAL</code> set.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>The pre-push hook is the backstop.</b>
+  <span><code>.husky/pre-push</code> refuses any push to <code>main</code> without the matching
+  <code>CA_PUSH_APPROVAL</code> and a verified record, refuses any branch named
+  <code>staging</code>, and runs the quick audit. A raw <code>git push</code> is blocked, as it
+  was on 3 September when it caught six workflow files still carrying schedule triggers.</span>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <b>Audit after the push, every time.</b>
+  <span>Web READY on the sha, portal READY or correctly CANCELED, Railway 3 of 3 SUCCESS, the
+  workflows green, then the product proof on <code>app.crowagent.ai</code>:
+  <code>x-ca-env: production</code>, no beta banner, and the gate that covered the change run
+  against production. Record it on the tracker row.</span>
+</div></div>
+
+<p class="sm">Vercel deploys a change of environment variable only on the next deployment. A
+variable set in the dashboard is therefore paired with a promotion, never assumed live.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-vars"><span class="n">Section 4</span>Environment variables, who holds what</h2>
+
+<p>The rule is one reader per variable, proven by grep of the consuming code with tests excluded.
+A variable nothing reads is deleted, not documented. On 3 and 4 September that removed 23 rows
+from Vercel and 9 from Railway (Resend, Sage, QuickBooks, Xero, M365, Google Workspace, tawk,
+Bitwarden, legacy price ids and others).</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Store</th><th>What lives there</th><th>How it is set</th></tr></thead>
+  <tbody>
+    <tr><td><b>Vercel web, production target</b></td><td>Supabase production URL and keys, Stripe LIVE keys and the live webhook secret (single and plural), <code>NEXT_PUBLIC_STRIPE_MODE=live</code>, <code>NEXT_PUBLIC_CA_ENV=production</code>, Brevo, Turnstile, Companies House, Sentry DSN, PostHog key, <code>PLATFORM_SECRET_KEY</code>, BFF token, CSRF origins</td><td>Dashboard by the owner for secrets. <code>scripts/staging/stripe-live-cutover.mjs</code> for the Stripe set, reading a gitignored local file so no key crosses a chat.</td></tr>
+    <tr><td><b>Vercel web, <code>staging</code> environment</b></td><td>The same names with staging values: staging Supabase, staging Railway URL, sandbox Stripe with its own webhook secret, <code>NEXT_PUBLIC_CA_ENV=staging</code>, no PostHog key on purpose</td><td><code>node scripts/staging/vercel-staging-admin.mjs sync-env-vars</code> (values from identity overrides, <code>web/.env.local</code> and readable production rows). Sensitive values the API cannot read back are pasted in the dashboard under environment "staging".</td></tr>
+    <tr><td><b>Railway <code>crowagent-platform</code></b></td><td>Production API: Supabase production, Stripe live key and webhook secret, Gemini and Anthropic keys, Brevo, Upstash, <code>PLATFORM_SECRET_KEY</code>, <code>ALLOWED_ORIGINS</code></td><td>Dashboard, or the logged in Railway CLI (<code>railway variable set</code> and <code>delete</code>). Any change redeploys the service.</td></tr>
+    <tr><td><b>Railway <code>crowagent-platform-staging</code></b></td><td>Same names with staging values, <code>ENVIRONMENT=staging</code>, <code>ALLOWED_ORIGINS</code> includes the staging domain</td><td>As above. Proven at runtime by a CORS preflight from the staging origin.</td></tr>
+    <tr><td><b>Supabase, both projects</b></td><td>Auth providers (email, Google, Azure), Site URL and redirect list, session time box 168 h and inactivity 24 h</td><td>Dashboard only. Staging Site URL is the staging domain.</td></tr>
+    <tr><td><b>Local <code>web/.env.local</code></b></td><td>Targets STAGING Supabase and STAGING Railway. Never production.</td><td>Hand edited. Gitignored. The staging sync reads it.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">
+  <b>Never copy from <code>web/.env.local.staging-bak</code>.</b> It points at the Supabase project
+  <code>yxyuqssqgdkcygnenfjh</code>, deleted in July. The current staging project is
+  <code>ipgrnwvfnumgvnxkpxsc</code>.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-guardrails"><span class="n">Section 5</span>The guardrails and what each one measures</h2>
+
+<p><code>pnpm billing:audit</code> runs <code>scripts/staging/billing-leak-audit.mjs</code>, thirteen
+checks, each red proved in its test file. <code>--quick</code> runs the five repo checks without
+the network and is what the pre-push hook uses. Any FAIL row is a P0.</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Check</th><th>What it reads</th><th>What a FAIL means</th></tr></thead>
+  <tbody>
+    <tr><td>root and portal ignore commands</td><td>the scripts are executed with a non main ref and with main</td><td>a preview build could bill</td></tr>
+    <tr><td>portal cron allowlist</td><td><code>apps/portal/vercel.json</code> against <code>billing-allowlist.json</code></td><td>a new timer was added without the RULE 0-G statement</td></tr>
+    <tr><td>workflow schedules, files and live</td><td>every workflow file, and <code>gh api</code> for the live state</td><td>a scheduled workflow exists or is active</td></tr>
+    <tr><td>build machines, both projects</td><td>Vercel project <code>resourceConfig</code></td><td>Elastic, on-demand concurrency, or a non Standard machine: builds start billing</td></tr>
+    <tr><td>custom environments</td><td>branch matchers on every custom environment</td><td>a push could build staging</td></tr>
+    <tr><td>non production deployments, 7 days</td><td>every deployment of both projects</td><td>a preview that is not CANCELED, or a staging upload that came from git rather than the CLI</td></tr>
+    <tr><td>password protection</td><td>project settings</td><td>the $150 add on was enabled</td></tr>
+    <tr><td>Railway shape</td><td>services and environments</td><td>a fourth service or a second environment appeared</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="sm">The audit is never wired into CI (RULE 0-G): it is run before every promotion, after
+any infrastructure change, and weekly by hand. A timer would be the thing it exists to catch.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="rel-runbooks"><span class="n">Section 6</span>Cutover runbooks and the rules of the road</h2>
+
+<div class="step"><div class="num">A</div><div class="body">
+  <b>Stripe live cutover, done 4 September.</b>
+  <span>Live webhook endpoint created for <code>app.crowagent.ai/api/stripe/webhooks</code>, the
+  archived live CrowMark product reactivated (its lookup keyed prices would have failed checkout),
+  live secret key pasted by the owner into Vercel and Railway, live webhook secret and mode written
+  by the cutover script, one promotion. Staging stays on the sandbox for ever. Remaining proof: one
+  Starter monthly checkout with a real card, then a refund.</span>
+</div></div>
+
+<div class="step"><div class="num">B</div><div class="body">
+  <b>Production data is the four accounts in one organisation.</b>
+  <span>Five test accounts and their organisations were deleted on 3 September, then the three
+  personal organisations were merged into <code>CrowAgent</code>. A snapshot of every deleted row
+  sits in <code>crowagent-scratch/</code>. Any future test account on production is a defect row.</span>
+</div></div>
+
+<div class="step"><div class="num">C</div><div class="body">
+  <b>The documents that bind.</b>
+  <span><code>crowagent-platform/docs/ENVIRONMENT-PROMOTION-MANDATE.md</code> (one page, binding
+  on humans and AI), <code>docs/PRODUCTION-CUTOVER-RUNBOOK.md</code>, RULE 0-P in
+  <code>ENGINEERING-STANDARDS.md</code> and the root <code>CLAUDE.md</code>. When a convenience
+  and the document disagree, the document wins. If a step is impossible, stop and put the question
+  to the owner with the cost in numbers.</span>
+</div></div>
+
+<p class="sm">Ledger: <code>scripts/staging/promotions.jsonl</code>. Tracker: <code>RELEASE-2.8.2-TRACKER.md</code>,
+rows <code>R282-STAGING-*</code>, <code>R282-PROMOTION-SCRIPTS-01</code>, <code>R282-BILLING-*</code>,
+<code>R282-PROD-*</code>.</p>
