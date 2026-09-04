@@ -248,6 +248,7 @@ const DOCS = [
   'architecture-ci-estate.html',
   'architecture-target-state.html',
   'architecture-release-and-environments.html',
+  'architecture-developer-guide.html',
 ];
 
 /* Strip comments and numeric entities the SAME way for every file, index.html

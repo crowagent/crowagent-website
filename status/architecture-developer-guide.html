@@ -1,0 +1,277 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  [R282-BOARD-DEV-GUIDE-01] END TO END DEVELOPER GUIDE. Written 2026-09-04 on
+  owner instruction: "publish end to end user guide for crowagent developers ...
+  all the manual commands and some of the important scripts, ci and end to end
+  pipeline".
+
+  Fragment injected by index.html. No style block, no script element, no colour
+  literal (check-board-contract.js). Every command below was read from the
+  package manifests, the Procfile, the workflow files and the Playwright config
+  on 2026-09-04, not remembered. When a command changes, change it here in the
+  same commit, because a guide that lies is worse than none.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div class="dochead">
+  <p class="kicker">Developer guide</p>
+  <p class="title">From a clean checkout to a production promotion</p>
+  <p class="lede">Three deployables, one monorepo plus the marketing site. The web app and the
+  portal are Next.js on Vercel, the API is FastAPI on Railway, the site is Astro on Cloudflare
+  Pages. Everything is verified on this machine first, promoted to staging, then to production by
+  one script. CI is a backstop that fires on the push, never a test runner.</p>
+  <p class="dated">Commands read from <code>package.json</code> (root, web, portal, astro), the API
+  <code>Procfile</code>, <code>.github/workflows</code> and <code>web/playwright.config.ts</code> on
+  4 September 2026.</p>
+</div>
+
+<div class="kpi">
+  <div><b>4</b><span>workflows fire on a push to main. Nothing runs on a timer</span></div>
+  <div><b>0</b><span>pushes per session by default. One approval is one push</span></div>
+  <div><b>3000 / 3001 / 3100</b><span>web dev, web production bundle, portal dev. Board on 8099</span></div>
+  <div><b>1 file</b><span>is the unit of a test run. A full suite is a certification act, run once</span></div>
+</div>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#dev-map">The estate and its ports</a></li>
+    <li><a href="#dev-setup">Set up and run locally</a></li>
+    <li><a href="#dev-verify">Verify a change: type check, tests, gates</a></li>
+    <li><a href="#dev-scripts">The scripts that matter</a></li>
+    <li><a href="#dev-db">Database and migrations</a></li>
+    <li><a href="#dev-pipeline">The end to end pipeline</a></li>
+    <li><a href="#dev-ci">CI: what fires, what gates, what it costs</a></li>
+    <li><a href="#dev-rules">Rules that are not optional</a></li>
+  </ol>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-map"><span class="n">Section 1</span>The estate and its ports</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Deployable</th><th>Code</th><th>Local</th><th>Staging</th><th>Production</th></tr></thead>
+  <tbody>
+    <tr><td><b>Platform web</b> (app.crowagent.ai)</td><td><code>crowagent-platform/web</code>, Next.js 16, npm</td><td><code>next dev</code> on 3000, <code>next start</code> on 3001</td><td><code>staging.app.crowagent.ai</code>, Vercel custom environment</td><td>Vercel <code>crowagent-platform-web</code></td></tr>
+    <tr><td><b>Founders portal</b> (portal.crowagent.ai)</td><td><code>crowagent-platform/apps/portal</code>, Next.js, pnpm workspace</td><td><code>pnpm dev</code> on 3100 (the script says 3000, run it with <code>-p 3100</code> beside the web app)</td><td>none, portal has no staging</td><td>Vercel <code>crowagent-portal</code></td></tr>
+    <tr><td><b>API</b></td><td><code>crowagent-platform/api</code>, FastAPI, Python</td><td><code>uvicorn app.main:app --reload --port 8000</code></td><td>Railway service <code>crowagent-platform-staging</code></td><td>Railway <code>crowagent-platform</code> plus <code>crowagent-worker</code></td></tr>
+    <tr><td><b>Marketing site</b> (crowagent.ai)</td><td><code>crowagent-website/astro</code>, Astro 7</td><td><code>npm run dev</code> (8093 for the Home 2.0 preview)</td><td>none</td><td>Cloudflare Pages, a push to <code>main</code> IS the deploy</td></tr>
+    <tr><td><b>Status board</b></td><td><code>crowagent-website/status</code></td><td><code>start-tracker.cmd</code> on 8099</td><td colspan="2">local only, reads the highest <code>RELEASE-*-TRACKER.md</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="sm">Databases: Supabase production <code>gujtuecjzfiqsdnzgyvo</code>, Supabase staging
+<code>ipgrnwvfnumgvnxkpxsc</code>, both in <code>eu-west-1</code>. Local development points at
+STAGING for both Supabase and Railway, through <code>web/.env.local</code>. A local process never
+talks to production.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-setup"><span class="n">Section 2</span>Set up and run locally</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Install, three package managers on purpose.</b>
+  <span>Root and portal: <code>pnpm install --frozen-lockfile</code>. Web:
+  <code>cd web &amp;&amp; npm ci</code> (Vercel installs the web project with npm against
+  <code>web/package-lock.json</code>, and <code>packages/ui</code> is installed standalone with npm,
+  so its dependencies are exact pins). API: <code>cd api &amp;&amp; pip install -r
+  requirements.txt</code>. Node 24 everywhere, pinned in the root <code>engines</code>.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b>Environment files.</b>
+  <span><code>web/.env.local</code> targets staging Supabase and staging Railway and is
+  gitignored. Copy <code>web/.env.example</code> for a fresh machine. Never copy from
+  <code>web/.env.local.staging-bak</code>, it names a Supabase project deleted in July. The
+  pre-commit hook refuses any <code>.env</code> file and any commit that carries the owner's
+  personal identity.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>Start servers detached, never inside a tool call.</b>
+  <span>Web: <code>cd web &amp;&amp; npm run dev</code> (3000). Production bundle for gates:
+  <code>cd web &amp;&amp; CA_BUILD_LOW_CPUS=4 npm run build &amp;&amp; npm run start</code> (3001).
+  Portal: <code>cd apps/portal &amp;&amp; pnpm dev -- -p 3100</code>. API:
+  <code>cd api &amp;&amp; uvicorn app.main:app --reload --port 8000</code>. Board:
+  <code>crowagent-website/status/start-tracker.cmd</code>. On this machine a server started
+  inside a tool call dies with the tool's timeout, so use <code>Start-Process</code> in PowerShell
+  and stop by verified pid, never by process name.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>Build facts that cost hours to learn.</b>
+  <span><code>CA_BUILD_LOW_CPUS=4</code> makes <code>next build</code> finish here, <code>=1</code>
+  never does. A build in <code>web/</code> while <code>next start</code> holds 3001 hangs both:
+  stop 3001 first. <code>web/.next/dev/cache</code> grows past 4 GB and survives restarts. Delete it
+  by path when a chunk looks stale. A green local build proves the source compiles against the
+  <code>node_modules</code> you happen to have, not that the deploy installs the same tree
+  (RULE 0-D). Staging is the rehearsal.</span>
+</div></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-verify"><span class="n">Section 3</span>Verify a change: type check, tests, gates</h2>
+
+<div class="callout">
+  <b>RULE 0-T.</b> Run the files that cover the change plus their guard, batched into ONE
+  invocation. Each cold start costs 30 to 130 seconds here. A full suite is a certification act
+  at the end of a release, never a way to check a fix.
+</div>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>What</th><th>Command (from the directory named)</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Web types</td><td><code>web/</code> <code>npx tsc --noEmit -p tsconfig.json</code> and <code>npm run type-check:tests</code></td><td>both tsconfigs before a promotion. Never pipe the command, the pipe's exit code is what you would read</td></tr>
+    <tr><td>Web unit tests</td><td><code>web/</code> <code>npx vitest run --pool=forks --no-file-parallelism --maxWorkers=1 &lt;files&gt;</code></td><td>the three flags are load bearing on this machine. Vitest can exit 0 with zero tests collected, read the count</td></tr>
+    <tr><td>Web e2e, one gate</td><td><code>web/</code> <code>BASE_URL=http://127.0.0.1:3001 npx playwright test e2e/&lt;spec&gt; --project=chromium --no-deps</code></td><td>projects: <code>security-headers-unauth</code>, <code>critical-journeys</code>, <code>a11y-public</code>, <code>axe-authed</code>, <code>responsive-authed</code>, <code>mobile-overflow</code>, <code>crowmark-scenarios</code> and more in <code>playwright.config.ts</code>. Authenticated projects need the <code>setup</code> project and a staging account, and the saved auth state expires silently</td></tr>
+    <tr><td>Against staging</td><td><code>BASE_URL=https://staging.app.crowagent.ai</code> with the same command</td><td>this is the run that verifies a promotion. Never run concurrent Playwright logins against production Supabase</td></tr>
+    <tr><td>Portal</td><td><code>apps/portal/</code> <code>pnpm vitest run &lt;files&gt;</code>, <code>pnpm tsc --noEmit</code>, <code>pnpm build</code></td><td>portal build validation also runs in CI on every push to main</td></tr>
+    <tr><td>API</td><td><code>api/</code> <code>pytest tests/&lt;file&gt; -v</code></td><td>targeted. <code>scripts/run_affected_tests.py</code> maps a changed file to its tests</td></tr>
+    <tr><td>Website</td><td><code>crowagent-website/astro/</code> <code>npm run build</code> is the local certification (64 gates), <code>npm run build:deploy</code> is what Cloudflare runs</td><td>an em dash in user facing copy fails the deploy</td></tr>
+    <tr><td>Brand and design tokens</td><td>root <code>pnpm brand:tokens:check</code>, <code>pnpm brand:superseded</code>, <code>bash scripts/brand-lint.sh</code></td><td>RULE 0-C: a hardcoded colour, radius or font is a defect. Tokens live in <code>packages/tokens</code></td></tr>
+    <tr><td>Billing leaks</td><td>root <code>pnpm billing:audit</code> (live) or <code>pnpm billing:audit:quick</code></td><td>thirteen checks, any FAIL is a P0. Runs inside the production promotion and the pre-push hook</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-scripts"><span class="n">Section 4</span>The scripts that matter</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Script</th><th>What it does</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td><code>scripts/staging/promote-staging.mjs</code></td><td>exports HEAD, uploads to the staging custom environment, Vercel builds it, smoke tests <code>x-ca-env</code> and <code>noindex</code>, appends to <code>promotions.jsonl</code>. <code>verify</code> subcommand marks the record. <code>--reuse &lt;url&gt;</code> re-verifies an upload</td><td>every staging promotion</td></tr>
+    <tr><td><code>scripts/staging/promote-production.mjs</code></td><td>preconditions in order, cost statement, the one push with <code>CA_PUSH_APPROVAL</code></td><td>every production promotion</td></tr>
+    <tr><td><code>scripts/staging/billing-leak-audit.mjs</code></td><td>repo and live checks against Vercel, GitHub and Railway</td><td>before promotions, after infra changes</td></tr>
+    <tr><td><code>scripts/staging/vercel-staging-admin.mjs</code></td><td><code>status</code>, <code>ensure-env</code>, <code>ensure-domain</code>, <code>sync-env-vars</code>, <code>ensure-public-staging</code>, <code>ensure-prod-identity</code>, <code>prune-dead-vars</code></td><td>staging environment administration</td></tr>
+    <tr><td><code>scripts/staging/stripe-live-cutover.mjs</code></td><td>writes the live Stripe set to Vercel and Railway production from a gitignored local file</td><td>done once, kept for key rotation</td></tr>
+    <tr><td><code>scripts/vercel-build-ignore.sh</code></td><td>the root Vercel ignore command: build main, cancel everything else</td><td>runs on Vercel, never edit off main</td></tr>
+    <tr><td><code>scripts/arch-lint-web.mjs</code>, <code>arch-lint-bff.mjs</code>, <code>arch-lint-py.mjs</code>, <code>arch-lint-responsive.mjs</code></td><td>architecture boundaries with committed baselines</td><td><code>npm run lint:arch-web</code> and siblings before a promotion that moves code between layers</td></tr>
+    <tr><td><code>scripts/donotbuild-scan.mjs</code></td><td>fails if a decommissioned product or a forbidden capability reappears</td><td>CI on push, and locally</td></tr>
+    <tr><td><code>scripts/verify-api-shard-coverage.mjs</code>, <code>verify-ci-wired-markers.mjs</code>, <code>verify-chassis-ratchet.mjs</code>, <code>verify-client-chunk-budget.mjs</code></td><td>certification helpers: shard coverage, wired gate markers, chassis ratchet, chunk budget</td><td>release certification</td></tr>
+    <tr><td><code>scripts/run_affected_tests.py</code></td><td>maps changed files to the API tests that cover them</td><td>API changes</td></tr>
+    <tr><td><code>scripts/assign-phases.mjs</code>, <code>status/build-platform-board.js</code></td><td>rebuild the board from the tracker</td><td>after tracker edits: board, then <code>node scripts/assign-phases.mjs ../crowagent-website/status/platform.json</code>, then board again</td></tr>
+    <tr><td><code>scripts/no_compromise_gate.py</code></td><td>Stop hook: the session cannot end with unverified claims</td><td>automatic</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-db"><span class="n">Section 5</span>Database and migrations</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Apply through the Supabase MCP, never the CLI and never <code>db push</code>.</b>
+  <span>Either re-runs about 158 already applied migrations, several with <code>DROP TABLE</code>.
+  Prefer <code>execute_sql</code> for DDL. After ANY apply, write the migration file into
+  <code>supabase/migrations/</code> with a unique, correctly sorting version: the file is the
+  record, not the stamp.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b>Staging first, then production, both by the same file.</b>
+  <span>The schema guard checks code against STAGING, never staging against production, so a
+  green guard says nothing about production. Twenty five production tables have no creating
+  migration for exactly this reason.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b>Know the traps.</b>
+  <span>A referential action is a real UPDATE or DELETE and fires the immutability triggers on the
+  ledgers: deleting an organisation with an audit row aborts unless the eleven triggers are
+  disabled and re-enabled inside the same transaction. <code>org_trust_pages</code> and
+  <code>org_trust_share_tokens</code> are NO ACTION foreign keys and must be pruned by hand.
+  RLS denial is a 200 with an empty array. Policy helpers live in <code>private</code>, not
+  <code>public</code>.</span>
+</div></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-pipeline"><span class="n">Section 6</span>The end to end pipeline</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <b>Work on local <code>main</code>, commit by pathspec.</b>
+  <span>Every commit names its tracker row (<code>R282-...</code>) and states what was measured.
+  <code>git add .</code> is forbidden in the shared tree. Nothing is pushed.</span>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <b>Verify locally, targeted.</b>
+  <span>Types on both tsconfigs, the unit files that cover the change in one invocation, the e2e
+  gate that covers it against 3001, the arch and brand lints if code moved.</span>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <b><code>pnpm staging:promote</code></b>
+  <span>Clean tree required. About five minutes. Vercel builds on the unbilled Standard machine.
+  Smoke proves the staging surface, the ledger gets a record.</span>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <b>Prove it on staging, then <code>pnpm staging:verify --sha &lt;full sha&gt; --by "..." --note "..."</code></b>
+  <span>The gates that cover the change, run against the staging URL. Beta testers use the five
+  beta tenants. The note names the evidence.</span>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <b><code>pnpm prod:promote --approval "&lt;owner words with the sha7&gt;"</code></b>
+  <span>Clean tree, main, verified record for the product tip (ledger and docs commits are walked
+  over), live billing audit, approval text, cost statement, one push. The pre-push hook enforces
+  the same rules on a raw push, so there is no second path.</span>
+</div></div>
+
+<div class="step"><div class="num">6</div><div class="body">
+  <b>Post push audit and product proof.</b>
+  <span>Web READY on the sha, portal READY or CANCELED for the right reason, Railway 3 of 3, four
+  workflows green, then the change proven on <code>app.crowagent.ai</code> and written on the
+  tracker row. Website: a push to <code>main</code> is a Cloudflare deploy and needs its own
+  approval.</span>
+</div></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-ci"><span class="n">Section 7</span>CI: what fires, what gates, what it costs</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Workflow</th><th>Trigger</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>apps-portal-build.yml</code> apps/portal Build Validation</td><td>push to main</td><td>portal install, lint and build. Red on jsx-a11y for two days in September until fixed locally</td></tr>
+    <tr><td><code>donotbuild-scan.yml</code></td><td>push to main</td><td>decommissioned products and forbidden capabilities stay out</td></tr>
+    <tr><td><code>no-untracked-todos.yml</code></td><td>push to main</td><td>no TODO without a tracker row</td></tr>
+    <tr><td><code>regime-threshold-scan.yml</code></td><td>push to main</td><td>procurement regime thresholds match the source of record</td></tr>
+    <tr><td>Vercel builds</td><td>push to main</td><td>web always, portal only for a merge tip or a change under <code>apps/portal</code> or <code>packages</code>. Fixed Standard machine, unbilled. Every other branch lands CANCELED</td></tr>
+    <tr><td>Railway</td><td>push to main</td><td>three services redeploy from <code>api/</code></td></tr>
+    <tr><td>Scheduled workflows</td><td>none</td><td>seven were still running nightly and weekly on 3 September, mostly red. All disabled and their triggers removed. The audit fails if one returns</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="sm">Budget: zero pushes per session by default, a hard ceiling of two even with approval,
+no reruns, no <code>workflow_dispatch</code>, no non draft PR without a separate ask. State the cost
+before asking: which workflows fire and whether a deploy triggers. CI is never a test runner: a
+red run is reproduced and fixed here first, and a remote run is a last resort for something that
+genuinely cannot run locally.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2 id="dev-rules"><span class="n">Section 8</span>Rules that are not optional</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Rule</th><th>In one line</th></tr></thead>
+  <tbody>
+    <tr><td>RULE 0</td><td>no Vercel preview deployment, ever. Every non main push lands CANCELED. <code>vercel.json</code> edits go on main only</td></tr>
+    <tr><td>RULE 0-B and 0-G</td><td>a push is the only Actions consuming act and needs its own approval. CI, gate and test work is never a work item of its own</td></tr>
+    <tr><td>RULE 0-C</td><td>the central design system is the only source of colour, type and spacing. Check the import graph, not the docstring</td></tr>
+    <tr><td>RULE 0-D</td><td>a local build is not a deploy rehearsal unless it reproduces the install. Staging is the rehearsal</td></tr>
+    <tr><td>RULE 0-P</td><td>code reaches production only by promotion through staging</td></tr>
+    <tr><td>RULE 0-S</td><td>no semicolons or parenthetical dashes in prose, no banned vocabulary, in commits, comments and docs alike</td></tr>
+    <tr><td>RULE 0-T and 0-CERT</td><td>targeted regression while building. Certification is a property of the log: green, current tree, comparable collection</td></tr>
+    <tr><td>RULE 0-V</td><td>a grep is a claim. Name the measurement and how it could have failed before stating a finding</td></tr>
+    <tr><td>Identity</td><td>every generated artefact is authored by <code>Crow Agent</code>, <code>crowagent.platform@gmail.com</code>. The pre-commit hook enforces it</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="sm">Canonical texts: <code>ENGINEERING-STANDARDS.md</code>, the root <code>CLAUDE.md</code>,
+<code>docs/ENVIRONMENT-PROMOTION-MANDATE.md</code>, <code>docs/architecture/15-release-and-deployment-process.md</code>.
+This page is the map. Those are the territory.</p>
