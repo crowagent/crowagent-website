@@ -323,101 +323,23 @@
   # switched off, which is why turning BFM off measured no change at all.
   #
   # SCOPE: this rides on the /* catch-all, so it reaches HTML at clean URLs.
-  # /js/*, /styles.min.css, /scripts.min.js and /Assets/* each UNSET
-  # Cache-Control before setting their own, so no asset inherits it. Verified
-  # against this file rather than assumed.
-  #
-  # NOT YET MEASURED, and it can only be checked after a deploy: whether
-  # no-transform affects content-encoding on the 116 KB HTML document. Check
-  # `content-encoding: br` survives on the first fetch after this ships.
-  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60, no-transform
-  Surrogate-Control: max-age=300
-  # 2026-08-01: the 2026-06-03 fix above cut the TTL but set the wrong header,
-  # so it only ever half-worked. MEASURED after shipping a new homepage: `/`,
-  # `/crowmark` and `/pricing` all returned `cf-cache-status: HIT` with an
-  # IDENTICAL `Age: 5261` — 87 minutes on an `s-maxage=300`. The owner could
-  # not see the new homepage at all while the origin was serving it correctly.
-  #
-  # Cloudflare obeys CDN-Cache-Control over Cache-Control for its own edge, and
-  # only `/*.html` below carried it. Clean URLs never match `/*.html`, which is
-  # exactly the gap the comment above describes but did not close. A Pages
-  # deployment does NOT purge those entries, so a content deploy could sit
-  # invisible for an hour or more with no way to tell from the build logs.
-  #
-  # HTML is now never edge-cached. Every asset path below re-asserts its own
-  # CDN-Cache-Control so nothing loses its long edge TTL — check those rules
-  # before changing this one.
-  CDN-Cache-Control: no-store
-
-# --- HTML pages: short cache, revalidate on edge ---
-/*.html
-  # [R28-CSP 2026-09-02] `no-transform` matches the /* catch-all above. This
-  # rule does NOT unset Cache-Control first, so Cloudflare Pages concatenates
-  # the two values and a request for a .html path receives both. Carrying the
-  # same directive in each keeps them from disagreeing, which is the failure the
-  # unset comment further down this file documents.
-  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60, no-transform
-  CDN-Cache-Control: no-store
-
-# --- [R2.2 F-042] JS modules + page CSS: keep the CDN EDGE warm; browser still
-# revalidates. The catch-all /* gives these only s-maxage=300 (5min CDN), so on
-# a low-traffic site edges go cold between visits → repeated origin fetches that
-# spiked /crowmark cold LCP to ~3s (warm HIT = 47-73ms). These are referenced
-# with ?v= cache-busters, so a longer EDGE TTL is safe (a deploy bumps ?v= → new
-# URL → fresh fetch). Browser max-age stays short (300s) to avoid the 4h-stale
-# incident class; only the edge/Surrogate TTL is extended.
-/js/*
-  # `!` UNSETS the inherited value first. Cloudflare Pages CONCATENATES a header
-  # when an earlier rule already set it rather than overriding it, so without
-  # these the catch-all's values ride along and the response carries two
-  # conflicting directives. Measured live 2026-08-01 on a stylesheet:
-  #   cdn-cache-control: no-store
-  #   cdn-cache-control: public, max-age=31536000, immutable
-  # Both were sent. Which one an edge or a browser honours is undefined.
-  ! Cache-Control
-  ! CDN-Cache-Control
-  ! Surrogate-Control
-  Cache-Control: public, max-age=300, s-maxage=86400, stale-while-revalidate=86400
-  Surrogate-Control: max-age=86400
-  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
-  # Safe to keep a long EDGE ttl: these are fetched with ?v= cache-busters, so
-  # a deploy changes the URL rather than needing the old one invalidated.
-  CDN-Cache-Control: public, max-age=86400
-
-# --- Versioned/minified assets: immutable, 1 year ---
-/styles.min.css
-  # `!` UNSETS the inherited value first. Cloudflare Pages CONCATENATES a header
-  # when an earlier rule already set it rather than overriding it, so without
-  # these the catch-all's values ride along and the response carries two
-  # conflicting directives. Measured live 2026-08-01 on a stylesheet:
-  #   cdn-cache-control: no-store
-  #   cdn-cache-control: public, max-age=31536000, immutable
-  # Both were sent. Which one an edge or a browser honours is undefined.
-  ! Cache-Control
-  ! CDN-Cache-Control
-  ! Surrogate-Control
-  Cache-Control: public, max-age=31536000, immutable
-  Surrogate-Control: max-age=31536000
-  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
-  # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
-  CDN-Cache-Control: public, max-age=31536000, immutable
-
-/scripts.min.js
-  # `!` UNSETS the inherited value first. Cloudflare Pages CONCATENATES a header
-  # when an earlier rule already set it rather than overriding it, so without
-  # these the catch-all's values ride along and the response carries two
-  # conflicting directives. Measured live 2026-08-01 on a stylesheet:
-  #   cdn-cache-control: no-store
-  #   cdn-cache-control: public, max-age=31536000, immutable
-  # Both were sent. Which one an edge or a browser honours is undefined.
-  ! Cache-Control
-  ! CDN-Cache-Control
-  ! Surrogate-Control
-  Cache-Control: public, max-age=31536000, immutable
-  Surrogate-Control: max-age=31536000
-  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
-  # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
-  CDN-Cache-Control: public, max-age=31536000, immutable
+  # /js/*, /styles.min.css, # --- [A-258, 2026-09-07] THREE RULES WERE DELETED HERE, AND THE FILES THEY
+# COVERED ARE GONE TOO.
+#
+# `/js/*`, `/styles.min.css` and `/scripts.min.js` cached the legacy root tree.
+# They had been INERT since 2026-08-05, when the Cloudflare Pages deploy source
+# moved to astro/dist: none of those paths has been emitted into dist since, so
+# the rules matched no request. On 2026-09-07 the files themselves were deleted
+# with the rest of the legacy estate, so the rules could never match again.
+#
+# THEIR REASONING IS NOT LOST, because the rules that remain still need it. The
+# `!` unset before every Cache-Control below exists because Cloudflare Pages
+# CONCATENATES a header when an earlier rule already set it rather than
+# overriding it. Measured live 2026-08-01 on a stylesheet, both of these were
+# sent on one response and which an edge honours is undefined:
+#     cdn-cache-control: no-store
+#     cdn-cache-control: public, max-age=31536000, immutable
+# That is why /Assets/* below unsets first and then re-asserts its own values.
 
 /changelog.xml
   Content-Type: application/rss+xml; charset=utf-8
@@ -473,17 +395,16 @@
 # M3 fix 2026-05-21: ensure AVIF + WebP images served with correct Content-Type.
 # Cloudflare Pages defaults to correct MIMEs for these but explicit headers
 # guarantee browser-decode + prevent application/octet-stream fallback.
-/Assets/marketing-screenshots/*.avif
-  Content-Type: image/avif
-  Cache-Control: public, max-age=31536000, immutable
-  Surrogate-Control: max-age=31536000
-
-/Assets/photos/*.avif
-  Content-Type: image/avif
-  Cache-Control: public, max-age=31536000, immutable
-  Surrogate-Control: max-age=31536000
-
-/Assets/product-shots/*.avif
+# [A-258 2026-09-07] THREE FOLDER RULES BECAME ONE GLOB, AND IT FIXES A GAP.
+# This was /Assets/marketing-screenshots/*.avif, /Assets/photos/*.avif and
+# /Assets/product-shots/*.avif. All three folders were deleted with the legacy
+# estate, so all three rules matched nothing. Replacing them with the same
+# `**` glob the WebP rule below already uses is not only tidier: the AVIFs that
+# actually ship are the responsive blog sets under /Assets/blog-photos/, and
+# NO rule covered those, so the one image family still being served was the one
+# family missing its explicit Content-Type. Verified after the change: every
+# .avif under Assets is matched by this rule.
+/Assets/**/*.avif
   Content-Type: image/avif
   Cache-Control: public, max-age=31536000, immutable
   Surrogate-Control: max-age=31536000
