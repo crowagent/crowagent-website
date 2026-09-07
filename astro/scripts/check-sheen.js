@@ -395,6 +395,95 @@ async function hover(page, selector) {
 }
 
 /**
+ * WAIT FOR THE ENTRANCE TO BE OVER BEFORE PROBING THE HOVER.
+ *
+ * ── THE DEFECT THIS FIXES (A-260) ───────────────────────────────────────────
+ *
+ * Both button probes aborted in preflight with "no CSSTransition running on
+ * ::after background-position mid-hover. Found instead: CSSAnimation
+ * sv-btn-sweep::after=running". The sweep was not broken. The gate was
+ * arriving in the middle of the hero's own entrance pass and reading it.
+ *
+ * motion.css runs `sv-btn-sweep` on `*:has(> #hero-title) .btn::after`, which
+ * is the SAME pseudo-element and the SAME `background-position` the hover
+ * transition uses. The two are designed to share one layer. While a CSS
+ * animation is filling it outranks every normal declaration, so the hover
+ * transition has nothing to do and correctly does not appear in
+ * `getAnimations()`. `main .btn--primary` on `/` IS a hero button, so the
+ * probe was hovering a control that had not finished arriving.
+ *
+ * ── WHY IT WAS INTERMITTENT, WHICH IS THE WORSE HALF ────────────────────────
+ *
+ * The old wait was a flat 250ms after `scrollIntoView`, and the entrance
+ * settles at about 1350ms. Whether the probe won or lost that race came down
+ * to how fast the machine loaded the page. It passed 33/33 on a quiet box on
+ * the morning of 2026-09-07 and failed three runs out of three that afternoon
+ * with 3.9GB free of 15.7. A gate whose colour tracks the load on the machine
+ * is not measuring the product, and this one had already gone red once in an
+ * earlier session for the same reason without the cause being found.
+ *
+ * ── WHY THIS WAITS ON THE CONDITION AND NOT ON A NUMBER ─────────────────────
+ *
+ * Sleeping 1400ms would pass today and is exactly the mistake motion.css warns
+ * against in its own words: the delay and the duration are inherited from the
+ * button row "so if the row moves in the cadence above, this moves with it and
+ * no second copy of the arithmetic can drift". A constant here WOULD be that
+ * second copy. So this asks the page whether the entrance is over rather than
+ * predicting when it will be, and it re-asks, because the rows are staggered
+ * and one finishing does not mean the next has started.
+ *
+ * A TIMEOUT IS A PREFLIGHT FAILURE, NEVER A SHRUG. If the entrance never
+ * ends, an animation is looping on the layer the hover needs, and measuring
+ * through it would report a working sweep as dead exactly as before. The
+ * caller says so and skips, which is the same contract every other preflight
+ * in this file keeps.
+ *
+ * Transitions are deliberately NOT waited on. The hover transition is the
+ * thing being measured, and at this point in the run nothing is hovered yet.
+ */
+async function settle(page, selector, cap = 6000) {
+  return page.evaluate(
+    async ([sel, budget]) => {
+      const el = document.querySelector(sel);
+      if (!el) return { settled: false, waited: 0, left: [] };
+      /* CSSAnimation only. A finished animation stays in getAnimations() with
+         playState "finished" because fill-mode is none, and it contributes
+         nothing to the layer once it is over, so it is not something to wait
+         for. */
+      const live = () => el
+        .getAnimations({ subtree: true })
+        .filter((a) => a.constructor.name === 'CSSAnimation' && a.playState !== 'finished');
+      const started = performance.now();
+      const waitedFor = new Set();
+      while (performance.now() - started < budget) {
+        const running = live();
+        if (!running.length) {
+          /* One more turn of the clock, because the stagger means the gap
+             between two rows can be longer than a frame. */
+          await new Promise((r) => setTimeout(r, 120));
+          if (!live().length) {
+            return { settled: true, waited: Math.round(performance.now() - started), waitedFor: [...waitedFor] };
+          }
+          continue;
+        }
+        for (const a of running) waitedFor.add(a.animationName);
+        await Promise.race([
+          Promise.all(running.map((a) => a.finished.catch(() => {}))),
+          new Promise((r) => setTimeout(r, 250)),
+        ]);
+      }
+      return {
+        settled: false,
+        waited: Math.round(performance.now() - started),
+        waitedFor: [...waitedFor],
+        left: live().map((a) => `${a.animationName}${(a.effect && a.effect.pseudoElement) || ''}`),
+      };
+    },
+    [selector, cap],
+  );
+}
+
+/**
  * THE FRAMES ARE CLIPPED PAGE SHOTS, NOT ELEMENT SHOTS, AND THAT IS A BUG FIX.
  *
  * `locator.screenshot()` scrolls its target into view before capturing. The
@@ -634,6 +723,19 @@ for (const b of BUTTONS) {
   await page.waitForTimeout(250);
 
   const SEL = '[data-sheen-probe]';
+  /* A-260. The hero's entrance sweep runs on the same ::after background-position
+     this probe is about to measure, so hovering before it is over reads the
+     entrance and reports the hover as missing. See settle(). */
+  const calm = await settle(page, SEL);
+  if (!calm.settled) {
+    preflight.push(
+      `${probe} (${found.sig}): the control was still animating after ${calm.waited}ms, so the hover ` +
+      `sweep could not be measured through it. Still running: ${calm.left.join(', ') || 'nothing named'}. ` +
+      `An entrance pass on ::after outranks the hover transition while it fills, so a reading taken here ` +
+      `reports a working sweep as dead`,
+    );
+    continue;
+  }
   if (!(await hover(page, SEL))) {
     preflight.push(`${probe} (${found.sig}): the pointer could not be brought onto the control in three attempts.`);
     continue;
