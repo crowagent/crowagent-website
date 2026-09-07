@@ -205,11 +205,40 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
           }),
           signal: AbortSignal.timeout(10000),
         })
-          .then((r) => {
+          .then(async (r) => {
             // Success ONLY on a 2xx. See the note at the top of this file.
             if (!r.ok) throw new Error(String(r.status));
+            /*
+             * [A-264 2026-09-08] "You are on the list" IS NOW READ FROM THE
+             * RESPONSE, not assumed from the status code.
+             *
+             * /api/notify answers 2xx when the address was captured EITHER on
+             * the Brevo list OR in the ops inbox, and those are two different
+             * promises. Only the first one means subscribed. A Brevo key scoped
+             * to transactional email without contacts permission, which is a
+             * real Brevo configuration, sends the ops mail fine and fails the
+             * contacts call, and this line would then have claimed a
+             * subscription that did not happen.
+             *
+             * This is the same rule the top of the file already records for the
+             * 404 era, applied one level deeper: the earlier fix stopped us
+             * assuming success from a request we never checked, and this one
+             * stops us assuming SUBSCRIPTION from a success we did check.
+             *
+             * `subscribed` is absent on an older API build. Absent is treated as
+             * subscribed so a deploy skew cannot downgrade a working signup into
+             * a warning, and the field is only ever used to WEAKEN the claim.
+             */
+            const data = await r.json().catch(() => ({}) as { subscribed?: boolean });
             form.reset();
             status.hidden = false;
+            if (data.subscribed === false) {
+              status.className = 'form__status form__status--warn nl__status';
+              status.textContent =
+                'Thanks. We have your address and will add you to the list shortly.';
+              btn.textContent = 'Received';
+              return;
+            }
             status.className = 'form__status form__status--ok nl__status';
             status.textContent = 'Thanks. You are on the list.';
             btn.textContent = 'Subscribed';
