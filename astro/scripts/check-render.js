@@ -238,7 +238,7 @@ const ALLOW_BESPOKE = [
       'exists to prevent. It is deliberately quieter than the pills it accompanies, ' +
       'and it is emitted only when autoplay is actually running, so it can never be a ' +
       'dead control: a reader with JavaScript off or prefers-reduced-motion set never ' +
-      'receives it at all.',
+      'receives it at all. — STALE SINCE 2026-09-06 AND DELIBERATELY RETAINED. The homepage was rebuilt and this component no longer ships on any route, so this gate reads dist and reports the entry as matching nothing. It is kept because the component still exists in src/ as the rollback path, and deleting a correct accessibility exemption for a component that is one import away from shipping again would turn a rollback into a red build. Delete this entry when the component itself is deleted, not before.',
   },
   {
     selector: '.wt__pause',
@@ -253,7 +253,7 @@ const ALLOW_BESPOKE = [
       'emitted only once the component confirms a timer is genuinely running ' +
       '(`hidden` until then), so a reader with JavaScript off or ' +
       'prefers-reduced-motion set never receives it and it can never be a dead ' +
-      'control.',
+      'control. — STALE SINCE 2026-09-06 AND DELIBERATELY RETAINED. The homepage was rebuilt and this component no longer ships on any route, so this gate reads dist and reports the entry as matching nothing. It is kept because the component still exists in src/ as the rollback path, and deleting a correct accessibility exemption for a component that is one import away from shipping again would turn a rollback into a red build. Delete this entry when the component itself is deleted, not before.',
   },
   {
     selector: '.rt__toggle',
@@ -285,7 +285,7 @@ const ALLOW_BESPOKE = [
       'check-controls.js rule 3 measures the same element at 1440 and 390 and passes it. ' +
       'What is left, and the only thing this entry covers, is the bespoke-button rule ' +
       'below: a padded, rounded, painted control that is not a .btn. Every user of ' +
-      '`control chip` on this site trips that rule and every one of them is named here.',
+      '`control chip` on this site trips that rule and every one of them is named here. — STALE SINCE 2026-09-06 AND DELIBERATELY RETAINED. The homepage was rebuilt and this component no longer ships on any route, so this gate reads dist and reports the entry as matching nothing. It is kept because the component still exists in src/ as the rollback path, and deleting a correct accessibility exemption for a component that is one import away from shipping again would turn a rollback into a red build. Delete this entry when the component itself is deleted, not before.',
   },
   {
     selector: '.ca-search-trigger',
@@ -992,7 +992,16 @@ const MEASURE_TINY = `window.__measureTiny = () => {
   for (const el of document.querySelectorAll('a, button, summary, [role="button"]')) {
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
-    if (r.width >= 24 && r.height >= 24) continue;
+    /* ROUNDED TO TWO DECIMALS BEFORE COMPARING, AND THE REASON IS A MEASURED
+       FALSE POSITIVE RATHER THAN A CONVENIENCE. getBoundingClientRect composes
+       every ancestor transform, so an element inside a block that is still
+       arriving reports a composited box: the breadcrumb links on two routes
+       read 23.999984741210938 during the arrival translate and exactly 24 at
+       rest, against a min-height of 24px declared in Breadcrumb.astro. A
+       target that is genuinely 23.9px still reads 23.90 here and still fails.
+       What cannot fail any more is a residue four decimal places down, which
+       is a fact about compositing and not about the design. */
+    if (+r.width.toFixed(2) >= 24 && +r.height.toFixed(2) >= 24) continue;
     /* THE EXEMPTION IS A SEMANTIC TEST, NOT A TAG LIST. A first pass listed the
      * tags that usually hold flowing text and missed two real cases: a link
      * inside a <span> mid-sentence on /contact, and nine inside a <div> on
@@ -1082,7 +1091,7 @@ const MEASURE_LEFT = `window.__measureLeft = () => {
     '.conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, ' +
     '.plans__trial, .lead, .faq__a, .sec-faq-a, .cmp-intro, .sec-say, ' +
     '.sec-prose, .gx-def, .gl-def, .rt__detail, .pg__p, .reach__body, ' +
-    '.cards__body, .cat__body, .spec__quote';
+    '.cards__body, .cat__body, .spec__quote, .h2pf__p, .h2pf__line';
 
   /* MIRRORS styles/alignment.css RULE 4, ONE BOX ONE AXIS, BY HAND, and the two
      must be edited together like the two constants above. Owner instruction of
@@ -1483,6 +1492,15 @@ for (const route of all) {
   collectLeft(measured.left, 1440);
   await page.setViewportSize({ width: 390, height: 844 });
   collectLeft(await page.evaluate('window.__measureLeft()'), 390);
+  /* SETTLE BEFORE MEASURING A TARGET SIZE. A resize re-triggers the arrival
+     animation on every block that has one, and for the length of it three
+     ancestors of a breadcrumb link carry a translate that
+     getBoundingClientRect folds into the link's own box. SC 2.5.8 is about the
+     size of the thing a reader aims at, which is its resting size, so this
+     waits for the arrival rather than racing it. The alignment pass above is
+     unaffected by a translate and does not need the wait, which is why it
+     stays in front of it. */
+  await page.waitForTimeout(500);
   /* A-243. The target rule runs here too. The viewport is already at 390 for
      the alignment pass, so this is a second evaluate and not a second load. */
   for (const t of await page.evaluate('window.__measureTiny()')) {

@@ -12,7 +12,7 @@ for(const route of ['/crowmark/','/crowmark-buyers/','/']){
  for(const w of [320,360,390,834]){
   const p=await b.newPage({viewport:{width:w,height:900},reducedMotion:'reduce'});
   await p.goto(base+route,{waitUntil:'load'});
-  await p.evaluate(()=>document.querySelector('.pcar')?.scrollIntoView({block:'center'}));
+  await p.evaluate(()=>document.querySelector('.pcar')?.scrollIntoView({block:'center',behavior:'instant'}));
   await p.evaluate(()=>document.querySelectorAll('*').forEach(e=>e.getAnimations?.().forEach(a=>a.finish())));
   const r=await p.evaluate(()=>{
     const car=document.querySelector('.pcar'); if(!car)return null;

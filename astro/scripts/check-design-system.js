@@ -225,7 +225,7 @@ const ALLOWED = new Map([
    * left aligning it moves the eyebrow and the h2 with it. It measures 4 lines
    * at 1440, which is over the owner threshold, and that count is written down
    * here so the next reader inherits a decision rather than a silence. */
-  ['align  src/styles/alignment.css  main :is( .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, .card__body, .item__body, .pair__body, .cap__body, .principles__body, .conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, .plans__trial, .lead, .faq__a, .sec-faq-a, .cmp-intro, .sec-say, .sec-prose, .gx-def, .gl-def, .rt__detail, .pg__p, .reach__body, .cards__body, .cat__body, .spec__quote )',
+  ['align  src/styles/alignment.css  main :is( .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, .card__body, .item__body, .pair__body, .cap__body, .principles__body, .conn__note, .role__p, .note, .tl__p, .hir__p, .in__aside, .compare, .plans__trial, .lead, .faq__a, .sec-faq-a, .cmp-intro, .sec-say, .sec-prose, .gx-def, .gl-def, .rt__detail, .pg__p, .reach__body, .h2pf__p, .h2pf__line, .cards__body, .cat__body, .spec__quote )',
    'OWNER DECISION A-16, 2026-08-04, FINISHED 2026-09-01. A-16 set the line at three painted line boxes: centre up to it, left-align beyond. CSS cannot count lines, so the threshold is applied to FAMILIES by judgement, and this entry is the only place that decision is enforced. THIRTEEN NAMES WERE ADDED ON 2026-09-01 on two owner instructions, one about centred body copy that looks like an up side down pyramid and one about FAQ answers on the product pages. Measured on the dev build at 1440 and at 1920, status code and landed URL asserted before every reading because two paths on this site 404 and an Astro 404 page yields plausible geometry that means nothing: .gx-def runs to 13 centred lines, .sec-say to 11, .sec-prose to 9, .faq__a and .cmp-intro to 7, .lead .sec-faq-a and .pg__p to 6, .rt__detail to 5, and .reach__body .cards__body .cat__body and .spec__quote to 4. Every one is prose over the threshold. THE TAPER WAS MEASURED, NOT INFERRED: Range rectangles on the FAQ answers put the first painted line of a /crowmark-buyers answer at x=105 and its last at x=447, which is the owner pyramid drawn. TWO OF THE THREE DELIBERATE ABSENCES ARE NOW GONE, and saying so is the point of re-stating this key rather than adding a second entry: .lead and .sec-say were held back on 2026-08-04 and again on 2026-08-31 as owner decisions rather than gate ones, and the owner has now made that decision. .section__standfirst is the ONE that remains centred, and its argument is no longer merely that it is scanned: it sits inside .section__head, so left aligning it would drag the eyebrow and the h2 off the centre line with it and rewrite a section header on fifteen routes. It reaches 4 lines, which is over the threshold, and it is held for the owner with that count written down rather than quietly kept. .pg__p was deferred on 2026-08-31 only because another agent held ProofGate.astro, and that hold is over.'],
   ['align  src/components/forms/NewsletterForm.astro  .nl__err',
    'the inline validation message. It became reachable by this rule on 2026-08-03, when the owner asked for the monthly digest to sit in a card and the form moved inside a centred `.surface`. An error belongs on the same left edge as the field it is about — a centred error floats away from the input that caused it, and a reader scanning back up from the message has nothing to line it up with. This is the SC 3.3.1 relationship, not a styling preference'],
@@ -317,10 +317,13 @@ const ALLOWED = new Map([
    'the outer nav rail, deliberately wider than --measure. The nav spans the viewport while the page content sits on the 1160px measure, so it is not on that scale at all'],
   ['token  src/components/footer/Footer.astro  max-width: 1440px',
    'the outer footer rail. Same as the nav: page chrome spanning the viewport, not content on --measure'],
-  ['token  src/styles/prose.css  font-size: 0.9em',
-   'inline <code> inside markdown-authored prose. `em` is the point: code has to sit at 0.9 of WHATEVER it is inside, and a token is an absolute value, so tokenising this would render code inside an h2 at the same size as code inside a paragraph. The one case where a relative unit is more correct than a token'],
-  ['token  src/layouts/Article.astro  font-size: 0.92em',
-   'inline <code> inside a blog post body, and the same argument as prose.css above: a ratio, not a size. Worth noting that the two disagree, 0.9 against 0.92, which nobody will ever see and which is exactly how a scale acquires a second opinion. One of them should move'],
+  /* THE TWO INLINE-CODE ENTRIES ARE GONE, 2026-09-06, AND THE SECOND ONE ASKED
+     FOR IT: "the two disagree, 0.9 against 0.92 ... One of them should move".
+     Both were right that a ratio is more correct here than an absolute step,
+     and both missed that a custom property holds a ratio perfectly well.
+     tokens.css declares --t-code: 0.9em, prose.css, Article.astro and the
+     tender compliance matrix all read it, and this list shrinks by two rather
+     than growing by a third. */
 
   /* ── 7 GRADIENTS: NO ENTRIES, AND THAT IS THE WHOLE SECTION ──────────────
    *

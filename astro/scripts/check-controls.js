@@ -424,7 +424,7 @@ for (const route of routes) {
     if (!c.shown || c.selected || probed.has(c.sig)) continue;
     probed.add(c.sig);
     const SEL = `[data-ctl="${c.i}"]`;
-    await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center' }), SEL);
+    await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: 'center', behavior: 'instant' }), SEL);
     await page.waitForTimeout(80);
 
     const rest = await page.evaluate((s) => {
@@ -574,7 +574,7 @@ for (const route of routes) {
     });
     if (!el) return null;
     el.setAttribute('data-ctl-rm', '');
-    el.scrollIntoView({ block: 'center' });
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
     return { sig: [...el.classList].filter((c) => !/^astro-/.test(c)).join('.') };
   });
   if (!first) continue;

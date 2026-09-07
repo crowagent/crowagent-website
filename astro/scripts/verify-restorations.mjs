@@ -44,7 +44,7 @@ const mag = await page.evaluate(async () => {
   if (!btn) return { err: 'no [data-magnetic] primary button found' };
   const cs = getComputedStyle(btn);
   const r = btn.getBoundingClientRect();
-  btn.scrollIntoView({ block: 'center' });
+  btn.scrollIntoView({ block: 'center', behavior: 'instant' });
   const r2 = btn.getBoundingClientRect();
   const cx = r2.left + r2.width / 2;
   const cy = r2.top + r2.height / 2;

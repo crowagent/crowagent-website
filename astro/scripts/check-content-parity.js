@@ -159,6 +159,30 @@ const UPDATE = process.argv.includes('--update');
  */
 const ALLOWED_LOSSES = new Map([
   /*
+   * 2026-09-06. The homepage heading "The rest of the workstation." went with
+   * the section that carried it, and this is a REPLACEMENT rather than a loss.
+   *
+   * Owner instruction, after several days reviewing the proposal on /home-2:
+   * "i want home-2 becomes live home page by replacing the current live page".
+   * The previous homepage introduced its extra product screens with a section
+   * head reading "The rest of the workstation."; the rebuilt page presents the
+   * same five screens inside one pinned app frame that a reader scrolls
+   * through, so there is no second block to introduce and nothing to head.
+   *
+   * WHAT A READER CAN STILL DO IS THE TEST THIS GATE APPLIES, and it is
+   * unchanged: every one of those screens is still on the page, still named,
+   * still captioned, and now also reachable one at a time from the dots beside
+   * the frame. What went is a sentence that existed to say "there is more
+   * below", on a page where the more is no longer below but inside.
+   *
+   * Recorded here rather than swept up by `--update` because a baseline
+   * refresh would have erased the record of WHY the sentence went along with
+   * the sentence itself.
+   */
+  ['/  heading: the rest of the workstation.',
+   'The section head that introduced the second block of product screens on the previous homepage. The rebuilt homepage presents those same five screens inside one pinned frame the reader scrolls through, so the block it introduced no longer exists as a separate block. Every screen it pointed at is still on the page, named and captioned, and now also selectable from the dots beside the frame.'],
+
+  /*
    * 2026-08-31. The /security/ heading "GDPR-aligned data processing" became
    * "GDPR compliant", and this is a CORRECTION rather than a loss.
    *

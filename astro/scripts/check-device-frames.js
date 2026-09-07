@@ -107,8 +107,8 @@ const FRAMES = [
     why: 'ui/Carousel.astro draws a browser: three traffic lights and the address app.crowagent.ai',
   },
   {
-    sel: '.wt__stage',
-    why: 'sections/WorkstationTour.astro draws a 16/10 desktop bezel with a caption plate over it',
+    sel: '.h2st__frame',
+    why: 'home2/Story2.astro pins a desktop app frame and cross-fades five screens inside it',
   },
 ];
 

@@ -438,7 +438,20 @@ async function open(page, route) {
  * THE CARD SHEEN
  * ══════════════════════════════════════════════════════════════════════════ */
 
-const CARD_ROUTES = ['/', '/about/', '/pricing/'];
+/* `/` LEFT THIS LIST ON 2026-09-06, AND IT IS A FACT ABOUT THE PAGE RATHER THAN
+   A GAP IN THE CHECK. The rebuilt homepage has no ordinary card on it. Measured
+   against the built HTML, every `.surface` it carries is either a
+   `surface--frame` (the hero workbench, the refusal gate's draft, the pinned
+   product screen, the refusal app pane) or the closing card, and BOTH of those
+   cancel the lamp and the sheen deliberately. There is nothing left for a card
+   probe to hover.
+
+   The homepage is not unmeasured because of it. The two checks further down
+   drive one frame and the closing card on `/` directly and assert that each
+   cancel is still in place, which is a stronger statement about that page than
+   the generic probe ever made. `/crowmark/` takes its slot here because it has
+   25 plain surfaces, the most of any route. */
+const CARD_ROUTES = ['/crowmark/', '/about/', '/pricing/'];
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
 for (const route of CARD_ROUTES) {
@@ -450,13 +463,18 @@ for (const route of CARD_ROUTES) {
      Its class signature is printed, so a run always says what it looked at. */
   const target = await page.evaluate(
     ([minW, minH]) => {
-      const el = [...document.querySelectorAll('.surface')].find((e) => {
+      /* NOT `.surface--frame` AND NOT `.fc`. Both cancel the lamp and the
+         sheen on an owner decision, so neither is a card for this purpose, and
+         the two checks below drive one of each directly to prove the cancels
+         are still there. A probe that merely skipped them would go quiet the
+         day somebody deleted a cancel. */
+      const el = [...document.querySelectorAll('.surface:not(.surface--frame, .fc)')].find((e) => {
         const r = e.getBoundingClientRect();
         return r.width >= minW && r.height >= minH;
       });
       if (!el) return null;
       el.setAttribute('data-sheen-probe', '');
-      el.scrollIntoView({ block: 'center' });
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
       const r = el.getBoundingClientRect();
       return {
         sig: `${el.tagName.toLowerCase()}.${[...el.classList].filter((c) => !/^astro-/.test(c)).join('.')}`,
@@ -604,7 +622,7 @@ for (const b of BUTTONS) {
     const el = document.querySelector(s);
     if (!el) return null;
     el.setAttribute('data-sheen-probe', '');
-    el.scrollIntoView({ block: 'center' });
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
     const r = el.getBoundingClientRect();
     return { sig: `${el.tagName.toLowerCase()}.${[...el.classList].filter((c) => !/^astro-/.test(c)).join('.')}`, w: r.width };
   }, b.sel);
@@ -705,6 +723,76 @@ for (const b of BUTTONS) {
     `i.e. ${moved.toFixed(0)}px across a ${Math.round(found.w)}px control (needs more than half, ${Math.round(found.w / 2)}px)`);
 }
 
+/* ── THE ONE VARIANT THAT MUST NOT HAVE A SHEEN ─────────────────────────────
+ *
+ * `.surface--frame` is a window onto a product screen: the hero workbench and
+ * the pinned app frame in the product story. Owner decision, 2026-09-06, after
+ * looking at the workbench: the light that followed the pointer across it did
+ * not read well. A window is looked into, not stroked.
+ *
+ * styles/surfaces.css cancels both pseudo-elements at doubled specificity,
+ * because the lamp and sheen rules sit at the same specificity and later in the
+ * file. That is a fragile thing to leave to a comment, so it is measured here.
+ * Without this check the only consequence of deleting the cancel would be that
+ * the card probe above starts picking the workbench again, which reads as a
+ * different failure entirely and sent one session chasing the wrong rule. */
+{
+  await open(page, '/');
+  const frame = await page.evaluate(() => {
+    const el = document.querySelector('.surface--frame');
+    if (!el) return null;
+    return {
+      sig: `${el.tagName.toLowerCase()}.${[...el.classList].filter((c) => !/^astro-/.test(c)).join('.')}`,
+      before: getComputedStyle(el, '::before').content,
+      after: getComputedStyle(el, '::after').content,
+    };
+  });
+  if (!frame) {
+    preflight.push('frame: no .surface--frame on / to check the cancelled sheen against');
+  } else {
+    rec('frame /', 'a device frame carries neither lamp nor sheen',
+      frame.before === 'none' && frame.after === 'none',
+      `${frame.sig}: ::before=${frame.before} (the pointer lamp) and ::after=${frame.after} (the sheen), both cancelled at doubled specificity in surfaces.css`);
+  }
+
+  /* ── AND THE CLOSING CARD, THE SECOND DELIBERATE OPT-OUT ─────────────────
+   *
+   * Owner, 2026-09-06, twice: "why you have added mouse point focus on CTA?"
+   * and, after a fix aimed at the wrong switch, "i can still see mouse focus
+   * animation when i hoover in CTA bottom in home page". The closing block is
+   * panel-sized, so the sheen band is about 2,560px of light crossing a
+   * 1,280px card, and the lamp is a 420px wash following the cursor across the
+   * one element on the page that is asking for something.
+   *
+   * `::before` IS ASSERTED DIFFERENTLY FROM THE FRAME'S, and that is the point
+   * of checking it here rather than trusting the exclusion. This card draws its
+   * travelling edge light on `.fc::before` in styles/effects.css, and the lamp
+   * was landing on the same pseudo-element of the same element and winning on
+   * specificity. So the test is not "nothing is there": it is that the sheen is
+   * gone AND the edge light is back. A conic gradient in the background image
+   * is the edge light; a radial one would be the lamp returning. */
+  const closing = await page.evaluate(() => {
+    const el = document.querySelector('.fc.surface');
+    if (!el) return null;
+    const b = getComputedStyle(el, '::before');
+    return {
+      sig: `${el.tagName.toLowerCase()}.${[...el.classList].filter((c) => !/^astro-/.test(c)).join('.')}`,
+      after: getComputedStyle(el, '::after').content,
+      beforeImage: b.backgroundImage.slice(0, 40),
+    };
+  });
+  if (!closing) {
+    preflight.push('closing card: no .fc.surface on / to check the cancelled sheen against');
+  } else {
+    rec('closing /', 'the closing card carries no sheen',
+      closing.after === 'none',
+      `${closing.sig}: ::after=${closing.after}`);
+    rec('closing /', 'and its edge light is what is on ::before, not the lamp',
+      /conic-gradient/.test(closing.beforeImage),
+      `::before background-image starts "${closing.beforeImage}" — conic is the travelling edge in effects.css, radial would be the pointer lamp back on top of it`);
+  }
+}
+
 /* ── THE TWO LAYERS ON ONE CONTROL ──────────────────────────────────────────
  *
  * styles/effects.css draws the CTA pulse on `.fc .btn--primary::before` and
@@ -748,13 +836,18 @@ for (const route of CARD_ROUTES) {
   await open(rpage, route);
   const target = await rpage.evaluate(
     ([minW, minH]) => {
-      const el = [...document.querySelectorAll('.surface')].find((e) => {
+      /* NOT `.surface--frame` AND NOT `.fc`. Both cancel the lamp and the
+         sheen on an owner decision, so neither is a card for this purpose, and
+         the two checks below drive one of each directly to prove the cancels
+         are still there. A probe that merely skipped them would go quiet the
+         day somebody deleted a cancel. */
+      const el = [...document.querySelectorAll('.surface:not(.surface--frame, .fc)')].find((e) => {
         const r = e.getBoundingClientRect();
         return r.width >= minW && r.height >= minH;
       });
       if (!el) return null;
       el.setAttribute('data-sheen-probe', '');
-      el.scrollIntoView({ block: 'center' });
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
       return { sig: `${el.tagName.toLowerCase()}.${[...el.classList].filter((c) => !/^astro-/.test(c)).join('.')}` };
     },
     [MIN_CARD.w, MIN_CARD.h],
@@ -807,7 +900,7 @@ for (const route of CARD_ROUTES) {
     const el = document.querySelector('main .btn--primary');
     if (!el) return null;
     el.setAttribute('data-sheen-probe', '');
-    el.scrollIntoView({ block: 'center' });
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
     return { sig: [...el.classList].filter((c) => !/^astro-/.test(c)).join('.') };
   });
   if (!found) {

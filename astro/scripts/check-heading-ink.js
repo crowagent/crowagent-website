@@ -190,7 +190,7 @@ const FIND = `(() => {
     const painted = cs.backgroundImage && cs.backgroundImage !== 'none';
     if (!clipped || !painted) continue;
     el.setAttribute('data-ink-probe', '');
-    el.scrollIntoView({ block: 'center' });
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
     const r = el.getBoundingClientRect();
     /* A SEGMENT THAT PAINTS ITSELF IS A SECOND TREATMENT AND IS NOT MEASURED
        HERE. The homepage hero sets "Get paid." in the teal-to-violet spectrum,

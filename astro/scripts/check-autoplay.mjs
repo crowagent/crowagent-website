@@ -34,19 +34,38 @@
  * reader then finds does nothing. Under reduced motion the button must be
  * absent or hidden.
  *
- * ── WHY IT DRIVES BOTH COMPONENTS ───────────────────────────────────────────
+ * ── WHICH TWO COMPONENTS, AND WHY THE ANSWER CHANGED ON 2026-09-06 ─────────
  *
- * The product tab switcher and the trust band are separate implementations of
- * the same idea, added within hours of each other, and the band's rules are
- * deliberately NOT identical to the switcher's — a band has no "choice" to
- * make, so rule 3 does not apply to it. Checking one and assuming the other is
- * how the second one drifts.
+ * This file drove `#product` (a tab switcher) and `#integrations .in__track`
+ * (a trust band) until the homepage was rebuilt. Neither element exists on /
+ * any more, and a gate whose selectors match nothing does not pass — it stops
+ * measuring, which is the failure mode this repo names "a control that reaches
+ * nothing". Re-pointed, at the two things that actually move on their own now:
  *
- * Timings are generous on purpose: the switcher's interval is six seconds and
- * the band's is its own, so a 14s observation window catches a single advance
- * with room to spare, and a 16s window after an interaction is more than two
- * intervals. Slow, and that is the right trade for a gate that has to be
- * believed.
+ *   the hero workbench (`.hmt`)   four rule-engine samples, a 7s dwell each,
+ *                                 stopping for good at the reader's own tab
+ *   the connector band (`#integrations .h2mq__track`)   about 36px/s, endless
+ *
+ * The band's rules are deliberately NOT identical to the workbench's: a band
+ * presents no choice, so rule 3 does not apply to it. Checking one and assuming
+ * the other is how the second one drifts.
+ *
+ * THE WORKBENCH IS RADIO-DRIVEN, NOT A TABLIST, so its selected state is read
+ * from `input.hmt__radio:checked` rather than from `aria-selected`. That is a
+ * fact about the component, not a weakening: the radio IS the state, the CSS
+ * paints from `:checked`, and a screen reader is told about it as a radio
+ * group. Reading a `[role=tab]` that does not exist would report null forever.
+ *
+ * FOCUS IS DROPPED AFTER PRESSING EITHER CONTROL, and that matters. Both
+ * components also suspend on `:focus-within`, so the click that presses pause
+ * would suspend them by itself and the check would pass while the button did
+ * nothing at all. Blurring first means what is measured afterwards is the
+ * button's own mechanism and not a side effect of having clicked something.
+ *
+ * Timings are generous on purpose: the workbench's dwell is seven seconds, so
+ * a 14s observation window catches an advance with room to spare, and a 16s
+ * window after an interaction is more than two intervals. Slow, and that is
+ * the right trade for a gate that has to be believed.
  *
  * Exit 0 clean, 1 on any failure. Reads dist/, so build first.
  */
@@ -91,17 +110,27 @@ const check = (name, ok, detail) => {
 
 const browser = await chromium.launch();
 
-/* The selected index of a tablist, which is the state autoplay changes. Read
-   from aria-selected rather than from a class, because aria-selected is what a
-   screen reader is told and a class is only what the paint uses. */
-const selectedIndex = (page, scope) =>
+/* The checked index of a radio group, which is the state the workbench's
+   autoplay changes. `:checked` is the state itself rather than a paint of it. */
+const checkedIndex = (page, scope) =>
   page.evaluate((s) => {
-    const list = document.querySelector(`${s} [role="tablist"]`);
-    if (!list) return null;
-    return [...list.querySelectorAll('[role="tab"]')].findIndex(
-      (t) => t.getAttribute('aria-selected') === 'true',
-    );
+    const radios = [...document.querySelectorAll(`${s} .hmt__radio`)];
+    if (!radios.length) return null;
+    return radios.findIndex((r) => r.checked);
   }, scope);
+
+/* Press a control, then take focus off it, so what follows measures the
+   control's own mechanism rather than the `:focus-within` suspension that any
+   click inside either component also triggers. */
+const pressAndBlur = (page, sel) =>
+  page.evaluate((s) => {
+    const el = document.querySelector(s);
+    if (!el) return null;
+    el.click();
+    const pressed = el.getAttribute('aria-pressed');
+    el.blur();
+    return pressed;
+  }, sel);
 
 const pauseControl = (page, sels) =>
   page.evaluate((s) => {
@@ -180,20 +209,21 @@ const open = async (reducedMotion) => {
   return page;
 };
 
-const PAUSE_SEL = '#product .tabsw__pause, #product [data-pause], #product button[aria-pressed]';
-const BAND_PAUSE_SEL = '#integrations [data-band-pause], #integrations .in__pause';
+const HMT = '.hmt';
+const PAUSE_SEL = '.hmt [data-hmt-stop]';
+const BAND_TRACK = '#integrations .h2mq__track';
+const BAND_PAUSE_SEL = '#integrations [data-mq-pause]';
 
 console.log('autoplay: driving the two autoplaying components on / and reading what they do');
 
-/* ── 1. THE PRODUCT TAB SWITCHER ─────────────────────────────────────────── */
-console.log('\n  the product tab switcher (#product)');
+/* ── 1. THE HERO WORKBENCH ─────────────────────────────────────────────── */
+console.log('\n  the hero workbench (.hmt)');
 {
   const page = await open('reduce');
-  await page.evaluate(() => document.querySelector('#product')?.scrollIntoView());
-  const before = await selectedIndex(page, '#product');
-  check('a tablist is present to measure', before !== null && before >= 0, `selected=${before}`);
+  const before = await checkedIndex(page, HMT);
+  check('a sample group is present to measure', before !== null && before >= 0, `checked=${before}`);
   await page.waitForTimeout(14000);
-  const after = await selectedIndex(page, '#product');
+  const after = await checkedIndex(page, HMT);
   check('does not advance under prefers-reduced-motion', before === after, `${before} -> ${after}`);
   const btn = await pauseControl(page, PAUSE_SEL);
   check(
@@ -205,10 +235,9 @@ console.log('\n  the product tab switcher (#product)');
 }
 {
   const page = await open('no-preference');
-  await page.evaluate(() => document.querySelector('#product')?.scrollIntoView());
-  const before = await selectedIndex(page, '#product');
+  const before = await checkedIndex(page, HMT);
   await page.waitForTimeout(14000);
-  const after = await selectedIndex(page, '#product');
+  const after = await checkedIndex(page, HMT);
   check('advances when motion is allowed', before !== after, `${before} -> ${after}`);
   const btn = await pauseControl(page, PAUSE_SEL);
   check('has a visible pause control (WCAG 2.2.2)', !!btn && !btn.hidden, JSON.stringify(btn));
@@ -223,43 +252,61 @@ console.log('\n  the product tab switcher (#product)');
   /* PRESS IT. The whole reason this file exists is that finding the control in
      the DOM proved nothing the last time somebody checked. */
   const page = await open('no-preference');
-  await page.evaluate(() => document.querySelector('#product')?.scrollIntoView());
   await page.waitForTimeout(1500);
-  const pressed = await page.evaluate((s) => {
-    const el = document.querySelector(s);
-    if (!el) return null;
-    el.click();
-    return el.getAttribute('aria-pressed');
-  }, PAUSE_SEL);
-  const before = await selectedIndex(page, '#product');
+  const pressed = await pressAndBlur(page, PAUSE_SEL);
+  const before = await checkedIndex(page, HMT);
   await page.waitForTimeout(16000);
-  const after = await selectedIndex(page, '#product');
-  check('pressing pause actually stops it', pressed !== null && before === after, `aria-pressed=${pressed}, ${before} -> ${after}`);
+  const after = await checkedIndex(page, HMT);
+  check(
+    'pressing pause actually stops it',
+    pressed !== null && before === after,
+    `aria-pressed=${pressed}, ${before} -> ${after}`,
+  );
+  await page.close();
+}
+{
+  /* AND PRESS IT AGAIN. A stop a reader cannot undo strands them on whichever
+     sample happened to be showing when they pressed it, so the control is a
+     toggle and the tour has to genuinely restart. */
+  const page = await open('no-preference');
+  await page.waitForTimeout(1500);
+  await pressAndBlur(page, PAUSE_SEL);
+  const resumed = await pressAndBlur(page, PAUSE_SEL);
+  const before = await checkedIndex(page, HMT);
+  await page.waitForTimeout(14000);
+  const after = await checkedIndex(page, HMT);
+  check(
+    'pressing it again resumes the tour',
+    resumed === 'false' && before !== after,
+    `aria-pressed=${resumed}, ${before} -> ${after}`,
+  );
   await page.close();
 }
 {
   const page = await open('no-preference');
-  await page.evaluate(() => document.querySelector('#product')?.scrollIntoView());
   await page.evaluate(() => {
-    [...document.querySelectorAll('#product [role="tab"]')][1]?.click();
+    const tab = [...document.querySelectorAll('.hmt__tab')][1];
+    if (tab) tab.click();
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
   });
-  const picked = await selectedIndex(page, '#product');
+  const picked = await checkedIndex(page, HMT);
   await page.waitForTimeout(16000);
-  const after = await selectedIndex(page, '#product');
+  const after = await checkedIndex(page, HMT);
   check('stops permanently once a reader picks a tab', picked === after, `${picked} -> ${after}`);
   await page.close();
 }
 
-/* ── 2. THE TRUST BAND ───────────────────────────────────────────────────────
+/* ── 2. THE CONNECTOR BAND ───────────────────────────────────────────────────────
  * Rule 3 does NOT apply here and that is deliberate rather than an omission: a
  * band presents no choice, so there is no explicit choice for it to respect.
  * Rules 1, 2 and the implied fourth all do. */
-console.log('\n  the trust band (#integrations)');
+console.log('\n  the connector band (#integrations)');
 {
   const page = await open('reduce');
-  await page.evaluate(() => document.querySelector('#integrations')?.scrollIntoView());
+  await page.evaluate(() => document.querySelector('#integrations')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await page.waitForTimeout(2000);
-  const moved = await travel(page, '#integrations .in__track');
+  const moved = await travel(page, BAND_TRACK);
   check('does not travel under prefers-reduced-motion', moved < 1, `moved ${moved}px in 1200ms`);
   const btn = await pauseControl(page, BAND_PAUSE_SEL);
   check(
@@ -271,9 +318,9 @@ console.log('\n  the trust band (#integrations)');
 }
 {
   const page = await open('no-preference');
-  await page.evaluate(() => document.querySelector('#integrations')?.scrollIntoView());
+  await page.evaluate(() => document.querySelector('#integrations')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await page.waitForTimeout(2500);
-  const moved = await travel(page, '#integrations .in__track');
+  const moved = await travel(page, BAND_TRACK);
   check('travels when motion is allowed', moved > 10, `moved ${moved}px in 1200ms`);
   const btn = await pauseControl(page, BAND_PAUSE_SEL);
   check('has a visible pause control (WCAG 2.2.2)', !!btn && !btn.hidden, JSON.stringify(btn));
@@ -282,17 +329,12 @@ console.log('\n  the trust band (#integrations)');
     !!btn && btn.w >= 24 && btn.h >= 24,
     btn ? `${btn.w}x${btn.h}` : 'n/a',
   );
-  const pressed = await page.evaluate((s) => {
-    const el = document.querySelector(s);
-    if (!el) return null;
-    el.click();
-    return el.getAttribute('aria-pressed');
-  }, BAND_PAUSE_SEL);
+  const pressed = await pressAndBlur(page, BAND_PAUSE_SEL);
   /* 400ms of settle against a measured 100ms stop: four times the observed
      worst case, because this runs inside a full build where everything is
      slower, and a gate that flakes under load is a gate people learn to
      re-run rather than believe. */
-  const after = await travel(page, '#integrations .in__track', 1200, 400);
+  const after = await travel(page, BAND_TRACK, 1200, 400);
   check(
     'pressing pause actually stops it',
     pressed !== null && after < 1,
@@ -317,6 +359,6 @@ if (failures.length) {
 }
 console.log(
   '\n  both autoplaying components stay still for a reader who asked for no motion,\n' +
-    '  offer a pause that genuinely pauses, and the tab switcher stops for good the\n' +
-    '  moment a reader chooses for themselves',
+    '  offer a pause that genuinely pauses and can be undone, and the workbench stops\n' +
+    '  for good the moment a reader chooses for themselves',
 );
