@@ -147,6 +147,10 @@ const GATES = [
   { name: 'check-shared-blocks', cmd: node, args: ['scripts/check-shared-blocks.js'] },
   { name: 'check-breadcrumbs', cmd: node, args: ['scripts/check-breadcrumbs.js'] },
   { name: 'check-sheen', cmd: node, args: ['scripts/check-sheen.js'] },
+  /* Local certification only, deliberately NOT in `build:deploy`. It drives a
+     browser, so it belongs with the other browser gates on a developer
+     machine rather than in the Cloudflare chain. */
+  { name: 'check-app-contrast', cmd: node, args: ['scripts/check-app-contrast.js'] },
   { name: 'check-status-pulse', cmd: node, args: ['scripts/check-status-pulse.mjs'] },
   /* Directly before check-budgets, because the two are halves of one answer
      about the fonts: check-budgets says how many bytes they cost and this says
