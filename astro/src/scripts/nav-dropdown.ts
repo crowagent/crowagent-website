@@ -45,6 +45,9 @@ function initDropdown(dropdown: HTMLElement) {
 
   let isOpen = false;
   let closeTimer: number | undefined;
+  /* Whether the panel currently open was opened by the pointer arriving
+     rather than by a click or a key. See the click handler. */
+  let openedByHover = false;
 
   function items(): HTMLElement[] {
     return Array.from(panel!.querySelectorAll<HTMLElement>('.ca-mega-item'));
@@ -188,6 +191,8 @@ function initDropdown(dropdown: HTMLElement) {
   function setOpen(open: boolean) {
     const changed = open !== isOpen;
     isOpen = open;
+    /* The flag describes the panel that is open now, so it cannot outlive it. */
+    if (!open) openedByHover = false;
     dropdown.dataset.open = open ? 'true' : 'false';
     trigger!.setAttribute('aria-expanded', open ? 'true' : 'false');
     /* Only on the closed -> open edge. mouseenter and click both call this with
@@ -214,8 +219,34 @@ function initDropdown(dropdown: HTMLElement) {
     if (returnFocus) trigger!.focus();
   }
 
+  /*
+   * WHY A POINTER CLICK ON AN ALREADY-HOVERED TRIGGER DOES NOT TOGGLE.
+   *
+   * The same sequence that made this menu unopenable by touch has a quieter
+   * form on the desktop, and the hover gate below does not reach it. Moving a
+   * mouse onto the trigger fires mouseenter and opens the panel, so the click
+   * that follows arrives with the menu ALREADY open and shuts it. The reader
+   * pressed the button that says "Products" and the products went away.
+   *
+   * Worse than the flicker is where it leaves them: mouseenter has already
+   * fired, so with the pointer still resting on the trigger there is no event
+   * left to reopen it. Measured 2026-09-07 by driving the real control: the
+   * pointer arrives and aria-expanded goes true, the click puts it back to
+   * false, and jiggling the pointer on the trigger leaves it false. They have
+   * to click a second time or leave and come back.
+   *
+   * So a pointer click is allowed to CONFIRM a hover-opened menu rather than
+   * undo it, once. `detail > 0` is what separates the two paths: a click
+   * synthesised from Enter or Space carries detail 0, so the keyboard keeps
+   * toggling and the button keeps the disclosure semantics its aria-expanded
+   * promises. Clearing the flag means a second deliberate click still closes.
+   */
   trigger.addEventListener('click', (e) => {
     e.preventDefault();
+    if (e.detail > 0 && isOpen && openedByHover) {
+      openedByHover = false;
+      return;
+    }
     // Reading the flag rather than the DOM. Deriving state from a class the
     // CSS also reacts to is what made the old version unclosable.
     setOpen(!isOpen);
@@ -293,6 +324,7 @@ function initDropdown(dropdown: HTMLElement) {
   if (canHover) {
     dropdown.addEventListener('mouseenter', () => {
       window.clearTimeout(closeTimer);
+      if (!isOpen) openedByHover = true;
       setOpen(true);
     });
     dropdown.addEventListener('mouseleave', () => {
