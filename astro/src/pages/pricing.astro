@@ -1498,6 +1498,53 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
   @media (max-width: 767px) {
     .grid--3 { grid-template-columns: minmax(0, 1fr); }
     .bar { justify-content: center; }
+
+    /*
+     * A-259: THE BAR STOPS BEING STICKY ON A PHONE, BECAUSE TWO STACKED STICKY
+     * BARS TAKE A FIFTH OF THE WINDOW ON THE ONE PAGE A READER IS COMPARING
+     * CARDS ON.
+     *
+     * MEASURED on the built page, scrolled to 1500px with everything docked:
+     *
+     *   390x844  iPhone 13      nav 73 + bar 116 = 189px, 22.4% of the window
+     *   360x800  small android  nav 73 + bar 116 = 189px, 23.6%
+     *   430x932  Pro Max        nav 73 + bar 116 = 189px, 20.3%
+     *   768x1024 iPad portrait  nav 73 + bar  60 = 133px, 13.0%
+     *   1440x900 laptop         nav 73 + bar  60 = 133px, 14.8%
+     *
+     * THE CAUSE IS THE WRAP, NOT THE BAR. `.bar` is a wrapping flex row
+     * carrying the audience switch and the billing switch. Swept across widths,
+     * it is 60px on one line at 600px and above and 116px on two lines below
+     * that, so the phone pays for a second row that no wider window does. The
+     * defect is entirely the difference between those two numbers.
+     *
+     * WHY `static` AND NOT A CONDENSER. A script that shrinks the bar on scroll
+     * is exactly the third of the three scripts this page deleted, and the
+     * header at the top of this file states the rule it would break: nothing on
+     * this page depends on JavaScript to be readable. A media query costs no
+     * script and cannot fail to run.
+     *
+     * WHY 767 AND NOT THE 600 THE MEASUREMENT POINTS AT. 767px is already this
+     * file's narrow breakpoint, immediately above, so no new number enters the
+     * page. It is also a SUPERSET of the wrap region, which is the safer side to
+     * be wrong on: the exact wrap width is a function of the two controls' own
+     * content, so a label gaining a word would walk a 599px cut-off straight
+     * past the defect while this one still covers it. Between 600 and 767 the
+     * bar is a single row and the stack is 133px, the same figure the laptop
+     * carries, so nothing in that range is worse off than a desktop reader.
+     *
+     * WHAT IS NOT LOST. The nav stays sticky, so navigation is untouched. Both
+     * controls are still the first thing under the header, where a reader looks
+     * for them, and they scroll away with the rest of the page instead of being
+     * held over the cards. The billing toggle remains a real checkbox driving
+     * CSS, so it keeps working with no script, and nothing here touches the
+     * accessibility tree. `top` and `z-index` on the base rule go inert with
+     * `position: static` rather than needing to be unset.
+     *
+     * Guarded by scripts/check-sticky-budget.js, which measures the docked
+     * stack as a share of the window rather than trusting this rule to exist.
+     */
+    .bar { position: static; }
   }
 
   /* `.cmp__more > summary::after` left this list with the mark itself, A-65:
