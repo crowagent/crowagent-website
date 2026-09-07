@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T00:00:27.809Z",
+  "updated": "2026-09-07T08:53:05.565Z",
   "release": "2.8.2",
   "note": "DERIVED, not authored. Generated from RELEASE-2.8.2-TRACKER.md and RELEASE-2.8.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement, and this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
@@ -9,12 +9,12 @@
     "crowagent-platform/docs/release-2.8.2/PHASE-ASSIGNMENT-*.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-09-07T00:00:27.714Z",
-    "sourceFingerprint": "103:1469667968",
+    "generatedAt": "2026-09-07T08:52:59.676Z",
+    "sourceFingerprint": "104:400820504",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 103,
+    "totalRaised": 104,
     "done": 16,
-    "remaining": 87,
+    "remaining": 88,
     "phases": {
       "1": {
         "items": 0,
@@ -57,8 +57,8 @@
         "onHold": 0
       },
       "6": {
-        "items": 87,
-        "open": 22,
+        "items": 88,
+        "open": 23,
         "built": 65,
         "wip": 0,
         "decision": 0,
@@ -205,7 +205,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 87,
+        "items": 88,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -1317,7 +1317,18 @@
       "changed": null,
       "status": "OPEN",
       "title": "[SEV:P2][LANE:PORTAL] the agent fleet is a three entry literal against a ten row registry, and the test surface bills real calls for assertions that do not match the agent",
-      "note": "FLEET_AGENTS is a THREE entry literal while agent_registry holds TEN, and four sibling pages offer a picker of all ten, so the fleet view and its own siblings disagree about what exists. The single execution row on production belongs to chief-of-staff, which is not in the literal, so it renders on no card. agents/fleet/route.ts contradicts itself in its own comments, saying three at line 3 and \"the 12 idle agents\" at line 114, which is a third number. SEPARATELY AND IT COSTS MONEY: /portal/agents/tests runs four HARDCODED test cases, energy payback and social value narrative assertions, that DO NOT VARY WITH THE AGENT SELECTED. Choose the Legal Agent and it is asked for a payback period, fails, and a rejected row with a confidence score lands in agent_execution_log from a real billed Anthropic call. ai_calls shows 2 runs ever, both 2026-06-05, so this has barely been used, which is the only reason it has not cost more. ALSO /portal/agents/governance opens on a tab that is a nine row literal of thresholds (\"Minimum Confidence 0.80, Block output if below\") that ENFORCE NOTHING, sitting one tab away from a genuinely careful probe surface, so proximity to an honest control lends the literals credibility they have not earned."
+      "note": "WITHDRAWN, AND I REPORTED IT TO THE OWNER BEFORE IT WAS WITHDRAWN. I called this unreconciled drift. IT IS NOT DRIFT: two migrations reconcile the two deliberately and the arithmetic is EXACT, 3 fleet plus 1 orchestrator plus 6 document generation equals 10. The agent caught its own error, and because I had already committed its mid flight draft the wrong finding sat in HEAD until this correction. THE NARROWER DEFECT THAT SURVIVES: the three agent pickers offer all ten rows UNDIFFERENTIATED, including three the registry marks phase2_locked, so an operator can select an agent the registry says is unavailable. The withdrawn claim follows for the record. FLEET_AGENTS is a THREE entry literal while agent_registry holds TEN, and four sibling pages offer a picker of all ten, so the fleet view and its own siblings disagree about what exists. The single execution row on production belongs to chief-of-staff, which is not in the literal, so it renders on no card. agents/fleet/route.ts contradicts itself in its own comments, saying three at line 3 and \"the 12 idle agents\" at line 114, which is a third number. SEPARATELY AND IT COSTS MONEY: /portal/agents/tests runs four HARDCODED test cases, energy payback and social value narrative assertions, that DO NOT VARY WITH THE AGENT SELECTED. Choose the Legal Agent and it is asked for a payback period, fails, and a rejected row with a confidence score lands in agent_execution_log from a real billed Anthropic call. ai_calls shows 2 runs ever, both 2026-06-05, so this has barely been used, which is the only reason it has not cost more. A LEAD FROM THE SAME AUDIT, CHASED AND CLEARED rather than left open: the agent migrations name their staging target as the project that ran out of disk and was DELETED, rebuilt on 2026-07-18. If that reference were EXECUTABLE, staging would answer queries with empty results rather than errors, and any suite green against it would be asserting nothing. MEASURED: the dead id appears in 84 files, ALL under"
+    },
+    {
+      "id": "R282-ESOURCING-URL-FIELD-SKIPS-THE-GUARD-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:SECURITY] two routers validate a user supplied URL and the newest one does not",
+      "note": "VERIFIED MYSELF. Three routers in this repository accept a URL from a caller. api/app/routers/webhooks.py:189 and api/app/routers/zapier.py:227 BOTH attach a field_validator calling assert_safe_external_url. api/app/routers/crowmark_esourcing.py:257 validates portal_base_url with max_length=500 AND NOTHING ELSE, and that field has a LIVE INPUT PATH from web/src/features/crowmark/esourcing/api.ts:30. The value is stored at :358 and the connector layer carries a base_url_field concept, so a fetch against it is plausible. EXPLOITABILITY TODAY IS UNVERIFIED AND SAID SO RATHER THAN ASSUMED: the table holds zero rows and I did not trace an end to end fetch of the STORED value. THE FINDING IS THE INCONSISTENCY, NOT THE EXPLOIT. Two routers remembered the validator and the newest one did not, which is the strongest possible argument that an egress guard must be an ENFORCED DEFAULT rather than something each route remembers to call. It is the same shape as R282-SSRF-GUARD-HAS-NO-CONSUMER-01, where a complete guard sits unused in web/, and the same shape as the portal's single Supabase client serving nine grant paths. A rule that depends on memory has already failed once here. Fix with the guard promotion rather than by patching this one field."
     },
     {
       "id": "R282-E2E-SECOND-PASS-FOREGROUND-01",
