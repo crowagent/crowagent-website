@@ -345,7 +345,30 @@ import Button from '../ui/Button.astro';
           message: valueOf('cp-msg'),
           turnstile_token: tsToken,
         }),
-        signal: AbortSignal.timeout(10000),
+        /*
+         * [A-265 2026-09-08] 10s WAS SHORTER THAN A SUCCESSFUL SUBMISSION.
+         *
+         * MEASURED ON PRODUCTION, not reasoned about. After the Turnstile
+         * secret was corrected, a real submission from a real browser showed
+         * "Something went wrong" while the server logged
+         * `POST /api/contact/submit 200`. The enquiry WAS accepted. The client
+         * had already aborted at 10s and shown a failure for work that
+         * succeeded, which is the worst shape a form can fail in: the reader
+         * gives up or sends again, and a duplicate is the best case.
+         *
+         * WHY THIS ROUTE IS SLOW, and why 10s was never enough headroom. It
+         * does three things in series after the token arrives: Cloudflare
+         * /siteverify, a Supabase insert, and a Brevo send. Warm, siteverify
+         * alone measured 0.3-1.0s across three probes, so the tail is the
+         * other two plus any cold start.
+         *
+         * 30s is chosen against the SERVER's own ceiling rather than picked as
+         * a round number: the function may run to the platform limit, and a
+         * client that gives up first converts a slow success into a reported
+         * failure. Erring long costs a reader a few more seconds of a spinner
+         * they can see. Erring short costs the enquiry.
+         */
+        signal: AbortSignal.timeout(30000),
       })
         .then((r) => {
           if (!r.ok) throw new Error(String(r.status));

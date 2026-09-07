@@ -358,7 +358,13 @@ const PARTNER_TYPES = [
             form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ||
             null,
         }),
-        signal: AbortSignal.timeout(10000),
+        /* [A-265 2026-09-08] 30s, for the reason measured on the contact form:
+           a real submission there returned 200 on the server while the reader
+           was shown a failure, because the client aborted at 10s. This form
+           posts to the Railway API, which does its own Turnstile check and its
+           own persistence, so it carries the same tail risk. The three forms
+           keep one number so the next person changes one thing. */
+        signal: AbortSignal.timeout(30000),
       })
         .then((r) => {
           // Success ONLY on a 2xx. A non-2xx (422 validation, 429 rate limit,
