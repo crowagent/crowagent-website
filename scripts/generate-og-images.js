@@ -175,8 +175,55 @@ function loadBuiltPages(repoRoot) {
         "Build it first:  cd astro && npm run build:deploy",
     );
   }
-  const routes = listBuiltPages(dist).filter((r) => !EXCLUDED_ROUTES.includes(r));
-  if (routes.length === 0) {
+  const allRoutes = listBuiltPages(dist).filter((r) => !EXCLUDED_ROUTES.includes(r));
+
+  /*
+   * ── ONLY RENDER CARDS THE SITE ACTUALLY ASKS FOR (A-262, 2026-09-07) ──────
+   *
+   * This used to render one card per built route. Measured on 2026-09-07: 46
+   * built pages produced 60 files in Assets/og and the shipped HTML referenced
+   * FIVE of them. Every other page carries SITE.defaultOgImage, one shared
+   * card at /Assets/og-image.png, so 55 files were output nobody consumed.
+   *
+   * Deleting them was not enough on its own. The next `npm run build:og` would
+   * have put them straight back, which is the definition of a cleanup that
+   * does not hold. So the generator now derives its work from DEMAND rather
+   * than from the route list: a card is rendered when a built page actually
+   * references `/Assets/og/<slug>.png`. Wire a page up to its own card in
+   * astro/src and the card appears on the next run. Take the reference away
+   * and it stops being generated, instead of quietly accumulating.
+   *
+   * THE REFERENCE IS READ FROM THE BUILT HTML, not from a list kept here. A
+   * list would be a second copy of a fact astro/src already states, and would
+   * drift the first time a page changed its mind.
+   */
+  const wanted = new Set();
+  for (const route of allRoutes) {
+    const html = fs.readFileSync(path.join(dist, route), "utf8");
+    for (const m of html.matchAll(/\/Assets\/og\/([A-Za-z0-9._-]+)\.png/g)) {
+      wanted.add(m[1]);
+    }
+  }
+  const routes = allRoutes.filter((r) => wanted.has(routeToSlug(r)));
+
+  /* A route can reference a card whose slug belongs to no built route, which
+     would be a card nothing can render and a broken og:image on a live page. */
+  const renderable = new Set(allRoutes.map((r) => routeToSlug(r)));
+  const orphans = [...wanted].filter((s) => !renderable.has(s));
+  if (orphans.length) {
+    throw new Error(
+      `Built pages reference ${orphans.length} card(s) with no route to render them: ` +
+        `${orphans.join(", ")}. Either the slug is wrong in astro/src or the page that ` +
+        "would own the card is not being built. Both ship a broken og:image.",
+    );
+  }
+
+  /* THE EMPTY CHECK MOVED TO `allRoutes`, AND THE DISTINCTION MATTERS. A build
+     that produced no HTML is a broken build and still throws here. Zero cards
+     WANTED is a different thing entirely and is legitimate: it means every page
+     is content with SITE.defaultOgImage. Throwing on that would fail a healthy
+     site, which is the failure mode this file exists to avoid. */
+  if (allRoutes.length === 0) {
     throw new Error(
       `${DIST_LABEL} exists but contains no .html files. A half-written or wiped build ` +
         "renders nothing while looking like a success. Rebuild:  cd astro && npm run build:deploy",
@@ -956,22 +1003,33 @@ async function main() {
     process.exit(2);
   }
 
-  // ── ASSERTION 2: the page count is the route count.
+  // ── ASSERTION 2: the page count is the count of cards the SITE ASKS FOR.
   //
-  // loadBuiltPages already refuses a duplicate slug and an untitled page, so this
-  // is the outer statement of the same contract: what got processed equals what
-  // was found. A generator that quietly emits fewer cards than there are pages is
-  // the failure this file exists to make impossible, and it never announces
-  // itself. The old run printed "Complete" with a total of whatever it happened
-  // to find.
-  const routeCount = listBuiltPages(path.join(repoRoot, DIST_RELATIVE)).filter(
-    (r) => !EXCLUDED_ROUTES.includes(r),
-  ).length;
-  if (pages.length !== routeCount) {
-    structuredLog("error", "Page count does not match the built route count", {
+  // [A-262 2026-09-07] This compared against the BUILT ROUTE COUNT, because the
+  // generator used to render one card per route. It no longer does: it renders
+  // what a built page actually references, so 45 routes wanting 5 cards is the
+  // correct state and the old form failed it, 5 against 45.
+  //
+  // THE CONTRACT IS UNCHANGED IN SUBSTANCE, only its denominator moved. What got
+  // processed must equal what was asked for. A generator that quietly emits
+  // fewer cards than were requested is still the failure this file exists to
+  // make impossible, and it still never announces itself. Counting demand rather
+  // than routes keeps that guarantee while letting the output set shrink to what
+  // is consumed.
+  const distDir = path.join(repoRoot, DIST_RELATIVE);
+  const wantedCount = (() => {
+    const want = new Set();
+    for (const route of listBuiltPages(distDir).filter((r) => !EXCLUDED_ROUTES.includes(r))) {
+      const html = fs.readFileSync(path.join(distDir, route), "utf8");
+      for (const m of html.matchAll(/\/Assets\/og\/([A-Za-z0-9._-]+)\.png/g)) want.add(m[1]);
+    }
+    return want.size;
+  })();
+  if (pages.length !== wantedCount) {
+    structuredLog("error", "Page count does not match the number of cards the built site references", {
       operation: "assert-page-count",
       pages: pages.length,
-      routes: routeCount,
+      wanted: wantedCount,
     });
     process.exit(2);
   }

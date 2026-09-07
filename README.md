@@ -3,66 +3,59 @@
 Marketing site for crowagent.ai, built with Astro and deployed on Cloudflare Pages.
 
 **What ships is the `astro/` tree.** Cloudflare Pages builds it and publishes
-`astro/dist`. The plain HTML files at the repository root (`index.html`,
-`pricing.html`, `blog/*.html` and the rest) are the LEGACY BASELINE. They are
-frozen, nothing serves them, and editing one changes nothing that a visitor sees.
+`astro/dist`.
 
-Verified against production on 2026-09-01:
+There is no longer a second tree. The legacy static site that used to sit at the
+repository root was removed in stages: the HTML on 2026-09-01, then its
+JavaScript, CSS, build pipeline and unreferenced assets on 2026-09-07. If you are
+reading an older note that describes root `index.html`, `styles.css`,
+`scripts.js` or a `js/` directory as a "frozen baseline", that note is stale.
 
-| URL | Status |
+## Layout
+
+| path | what it is |
 |---|---|
-| `https://crowagent.ai/pricing` | 308 to `/pricing/`, which returns 200 |
-| `https://crowagent.ai/pricing.html` | **404** |
-| `https://crowagent.ai/search-index.json` | 200, and that file exists only in the Astro build |
+| `astro/` | the site. Source in `astro/src`, gates in `astro/scripts`, build output in `astro/dist` (gitignored) |
+| `Assets/` | fonts, the shared OG card, blog photography and product screens, copied into the build by `astro/scripts/copy-assets.js` **only where a built page references them** |
+| `_headers`, `_redirects`, `robots.txt`, `llms*.txt` | Cloudflare config and crawler files, copied into the build by `astro/scripts/copy-cf-config.js` |
+| `status/` | the website board, `status/issues.json`, and the architecture views that read it |
+| `tests/` | Playwright specs and the UI audit harness |
+| `scripts/` | the few root tools that still do something: OG card rendering, the release audit, robots verification |
 
-Directory routes and a served `search-index.json` are both Astro build outputs.
-The legacy tree has neither.
+## Build and check
 
-Root `Assets/`, `_headers`, `_redirects`, `robots.txt` and `llms*.txt` are the
-exception: they live at the root but they ARE load bearing. `astro/scripts/copy-assets.js`
-and `astro/scripts/copy-cf-config.js` copy them into `astro/dist` on every build,
-and copy-assets exits 1 on a referenced asset it cannot find.
+Everything that guards what ships lives in `astro/`:
 
-## Development
-
-```bash
-cd astro
-npm install
-npm run dev        # http://localhost:8093
+```
+cd astro && npm ci
+npm run build          # the full gate chain, every gate runs even if one fails
+npm run build:deploy   # what Cloudflare Pages runs
 ```
 
-## Build
+`npm run build` at the repository root deliberately refuses and tells you this.
+So does `npm test`: the jest suite was deleted on 2026-09-07 because every test
+in it loaded the legacy tree. The tests that matter are the gate chain above and
+the Playwright specs (`npx playwright test`).
 
-```bash
-cd astro
-npm run build:deploy   # what Cloudflare Pages runs: guards, type-check, build, emit
-npm run build          # the full local gate chain, roughly 31 steps, for certification
+## Free local audits
+
+These cost no CI minutes and are not wired into any workflow, on purpose:
+
+```
+npm run audit:release   # axe-core over every route, Lighthouse per template
+npm run audit:ui        # the UI audit harness
+npm run build:og:check  # which OG cards the site asks for
 ```
 
-`astro build` WIPES `astro/dist`, so anything that reads the build has to run
-after it.
+## Deploying
 
-## Social cards
+**A push to `main` IS a Cloudflare Pages production deploy.** It needs explicit
+owner approval every time. Verify locally first: the gate chain above is the
+same set of checks, and running it costs nothing.
 
-`scripts/generate-og-images.js` renders `Assets/og/*.png` from the titles and
-descriptions of the BUILT pages in `astro/dist`. It needs the build to exist and
-fails loudly when it does not. Order matters:
+## Open Graph cards
 
-```bash
-cd astro && npm run build:deploy
-cd .. && npm run build:og:force
-cd astro && node scripts/copy-assets.js
-```
-
-## Tests
-
-```bash
-cd astro && npm run build              # the gate chain, the real suite
-npx playwright test tests/smoke.spec.js   # targets astro/dist on :8095
-```
-
-Five Playwright specs still target the legacy root tree on :8092. Its server no
-longer starts by default. Run them with `CA_LEGACY_SERVER=1`.
-
-`npm test` at the root is the jest suite. Its whole coverage floor is four legacy
-root JS files that the built site does not load, so it is no longer a push gate.
+Most pages share one card, `SITE.defaultOgImage`. A page that wants its own
+references `/Assets/og/<slug>.png`, and `scripts/generate-og-images.js` renders
+exactly the cards the built site references, nothing more. Wire a page up in
+`astro/src` and its card appears on the next run.
