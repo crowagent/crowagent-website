@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T08:53:05.565Z",
+  "updated": "2026-09-07T22:17:28.019Z",
   "release": "2.8.2",
   "note": "DERIVED, not authored. Generated from RELEASE-2.8.2-TRACKER.md and RELEASE-2.8.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement, and this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
@@ -9,12 +9,12 @@
     "crowagent-platform/docs/release-2.8.2/PHASE-ASSIGNMENT-*.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-09-07T08:52:59.676Z",
-    "sourceFingerprint": "104:400820504",
+    "generatedAt": "2026-09-07T22:17:27.069Z",
+    "sourceFingerprint": "104:1007839200",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 104,
-    "done": 16,
-    "remaining": 88,
+    "done": 19,
+    "remaining": 85,
     "phases": {
       "1": {
         "items": 0,
@@ -57,14 +57,15 @@
         "onHold": 0
       },
       "6": {
-        "items": 88,
-        "open": 23,
+        "items": 85,
+        "open": 20,
         "built": 65,
         "wip": 0,
         "decision": 0,
         "onHold": 0
       }
-    }
+    },
+    "stale": true
   },
   "legend": {
     "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
@@ -205,7 +206,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 88,
+        "items": 85,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -238,7 +239,8 @@
     {
       "src": "crowagent-platform/scripts/deploy-phase-boundaries-2.8.2.json",
       "why": "No deploy budget has been declared for R2.8.2, so the panel below is the PREVIOUS release's and its spend does NOT apply here. RULE 0-R: the budget resets per release and is not inherited, so R2.8.2 starts at zero spent. Declare this release's boundaries in that file. Until then treat the numbers below as history."
-    }
+    },
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 104:1007839200 vs 105:296707800). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
   ],
   "issues": [
     {
@@ -1183,7 +1185,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0][LANE:BILLING] the Revenue page shows sandbox KPIs and a LIVE revenue chart together under one badge",
       "note": "The KPI cards, events feed and failed payments thread a mode parameter and DEFAULT TO TEST (revenue/page.tsx:263). The panel directly beneath them, \"MRR, 12 months by product\", calls a route that falls back to a summary built from the generic STRIPE_SECRET_KEY with NO mode parameter (lib/api/stripe-client.ts:20). On production that credential's last four characters match STRIPE_SECRET_KEY_LIVE and differ from STRIPE_SECRET_KEY_TEST. So the default view is an amber \"Test mode\" pill over four sandbox cards, with a LIVE ACCOUNT revenue chart underneath. The same defect reaches the Customers page Stripe tile, which has no mode control at all. WHY THIS IS A P0 RATHER THAN A DISPLAY BUG: production cut over to Stripe LIVE on 2026-09-04, so from now on these two halves diverge for real, and the owner reads this screen to know what the business earned. A screen that mixes sandbox and live money under one badge is the worst kind of wrong, because every number on it looks equally confident."
     },
@@ -1293,7 +1295,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0][LANE:PORTAL] publishing a regulation update reports success for an email fan out that is structurally impossible",
       "note": "VERIFIED MYSELF, and it is worse than the report said. apps/portal/src/app/api/regulation-updates/route.ts:93 posts to ${railwayUrl}/api/v1/core/regulatory-update-email. THE CORE ROUTERS WERE DELETED: api/app/main.py:617 mounts only /api/v1/core/zapier under that prefix, so the target is a 404. The call sits in a try whose catch logs and then execution CONTINUES to return NextResponse.json with a published status. AND THE CATCH DOES NOT EVEN FIRE: fetch does NOT throw on a 404, it resolves with ok: false, and the response is never inspected. So the failure is invisible even in the log that was written to catch it. The operator is told the update was published and the emails queued. Nothing was queued and nothing can be. THIS IS WORSE THAN A STUB, because a stub does not assert an outcome. Fix: check res.ok, and report the fan out result separately from the publish result, because a stored update with no email is a legitimate partial outcome that the caller must be told about rather than a success."
     },
@@ -1304,7 +1306,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0][LANE:PORTAL] the MRR snapshot job has reported success 29 times and written zero rows, and every revenue surface reads the result",
       "note": "VERIFIED MYSELF on production cron.job_run_details: portal-mrr-snapshot has 31 runs, 29 marked succeeded, last run 2026-09-06 00:56. portal_mrr_snapshots holds ONE row, captured 2026-03-20, 171 days old. So the job has \"succeeded\" 29 times since August and written NOTHING. THE REASON IS THE TRAP THIS ESTATE HAS HIT BEFORE, recorded in memory as a row failing while its job succeeds: pg_cron marks a run succeeded when net.http_post is ENQUEUED, not when the endpoint answers. The status column is a statement about the queue, not about the work. WHAT READS THIS STALE ROW: the portal overview, the financial analytics MRR trend, the waterfall anchor, the runway and the breakeven. So the one surviving snapshot says £1,240 and 7 active subscriptions, against a Stripe LIVE account holding ZERO subscriptions, and every derived figure inherits it. Combined with R282-PORTAL-MRR-CHART-IS-ONE-NUMBER-TWELVE-TIMES-01, which found the 12 month chart repeating that same single value, the entire revenue picture in the portal descends from one measurement taken in March. Fix: assert the WRITE rather than the dispatch, by checking the row count moved, and surface the snapshot's age on every surface that reads it so a stale figure cannot present as current."
     },
@@ -1384,6 +1386,17 @@
       "status": "BUILT",
       "title": "[SEV:P3][LANE:UX] revision 2 E2E-DEF-009 adding a second bid from a company already bidding is silently refused",
       "note": "THE RULE WAS ALREADY ENFORCED AND THE ENFORCEMENT WAS THE INVISIBLE PART. unscoredSuppliers filtered already bidding suppliers out of the picker, so the company simply VANISHED with no statement that it had, which reads as a broken control. Already bidding suppliers are now listed as DISABLED controls reading \"{name} is already bidding\", and the rule itself is unchanged, the old filter is only renamed to addableSuppliers. Red proof: with the refusal control removed from the render, the test fails with \"Unable to find an accessible element with the role button and name Alpha Grounds Ltd is already bidding\". CAVEAT, stated because it could not be measured: the owner reported \"the option STAYS in the picker\", and the picker's filter did REMOVE already bidding suppliers, so that exact symptom cannot be reproduced from the code. The buyer evaluation picker is the only supplier picker in the tree, confirmed by sweeping app/(dashboard)/buyer and src/features/public-sector for select, option and picker controls, which returns only risk-radar besides it. So the fix satisfies the row's stated remedy on the surface that exists, and if the owner saw this elsewhere that surface has not been found. SEPARATE FINDING while there: evaluation_responses has NO unique constraint (20260530120001_council_foundations.sql:184-186), so the SERVER would happily insert a duplicate bid if a request reached it. The client is the only guard today. Original note follows. Staging, 2026-09-06. The option stays in the picker, the click does nothing, no message appears. Correct rule, invisible enforcement, so the user retries and concludes the button is broken. Remove already bidding suppliers from the picker or show the refusal."
+    },
+    {
+      "id": "R282-BREVO-PRODUCTION-KEY-REVOKED-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P0][LANE:INFRA] the production Brevo REST key is revoked, so every newsletter signup on the website fails",
+      "note": "LIVE ON PRODUCTION, reported by the owner from a Sentry notification at 22:05 on 2026-09-07 and confirmed in Sentry as CROWAGENT-WEB-55, 2 events, first seen 22:02, culprit POST /api/notify. Brevo answers 401 {\"message\":\"Key not found\",\"code\":\"unauthorized\"}. MEASURED, NOT INFERRED, on the parts that could be measured. The Brevo ACCOUNT is healthy: accounts_get_account returns the Crowagent Ltd organisation on the free plan with 298 send credits and the SMTP relay enabled, and lists_get_lists shows list 11 newsletter-subscribers and list 12 Compliance Digest both present. So the account and the lists are fine and the KEY is the fault, which is what Key not found means: the key was deleted or rotated at Brevo and the value on Vercel now names a key that no longer exists. WHAT THE VISITOR SEES, and it is the one good part: web/lib/email/index.ts:122 THROWS on a non 2xx and sendEmail resolves the SAME key through getBrevoApiKey(), so both halves of the route fail, !addedToList && !emailed holds and /api/notify answers 502. NewsletterForm.astro shows a success message only on a 2xx, so the reader gets \"Something went wrong. Please try again, or email hello@crowagent.ai\" rather than a fake confirmation. NOBODY IS BEING SILENTLY DROPPED, which is exactly what the A-263 fix earlier the same day was for. THIS IS A CREDENTIAL AND THEREFORE THE OWNER'S: creating or entering a third party API key is a line I hold. What is needed is one paste. Generate a REST API v3 key at Brevo, SMTP and API then API keys, the xkeysib- form, and set it as BREVO_API_KEY on the Vercel project crowagent-platform-web, then redeploy. Check the Railway service too, since api/notify has a sibling there and the same key broke in both places on 2026-07-03. TWO TRAPS THIS ESTATE HAS ALREADY HIT, do not repeat them: an xsmtp- SMTP key does NOT authenticate /v3/* and 401s exactly like this, and on 2026-07-03 a Stripe sk_live_ key was mis-pasted into this same variable and sent to Brevo as an auth header. "
     }
   ]
 }
