@@ -172,6 +172,30 @@ const LIMITS = [
   'It sends nothing anywhere. The text is read in your browser. There is no account, no email gate and no request to any server.',
 ];
 
+/*
+ * TWO SMALL SHAPES FOR THE REFERENCE SECTIONS BELOW, both derived from the copy
+ * rather than hand-written beside it, so the copy stays the single source.
+ *
+ * `tokens` splits a rule's detail on its double-quoted runs. Every quoted
+ * string in RULES is a literal from a tender document (a trigger phrase, a
+ * clause number, an example sentence), so the split marks what is already
+ * there rather than deciding anything. Odd indices are the quoted parts, which
+ * is a property of String.split with one capture group.
+ *
+ * `claim` takes a limitation's opening sentence as its heading and the rest as
+ * its body. Every entry in LIMITS is already written that way; the split is at
+ * the first full stop followed by a space, and a limitation with no second
+ * sentence simply has no body.
+ */
+const tokens = (text: string) => text.split(/"([^"]*)"/g);
+
+const claim = (text: string) => {
+  const at = text.indexOf('. ');
+  return at < 0
+    ? { head: text, body: '' }
+    : { head: text.slice(0, at + 1), body: text.slice(at + 2) };
+};
+
 const schema = [
   /*
    * WebApplication, matching the calculator's node field for field.
@@ -461,22 +485,43 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
     </p>
   </Section>
 
+  {/* THE COUNT IS READ FROM THE LIST. It said "Four rules" above eleven of
+      them, and had since the section was written, which is the one factual
+      correction in this pass. A number typed beside a list it describes is a
+      number that goes stale the first time somebody adds a rule. */}
   <Section
     eyebrow="Published in full"
     title="What the rules look for."
-    standfirst="Four rules, all deterministic. There is no model, no network call and nothing guessed. Every row the tool produces can be traced back to the characters that triggered it."
+    standfirst={`${RULES.length} rules, all deterministic. There is no model, no network call and nothing guessed. Every row the tool produces can be traced back to the characters that triggered it.`}
     id="rules"
   >
-    <dl class="deflist">
+    {/* A NUMBERED SPECIFICATION, NOT A DEFINITION LIST. `.deflist` is the
+        site's recipe for a term above its prose description, and it stays
+        exactly as it is for the five pages that want that. This is a different
+        object: eleven numbered rules a reader scans to find one, on the shared
+        card recipe so the box, the border and the hover are the site's own.
+
+        <ol>, because the numbers are the point: a rule is cited by its number
+        in the tool's own output, and a reader who has been given "rule 7"
+        should be able to count to it. */}
+    <ol class="rulespec" data-cascade>
       {
-        RULES.map((r) => (
-          <>
-            <dt>{r.term}</dt>
-            <dd>{r.detail}</dd>
-          </>
+        RULES.map((r, i) => (
+          <li class="surface surface--pad surface--row rulespec__rule">
+            <p class="meta rulespec__n">{String(i + 1).padStart(2, '0')}</p>
+            <h3 class="card-h rulespec__h">{r.term}</h3>
+            <p class="rulespec__body">
+              {/* Odd indices are the quoted runs. See `tokens` in the
+                  frontmatter for why that is a property of the split rather
+                  than an assumption about the text. */}
+              {tokens(r.detail).map((part, j) =>
+                j % 2 ? <code class="rulespec__tok">{part}</code> : part,
+              )}
+            </p>
+          </li>
         ))
       }
-    </dl>
+    </ol>
   </Section>
 
   <Section
@@ -485,8 +530,29 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
     standfirst="Written down because a free tool that overstates itself costs more credibility than it earns attention."
     id="limits"
   >
-    <ul class="notes">
-      {LIMITS.map((l) => <li>{l}</li>)}
+    {/* THE CLAIM IS THE HEADING AND THE REASONING IS THE BODY. Six disc
+        bullets running the full column meant a reader had to read all six to
+        find out what the tool will not do. Each entry already opens with that
+        sentence, so the split costs no rewriting and the six claims can now be
+        taken in one pass.
+
+        The mark is the site's refusal ink, which is the same colour the tool
+        itself uses for a figure it will not stand behind. It is decorative and
+        says so: the list is a list, and a screen reader announces it as one
+        without being told about a drawn dash. */}
+    <ul class="limits" data-cascade>
+      {
+        LIMITS.map((l) => {
+          const c = claim(l);
+          return (
+            <li class="surface surface--pad surface--row limits__item">
+              <span class="limits__mark" aria-hidden="true"></span>
+              <p class="limits__h">{c.head}</p>
+              {c.body && <p class="limits__body">{c.body}</p>}
+            </li>
+          );
+        })
+      }
     </ul>
   </Section>
 
@@ -1058,5 +1124,149 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
     .matrix :global(.matrix__row) {
       grid-template-columns: minmax(0, 1fr);
     }
+  }
+
+  /* ── THE RULE SPECIFICATION ─────────────────────────────────────────────
+   *
+   * Eleven rules a reader scans to find one, so: a two-column grid of cards on
+   * a wide screen, one column below it, each card numbered.
+   *
+   * THE BOX IS `.surface` AND NOTHING HERE RESTATES IT. No background, no
+   * border, no radius, no shadow and no hover: styles/surfaces.css owns all
+   * six, and its instructions say a component that restates them is how the
+   * count got to twenty-one. What is local is the grid, the number, and the
+   * measure on the body.
+   *
+   * THE HEADING IS `.card-h`, the recipe in styles/blocks.css that five other
+   * pages take. A rule's name is a card heading like any other. */
+  .rulespec {
+    display: grid;
+    gap: var(--stack-2);
+    margin: var(--stack-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 62rem) {
+    .rulespec {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--stack-2) var(--space-6);
+    }
+  }
+
+  /* LEFT COMES FROM `surface--row`, NOT FROM A LOCAL DECLARATION.
+     surfaces.css names that modifier as "the one opt-out from the centring
+     rule" for a card whose content is columns read down a left edge, and
+     scripts/check-render.js measures for it by name: written locally, the same
+     result is reported as eleven blocks with content off the centre line. The
+     reason still holds either way. The section head is centred and these cards
+     inherited it, which set eleven paragraphs of dense reference prose on a
+     ragged left edge, and a reader tracking a return sweep needs the next line
+     to start where the last one did. */
+  .rulespec__rule {
+    display: grid;
+    /* `start`, for the reason recorded in home2/HowItRuns2.astro: two cards in
+       one grid row are stretched to the taller, and a grid with auto rows
+       spreads that slack EQUALLY ACROSS ITS ROWS by default, which pushes the
+       heading of the shorter card away from its number. */
+    align-content: start;
+    row-gap: 2px;
+  }
+
+  .rulespec__n {
+    margin: 0;
+    letter-spacing: 0.1em;
+    color: var(--c-text-muted);
+  }
+
+  .rulespec__h {
+    /* The shared heading owns the face, the size and the weight. What is local
+       is the space under it, which is tighter here than on a plan card because
+       the number above already separates this from the card edge. */
+    margin-block-end: var(--stack-1);
+  }
+
+  .rulespec__body {
+    margin: 0;
+    /* A MEASURE, WHICH IS THE HALF OF THIS THAT ACTUALLY MADE IT READABLE.
+       These paragraphs set at about 140 characters a line in the previous
+       full-column layout, against the 65 to 75 a reader can track without
+       losing the return sweep. */
+    max-width: 68ch;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  /* QUOTED DOCUMENT TEXT, SET AS WHAT IT IS. Every double-quoted run in these
+     rules is a literal from a tender pack, and forty of them inside one
+     paragraph of prose quotation marks is what made the section unreadable.
+     Mono, on a faint ground, with no quotation marks left to draw: the marks
+     were doing the job this treatment does, and keeping both would say it
+     twice. `word-break` because some of these are long clause patterns that
+     must not push the card wider than its column. */
+  .rulespec__tok {
+    font-family: var(--font-mono);
+    font-size: var(--t-code);
+    padding: 0.1em 0.36em;
+    border-radius: var(--radius-chip);
+    background-color: color-mix(in srgb, var(--c-text) 7%, transparent);
+    color: var(--c-text);
+    overflow-wrap: anywhere;
+  }
+
+  /* ── WHAT IT DOES NOT DO ────────────────────────────────────────────────
+   *
+   * The same card, carrying a claim and its reasoning. Two columns on a wide
+   * screen because six of these read as a set to be taken in rather than a
+   * sequence to be followed. */
+  .limits {
+    display: grid;
+    gap: var(--stack-2);
+    margin: var(--stack-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 62rem) {
+    .limits {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--stack-2) var(--space-6);
+    }
+  }
+
+  .limits__item {
+    display: grid;
+    align-content: start;
+    row-gap: var(--stack-1);
+  }
+
+  /* A short bar in the refusal ink: the same colour the tool puts on a figure
+     it will not stand behind, so the section that lists what the tool refuses
+     to do is marked in the language the tool already speaks. */
+  .limits__mark {
+    inline-size: var(--space-6);
+    block-size: 2px;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-refused);
+  }
+
+  .limits__h {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--c-text);
+  }
+
+  .limits__body {
+    margin: 0;
+    max-width: 62ch;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.7;
+    color: var(--c-text-sub);
   }
 </style>
