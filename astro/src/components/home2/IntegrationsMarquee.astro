@@ -1,124 +1,107 @@
 ---
 /**
- * HOME 2.0: THE INTEGRATIONS MARQUEE.
+ * HOME 2.0: YOUR EVIDENCE ALREADY EXISTS. WE READ IT WHERE IT LIVES.
  *
- * One row of chips scrolling at 40px per second, with the track duplicated once
- * so the loop never shows a seam.
+ * The live homepage's Integrations section: the same heading, the same chips
+ * with the same scopes, the same read-only statement, the same link. The chips
+ * come from src/data/integrations.ts, the one file the /integrations page and
+ * the live homepage both read, so a connector added there appears here.
  *
- * ── THREE OF THE BOARD'S EIGHT CHIPS ARE NOT ON THIS SITE AND ARE DROPPED ──
+ * ── TEXT CHIPS, NOT LOGO FILES ─────────────────────────────────────────────
  *
- * The Figma board lists Xero, HubSpot and Salesforce. Measured by grep across
- * src on 2026-09-03: not one of the three appears anywhere on this site, in any
- * page, component or data file. A logo strip is a claim about what a product
- * connects to, and it is the kind of claim a buyer checks, so a name that
- * appears nowhere else cannot go on the homepage. The five the board names that
- * DO exist are kept, and the list is completed from src/data/integrations.ts,
- * which is the file the live /integrations page and the live homepage chip grid
- * both read.
- *
- * TEXT CHIPS, NOT LOGO FILES. scripts/check-vendor-logos.js fails the build on
- * any mark served without a row in Assets/brand/integrations/LOGO-PROVENANCE.md
- * naming the vendor, the source URL, the retrieval date and the brand
- * permission relied on. Setting a name in the site's own type asserts nothing
- * about a trade mark and needs no such row.
+ * scripts/check-vendor-logos.js fails the build on any mark served without a
+ * provenance row. Setting a name in the site's own type asserts nothing about
+ * a trade mark and needs no such row.
  *
  * ── THE LOOP IS ONE KEYFRAME ON translateX AND NO JAVASCRIPT ───────────────
  *
- * The travel is exactly one track width, from 0 to -100 percent, so the copy
- * arrives where the original left and the seam never shows. It is a loop rather
- * than an arrival, and it starts at zero displacement rather than at a hidden
- * offset, so scripts/check-motion.js rule 2 can read it as one. The `aria-hidden`
- * is on the duplicate half only, so a screen reader hears the list once. Pause on
- * hover and on focus-within is CSS. Under reduced motion the animation does not
- * exist and the chips wrap into a static grid, which is the same information at
- * rest.
+ * The track is duplicated once and travels exactly its own width, so the copy
+ * arrives where the original left and the seam never shows. The gap lives on
+ * the chip's trailing margin so one track's width includes its own trailing
+ * space and the travel is a plain -100%, which is what lets check-motion.js
+ * read it as the loop it is. The duplicate half is aria-hidden so the list is
+ * announced once. Pause on hover and focus-within is CSS. Under reduced motion
+ * the animation does not exist and the chips wrap into a static grid.
  */
-const CHIPS = [
-  'Microsoft 365',
-  'SharePoint',
-  'OneDrive for Business',
-  'Google Workspace',
-  'Confluence Cloud',
-  'Microsoft Entra ID',
-  'Okta',
-  'Contracts Finder',
-  'Find a Tender',
-];
+import Section from '../layout/Section.astro';
+import { HOME_CHIPS, IDENTITY } from '../../data/integrations';
+
+/* The six the live homepage shows, plus the two identity providers it does
+   not, so the loop is long enough to travel at every width. Ping and OneLogin
+   are on /integrations with the same scope line. */
+const CHIPS = [...HOME_CHIPS, ...IDENTITY.filter((c) => /Ping|OneLogin/.test(c.name))];
 ---
 
-<section class="h2mq" aria-labelledby="h2mq-title">
-  {/* Same split as the proof strip. The heading carries the outline at the
-      heading tier, the kicker carries the look. */}
-  <h2 class="visually-hidden" id="h2mq-title">Your evidence already exists. We read it where it lives.</h2>
-  <p class="h2mq__kicker" aria-hidden="true">
-    Your evidence already exists. We read it where it lives.
-  </p>
-
+<Section
+  eyebrow="Plugged in, read only"
+  title="Your evidence already exists. We read it where it lives."
+  id="integrations"
+  class="h2mq"
+  bleed
+  cascade
+>
   <div class="h2mq__viewport">
     <ul class="h2mq__track">
-      {CHIPS.map((c) => <li class="h2mq__chip">{c}</li>)}
+      {
+        CHIPS.map((c) => (
+          <li class="h2mq__chip">
+            <span class="h2mq__name">{c.name}</span>
+            <span class="h2mq__scope">{c.scope}</span>
+          </li>
+        ))
+      }
     </ul>
-    {/* The seam filler. Identical content, hidden from assistive technology so
-        the list is announced once. */}
     <ul class="h2mq__track" aria-hidden="true">
-      {CHIPS.map((c) => <li class="h2mq__chip">{c}</li>)}
+      {
+        CHIPS.map((c) => (
+          <li class="h2mq__chip">
+            <span class="h2mq__name">{c.name}</span>
+            <span class="h2mq__scope">{c.scope}</span>
+          </li>
+        ))
+      }
     </ul>
   </div>
 
+  {/* WCAG 2.2.2. The row auto-travels for longer than five seconds, so a
+      reader must be able to stop it, and hover is not a mechanism a keyboard
+      or a touch screen has. The button is `hidden` in the markup and revealed
+      by the script only when the loop is actually running, so a reader under
+      reduced motion, or with no script, is never offered a control over
+      something that is not moving. */}
+  <div class="h2mq__controls">
+    <button class="control h2mq__pause" type="button" data-mq-pause aria-pressed="false" hidden>
+      <span class="h2mq__pause-icon" aria-hidden="true"></span>
+      <span data-mq-pause-label>Pause scrolling</span>
+    </button>
+  </div>
+
   <p class="h2mq__note">
+    Every source above is read only. We do not write to your files, change a setting in your
+    tenant, or create an account.
+  </p>
+  <p class="h2mq__more">
     <a href="/integrations/">Every connector, with the exact scope it is granted.</a>
   </p>
-</section>
+</Section>
 
 <style>
-  .h2mq {
-    padding-block: var(--sec-pad-y-sm);
-  }
-
-  .h2mq__kicker {
-    margin: 0 0 var(--space-8);
-    padding-inline: var(--gutter);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: 500;
-    line-height: var(--lh-tight);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-    text-align: center;
-  }
-
-  /* ── THE GAP IS ON THE CHIP, NOT BETWEEN THE TRACKS ─────────────────────
-   *
-   * A duplicated track loops seamlessly only if it travels exactly its own
-   * width. With `gap` between the two tracks that distance is
-   * `-100% - var(--space-3)`, and scripts/check-motion.js failed the build on
-   * it, correctly: its rule 2 reads the two ends of a keyframe to decide
-   * whether it is an entrance, and its parser cannot see a translate inside a
-   * `calc()`, so it read the end state as "no translate" and the loop as an
-   * arrival that resolves to rest. That is the same shape as the pattern that
-   * has twice left content on this site permanently invisible, and a gate that
-   * cannot tell the two apart should fail.
-   *
-   * Moving the gap onto the chip's own trailing margin makes one track's width
-   * include its own trailing space, so the travel is exactly -100%, the loop is
-   * seamless, and both ends of the keyframe are plain values a reader and a
-   * parser can both check. The rule was answered rather than exempted. */
   .h2mq__viewport {
     display: flex;
     overflow: hidden;
+    padding-block: var(--space-2);
     -webkit-mask-image: linear-gradient(
       90deg,
       transparent 0,
-      rgb(0 0 0) 80px,
-      rgb(0 0 0) calc(100% - 80px),
+      rgb(0 0 0) 10%,
+      rgb(0 0 0) 90%,
       transparent 100%
     );
     mask-image: linear-gradient(
       90deg,
       transparent 0,
-      rgb(0 0 0) 80px,
-      rgb(0 0 0) calc(100% - 80px),
+      rgb(0 0 0) 10%,
+      rgb(0 0 0) 90%,
       transparent 100%
     );
   }
@@ -131,27 +114,88 @@ const CHIPS = [
     list-style: none;
   }
 
+  /* A chip, at --radius-chip: not the card recipe. The row's gap is carried
+     by the chip so one track's width includes its own trailing space. */
+  /* Centred, name over scope, owner instruction 2026-09-06. A chip is scanned
+     rather than read, so it takes the card's alignment. */
   .h2mq__chip {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+    min-inline-size: 11.5rem;
+    padding: var(--space-3) var(--space-5);
+    margin-inline-end: var(--space-3);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background-color: var(--c-card);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .h2mq__name {
+    font-family: var(--font-display);
+    font-size: var(--t-body);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    color: var(--c-text);
+  }
+
+  .h2mq__scope {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-text-muted);
+  }
+
+  .h2mq__controls {
+    display: flex;
+    justify-content: center;
+    margin-block-start: var(--space-5);
+    padding-inline: var(--gutter);
+  }
+
+  /* `.control` in styles/controls.css is the site's shared quiet control: the
+     ground, the hairline, the pointer response and the focus ring all come
+     from it. What is local here is the icon and the gap. */
+  .h2mq__pause {
     display: inline-flex;
     align-items: center;
-    flex: 0 0 auto;
-    min-block-size: 38px;
-    padding-inline: 16px;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    background-color: var(--c-card);
+    gap: var(--space-2);
+    min-block-size: 36px;
+    padding-inline: var(--space-4);
     font-family: var(--font-body);
     font-size: var(--t-caption);
-    line-height: var(--lh-tight);
-    color: var(--c-text-sub);
-    white-space: nowrap;
-    /* The row's gap, carried by the chip so one track's width includes its own
-       trailing space. See the note on .h2mq__viewport. */
-    margin-inline-end: var(--space-3);
+  }
+
+  /* Two bars for pause, one triangle for play. Drawn rather than an icon file,
+     because it is two rectangles. */
+  .h2mq__pause-icon {
+    inline-size: 10px;
+    block-size: 10px;
+    flex: 0 0 auto;
+    background-color: currentColor;
+    clip-path: polygon(0 0, 34% 0, 34% 100%, 0 100%, 0 0, 66% 0, 100% 0, 100% 100%, 66% 100%, 66% 0);
+  }
+
+  .h2mq__pause[aria-pressed='true'] .h2mq__pause-icon {
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
   }
 
   .h2mq__note {
-    margin: var(--space-6) 0 0;
+    margin: var(--space-8) auto 0;
+    padding-inline: var(--gutter);
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+    text-align: center;
+    max-width: 52ch;
+    text-wrap: balance;
+  }
+
+  .h2mq__more {
+    margin: var(--space-3) 0 0;
     padding-inline: var(--gutter);
     font-family: var(--font-body);
     font-size: var(--t-caption);
@@ -161,31 +205,35 @@ const CHIPS = [
 
   @media (prefers-reduced-motion: no-preference) {
     .h2mq__track {
-      /* 40px per second. One full cycle is exactly one track width, which is
-         where the duplicate begins, so the seam never shows. The duration is
-         derived rather than picked: nine chips at roughly 160px each including
-         their 12px trailing margin is about 1,550px, and 1,550 at 40px per
-         second is about 39 seconds. */
-      animation: h2mq-run 39s var(--m-ease-travel) infinite;
+      /* About 36px per second. Eight chips at roughly 210px each including
+         their trailing margin is about 1,700px, and 1,700 at 36px per second
+         is about 47 seconds. */
+      animation: h2mq-run 47s var(--m-ease-travel) infinite;
       animation-play-state: var(--h2mq-state, running);
     }
 
-    .h2mq:hover,
-    .h2mq:focus-within {
+    .h2mq:focus-within,
+    .h2mq[data-mq='paused'] {
       --h2mq-state: paused;
+    }
+
+    /* Hover pauses only where hover is real: a tap on a touch screen can
+       latch :hover on the section and would have parked the loop for good. */
+    @media (hover: hover) {
+      .h2mq:hover {
+        --h2mq-state: paused;
+      }
     }
   }
 
-  /* Exactly one track width, so the copy arrives where the original left and
-     the seam never shows. Both ends are plain values. */
+  /* Exactly one track width. Both ends are plain values. */
   @keyframes h2mq-run {
     from { transform: translateX(0%); }
     to   { transform: translateX(-100%); }
   }
 
-  /* Reduced motion: a static wrapped grid. The duplicate half is removed rather
-     than left stacked, because two copies of one list with no movement reads as
-     a mistake. */
+  /* Reduced motion: a static wrapped grid. The duplicate half is removed
+     rather than left stacked. */
   @media (prefers-reduced-motion: reduce) {
     .h2mq__viewport {
       -webkit-mask-image: none;
@@ -209,3 +257,38 @@ const CHIPS = [
     }
   }
 </style>
+
+<script>
+  /*
+   * THE PAUSE CONTROL, AND THE THREE THINGS THAT MAKE IT HONEST.
+   *
+   * 1. IT APPEARS ONLY WHEN SOMETHING IS MOVING. The button ships `hidden`.
+   *    Under `prefers-reduced-motion: reduce` the loop does not exist, so the
+   *    button stays hidden: offering to pause a still row is a control that
+   *    reaches nothing.
+   * 2. IT REPORTS ITS STATE. `aria-pressed` carries it, and the label changes
+   *    with it, so a screen reader hears which of the two states it is in.
+   * 3. IT CANNOT HIDE THE CONTENT. Pausing sets one attribute that CSS reads
+   *    as `animation-play-state: paused`. The chips are fully painted and
+   *    fully legible in both states, moving or still.
+   */
+  const band = document.querySelector<HTMLElement>('.h2mq');
+  const btn = band?.querySelector<HTMLButtonElement>('[data-mq-pause]');
+  const label = btn?.querySelector<HTMLElement>('[data-mq-pause-label]');
+
+  if (band && btn && label) {
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduced) {
+      btn.hidden = false;
+      btn.addEventListener('click', () => {
+        const paused = band.dataset.mq !== 'paused';
+        band.dataset.mq = paused ? 'paused' : 'running';
+        btn.setAttribute('aria-pressed', String(paused));
+        label.textContent = paused ? 'Resume scrolling' : 'Pause scrolling';
+      });
+    }
+  }
+</script>

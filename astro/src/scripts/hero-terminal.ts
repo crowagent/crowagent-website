@@ -134,7 +134,15 @@ function print(list: HTMLElement, rows: [string, string][]): void {
   }
 }
 
-export function initHeroTerminal(): void {
+/**
+ * `hold` lets a caller supply the sentence for the Hold row. The live hero
+ * passes nothing and keeps holdLine(); the Home 2.0 preview supplies a fuller
+ * sentence for the two cases where holdLine reads as an error to a reader who
+ * pasted an SLA or a social value target (2026-09-06). Same engine, same
+ * verdict, a better sentence about it.
+ */
+export function initHeroTerminal(options?: { hold?: (m: TenderMatrix) => string }): void {
+  const hold = options?.hold ?? holdLine;
   const hmt = document.querySelector<HTMLElement>('.hmt');
   const tabs = hmt && hmt.querySelector('.hmt__tabs');
   const panes = hmt && hmt.querySelector('.hmt__panes');
@@ -266,7 +274,7 @@ export function initHeroTerminal(): void {
     print(out, [
       ['Read', readLine(m)],
       ['Match', matchLine(m)],
-      ['Hold', holdLine(m)],
+      ['Hold', hold(m)],
     ]);
   };
 

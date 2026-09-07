@@ -2,141 +2,349 @@
 /**
  * HOME 2.0: WATCH IT REFUSE A FIGURE.
  *
- * Five step cards and the refusal that closes them. The steps light in sequence
- * when the section reaches the viewport, on `data-lit`, and the lit state is
- * the state they rest in, so a reader who never gets the light gets the
- * finished trace rather than four dim boxes.
+ * The live homepage's ReasoningTrace, with its worked example verbatim: the
+ * question, its provenance, the five steps and their detail, the claim dropped
+ * at Ground, the tally and the illustrative sum. What changes is that the
+ * engine is now SHOWN doing it, on a screen that looks like the product.
  *
- * ── THE FIGURE IS ILLUSTRATIVE AND THE PAGE SAYS SO ────────────────────────
+ * ── THE DRAFT SCREEN IS DRAWN IN THE PRODUCT'S OWN LANGUAGE ────────────────
  *
- * £27,450 is a per job, per year proxy value used to show the mechanism. It is
- * NOT a National TOMs proxy and it is not a figure this company publishes.
- * pages/sources.astro already records the homepage's £27,000 and £108,000 as
- * illustrative placeholders for exactly this reason, and the caption below says
- * the same thing in print.
+ * Owner, 2026-09-06: the pane should be a realistic, light product screen like
+ * the captures in the section above. No drawn capture of the draft editor
+ * exists (the sixteen in Assets/shots stop at the questions list), so the
+ * screen is built here in HTML on the same grammar those captures use: the
+ * sidebar, the breadcrumb, the title with its pills, the purple grounding
+ * banner, white cards on a pale ground, Inter throughout. Drawing it rather
+ * than forging a PNG is what lets the engine be seen WORKING on it.
  *
- * ── 05 IS "NOT REACHED", WHICH IS THE WHOLE POINT ──────────────────────────
+ * Every colour on the light screen is derived from a token with color-mix()
+ * against --c-text (the page ink, white on this theme) or --c-floor, never a literal, so the screen follows the
+ * palette the way everything else does. The deep teal and deep violet are the
+ * site's verified and refused roles mixed down to hold 4.5:1 on white.
  *
- * Cite is dimmed rather than absent. A step that is missing reads as a step the
- * product does not have. A step that is present and explicitly not reached
- * reads as the engine stopping, which is the argument the section exists to
- * make.
+ * ── THE RUN ────────────────────────────────────────────────────────────────
+ *
+ * When the section reaches the viewport a scan runs down the draft, the three
+ * claims that trace to a confirmed commitment are underlined one after
+ * another, the one that does not is struck and refused, and the grounding list
+ * beneath pops each row's mark as the scan reaches it. Above the frame the
+ * five steps light in the engine's order; to its right the tally counts what
+ * happened. One choreography on the site's one beat, and it runs once.
+ *
+ * ── THE FIGURES ARE ILLUSTRATIVE AND THE PAGE SAYS SO ──────────────────────
+ *
+ * £27,000 and £108,000 are recorded as illustrative placeholders in
+ * pages/sources.astro, and the sum line carries the word in print. The draft
+ * says "from a commitment you confirmed" and never "proxy". The word count on
+ * the editor is computed from the draft string, not typed.
+ *
+ * ── EVERY REST STATE IS THE FINISHED TRACE ─────────────────────────────────
+ *
+ * Underlines drawn, strike struck, stamp stamped, marks in place, scan parked
+ * off the page, before any script runs. Every animation below is scale from
+ * the start edge, translate returning to zero, or ink and light. Nothing moves
+ * opacity, so nothing can be left unread.
  */
 import Section from '../layout/Section.astro';
+import DeviceChrome from './DeviceChrome.astro';
 
 interface Step {
   n: string;
   name: string;
-  body: string;
-  tone: 'done' | 'stopped' | 'unreached';
+  detail: string;
 }
 
+const QUESTION = 'Quantify the community and environmental benefit this contract will create.';
+const PROVENANCE = 'A private-sector RFP. The same run answers a public notice.';
+
 const STEPS: Step[] = [
-  {
-    n: '01',
-    name: 'Retrieve',
-    body: 'Clause 4.1 and your last three pricing schedules.',
-    tone: 'done',
-  },
+  { n: '01', name: 'Retrieve', detail: 'The published question is read with its wording intact.' },
   {
     n: '02',
     name: 'Ground',
-    body: 'Every figure matched to a page in your own evidence.',
-    tone: 'done',
+    detail: 'Every figure is matched to a confirmed commitment. One is not, and is dropped here.',
   },
-  {
-    n: '03',
-    name: 'Compute',
-    body: '£27,450 per year appears in no source you hold.',
-    tone: 'stopped',
-  },
-  {
-    n: '04',
-    name: 'Check',
-    body: 'Refused. Drafting stops here until a source is attached.',
-    tone: 'stopped',
-  },
-  {
-    n: '05',
-    name: 'Cite',
-    body: 'Not reached.',
-    tone: 'unreached',
-  },
+  { n: '03', name: 'Compute', detail: 'What survives is computed from those commitments, never generated.' },
+  { n: '04', name: 'Check', detail: 'The draft is counted against what it claimed: four asked for, three traced.' },
+  { n: '05', name: 'Cite', detail: 'Each surviving figure carries its source, and a named person approves it.' },
+];
+
+const DROP_AT = '02';
+
+const TALLY = [
+  { k: 'Claimed', v: '4' },
+  { k: 'Traced', v: '3' },
+  { k: 'Refused', v: '1', refused: true },
+];
+
+const SUM_JOBS = 4;
+const SUM_PER_JOB = 27000;
+const SUM_TOTAL = SUM_JOBS * SUM_PER_JOB;
+const GBP = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  maximumFractionDigits: 0,
+});
+
+/* The draft, as one string, so the word count on the editor is measured. */
+const DRAFT_PARTS = [
+  'This contract will create ',
+  'four new roles',
+  ' for local residents, each carried at ',
+  '£27,000 per year',
+  ' from a commitment you confirmed, ',
+  '£108,000',
+  ' across the term, alongside ',
+  'local supply chain spend',
+  ' in the borough.',
+];
+const WORDS = DRAFT_PARTS.join('').trim().split(/\s+/).length;
+
+/* The grounding list under the draft: one row per claim, in the order the scan
+   reaches them. The first three restate the sum; the fourth is the refusal. */
+const GROUNDING = [
+  { claim: 'four new roles', source: 'Commitment · local employment · 4 roles', state: 'traced' },
+  { claim: '£27,000 per year', source: 'Commitment · per role, per year', state: 'traced' },
+  { claim: '£108,000', source: `Computed · ${SUM_JOBS} × ${GBP.format(SUM_PER_JOB)}`, state: 'traced' },
+  { claim: 'local supply chain spend', source: 'No recorded commitment', state: 'refused' },
+] as const;
+
+const BANNER =
+  'Answers are AI-assisted and grounded only in your own answer library, the published requirement and your confirmed commitments. Every £ and % comes from your engine-computed commitments and is never invented. A named human reviews, edits and approves every answer before you submit it.';
+
+const SIDEBAR = [
+  { group: 'Workspace', items: ['Home', 'Action centre', 'Settings'] },
+  { group: 'CrowMark', items: ['Contracts', 'Discover', 'New contract', 'Answer library', 'Insights', 'Reports'] },
 ];
 ---
 
 <Section
-  eyebrow="The signature moment"
+  eyebrow="Run the real engine"
   title="Watch it refuse a figure."
-  standfirst="A generative tool would have written a number and moved on. This one shows the five steps it took, and where it stopped."
-  id="refusal-trace"
+  standfirst="If a figure cannot be traced, the engine refuses it. A generative tool asked for a number it does not have will produce a plausible one. CrowAgent does the opposite, and it does it visibly."
+  id="reasoning"
   class="h2rt"
+  cascade
 >
-  <div class="h2rt__rig" data-lit data-lit-threshold="0.25">
-    <ol class="h2rt__steps">
-      {
-        STEPS.map((s, i) => (
-          <li class="h2rt__step" data-tone={s.tone} style={`--step-i: ${i}`}>
-            <p class="h2rt__n">{s.n}</p>
-            <h3 class="h2rt__name">{s.name}</h3>
-            <p class="h2rt__body">{s.body}</p>
-          </li>
-        ))
-      }
-    </ol>
+  <div class="h2rt__rig">
+    <div class="h2rt__trace" data-reel>
+      <div class="h2rt__rail" aria-hidden="true">
+        <i class="h2rt__rail-lit"></i>
+      </div>
 
-    <p class="h2rt__out">
-      <span class="h2rt__badge">Refused</span>
-      <span class="h2rt__out-text">
-        "£27,450 per year in social value" is not in your evidence. The draft
-        carries the clause and an empty, highlighted field. A person signs off
-        the number, or it does not go in.
-      </span>
-    </p>
+      <ol class="h2rt__steps" data-cascade>
+        {
+          STEPS.map((s, i) => (
+            <li class="h2rt__step" style={`--step-i: ${i}`} data-drop={s.n === DROP_AT ? 'on' : undefined}>
+              <span class="h2rt__dot" aria-hidden="true"></span>
+              <p class="meta h2rt__n">
+                <span class="visually-hidden">Step </span>{s.n}
+              </p>
+              <h3 class="h2rt__name">{s.name}</h3>
+              <p class="h2rt__detail">{s.detail}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
 
-    <p class="h2rt__caption">
-      An illustrative figure, used to show the mechanism. It is not a published
-      proxy value.
-    </p>
+    <div class="h2rt__desk">
+      <div class="surface surface--frame surface--row h2rt__pane" role="group" aria-label="The draft, as the engine reads it" data-reel>
+        <DeviceChrome host="app.crowagent.ai/" path="mark/draft" />
+
+        <div class="h2rt__app">
+          <nav class="h2rt__side" aria-label="Product navigation, illustrative">
+            <p class="h2rt__brand">CrowAgent</p>
+            <p class="h2rt__plan"><span>CrowMark</span><span class="chip h2rt__plan-tag">Pro</span></p>
+            {
+              SIDEBAR.map((g) => (
+                <div class="h2rt__group">
+                  <p class="meta h2rt__group-name">{g.group}</p>
+                  <ul class="h2rt__navlist">
+                    {g.items.map((item) => (
+                      <li class="h2rt__navitem" data-on={item === 'Contracts' ? 'yes' : undefined}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            }
+          </nav>
+
+          <div class="h2rt__main">
+            <p class="h2rt__crumb">
+              Crow <i>›</i> CrowMark <i>›</i> Contracts <i>›</i> Reablement &amp; Home Support Services <i>›</i>
+              <b>Q7</b>
+            </p>
+
+            <div class="h2rt__head">
+              <p class="h2rt__title">Q7 · Social value</p>
+              <span class="h2rt__pill">500-word limit · weight 10</span>
+              <span class="meta h2rt__live" aria-hidden="true"><i></i>Grounding</span>
+            </div>
+
+            <p class="surface--row h2rt__banner">
+              <span class="h2rt__banner-i" aria-hidden="true">i</span>
+              {BANNER}
+            </p>
+
+            <div class="surface--row h2rt__card h2rt__editor">
+              <p class="meta h2rt__ask-label">Question, as published</p>
+              <p class="h2rt__ask">{QUESTION}</p>
+              <p class="meta h2rt__ask-src">{PROVENANCE}</p>
+
+              <p class="meta h2rt__draft-label">
+                <span>Draft answer</span>
+                <span class="h2rt__count">{WORDS} of 500 words</span>
+              </p>
+              <p class="h2rt__draft">
+                {DRAFT_PARTS[0]}
+                <mark class="h2rt__claim" data-claim="traced" style="--claim-i: 0">{DRAFT_PARTS[1]}</mark>
+                {DRAFT_PARTS[2]}
+                <mark class="h2rt__claim" data-claim="traced" style="--claim-i: 1">{DRAFT_PARTS[3]}</mark>
+                {DRAFT_PARTS[4]}
+                <mark class="h2rt__claim" data-claim="traced" style="--claim-i: 2">{DRAFT_PARTS[5]}</mark>
+                {DRAFT_PARTS[6]}
+                <mark class="h2rt__claim" data-claim="refused">{DRAFT_PARTS[7]}</mark>
+                {DRAFT_PARTS[8]}
+                <i class="h2rt__scan" aria-hidden="true"></i>
+              </p>
+            </div>
+
+            <div class="surface--row h2rt__card h2rt__ground">
+              <p class="meta h2rt__ground-label">Where each figure came from</p>
+              <ul class="h2rt__rows">
+                {
+                  GROUNDING.map((g, i) => (
+                    <li class="h2rt__row" data-state={g.state} style={`--row-i: ${i}`}>
+                      <span class="h2rt__mark" aria-hidden="true"></span>
+                      <span class="h2rt__row-claim">{g.claim}</span>
+                      <span class="h2rt__row-src">{g.source}</span>
+                      <span class="chip h2rt__row-state">{g.state === 'traced' ? 'Traced' : 'Refused'}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+
+            <p class="surface--row h2rt__verdict">
+              <span class="chip h2rt__badge">Refused</span>
+              <span class="h2rt__verdict-text">
+                "local supply chain spend" has no recorded commitment, so it carries no figure. The
+                draft keeps the clause and an empty, highlighted field for a person to fill or
+                remove.
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="h2rt__ledger">
+        <dl class="h2rt__tally">
+          {
+            TALLY.map((t) => (
+              <div class:list={['h2rt__cell', { 'h2rt__cell--refused': t.refused }]}>
+                <dt>{t.k}</dt>
+                <dd class="sv-numeral">{t.v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <p class="h2rt__sum">
+          <span>{SUM_JOBS} jobs × {GBP.format(SUM_PER_JOB)} per year =</span>
+          <b>{GBP.format(SUM_TOTAL)}</b>
+          <span class="chip h2rt__eg">illustrative</span>
+        </p>
+        <p class="h2rt__refused">
+          <s class="h2rt__refused-claim">local supply chain spend</s>
+          <span class="h2rt__refused-why">
+            No recorded commitment, so it carries no figure. The total above is the same with it as
+            without it.
+          </span>
+        </p>
+        <p class="h2rt__signoff">
+          The untraced claim is removed before a named approver reads the draft. A person signs off,
+          not the software.
+        </p>
+        <p class="h2rt__cta">
+          <a href="/crowmark/">How the drafter works</a>
+          <a href="/sources/#homepage">Sources</a>
+        </p>
+      </div>
+    </div>
   </div>
 </Section>
 
 <style>
+  .h2rt__rig {
+    position: relative;
+  }
+
+  /* ── THE STEPS ─────────────────────────────────────────────────────────── */
+  .h2rt__trace {
+    position: relative;
+    /* Rest is the finished drawing. See THE RUN at the foot of this file. */
+    --reel: 1;
+  }
+
   .h2rt__steps {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-5);
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  @media (min-width: 48rem) {
-    .h2rt__steps {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: var(--space-3);
-    }
+    --arrive-item-step: 64px;
   }
 
   .h2rt__step {
-    padding: var(--space-4);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-chip);
-    background-color: var(--c-card);
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'dot n'
+      'dot name'
+      'dot detail';
+    column-gap: var(--space-4);
+    align-items: start;
+    /* Third and last instance of the same defect on this page, found by
+       sweeping every grid inside a stretched row rather than by looking. The
+       five steps share one grid row, so they are all as tall as the tallest,
+       and `align-content` defaults to spreading the leftover space equally
+       across the rows of the shorter ones: measured at 1440, the short steps
+       ran 17.3 / 41.5 / 35.3 / 51.3 against 12 / 36.3 / 30.1 / 67 on the tall
+       ones, which puts their names on five different lines. `start` sends the
+       slack to the foot of the column. Same fix as .h2run__stage and
+       .h2bs__station. */
+    align-content: start;
     text-align: left;
   }
 
+  .h2rt__dot {
+    grid-area: dot;
+    display: block;
+    inline-size: 12px;
+    block-size: 12px;
+    margin-block-start: 3px;
+    border-radius: var(--radius-pill);
+    --dot-ink: var(--c-verified);
+  }
+
+  [data-drop='on'] .h2rt__dot {
+    --dot-ink: var(--c-refused);
+  }
+
   .h2rt__n {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0.08em;
+    grid-area: n;
+    margin: 0;
+    letter-spacing: 0.1em;
     color: var(--c-text-muted);
   }
 
   .h2rt__name {
-    margin: 0 0 4px;
+    grid-area: name;
+    margin: var(--space-1) 0 0;
     font-family: var(--font-display);
     font-size: var(--t-h4);
     font-weight: var(--t-w-h3);
@@ -144,108 +352,879 @@ const STEPS: Step[] = [
     color: var(--c-text);
   }
 
-  .h2rt__body {
-    margin: 0;
+  [data-drop='on'] .h2rt__name {
+    color: var(--c-refused);
+  }
+
+  .h2rt__detail {
+    grid-area: detail;
+    margin: var(--space-1) 0 0;
     font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.5;
+    color: var(--c-text-sub);
+    text-wrap: pretty;
+  }
+
+  .h2rt__rail {
+    display: none;
+  }
+
+  /* ── STACKED: THE RAIL RUNS DOWN THROUGH THE DOTS ────────────────────
+   *
+   * Below 62rem the five steps stack and the horizontal rail has nowhere to
+   * go, so until 2026-09-06 a phone and a tablet had five dots and no line at
+   * all between them: the owner reported the step lighting as not working, and
+   * a dot changing colour with nothing joining it is not a sequence. The same
+   * drawing turned on its side, drawn by the same reel. */
+  @media (max-width: 61.999rem) {
+    .h2rt__dot {
+      position: relative;
+      z-index: 1;
+    }
+
+    .h2rt__rail {
+      display: block;
+      position: absolute;
+      inset-block: 6px;
+      inset-inline-start: 5px;
+      inline-size: 2px;
+      border-radius: var(--radius-pill);
+      background-color: var(--c-border);
+    }
+
+    .h2rt__rail-lit {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      border-radius: var(--radius-pill);
+      background-image: var(--grad-draw-y);
+      transform-origin: 50% 0;
+      transform: scaleY(var(--reel));
+    }
+  }
+
+  @media (min-width: 62rem) {
+    .h2rt__steps {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+
+    .h2rt__step {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'dot'
+        'n'
+        'name'
+        'detail';
+      padding-inline-end: var(--space-6);
+    }
+
+    .h2rt__dot {
+      margin-block-start: 0;
+    }
+
+    .h2rt__n {
+      margin-block-start: var(--space-5);
+    }
+
+    .h2rt__detail {
+      max-width: 24ch;
+    }
+
+    .h2rt__rail {
+      display: block;
+      position: absolute;
+      inset-block-start: 6px;
+      inset-inline: 6px;
+      block-size: 1px;
+      background-color: var(--c-border);
+      overflow: hidden;
+    }
+
+    .h2rt__rail-lit {
+      display: block;
+      block-size: 100%;
+      background-image: var(--grad-draw);
+    }
+  }
+
+  /* ── THE DESK: THE SCREEN AND THE LEDGER ───────────────────────────────── */
+  .h2rt__desk {
+    display: grid;
+    gap: var(--space-8);
+    align-items: start;
+    margin-block-start: calc(var(--space-12) * 1.25);
+  }
+
+  @media (min-width: 62rem) {
+    .h2rt__desk {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: clamp(var(--space-10), 5vw, calc(var(--space-12) * 1.5));
+    }
+  }
+
+  .h2rt__pane {
+    position: relative;
+    /* Rest is the finished screen. See THE RUN at the foot of this file. */
+    --reel: 1;
+    --surface-shadow:
+      var(--shadow-panel),
+      0 40px 120px -40px color-mix(in srgb, var(--c-ambient-deep) 55%, transparent);
+  }
+
+  /* The browser chrome, dark, the same bar the product frame above wears. */
+
+
+
+
+
+  /* ── THE LIGHT SCREEN ──────────────────────────────────────────────────
+   *
+   * Every colour below is a token mixed against --c-text (the page ink, white on this theme) or --c-floor. The
+   * app's grammar, taken from the captures: pale sidebar, white cards, hairline
+   * borders, deep teal for the verified role and deep violet for the refused
+   * one, and the CrowMark purple on the banner. */
+  .h2rt__app {
+    --app-bg: color-mix(in srgb, var(--c-text) 97%, var(--c-floor));
+    --app-card: var(--c-text);
+    --app-line: color-mix(in srgb, var(--c-text) 89%, var(--c-floor));
+    --app-ink: color-mix(in srgb, var(--c-floor) 90%, var(--c-text));
+    --app-ink-sub: color-mix(in srgb, var(--c-floor) 62%, var(--c-text));
+    --app-ink-muted: color-mix(in srgb, var(--c-floor) 46%, var(--c-text));
+    --app-verified: color-mix(in srgb, var(--c-verified) 62%, var(--c-floor));
+    --app-verified-tint: color-mix(in srgb, var(--c-verified) 12%, var(--c-text));
+    --app-refused: color-mix(in srgb, var(--c-refused) 58%, var(--c-floor));
+    --app-refused-tint: color-mix(in srgb, var(--c-refused) 14%, var(--c-text));
+    --app-brand: color-mix(in srgb, var(--c-ambient-deep) 88%, var(--c-floor));
+    --app-brand-tint: color-mix(in srgb, var(--c-ambient-deep) 8%, var(--c-text));
+    --app-brand-line: color-mix(in srgb, var(--c-ambient-deep) 34%, var(--c-text));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    background-color: var(--app-bg);
+    color: var(--app-ink);
+    font-family: var(--font-body);
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__app {
+      grid-template-columns: 9.5rem minmax(0, 1fr);
+    }
+  }
+
+  /* The sidebar: pale, hairline on its end edge, hidden on a phone. */
+  .h2rt__side {
+    display: none;
+    padding: var(--space-4) var(--space-3);
+    border-inline-end: 1px solid var(--app-line);
+    background-color: var(--app-bg);
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__side {
+      display: block;
+    }
+  }
+
+  .h2rt__brand {
+    margin: 0 0 var(--space-3);
+    padding-inline: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--t-caption);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    color: var(--app-ink);
+  }
+
+  .h2rt__plan {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 var(--space-4);
+    padding: 6px var(--space-2);
+    border-radius: var(--radius-chip);
+    background-color: var(--app-brand-tint);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    color: var(--app-brand);
+  }
+
+  .h2rt__plan-tag {
+    background-color: var(--app-brand);
+    color: var(--app-card);
+  }
+
+  .h2rt__group {
+    margin-block-end: var(--space-3);
+  }
+
+  .h2rt__group-name {
+    margin: 0 0 var(--space-1);
+    padding-inline: var(--space-2);
+    letter-spacing: 0.1em;
+    color: var(--app-ink-muted);
+  }
+
+  .h2rt__navlist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .h2rt__navitem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px var(--space-2);
+    border-radius: var(--radius-chip);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--app-ink-sub);
+  }
+
+  .h2rt__navitem::before {
+    content: '';
+    inline-size: 4px;
+    block-size: 4px;
+    border-radius: var(--radius-pill);
+    background-color: var(--app-ink-muted);
+  }
+
+  .h2rt__navitem[data-on='yes'] {
+    background-color: var(--app-verified-tint);
+    color: var(--app-ink);
+    font-weight: 600;
+  }
+
+  .h2rt__navitem[data-on='yes']::before {
+    background-color: var(--app-verified);
+  }
+
+  /* The main pane. */
+  .h2rt__main {
+    min-width: 0;
+    padding: var(--space-4);
+    background-color: var(--app-bg);
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__main {
+      padding: var(--space-5);
+    }
+  }
+
+  .h2rt__crumb {
+    margin: 0 0 var(--space-3);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--app-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .h2rt__crumb i {
+    font-style: normal;
+    padding-inline: 4px;
+  }
+
+  .h2rt__crumb b {
+    color: var(--app-ink);
+    font-weight: 600;
+  }
+
+  .h2rt__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-block-end: var(--space-3);
+  }
+
+  .h2rt__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-tight);
+    letter-spacing: -0.01em;
+    color: var(--app-ink);
+  }
+
+  .h2rt__pill {
+    padding: 3px 9px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--radius-pill);
+    background-color: var(--app-card);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--app-ink-sub);
+  }
+
+  .h2rt__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: auto;
+    letter-spacing: 0.1em;
+    color: var(--app-verified);
+  }
+
+  .h2rt__live i {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: var(--radius-pill);
+    background-color: var(--app-verified);
+    box-shadow: 0 0 8px var(--c-verified-glow);
+  }
+
+  /* The grounding banner, verbatim from the product, in its purple. */
+  .h2rt__banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--app-brand-line);
+    border-radius: var(--radius-chip);
+    background-color: var(--app-brand-tint);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--app-ink-sub);
+  }
+
+  .h2rt__banner-i {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 16px;
+    block-size: 16px;
+    border-radius: var(--radius-pill);
+    background-color: var(--app-brand-line);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--app-brand);
+  }
+
+  /* White cards on the pale ground. The radius is the chip radius and the
+     padding is small, so they are the product's own cards and not the site's
+     card recipe. */
+  .h2rt__card {
+    padding: var(--space-3);
+    border: 1px solid var(--app-line);
+    border-radius: var(--radius-chip);
+    background-color: var(--app-card);
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__card {
+      padding: var(--space-4);
+    }
+  }
+
+  .h2rt__ask-label,
+  .h2rt__ground-label {
+    margin: 0 0 var(--space-1);
+    letter-spacing: 0.1em;
+    color: var(--app-ink-muted);
+  }
+
+  .h2rt__ask {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-caption);
+    font-weight: var(--t-w-h3);
+    line-height: 1.35;
+    color: var(--app-ink);
+    text-wrap: pretty;
+  }
+
+  .h2rt__ask-src {
+    margin: var(--space-1) 0 0;
+    letter-spacing: 0.1em;
+    color: var(--app-ink-muted);
+  }
+
+  .h2rt__draft-label {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: var(--space-4) 0 var(--space-1);
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid var(--app-line);
+    letter-spacing: 0.1em;
+    color: var(--app-verified);
+  }
+
+  .h2rt__count {
+    font-weight: 500;
+    color: var(--app-ink-muted);
+  }
+
+  /* The draft, and the scan that reads it. The paragraph clips the scan band,
+     so the band's rest position, above the paragraph, is off the page. */
+  .h2rt__draft {
+    position: relative;
+    margin: 0;
+    padding-block: var(--space-1);
+    font-size: var(--t-caption);
+    line-height: 1.8;
+    color: var(--app-ink);
+    overflow: hidden;
+    text-wrap: pretty;
+  }
+
+  /* ── THE CLAIMS ──────────────────────────────────────────────────────── */
+  .h2rt__claim {
+    position: relative;
+    display: inline;
+    padding-inline: 0.12em;
+    border-radius: var(--radius-chip);
+    background-color: transparent;
+    color: var(--app-ink);
+    font-weight: 600;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .h2rt__claim[data-claim='traced']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -0.06em;
+    block-size: 2px;
+    border-radius: var(--radius-pill);
+    /* The ambient ramp, mixed to hold on white. */
+    background-image: linear-gradient(90deg, var(--app-verified), var(--app-brand));
+    transform-origin: 0 50%;
+  }
+
+  /* The strike is a text decoration, because a claim that wraps on a phone is
+     two fragments and a pseudo-element belongs to one of them. It rests
+     struck; on the run its colour lands at the beat the scan reaches it. */
+  .h2rt__claim[data-claim='refused'] {
+    color: var(--app-refused);
+    background-color: var(--app-refused-tint);
+    text-decoration-line: line-through;
+    text-decoration-color: var(--app-refused);
+    text-decoration-thickness: 3px;
+  }
+
+  .h2rt__scan {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: -2em;
+    block-size: 1.8em;
+    pointer-events: none;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--app-verified-tint) 30%,
+      var(--app-verified-tint) 70%,
+      transparent
+    );
+    border-block-end: 1px solid color-mix(in srgb, var(--app-verified) 55%, transparent);
+  }
+
+  /* ── THE GROUNDING LIST ──────────────────────────────────────────────── */
+  .h2rt__ground {
+    margin-block-start: var(--space-3);
+  }
+
+  .h2rt__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .h2rt__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'mark claim state'
+      'mark src state';
+    column-gap: var(--space-2);
+    align-items: center;
+    padding-block: var(--space-2);
+    border-block-start: 1px solid var(--app-line);
+    font-size: var(--t-micro);
+    line-height: 1.4;
+  }
+
+  @media (min-width: 48rem) {
+    .h2rt__row {
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr) auto;
+      grid-template-areas: 'mark claim src state';
+      column-gap: var(--space-3);
+    }
+  }
+
+  .h2rt__row:first-child {
+    border-block-start: 0;
+    padding-block-start: 0;
+  }
+
+  /* The mark: a filled disc with a tick drawn in the card colour, or with a
+     cross for the refused row. */
+  .h2rt__mark {
+    grid-area: mark;
+    position: relative;
+    inline-size: 14px;
+    block-size: 14px;
+    border-radius: var(--radius-pill);
+    background-color: var(--app-verified);
+  }
+
+  .h2rt__mark::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 4px;
+    inset-block-start: 2px;
+    inline-size: 4px;
+    block-size: 7px;
+    border-inline-end: 2px solid var(--app-card);
+    border-block-end: 2px solid var(--app-card);
+    transform: rotate(45deg);
+  }
+
+  [data-state='refused'] .h2rt__mark {
+    background-color: var(--app-refused);
+  }
+
+  [data-state='refused'] .h2rt__mark::before,
+  [data-state='refused'] .h2rt__mark::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 6px;
+    inset-block-start: 3px;
+    inline-size: 0;
+    block-size: 8px;
+    border-inline-end: 2px solid var(--app-card);
+    border-block-end: 0;
+  }
+
+  [data-state='refused'] .h2rt__mark::before {
+    transform: rotate(-45deg);
+  }
+
+  [data-state='refused'] .h2rt__mark::after {
+    transform: rotate(45deg);
+  }
+
+  .h2rt__row-claim {
+    grid-area: claim;
+    font-weight: 600;
+    color: var(--app-ink);
+  }
+
+  [data-state='refused'] .h2rt__row-claim {
+    color: var(--app-refused);
+    text-decoration-line: line-through;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .h2rt__row-src {
+    grid-area: src;
+    font-family: var(--font-mono);
+    color: var(--app-ink-sub);
+  }
+
+  .h2rt__row-state {
+    grid-area: state;
+    background-color: var(--app-verified-tint);
+    color: var(--app-verified);
+  }
+
+  [data-state='refused'] .h2rt__row-state {
+    background-color: var(--app-refused-tint);
+    color: var(--app-refused);
+  }
+
+  /* The verdict, the one dark-on-light refusal band. */
+  /* ── THE VERDICT SETTLES, ONCE, AT THE MOMENT THE CLAIM IS STRUCK ──────
+   *
+   * This is the one moment of emphasis left on the page, and it is here
+   * because this sentence is the page's argument: the engine found a figure it
+   * could not trace and took it out. Everything else on this section resolves
+   * quietly in reading order; this arrives.
+   *
+   * `--land` is the same reel threshold the strike-through uses, offset a
+   * fraction later so the verdict follows the strike rather than racing it.
+   * clamp() holds it at 0 before and 1 after, so the resting state IS the
+   * finished state: a browser with no script, a print, or a reader who has
+   * scrolled past all see the verdict fully landed, and nothing here is ever
+   * missing.
+   *
+   * TRANSFORM ONLY, AND UNDER ONE MOVE. It rises 6px and settles. It does not
+   * fade, because a verdict that fades in can be caught half-said; it does not
+   * bounce, because a bounce on a refusal is a cartoon; and it does not scale,
+   * because scaling type at this size softens it for the frames that matter.
+   * A single 6px rise over roughly a fifth of a second of scroll is what the
+   * research on this calls a settle, and one settle on one element is the
+   * whole budget this page has for emphasis. */
+  .h2rt__verdict {
+    --land: clamp(0, calc((var(--reel, 1) - 0.58) * 12), 1);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-chip);
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--app-refused) calc(var(--land) * 35%),
+        var(--app-card)
+      );
+    background-color: color-mix(
+      in srgb,
+      var(--app-refused-tint) calc(var(--land) * 100%),
+      transparent
+    );
+    transform: translateY(calc((1 - var(--land)) * 6px));
+  }
+
+  .h2rt__badge {
+    flex: 0 0 auto;
+    /* The badge takes its ground from the same number, so the label reads as
+       ink on the card until the verdict has actually been reached. */
+    background-color: color-mix(
+      in srgb,
+      var(--app-refused) calc(var(--land) * 100%),
+      transparent
+    );
+    color: color-mix(in srgb, var(--app-card) calc(var(--land) * 100%), var(--app-refused));
+  }
+
+  .h2rt__verdict-text {
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--app-ink-sub);
+  }
+
+  /* ── THE LEDGER (on the page, dark) ─────────────────────────────────── */
+  .h2rt__ledger {
+    text-align: left;
+  }
+
+  @media (min-width: 62rem) {
+    .h2rt__ledger {
+      position: sticky;
+      top: calc(var(--space-12) * 2);
+    }
+  }
+
+  .h2rt__tally {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding-block-end: var(--space-6);
+    border-block-end: 1px solid var(--c-border);
+  }
+
+  .h2rt__cell {
+    padding-inline: var(--space-4);
+    border-inline-start: 1px solid var(--c-border);
+  }
+
+  .h2rt__cell:first-child {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  .h2rt__cell dt {
+    margin: 0;
+    letter-spacing: 0.1em;
+    color: var(--c-text-muted);
+  }
+
+  .h2rt__cell dd {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: var(--t-w-h1);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .h2rt__cell--refused dt,
+  .h2rt__cell--refused dd {
+    color: var(--c-refused);
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  .h2rt__sum {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: var(--space-6) 0 0;
+    font-family: var(--font-mono);
     font-size: var(--t-caption);
     line-height: 1.5;
     color: var(--c-text-sub);
   }
 
-  [data-tone='done'] .h2rt__n,
-  [data-tone='done'] .h2rt__name {
-    color: var(--c-teal);
+  .h2rt__sum b {
+    display: inline-block;
+    font-size: var(--t-h4);
+    color: var(--c-text);
   }
 
-  [data-tone='done'] {
-    border-color: color-mix(in srgb, var(--c-teal) 34%, transparent);
-  }
-
-  [data-tone='stopped'] .h2rt__n,
-  [data-tone='stopped'] .h2rt__name {
-    color: var(--c-amber);
-  }
-
-  [data-tone='stopped'] {
-    border-color: color-mix(in srgb, var(--c-amber) 34%, transparent);
-  }
-
-  /* Dimmed by INK, not by opacity. --c-text-muted clears 4.5:1 on this ground,
-     which a 55 percent alpha over the same colour would not. */
-  [data-tone='unreached'] .h2rt__name,
-  [data-tone='unreached'] .h2rt__body {
+  .h2rt__eg {
+    border: 1px solid var(--c-border);
     color: var(--c-text-muted);
   }
 
-  [data-tone='unreached'] {
-    background-color: transparent;
-  }
-
-  .h2rt__out {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    margin: var(--space-6) 0 0;
-    padding: var(--space-4);
-    border: 1px solid color-mix(in srgb, var(--c-amber) 26%, transparent);
-    border-radius: var(--radius-chip);
-    background-color: color-mix(in srgb, var(--c-amber) 10%, transparent);
-    text-align: left;
-  }
-
-  .h2rt__badge {
-    flex: 0 0 auto;
-    padding: 3px 9px;
-    border-radius: var(--radius-pill);
-    background-color: var(--c-amber);
-    color: var(--c-bg);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    line-height: var(--lh-tight);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .h2rt__out-text {
+  .h2rt__refused {
+    margin: var(--space-4) 0 0;
     font-family: var(--font-body);
     font-size: var(--t-caption);
     line-height: 1.55;
     color: var(--c-text-sub);
   }
 
-  .h2rt__caption {
+  .h2rt__refused-claim {
+    display: inline-block;
+    margin-inline-end: var(--space-2);
+    font-family: var(--font-mono);
+    color: var(--c-refused);
+    text-decoration-color: var(--c-refused);
+    text-decoration-thickness: 2px;
+  }
+
+  .h2rt__signoff {
     margin: var(--space-4) 0 0;
     font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--c-text);
+    max-width: 40ch;
+    text-wrap: pretty;
+  }
+
+  .h2rt__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin: var(--space-5) 0 0;
+    font-family: var(--font-body);
     font-size: var(--t-caption);
-    color: var(--c-text-muted);
-    text-align: center;
   }
 
-  /* ── THE SEQUENCE. Adds light and takes it back. Rest is the finished card ─ */
+  /* ── THE RUN, SCRUBBED BY THE SCROLL ─────────────────────────────────
+   *
+   * It was a timed choreography on `data-lit`: one pass, on a clock, started
+   * when a fraction of the section was in view. On a phone and a tablet the
+   * screen sits a viewport or more below the steps, so the pass had finished
+   * before the reader arrived and the demo looked static. Owner, 2026-09-06:
+   * no animation in Run the real engine on mobile, and the same on tablet.
+   *
+   * TWO REELS, AND NOTHING IS ON A CLOCK. scripts/reel.ts writes `--reel` from
+   * 0 to 1 across a block's travel through the viewport: one on the steps, one
+   * on the screen. Every value below is a function of it, so the reader is the
+   * projectionist: the scan runs the draft as they scroll it, each claim's rule
+   * draws as the scan reaches it, the refusal strikes, the stamp lands. Scroll
+   * back and it rewinds.
+   *
+   * REST IS 1, WHICH IS THE FINISHED TRACE. `--reel: 1` is declared on both
+   * blocks, so with no script, under reduced motion, in print and on any engine
+   * that never runs the file, the screen is complete and merely still. Nothing
+   * here can leave a word unread.
+   *
+   * `k(t, w)` below is written out per element rather than as a helper because
+   * CSS has none: `clamp(0, (reel - t) / w, 1)` is a ramp from 0 to 1 that
+   * starts at t and takes w of the reel to complete.
+   */
+
+  /* The steps. Each lights as the reel passes its fifth. */
+  .h2rt__step {
+    --on: clamp(0, calc((var(--reel) - var(--step-i, 0) * 0.16) * 6), 1);
+  }
+
+  .h2rt__dot {
+    background-color: color-mix(in srgb, var(--dot-ink) calc(var(--on) * 100%), var(--c-border));
+    box-shadow: 0 0 calc(var(--on) * 16px) color-mix(in srgb, var(--dot-ink) calc(var(--on) * 70%), transparent);
+  }
+
+  .h2rt__name {
+    color: color-mix(in srgb, var(--c-text) calc(var(--on) * 100%), var(--c-text-muted));
+  }
+
+  [data-drop='on'] .h2rt__name {
+    color: color-mix(in srgb, var(--c-refused) calc(var(--on) * 100%), var(--c-text-muted));
+  }
+
+  .h2rt__detail {
+    color: color-mix(in srgb, var(--c-text-sub) calc(var(--on) * 100%), var(--c-text-muted));
+  }
+
+  /* The scan reads down the draft as the screen travels. */
+  .h2rt__scan {
+    inset-block-start: calc(-2em + var(--reel) * (100% + 2em));
+  }
+
+  /* Each traced rule draws as the scan reaches its claim. */
+  .h2rt__claim[data-claim='traced'] {
+    --on: clamp(0, calc((var(--reel) - 0.18 - var(--claim-i, 0) * 0.1) * 10), 1);
+  }
+
+  .h2rt__claim[data-claim='traced']::after {
+    transform: scaleX(var(--on));
+  }
+
+  /* The refusal strikes last, and its highlight comes up with the strike. */
+  .h2rt__claim[data-claim='refused'] {
+    --on: clamp(0, calc((var(--reel) - 0.52) * 10), 1);
+    background-color: color-mix(in srgb, var(--app-refused) calc(var(--on) * 14%), transparent);
+    text-decoration-color: color-mix(in srgb, var(--app-refused) calc(var(--on) * 100%), transparent);
+  }
+
+  /* Each grounding row's mark grows as its claim is settled. */
+  .h2rt__row {
+    --on: clamp(0, calc((var(--reel) - 0.22 - var(--row-i, 0) * 0.1) * 10), 1);
+  }
+
+  .h2rt__mark {
+    scale: calc(0.55 + var(--on) * 0.45);
+  }
+
+  /* The verdict is stamped as the refusal lands. */
+  .h2rt__badge {
+    --on: clamp(0, calc((var(--reel) - 0.6) * 8), 1);
+    scale: calc(0.82 + var(--on) * 0.18);
+  }
+
+  /* The ledger beside it settles on the same reel. */
+  .h2rt__sum b {
+    scale: calc(0.9 + clamp(0, calc((var(--reel) - 0.66) * 8), 1) * 0.1);
+  }
+
+  .h2rt__cell--refused dd {
+    --on: clamp(0, calc((var(--reel) - 0.74) * 8), 1);
+    text-shadow: 0 0 calc(var(--on) * 18px) color-mix(in srgb, var(--c-refused) calc(var(--on) * 70%), transparent);
+  }
+
+  /* The drawn rail is the steps' reel, scaled from the start edge. */
+  @media (min-width: 62rem) {
+    .h2rt__rail-lit {
+      transform-origin: 0 50%;
+      transform: scaleX(var(--reel));
+    }
+  }
+
+  /* The one loop that is not the reader's: a status light breathing. */
   @media (prefers-reduced-motion: no-preference) {
-    [data-lit='on'] .h2rt__step {
-      animation: h2rt-lift var(--m-beat) var(--m-ease-land)
-        calc(var(--step-i, 0) * var(--m-beat) * 0.35) 1;
-    }
-
-    [data-lit='on'] .h2rt__badge {
-      animation: h2rt-settle calc(var(--m-beat) / 2) var(--m-ease-land)
-        calc(var(--m-beat) * 2.2) 1;
+    .h2rt__live i {
+      animation: h2rt-breathe calc(var(--m-beat) * 3) var(--m-ease-breath) infinite;
     }
   }
 
-  /* Starts and ends at zero displacement, so this is a pulse rather than the
-     entrance scripts/check-motion.js rule 2 centralises. */
-  @keyframes h2rt-lift {
-    0%   { transform: translateY(0); box-shadow: none; }
-    45%  { transform: translateY(-5px); box-shadow: var(--shadow-card); }
-    100% { transform: translateY(0); box-shadow: none; }
-  }
-
-  @keyframes h2rt-settle {
-    0%   { transform: translateY(0); }
-    40%  { transform: translateY(-4px); }
-    100% { transform: translateY(0); }
+  @keyframes h2rt-breathe {
+    0%, 100% { box-shadow: 0 0 6px var(--c-verified-glow); }
+    50%      { box-shadow: 0 0 14px var(--c-verified-glow); }
   }
 </style>

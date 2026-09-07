@@ -399,8 +399,25 @@ const year = new Date().getFullYear();
 </script>
 
 <style>
+  /* ── 3px, FOUR COLOURS, TRAVELLING ──────────────────────────────────
+     Owner, 2026-09-06: "the teal color line between home page and footer, cant
+     this be multi gradient colors use most of the colors and must feel like
+     motion and line width must be slightly slim?"
+
+     It was 6px of --grad-rule, which is two stops of one family and therefore
+     reads as a solid teal bar at that weight. It is now half the weight and
+     carries the full ambient ramp from --grad-seam, tiled at a fixed 1200px so
+     the travel in styles/effects.css can move it by exactly one tile and loop
+     without a jump. The tile is measured in pixels rather than percent on
+     purpose: a percentage tile is a different number of pixels at every
+     viewport, so the loop would be seamless at one width and stutter at the
+     next.
+
+     The geometry lives here and the motion lives in effects.css, beside the
+     site's other four named effects, because a page that turns motion off must
+     be able to drop the animation without losing the line. */
   .ca-footer-hairline {
-    height: 6px;
+    height: 3px;
     /* O-40. This hand-rolled a THIRD gradient opinion: 90deg across three ambient
        stops, where brand pack v5 defines two. --grad-rule at two stops and
        --grad-spectrum at four. A third, undocumented, on every page, is exactly
@@ -409,8 +426,16 @@ const year = new Date().getFullYear();
        Collapsed to the token. THE VIOLET END STOP IS GONE AND THAT IS THE
        DECISION, not an oversight. --grad-rule runs ambient-start to ambient-mid
        and is the divider recipe this site already uses seven times over. A
-       6px bar under the footer is a rule, so it takes the rule gradient. */
-    background: var(--grad-rule);
+       6px bar under the footer is a rule, so it takes the rule gradient.
+
+       SUPERSEDED 2026-09-06 BY THE OWNER, and the note above is kept because
+       it explains why the line was one colour for a month. Asked for directly
+       ("use most of the colors ... must feel like motion"), the seam now takes
+       --grad-seam, which is the same ambient ramp read out and back so it can
+       tile. --grad-rule is still the divider recipe everywhere else. */
+    background-image: var(--grad-seam);
+    background-size: 1200px 100%;
+    background-repeat: repeat-x;
   }
 
   .ca-footer {
@@ -770,9 +795,15 @@ const year = new Date().getFullYear();
     margin-left: 0;
   }
 
+  /* ONE COLUMN FROM 900px, WAS TWO. The accordion arrives at the same step
+     (see THE MOBILE COLLAPSE below), and a two-column grid of collapsed
+     accordions put one shut row beside the brand and stacked the other three
+     in pairs, which is the arrangement the owner called odd on a tablet. Shut
+     rows are full-width bars, so they read as a list, and the brand column
+     keeps the width it needs above them. */
   @media (max-width: 900px) {
     .ca-footer-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
     }
   }
   @media (max-width: 560px) {
@@ -858,7 +889,12 @@ const year = new Date().getFullYear();
     transition-timing-function: var(--ease);
   }
 
-  @media (max-width: 767px) {
+  /* 900px FROM 2026-09-06, WAS 767px. Owner, on a tablet: the footer "looks
+     odd, its better to align these same as mobile like collapsed most of them".
+     900 is not a new breakpoint: it is this file's own grid step, where five
+     columns become two, so the accordion now arrives exactly when the columns
+     stop being columns rather than one step later. It reaches every route. */
+  @media (max-width: 900px) {
     /* The <p> label and the <button> label are never both on screen. */
     .ca-footer.has-js-accordion .ca-footer-col-title {
       display: none;

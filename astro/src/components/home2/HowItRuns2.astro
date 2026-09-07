@@ -2,20 +2,25 @@
 /**
  * HOME 2.0: FIVE STAGES, AND ONE OF THEM IS A REFUSAL.
  *
- * A rail with five nodes. Horizontal from 62rem, stacked below it.
+ * The live homepage's fourth section, HowItRuns, with its five stage names and
+ * bodies verbatim. The live page draws them as five cards inside a panel. This
+ * draws them as what they are: five points on one line.
  *
- * ── THE LIGHT RUNS LEFT TO RIGHT, AND THE REST STATE IS THE LIT RAIL ───────
+ * ── A RAIL, OPEN, WITH THE GATE MARKED ─────────────────────────────────────
  *
- * The rail is painted at full length and the nodes at full contrast before any
- * animation exists. `data-lit` then runs a light along it once. If the observer
- * in scripts/motion.ts never fires, if the module is blocked, or if the reader
- * has asked for reduced motion, the drawing is finished and merely still. That
- * inversion is the repository's rule: nothing here can leave a stage unlit,
- * because unlit is not a state any element is ever put into.
+ * Horizontal from 62rem, stacked below it. The rail is painted at full length
+ * and the nodes at full contrast before any animation exists. `data-lit` then
+ * runs a light along it once, and after that a glint travels the rail on the
+ * site's ambient cycle, so the drawing stays alive without ever restating its
+ * arrival. Refuse is the one node with a colour of its own: it is the
+ * differentiator and the only stage whose job is to remove work, so it carries
+ * the refusal role while the other four carry the verified one.
  *
- * Refuse is the one node with a colour of its own. It is the differentiator and
- * the only stage whose job is to remove work, so it carries the verified teal
- * while the other four are the muted rail ink.
+ * ── THE STAGGER IS THE SHARED CASCADE ──────────────────────────────────────
+ *
+ * The list carries `data-cascade`, so the five stages arrive one after another
+ * on the same view timeline and the same step every other row on the page
+ * uses. Nothing about that arrival is written here.
  */
 import Section from '../layout/Section.astro';
 
@@ -23,35 +28,35 @@ interface Stage {
   n: string;
   name: string;
   body: string;
-  accent?: boolean;
+  gate?: boolean;
 }
 
 const STAGES: Stage[] = [
   {
     n: '01',
     name: 'Find',
-    body: 'Contracts Finder, Find a Tender and the portals you already watch, in one deduplicated list.',
+    body: 'Find a Tender and Contracts Finder, read continuously and scored against the evidence you hold.',
   },
   {
     n: '02',
     name: 'Qualify',
-    body: 'Fit, deadline, value and weighting. A no at this stage saves a week.',
+    body: 'Fit, component by component, with the reason for each. Stated as context, never as a probability of award.',
   },
   {
     n: '03',
     name: 'Draft',
-    body: 'Answers grounded in your own library and in the published tender text.',
+    body: 'Answers grounded in your answer library, the published requirement and your confirmed commitments.',
   },
   {
     n: '04',
     name: 'Refuse',
-    body: 'Any figure with no source in your evidence stops here and is not drafted.',
-    accent: true,
+    body: 'Any figure without a recorded commitment behind it is taken out of the draft before review.',
+    gate: true,
   },
   {
     n: '05',
     name: 'Evidence',
-    body: 'Every claim traced back to the page it came from, ready for the panel.',
+    body: 'After award, each commitment is tracked to the dated evidence that proves it, month by month.',
   },
 ];
 ---
@@ -59,22 +64,37 @@ const STAGES: Stage[] = [
 <Section
   eyebrow="How it runs"
   title="Five stages, and one of them is a refusal."
-  standfirst="The gate is not a filter bolted on at the end. It sits between the draft and the person who signs it, and it is the only stage whose job is to remove work rather than produce it."
+  standfirst="The gate is not a filter bolted on at the end. It sits between the draft and the human who signs it, and it is the only stage whose job is to remove work rather than produce it."
   id="how-it-runs"
   class="h2run"
+  cascade
 >
-  <div class="h2run__rig" data-lit data-lit-threshold="0.25">
+  {/* `data-reel`: scripts/reel.ts writes --reel from 0 to 1 as this block
+      travels up the viewport. Every light below is a function of it, and it
+      rests at 1, which is the finished drawing. */}
+  <div class="h2run__rig" data-lit data-lit-threshold="0.2" data-reel>
     <div class="h2run__rail" aria-hidden="true">
+      {/* THE RAIL DRAWS AND NOTHING RIDES IT. It carried a bright point at
+          the drawn end, which was the decorative half of a device that is
+          otherwise doing real work: the rail IS the five stages running, and a
+          reader scrubbing it is watching the process rather than watching a
+          light. Owner, 2026-09-06, on the same point riding four different
+          rails across the page: "dont you think this looks so cheap". This is
+          the one rail kept, and it keeps only the part that means something. */}
       <i class="h2run__rail-lit"></i>
     </div>
 
-    <ol class="h2run__list">
+    <ol class="h2run__list" data-cascade>
       {
         STAGES.map((s, i) => (
-          <li class="h2run__stage" style={`--stage-i: ${i}`} data-accent={s.accent ? 'on' : undefined}>
-            <span class="h2run__node">
-              <span class="h2run__n">{s.n}</span>
+          <li class="h2run__stage" style={`--stage-i: ${i}`} data-gate={s.gate ? 'on' : undefined}>
+            <span class="h2run__node" aria-hidden="true">
+              <i class="h2run__pip"></i>
             </span>
+            <p class="meta h2run__n">
+              <span class="visually-hidden">Stage </span>{s.n}
+              {s.gate && <span class="chip h2run__tag">The gate</span>}
+            </p>
             <h3 class="h2run__name">{s.name}</h3>
             <p class="h2run__body">{s.body}</p>
           </li>
@@ -85,8 +105,20 @@ const STAGES: Stage[] = [
 </Section>
 
 <style>
+  /* ── THE REEL. Rest is 1: rail drawn, every stage lit ─────────────────
+   *
+   * --reel is written by scripts/reel.ts while the block crosses the
+   * viewport. Each stage derives its own light from it: stage i turns from
+   * unlit to lit as the reel passes i/5, over a fifth of the reel, so the
+   * light travels the row in step with the rail's head. Ink and glow only,
+   * never opacity: an unlit stage is muted ink, not a missing one. */
   .h2run__rig {
     position: relative;
+    --reel: 1;
+  }
+
+  .h2run__stage {
+    --on: clamp(0, calc((var(--reel) - var(--stage-i, 0) * 0.2) * 5), 1);
   }
 
   .h2run__list {
@@ -95,17 +127,36 @@ const STAGES: Stage[] = [
     margin: 0;
     padding: 0;
     list-style: none;
+    /* The shared cascade's per-item step, widened for this row only. Five
+       stages that assemble over about a third of a viewport of scroll read as
+       the engine building itself; at the default step the whole row lands in
+       one gesture. A knob on the central system, not a second system. */
+    --arrive-item-step: 72px;
   }
 
   .h2run__stage {
+    position: relative;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
+      'node n'
       'node name'
       'node body';
     column-gap: var(--space-4);
     row-gap: 2px;
     align-items: start;
+    /* `align-content: start`, AND IT IS NOT THE SAME PROPERTY AS THE LINE
+       ABOVE. `align-items` places each cell inside its row; `align-content`
+       decides what happens to leftover space between the rows, and its default
+       spreads that space EQUALLY ACROSS THEM. The five stages share one grid
+       row so they are stretched to the tallest, and stage 04's body is two
+       lines where the others are three, which left it about 17px of slack:
+       measured, its four rows came out 32.5 / 52.3 / 34.6 / 73.5 against
+       28 / 44 / 30.1 / 90.8 on every sibling, so its heading sat 12.8px below
+       theirs in a row whose whole argument is that the five are the same kind
+       of thing. The slack now falls at the bottom of the column, where nothing
+       is reading. Same defect and same fix as .h2bs__station. */
+    align-content: start;
     text-align: left;
   }
 
@@ -114,50 +165,77 @@ const STAGES: Stage[] = [
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    inline-size: 40px;
-    block-size: 40px;
+    inline-size: 28px;
+    block-size: 28px;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--c-border);
-    background-color: var(--c-raised);
+    border: 1px solid color-mix(in srgb, var(--c-verified) calc(var(--on) * 40%), var(--c-border));
+    background-color: var(--c-floor);
+    --node-ink: var(--c-verified);
+    box-shadow: 0 0 calc(var(--on) * 22px) color-mix(in srgb, var(--node-ink) calc(var(--on) * 28%), transparent);
+  }
+
+  .h2run__pip {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--node-ink) calc(var(--on) * 100%), var(--c-border));
+    box-shadow: 0 0 calc(var(--on) * 12px) color-mix(in srgb, var(--node-ink) calc(var(--on) * 70%), transparent);
+  }
+
+  [data-gate='on'] .h2run__node {
+    --node-ink: var(--c-refused);
+    border-color: color-mix(in srgb, var(--c-refused) calc(var(--on) * 55%), var(--c-border));
+  }
+
+  /* THE NUMBER LINE RESERVES THE CHIP'S HEIGHT WHETHER OR NOT IT HOLDS ONE.
+     Stage 04 carries a chip reading "The gate" beside its numeral, and a chip
+     is taller than a numeral, so that one row grew and took its heading and
+     body 18px below the other four. In a row of five stages whose argument is
+     that they are the same kind of thing, one sitting lower reads as a
+     mistake. Fixed at the row rather than at the chip, so tagging a second
+     stage later cannot bring it back. */
+  .h2run__n {
+    grid-area: n;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    /* 1.75rem is the chip's measured height, 27.8px, rounded up. Below it the
+       tagged stage's number row is taller than the other four and takes its
+       heading down with it. */
+    min-block-size: 1.75rem;
+    margin: 0;
+    letter-spacing: 0.1em;
     color: var(--c-text-muted);
   }
 
-  .h2run__n {
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0.04em;
-  }
-
-  [data-accent='on'] .h2run__node {
-    border-color: color-mix(in srgb, var(--c-teal) 55%, transparent);
-    background-color: color-mix(in srgb, var(--c-teal) 14%, transparent);
-    color: var(--c-teal);
-    box-shadow: 0 0 24px color-mix(in srgb, var(--c-teal) 30%, transparent);
+  .h2run__tag {
+    border: 1px solid color-mix(in srgb, var(--c-refused) 40%, transparent);
+    background-color: color-mix(in srgb, var(--c-refused) 12%, transparent);
+    color: var(--c-refused);
   }
 
   .h2run__name {
     grid-area: name;
-    margin: 0;
+    margin: var(--space-1) 0 0;
     font-family: var(--font-display);
     font-size: var(--t-h4);
     font-weight: var(--t-w-h3);
     line-height: var(--lh-tight);
-    color: var(--c-text);
+    color: color-mix(in srgb, var(--c-text) calc(var(--on) * 100%), var(--c-text-muted));
   }
 
-  [data-accent='on'] .h2run__name {
-    color: var(--c-teal);
+  [data-gate='on'] .h2run__name {
+    color: color-mix(in srgb, var(--c-refused) calc(var(--on) * 100%), var(--c-text-muted));
   }
 
   .h2run__body {
     grid-area: body;
-    margin: 0;
+    margin: var(--space-1) 0 0;
     font-family: var(--font-body);
     font-size: var(--t-caption);
     line-height: 1.55;
-    color: var(--c-text-sub);
+    color: color-mix(in srgb, var(--c-text-sub) calc(var(--on) * 100%), var(--c-text-muted));
+    text-wrap: pretty;
   }
 
   /* The rail is drawn only where the row is a row. Below 62rem the stages
@@ -166,83 +244,91 @@ const STAGES: Stage[] = [
     display: none;
   }
 
+  /* Stacked: the rail runs DOWN through the nodes and draws with the reel,
+     the same drawing turned on its side, so a phone sees the light travel. */
   @media (max-width: 61.999rem) {
-    .h2run__stage:not(:last-child) .h2run__node::after {
-      content: '';
+    .h2run__node {
+      position: relative;
+      z-index: 1;
+    }
+
+    .h2run__rail {
+      display: block;
       position: absolute;
-      inline-size: 1px;
-      block-size: var(--space-6);
-      margin-block-start: 40px;
+      inset-block: 14px;
+      inset-inline-start: 13px;
+      inline-size: 2px;
+      border-radius: var(--radius-pill);
       background-color: var(--c-border);
     }
 
-    .h2run__node {
-      position: relative;
+    .h2run__rail-lit {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      background-image: var(--grad-draw-y);
+      transform-origin: 50% 0;
+      transform: scaleY(var(--reel));
     }
   }
 
   @media (min-width: 62rem) {
     .h2run__list {
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: var(--space-5);
+      gap: var(--space-6);
     }
 
     .h2run__stage {
       grid-template-columns: minmax(0, 1fr);
       grid-template-areas:
         'node'
+        'n'
         'name'
         'body';
-      row-gap: var(--stack-1);
-      justify-items: center;
-      text-align: center;
+      row-gap: 0;
+      padding-inline-end: var(--space-6);
+    }
+
+    .h2run__n {
+      margin-block-start: var(--space-5);
     }
 
     .h2run__body {
-      max-width: 22ch;
+      max-width: 24ch;
     }
 
     .h2run__rail {
       display: block;
       position: absolute;
-      inset-block-start: 20px;
-      inset-inline: 10%;
+      inset-block-start: 14px;
+      inset-inline: 14px;
       block-size: 1px;
       background-color: var(--c-border);
-      overflow: hidden;
     }
 
+    /* The drawn rail is the reel, scaled from the start edge. */
     .h2run__rail-lit {
       display: block;
       block-size: 100%;
-      background-image: var(--grad-rule);
+      background-image: var(--grad-draw);
       transform-origin: 0 50%;
-    }
-  }
-
-  /* ── THE LIGHT. Rest is the finished rail, so nothing can be left dark ──── */
-  @media (prefers-reduced-motion: no-preference) {
-    [data-lit='on'] .h2run__rail-lit {
-      animation: h2run-sweep calc(var(--m-beat) * 2) var(--m-ease-travel) 1;
+      transform: scaleX(var(--reel));
     }
 
-    [data-lit='on'] .h2run__node {
-      animation: h2run-glow var(--m-beat) var(--m-ease-land)
-        calc(var(--stage-i, 0) * var(--m-beat) * 0.4) 1;
-    }
-  }
+    /* The head: a bright point riding the drawn end of the rail, so the eye
+       has something to follow as it scrolls. It rests at the far end. */  }
 
-  /* Scale, never translate, so this is not the entrance check-motion rule 2
-     centralises. It ends at the full rail, which is also where it rests. */
-  @keyframes h2run-sweep {
-    from { transform: scaleX(0); }
-    to   { transform: scaleX(1); }
-  }
+  /* ── THE LIGHT. Rest is the finished rail, so nothing can be left dark ────
+     The rail draws from `--reel`, the number scripts/reel.ts writes across this
+     block's travel through the viewport, which is what puts it in step with the
+     stages arriving above it. An earlier note here said it drew on the view
+     timeline through `data-draw` in styles/motion.css. It never did: that
+     recipe reached no element on any of 45 routes, and it is deleted with this
+     note.
 
-  /* Adds light and takes it away again. Rest state before and after. */
-  @keyframes h2run-glow {
-    0%   { box-shadow: 0 0 0 color-mix(in srgb, var(--c-teal) 0%, transparent); }
-    45%  { box-shadow: 0 0 26px color-mix(in srgb, var(--c-teal) 42%, transparent); }
-    100% { box-shadow: 0 0 0 color-mix(in srgb, var(--c-teal) 0%, transparent); }
-  }
+     The travelling highlight that used to run the rail is gone too. It
+     translated 900% inside a rail that had lost its `overflow: hidden`, which
+     put a horizontal scrollbar across the page at 1440. Its rules outlived it
+     by a day. */
+
 </style>

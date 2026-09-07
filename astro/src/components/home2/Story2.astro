@@ -1,0 +1,747 @@
+---
+/**
+ * HOME 2.0: ONE TENDER, FROM NOTICE TO EVIDENCE.
+ *
+ * The live homepage's product section, ProductScreens, with its five stages,
+ * their titles, bodies and quoted banners verbatim, and its five real screens
+ * from src/data/crowmark-screens.ts. The live page puts them behind a tab
+ * switcher inside a panel, one at a time. This tells them as one story.
+ *
+ * ── A STICKY FRAME, AND THE SCROLL IS THE CONTROL ──────────────────────────
+ *
+ * The five stages run down one column as ordinary copy. Beside them a device
+ * frame stays pinned, and as each stage reaches the middle of the viewport the
+ * frame shows that stage's screen. The reader never presses anything to see
+ * the product move through the contract; they read, and it follows. The dots
+ * beside the frame are a second way in for anyone who wants to jump.
+ *
+ * ── THE BANNERS ARE DISCLOSED, NOT PRINTED ─────────────────────────────────
+ *
+ * Three screens carry a banner whose wording is the argument: the fit context
+ * panel, the grounding banner, the evaluation banner. On the live page each is
+ * printed beside its screen as a block quote. Here each lives in a <details>
+ * under its stage, closed until asked for, and a hotspot sits ON THE SCREEN at
+ * the banner's own position. Pressing the hotspot opens the disclosure and
+ * shows the wording in a tooltip beside the marker. The <details> is the one
+ * copy assistive technology reads and it works with no script at all; the
+ * tooltip is a mirror and is hidden from it.
+ *
+ * The hotspot coordinates are percentages of the screen, measured on the
+ * 2880x1800 captures. Every screen here is that size, so the frame's 16:10
+ * box maps to the capture one to one and nothing is cropped.
+ *
+ * ── EVERY SCREEN IS PAINTED, AND THE FIRST IS ON TOP ───────────────────────
+ *
+ * The five screens are stacked at full opacity. `data-story-active`, written
+ * by scripts/story.ts, raises one to the top and wipes it in on clip-path. With
+ * no script, no observer and no scroll the first screen shows and the section
+ * is complete. Nothing here animates opacity, so nothing can be left hidden.
+ * The frame wears the site's one glass recipe on its frame modifier.
+ */
+import Section from '../layout/Section.astro';
+import DeviceChrome from './DeviceChrome.astro';
+import { SUPPLIER_SCREENS, BUYER_SCREENS, VARIANT, avifSrcset } from '../../data/crowmark-screens';
+import type { Slide } from '../ui/Carousel.astro';
+
+const ALL: Slide[] = [...SUPPLIER_SCREENS, ...BUYER_SCREENS];
+
+function screen(name: string): Slide {
+  const hit = ALL.find((s) => s.src.includes(`/${name}${VARIANT}.png`));
+  if (!hit) throw new Error(`Story2: no drawn screen named "${name}${VARIANT}" in crowmark-screens.ts`);
+  return hit;
+}
+
+interface Stage {
+  id: string;
+  path: string;
+  slide: Slide;
+  kicker: string;
+  title: string;
+  body: string;
+  /** The banner on the screen, and where on the screen it is, as percentages. */
+  banner?: { text: string; src: string; x: number; y: number };
+  note?: string;
+}
+
+const STAGES: Stage[] = [
+  {
+    id: 'screen-discover',
+    path: 'mark/discover',
+    slide: screen('sup-1-discover'),
+    kicker: '01 · Supplier · Discover',
+    title: 'Notices you could actually win the argument on.',
+    body:
+      'Both UK registers are read: Find a Tender and Contracts Finder. Relevance is scored against the evidence you already hold rather than against the words in the notice, and the register a notice came from is named on the notice, so the trail out to the source is one click and not a search.',
+    note: 'Relevance is a sorting aid. It is not a forecast of anything.',
+  },
+  {
+    id: 'screen-qualify',
+    path: 'mark/qualify',
+    slide: screen('sup-3-bid-no-bid'),
+    kicker: '02 · Supplier · Bid or no bid',
+    title: 'Fit, broken into its parts, with the reason attached.',
+    body:
+      'The score is decomposed component by component, each with a band, a points total and a one-line reason you can argue with. What it is not is stated on the screen itself, in the product, where a reader cannot miss it.',
+    banner: {
+      text: 'This is FIT context. It is not a probability of award, and CrowMark does not produce one.',
+      src: 'The data confidence panel',
+      x: 26,
+      y: 48,
+    },
+  },
+  {
+    id: 'screen-draft',
+    path: 'mark/draft',
+    slide: screen('sup-2-tender-questions'),
+    kicker: '03 · Supplier · Draft',
+    title: 'The drafter is told where a figure may come from.',
+    body:
+      'The tender is split into its scored questions, each with its category, word limit and weighting. The boundary the drafter works inside runs across the top of the screen and is not a setting anyone can turn off.',
+    banner: {
+      text:
+        'Answers are AI-assisted and grounded only in your own answer library, the published requirement and your confirmed commitments. Every £ and % comes from your engine-computed commitments and is never invented. A named human reviews, edits and approves every answer before you submit it.',
+      src: 'The grounding banner',
+      x: 26,
+      y: 24,
+    },
+  },
+  {
+    id: 'screen-evaluate',
+    path: 'mark/evaluate',
+    slide: screen('buy-2-response-review'),
+    kicker: '04 · Buyer · Evaluate',
+    title: 'It finds the passage. It does not set the band.',
+    body:
+      'One criterion against one response. The supplier is quoted verbatim and the quote is cited to a section and a page of the response document, so an evaluator checks a reference rather than trusting a summary. The band, and the audit line under it, belong to a named person.',
+    banner: {
+      text:
+        'CrowMark locates the passage that answers this criterion and shows you where it came from. It does not score, rank or recommend. The band is yours to set.',
+      src: 'The evaluation banner',
+      x: 26,
+      y: 18,
+    },
+  },
+  {
+    id: 'screen-evidence',
+    path: 'mark/delivery',
+    slide: screen('buy-4-delivery-oversight'),
+    kicker: '05 · Buyer · After award',
+    title: 'A commitment is only worth the evidence filed against it.',
+    body:
+      'Promises made at award are carried forward as measures, and each measure collects dated evidence against it month by month. The same view carries the next assessment date for each contract, which is the part of the duty that is easiest to lose track of and the hardest to explain later.',
+    note:
+      'Each contract reads on track, at risk or behind against the evidence received, not against a projection. Suppliers see the other half of this: the same commitments, with the upload that proves each one.',
+  },
+];
+
+const HOSTNAME = 'app.crowagent.ai';
+const tipId = (s: Stage) => `${s.id}-banner`;
+---
+
+<Section
+  eyebrow="The product"
+  title="One tender, from notice to evidence."
+  standfirst="Five screens along the same contract: finding the notice, deciding whether to bid, drafting the answers, evaluating the responses, and proving delivery afterwards. The wording each screen carries is on the screen, where a reader cannot miss it."
+  id="product"
+  class="h2st"
+  cascade
+>
+  <div class="h2st__grid" data-story>
+    <div class="h2st__pin" data-story-pin>
+      <div class="surface surface--frame surface--row h2st__frame">
+        <DeviceChrome host={`${HOSTNAME}/`} path={STAGES[0].path} pathIsLive />
+        <div class="h2st__screens">
+          {
+            STAGES.map((s, i) => (
+              <picture class="h2st__screen" data-story-frame={i}>
+                <source
+                  type="image/avif"
+                  srcset={avifSrcset(s.slide.src, s.slide.width)}
+                  sizes="(min-width: 62rem) 56vw, 100vw"
+                />
+                <img
+                  src={s.slide.src}
+                  width={s.slide.width}
+                  height={s.slide.height}
+                  alt={s.slide.alt}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </picture>
+            ))
+          }
+          {
+            STAGES.map(
+              (s, i) =>
+                s.banner && (
+                  <div class="h2st__spot" data-story-spot={i} style={`--sx: ${s.banner.x}%; --sy: ${s.banner.y}%`}>
+                    <button
+                      class="h2st__spot-btn"
+                      type="button"
+                      data-story-spot-btn
+                      aria-expanded="false"
+                      aria-controls={tipId(s)}
+                      aria-label={`${s.banner.src}: read the wording on this screen`}
+                    >
+                      <i class="h2st__ping" aria-hidden="true"></i>
+                      <i class="h2st__pip" aria-hidden="true"></i>
+                    </button>
+                    <div class="h2st__tip" aria-hidden="true">
+                      <p class="h2st__tip-text">&ldquo;{s.banner.text}&rdquo;</p>
+                      <p class="meta h2st__tip-src">{s.banner.src}, on this screen</p>
+                    </div>
+                  </div>
+                ),
+            )
+          }
+        </div>
+      </div>
+
+      <div class="h2st__dots" role="group" aria-label="Jump to a stage">
+        {
+          STAGES.map((s, i) => (
+            <button
+              class="h2st__dot"
+              type="button"
+              data-story-dot
+              aria-label={`Stage ${i + 1}: ${s.title}`}
+              aria-current={i === 0 ? 'true' : 'false'}
+            >
+              <i aria-hidden="true"></i>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <ol class="h2st__steps">
+      {
+        STAGES.map((s, i) => (
+          <li class="h2st__step" id={s.id} data-story-step={i} data-story-path={s.path}>
+            <p class="meta h2st__kicker">{s.kicker}</p>
+            <h3 class="h2st__h">{s.title}</h3>
+            <p class="h2st__p">{s.body}</p>
+            {s.banner && (
+              <details class="h2st__banner" id={tipId(s)}>
+                <summary class="meta h2st__banner-sum">
+                  <span class="h2st__banner-mark" aria-hidden="true"></span>
+                  {s.banner.src}, on this screen
+                </summary>
+                <blockquote class="h2st__quote">
+                  <p class="h2st__quote-text">&ldquo;{s.banner.text}&rdquo;</p>
+                </blockquote>
+              </details>
+            )}
+            {s.note && <p class="h2st__p h2st__note">{s.note}</p>}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Section>
+
+<style>
+  .h2st__grid {
+    display: grid;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  @media (min-width: 62rem) {
+    .h2st__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(var(--space-10), 5vw, calc(var(--space-12) * 1.5));
+    }
+
+    .h2st__pin {
+      order: 2;
+    }
+
+    .h2st__steps {
+      order: 1;
+    }
+  }
+
+  /* ── THE PINNED FRAME ──────────────────────────────────────────────────── */
+  /* ── WHERE THE FRAME PARKS, AND WHY IT IS NOT A FIXED OFFSET ────────────
+   *
+   * A flat `top` puts the frame near the top of the window whatever the window
+   * is. On a tall tablet that is top-heavy: the frame is about 420px in a
+   * 1366px viewport, so it sat 86px down with 860px of empty column beneath it
+   * while the text column beside it was full. Measured on the owner's iPad Pro
+   * on 2026-09-06, in the same pass as the stage heights.
+   *
+   * So the offset grows with the room available, and stops. `(100vh - 32rem)/2`
+   * is the offset that would centre a frame of about 512px, the floor keeps it
+   * clear of the sticky header on a short window, and 18rem caps it so the
+   * frame never parks so low that the reader scrolls past a stage before it
+   * pins. At 1366 that is 288px down rather than 86, which balances the two
+   * columns; at 900 it is 194; below that the floor takes over. */
+  .h2st__pin {
+    position: sticky;
+    top: clamp(
+      calc(var(--space-12) * 1.8),
+      calc((100vh - 32rem) / 2),
+      18rem
+    );
+    z-index: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 61.999rem) {
+    .h2st__pin {
+      top: calc(var(--space-12) * 1.6);
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+      padding-block-end: var(--space-4);
+      background-image: linear-gradient(180deg, var(--c-floor) 0%, var(--c-floor) 82%, transparent);
+    }
+  }
+
+  /* The glass is the recipe's; the frame's own ambient cast is added on the
+     shadow knob so the screen sits in the page's atmosphere. */
+  .h2st__frame {
+    --surface-shadow:
+      var(--shadow-panel),
+      0 40px 120px -40px color-mix(in srgb, var(--c-ambient-deep) 55%, transparent);
+  }
+
+
+
+
+
+
+  .h2st__screens {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background-color: var(--c-lit);
+  }
+
+  .h2st__screen {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .h2st__screen img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* Rest: the first screen on top. Nothing is transparent. */
+  .h2st__screen:first-child {
+    z-index: 1;
+  }
+
+  [data-story-active='0'] .h2st__screen:nth-child(1),
+  [data-story-active='1'] .h2st__screen:nth-child(2),
+  [data-story-active='2'] .h2st__screen:nth-child(3),
+  [data-story-active='3'] .h2st__screen:nth-child(4),
+  [data-story-active='4'] .h2st__screen:nth-child(5) {
+    z-index: 2;
+  }
+
+  /* The wipe. clip-path only: the screen beneath is opaque, so at no frame
+     is anything but a finished screen visible. */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-story-active='0'] .h2st__screen:nth-child(1),
+    [data-story-active='1'] .h2st__screen:nth-child(2),
+    [data-story-active='2'] .h2st__screen:nth-child(3),
+    [data-story-active='3'] .h2st__screen:nth-child(4),
+    [data-story-active='4'] .h2st__screen:nth-child(5) {
+      animation: h2st-wipe calc(var(--m-beat) * 1.2) var(--m-ease-land) both;
+    }
+  }
+
+  @keyframes h2st-wipe {
+    from { clip-path: inset(0 0 100% 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+
+  /* ── THE HOTSPOTS ──────────────────────────────────────────────────────
+   *
+   * One per banner, at the banner's own coordinates on its screen, shown only
+   * while that screen is on top. The marker is a pip with a ring that pings
+   * outward, on the ambient beat. The ring's loop fades OUT from 0.6 and
+   * never rises to 1, so it is a signal and not an entrance. */
+  .h2st__spot {
+    position: absolute;
+    z-index: 3;
+    inset-inline-start: var(--sx);
+    inset-block-start: var(--sy);
+    display: none;
+  }
+
+  [data-story-active='1'] .h2st__spot[data-story-spot='1'],
+  [data-story-active='2'] .h2st__spot[data-story-spot='2'],
+  [data-story-active='3'] .h2st__spot[data-story-spot='3'] {
+    display: block;
+  }
+
+  .h2st__spot-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    margin: -22px 0 0 -22px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    cursor: pointer;
+  }
+
+  .h2st__pip,
+  .h2st__ping {
+    grid-area: 1 / 1;
+    border-radius: var(--radius-pill);
+  }
+
+  .h2st__pip {
+    inline-size: 14px;
+    block-size: 14px;
+    border: 2px solid var(--c-bg);
+    background-color: var(--c-verified);
+    box-shadow: 0 0 0 1px var(--c-verified), 0 2px 10px color-mix(in srgb, var(--c-verified) 60%, transparent);
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .h2st__ping {
+    inline-size: 14px;
+    block-size: 14px;
+    border: 2px solid var(--c-verified);
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .h2st__ping {
+      animation: h2st-ping calc(var(--m-beat) * 3) var(--m-ease-breath) infinite;
+    }
+  }
+
+  @keyframes h2st-ping {
+    0%   { transform: scale(1);   opacity: 0.7; }
+    70%  { transform: scale(2.6); opacity: 0; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  @media (hover: hover) {
+    .h2st__spot-btn:hover .h2st__pip {
+      transform: scale(1.15);
+    }
+  }
+
+  .h2st__spot-btn:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 2px;
+  }
+
+  .h2st__spot-btn[aria-expanded='true'] .h2st__pip {
+    background-color: var(--c-text);
+  }
+
+  /* The tooltip. Anchored to the marker's right on a wide screen and pinned
+     to the frame's foot on a narrow one, where a bubble beside a 14px pip
+     would leave the frame. Shown by the button's state, and by hover and
+     focus so a pointer can read it without a press. */
+  .h2st__tip {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(100% + var(--space-2));
+    transform: translateY(-50%);
+    inline-size: min(22rem, 46vw);
+    padding: var(--space-4);
+    border-radius: var(--radius-frame);
+    border: 1px solid color-mix(in srgb, var(--c-verified) 40%, var(--c-border));
+    background-color: var(--c-raised);
+    box-shadow: var(--shadow-panel);
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .h2st__spot-btn[aria-expanded='true'] + .h2st__tip,
+  .h2st__spot-btn:hover + .h2st__tip,
+  .h2st__spot-btn:focus-visible + .h2st__tip {
+    visibility: visible;
+  }
+
+  @media (max-width: 47.999rem) {
+    .h2st__spot {
+      position: static;
+    }
+
+    .h2st__spot-btn {
+      position: absolute;
+      inset-inline-start: var(--sx);
+      inset-block-start: var(--sy);
+      z-index: 3;
+    }
+
+    .h2st__tip {
+      inset: auto var(--space-3) var(--space-3);
+      transform: none;
+      inline-size: auto;
+      z-index: 4;
+    }
+  }
+
+  .h2st__tip-text {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.55;
+    color: var(--c-text);
+  }
+
+  .h2st__tip-src {
+    margin: var(--space-2) 0 0;
+    letter-spacing: 0.1em;
+    color: var(--c-verified);
+  }
+
+  /* ── THE DOTS ────────────────────────────────────────────────────────── */
+  .h2st__dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-4);
+  }
+
+  .h2st__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 28px;
+    block-size: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    cursor: pointer;
+  }
+
+  /* The pip carries the verified role at rest, dimmed; the current one turns
+     it up. So the state restates a mark the pip already has rather than
+     introducing one, which is check-palette-roles.js rule 2. */
+  .h2st__dot i {
+    display: block;
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--c-verified) 30%, var(--c-border));
+    transition:
+      inline-size var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  .h2st__dot[aria-current='true'] i {
+    inline-size: 22px;
+    background-color: var(--c-verified);
+  }
+
+  .h2st__dot:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 2px;
+  }
+
+  /* ── THE STEPS ───────────────────────────────────────────────────────── */
+  .h2st__steps {
+    display: grid;
+    gap: var(--space-10);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+
+  @media (min-width: 62rem) {
+    /* No lead-in above the first step: the frame is already on screen and
+       the reader should meet the first stage beside it rather than scroll
+       through a hole to reach it. The run-out below the last step is what
+       lets the frame stay pinned until that step has been read. */
+    .h2st__steps {
+      gap: 0;
+      padding-block: 0 calc(var(--space-12) * 3);
+    }
+
+    /* ── THE SCROLL DISTANCE PER STAGE IS CAPPED, AND IT HAS TO BE ─────────
+     *
+     * This was `min-block-size: 62vh`, which ties how far a reader scrolls per
+     * stage to the height of their WINDOW while the thing that has to fill it,
+     * five short paragraphs, does not change at all. On a tall tablet that is
+     * at its worst. Measured on the owner's iPad Pro at 1024x1366:
+     *
+     *   step height   656  847  847  847  847
+     *   text in it    323  278  278  328  367
+     *   empty         333  569  569  519  480
+     *
+     * Five holes of about half a screen each, which is what the owner reported
+     * on 2026-09-06: "the product section has so much gaps while scrolling the
+     * text". At 1440x900 the same rule gives 558 against 275, so it was airy
+     * everywhere and only became a hole on a tall screen.
+     *
+     * THE CLAMP IS THE FIX RATHER THAN A SMALLER vh. A stage still needs more
+     * height than its text, because that slack IS the dwell: it is how long the
+     * pinned frame holds one screen before the next stage takes it, and a stage
+     * sized to its text would flip the frame the moment a line scrolled past.
+     * What it must not do is grow without limit. 28rem is 448px, which sits
+     * about 80 to 170px above the tallest stage's text, so every stage keeps a
+     * dwell and none keeps a hole. 20rem holds the floor on a short window.
+     *
+     * The first stage is shorter still, because the frame is already on screen
+     * beside it and the reader should meet it rather than scroll to it. */
+    .h2st__step {
+      min-block-size: clamp(20rem, 48vh, 28rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-block: var(--space-10);
+    }
+
+    .h2st__step:first-child {
+      min-block-size: clamp(14rem, 34vh, 19rem);
+      justify-content: flex-start;
+      padding-block-start: var(--space-8);
+    }
+  }
+
+  .h2st__step {
+    position: relative;
+    padding-inline-start: var(--space-6);
+    text-align: left;
+  }
+
+  .h2st__step::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 1px;
+    background-color: var(--c-border);
+  }
+
+  .h2st__step::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 2px;
+    background-image: linear-gradient(
+      180deg,
+      transparent,
+      var(--c-ambient-start) 18%,
+      var(--c-ambient-end) 82%,
+      transparent
+    );
+    transform: scaleY(0.4);
+    transform-origin: 50% 50%;
+    transition:
+      transform var(--dur-slow) var(--ease),
+      opacity var(--dur-slow) var(--ease);
+    opacity: 0.5;
+  }
+
+  [data-story-active='0'] .h2st__step:nth-child(1)::after,
+  [data-story-active='1'] .h2st__step:nth-child(2)::after,
+  [data-story-active='2'] .h2st__step:nth-child(3)::after,
+  [data-story-active='3'] .h2st__step:nth-child(4)::after,
+  [data-story-active='4'] .h2st__step:nth-child(5)::after {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+
+  .h2st__kicker {
+    margin: 0;
+    letter-spacing: 0.1em;
+    color: var(--c-verified);
+  }
+
+  .h2st__h {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: var(--t-w-h3);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--c-text);
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .h2st__p {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--c-text-sub);
+    max-width: 52ch;
+    text-wrap: pretty;
+  }
+
+  /* ── THE DISCLOSURE ──────────────────────────────────────────────────── */
+  .h2st__banner {
+    margin: var(--space-4) 0 0;
+    max-width: 52ch;
+  }
+
+  .h2st__banner-sum {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-block-size: 44px;
+    padding-inline-end: var(--space-2);
+    list-style: none;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    color: var(--c-verified);
+  }
+
+  .h2st__banner-sum::-webkit-details-marker {
+    display: none;
+  }
+
+  .h2st__banner-mark {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--c-verified);
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  .h2st__banner[open] .h2st__banner-mark {
+    background-color: var(--c-verified);
+  }
+
+  .h2st__banner-sum:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+    border-radius: var(--radius-chip);
+  }
+
+  /* THE SITE HAS ONE PULLED QUOTE AND styles/prose.css OWNS IT. This used to
+     restate it with a 2px rule and its own padding, which check-treatments
+     counted as a second blockquote treatment: a quote that looks different in
+     one place is a quote the reader has to learn twice. Only the margin, which
+     is this disclosure's own spacing, is local. */
+  .h2st__quote {
+    margin: var(--space-2) 0 0;
+  }
+
+  .h2st__quote-text {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.6;
+    color: var(--c-text);
+  }
+
+  .h2st__note {
+    font-size: var(--t-caption);
+    color: var(--c-text-muted);
+  }
+</style>

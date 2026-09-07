@@ -552,6 +552,50 @@
     backdrop-filter: none;
   }
 
+  /* ── HOME 2.0, 2026-09-05. A DEVICE FRAME ON THE ONE GLASS RECIPE ───────
+   *
+   * A window, a document, a screen: an object the reader looks INTO rather
+   * than a block of copy. It keeps the surface's translucent fill, its border
+   * and its backdrop blur, so it is the same glass as every card on the site,
+   * and it changes three things. The radius is the frame radius, because a
+   * frame with its own chrome bar is what --radius-frame-lg was added for. It
+   * clips its contents, because a window has edges. And it does not lift, glow
+   * or recolour under the pointer, because a window is not a control; the
+   * hover rule below restates the rest values so the shared `.surface:hover`
+   * has nothing to change. A frame reads left, and it says so the way every
+   * other left-reading surface does, by also wearing `surface--row`, so the
+   * alignment rule in check-design-system.js sees one recipe and not a second
+   * one. Written here rather than in the four components
+   * that wanted it, because this file's own instruction forbids a component
+   * restating glass, and four restatements is how twenty-one card recipes
+   * happened. */
+  .surface--frame {
+    --surface-edge: color-mix(in srgb, var(--c-text) 16%, transparent);
+    --surface-shadow: var(--shadow-panel);
+    border-radius: var(--radius-frame-lg);
+    overflow: hidden;
+  }
+
+  @media (hover: hover) {
+    .surface--frame:hover,
+    .surface--frame:focus-within {
+      border-color: var(--surface-edge);
+      background-color: var(--c-card);
+      box-shadow: var(--surface-shadow);
+      transform: none;
+    }
+  }
+
+  /* And no pointer lamp or perimeter sheen either. Owner, 2026-09-06: the
+     light that followed the mouse across the hero's workbench did not read
+     well. A window is looked into, not stroked. The class is doubled so this
+     outranks the lamp and sheen rules further down, which sit at the same
+     specificity and later in the file. */
+  .surface.surface--frame.surface--frame::before,
+  .surface.surface--frame.surface--frame::after {
+    content: none;
+  }
+
   /* OPACITY IS THE DIFFERENCE, NOT SHAPE. This modifier used to set
      --radius-panel as well, which put a 16px block in the same grid as 20px
      cards on /crowmark-buyers and made it read as a card somebody had not
@@ -1311,6 +1355,19 @@
          or a figure, and all three were re-measured after this change. */
       .surface:has(.surface)::after { content: none; }
       figure.surface::after { content: none; }
+
+      /* AND THE CLOSING CARD, for the reason directly above rather than a new
+         one: the band is 100% of the element wide and travels its full width
+         plus its own, which on a 1,280 x 520 closing block is about 2,560px of
+         light crossing it because a pointer entered anywhere. That card is
+         already carrying a travelling edge light and a breathing glow behind
+         its primary button, and a third and fourth light on the same element
+         is what the owner was seeing when they asked, on 2026-09-06, why there
+         was a mouse focus animation on the CTA.
+
+         Specificity (0,2,0) against the (0,1,0) of `.surface::after`, so it
+         wins outright without a doubled class. */
+      .surface.fc::after { content: none; }
     }
   }
 
@@ -1393,7 +1450,17 @@
   @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
     @media (hover: hover) and (pointer: fine) {
       @media (prefers-reduced-motion: no-preference) {
-        .surface:not(.surface--panel)::before {
+        /* `.fc` JOINED `.surface--panel` HERE ON 2026-09-06, on the same
+           argument and an owner report. The closing card draws its travelling
+           edge light on `.fc::before` in styles/effects.css, so this lamp was
+           landing on the same pseudo-element of the same element and winning
+           on specificity, (0,2,0) against (0,1,0), inside one layer. The
+           reader lost the edge light and gained a 420px wash following the
+           cursor across the one block on the page that asks them for
+           something. Owner, twice: "why you have added mouse point focus on
+           CTA?" and "i can still see mouse focus animation when i hoover in
+           CTA bottom in home page". */
+        .surface:not(.surface--panel, .fc)::before {
           content: '';
           position: absolute;
           inset: 0;
@@ -2216,4 +2283,29 @@
 
 #main-content > section:nth-of-type(even) {
   background-color: var(--c-bg);
+}
+
+/* ── HOME 2.0, 2026-09-06. THE SOFT LADDER, OPT-IN PER ROUTE ─────────────
+ *
+ * Owner, 2026-09-05, on the live page: each section reads as "disconnected"
+ * from the next. Measured, the cause is the rung boundary itself: --c-floor
+ * meets --c-bg on one pixel row, and a one-row step between two near-blacks
+ * reads as a seam. With `data-ladder="soft"` on <main> the even rungs keep the
+ * same two colours and the same order, but each fades in from the floor over
+ * its first stretch and back out over its last, so the page changes depth
+ * rather than changing slab. The odd rungs are untouched: they paint nothing,
+ * as before, and the fade lands on them exactly.
+ *
+ * The fade length is the smaller of 12 percent and 160px, so a short band
+ * such as the numbers strip does not spend half its height fading. Colours
+ * are the two ladder tokens and nothing else. */
+#main-content[data-ladder='soft'] > section:nth-of-type(even) {
+  background-color: transparent;
+  background-image: linear-gradient(
+    180deg,
+    var(--c-floor) 0%,
+    var(--c-bg) min(12%, 160px),
+    var(--c-bg) calc(100% - min(12%, 160px)),
+    var(--c-floor) 100%
+  );
 }

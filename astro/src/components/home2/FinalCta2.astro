@@ -2,49 +2,78 @@
 /**
  * HOME 2.0: THE CLOSING PANEL.
  *
- * One gradient panel, one heading, one lede and two pills.
+ * The live homepage's closing card, word for word: the eyebrow, the heading,
+ * the standfirst, the one primary, the one free link and the note. One panel,
+ * lit from within.
  *
- * ── THE GRADIENT IS DARKENED, AND IT IS DARKENED FOR CONTRAST ──────────────
+ * ── THE LIGHT IS THE HERO'S, RETURNING ─────────────────────────────────────
  *
- * The board draws violet-deep to panel to teal-dark. Computed against white
- * before it was typed: --c-violet-deep clears 5.70:1 and --c-teal-dark clears
- * only 2.09:1, so the right hand third of the board's panel puts every word on
- * it below the 4.5:1 this page has to hold. Both ends are therefore mixed down
- * into --c-floor, which keeps the hue and the direction of the board and lifts
- * the ratios to about 8.0:1 at the violet end and about 10.6:1 at the teal end.
- * The mid stop is --c-panel unchanged.
+ * The panel paints the site's stage gradient and one ambient field, the same
+ * roles the hero opened with, so the page closes on the atmosphere it opened
+ * on. The field drifts on the ambient loop between two displaced positions
+ * and rests nowhere, so it is never an arrival.
  *
- * This is a colour correction rather than a design change, and it is exactly
- * the kind tokens.css already records for --c-teal: that token is a dark-ground
- * colour, it clears 7.7:1 on --c-bg and it fails outright on anything light.
+ * ── THE PANEL CLEARS 4.5:1 EVERYWHERE ──────────────────────────────────────
+ *
+ * The ambient field is mixed down into the panel ground at low alpha rather
+ * than painted raw. --c-ambient-deep clears 5.70:1 against white on its own
+ * and the mixed field lifts the ratio further, so every word on the panel
+ * holds the site's floor.
  *
  * ── THE TWO PILLS ARE THE PAGE'S ONLY TWO OFFERS ───────────────────────────
  *
- * Request access, or read a tender free. Both are stated once at the top of the
- * page and once here, which is the arrangement R262-WEB-03 settled for the live
+ * Request access, or read a tender free. Both are stated once at the top of
+ * the page and once here, the arrangement R262-WEB-03 settled for the live
  * homepage after it was found to be carrying four competing calls to action.
- * There is no third.
  */
 import Button from '../ui/Button.astro';
 ---
 
 <section class="h2cta" aria-labelledby="h2cta-title">
-  <div class="h2cta__panel">
+  {/* `fc surface` BEFORE the local class, and both are load bearing.
+
+      `surface` is the site's one card recipe: border, radius, background,
+      shadow and the hover, all from styles/surfaces.css. `fc` is what
+      styles/effects.css keys the two closing-card effects on, and they exist
+      nowhere else: the pulse behind the primary button and the light
+      travelling the card's edge. This panel had neither, because it restated
+      the card recipe locally instead of using it, and a gate had to find that
+      rather than a reader.
+
+      The local class keeps only what is this block's own. */}
+  {/* `data-spot="off"` IS KEPT AND IT IS NOT THE THING THAT TURNED THE LIGHT
+      OFF. It gates the SECTION light in scripts/motion.ts, which has been
+      disabled site-wide since 2026-08-03, so it was already doing nothing here.
+      It stays because the live closing card carries it and a difference
+      between the two that means nothing is worse than a line that means
+      nothing.
+
+      What actually followed the pointer across this card was the CARD lamp,
+      bound to `.surface` itself by scripts/card-spotlight.ts, plus the card
+      sheen. Both are now excluded for `.fc` in styles/surfaces.css, beside the
+      exclusion `.surface--panel` already had, and the argument is written
+      there rather than repeated here. */}
+  <div class="fc surface h2cta__panel" data-spot="off">
+    <div class="h2cta__amb" aria-hidden="true">
+      <b class="h2cta__field"></b>
+      <i class="h2cta__grain"></i>
+    </div>
+
+    <p class="eyebrow h2cta__brow">Ready when you are</p>
     <h2 class="h2cta__title" id="h2cta-title">See it on your own tender.</h2>
 
     <p class="h2cta__lede">
-      Bring a live notice and we will show you what it refuses. Access is limited
-      and by request.
+      Bring a live notice and we will run it with you. Access is limited and by request.
     </p>
 
-    <div class="h2cta__row">
+    <div class="btn-row h2cta__row">
       <Button href="/contact/?enquiry=limited-access#contact-form">Request access</Button>
       <Button href="/tools/tender-compliance-matrix/" variant="secondary">Read a tender, free</Button>
     </div>
 
     <p class="h2cta__note">
-      There is no free plan and no self-serve signup. A 14-day evaluation trial
-      is available on request.
+      Access is by request. There is no free plan, and no self-serve signup. A 14-day evaluation
+      trial is available on request.
     </p>
   </div>
 </section>
@@ -54,20 +83,90 @@ import Button from '../ui/Button.astro';
     padding-block: var(--sec-pad-y);
   }
 
+  /* NOT DECLARED HERE, ON PURPOSE: border, border-radius, box-shadow and the
+     hover. styles/surfaces.css owns all four on `.surface`, and its own
+     instructions say a component that restates them is how the count got to
+     twenty-one. This panel restated three of them and pinned its own border at
+     the rest value, which is the exact defect the live closing card had to fix
+     in August: an unlayered scoped declaration beats a layered one whatever
+     its specificity, so a restated border is a border that never answers the
+     pointer.
+
+     THE BACKGROUND IS THE ONE DELIBERATE EXCEPTION, and it is the same
+     exception the live card makes for the same reason. The closing block has
+     to read as arrival, so it starts from --c-lit, the token for a surface
+     sitting directly under a light, rather than from the card ramp. Written
+     out rather than taken from a knob token: a custom property substitutes its
+     var()s where it is DECLARED, so a gradient token on :root inherits already
+     finished and ignores the knobs an element sets. */
   .h2cta__panel {
+    isolation: isolate;
+    overflow: hidden;
     max-width: var(--measure);
     margin-inline: auto;
-    padding: clamp(32px, 6vw, 72px) var(--gutter);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-panel);
-    background-image: linear-gradient(
-      110deg,
-      color-mix(in srgb, var(--c-violet-deep) 78%, var(--c-floor)) 0%,
-      var(--c-panel) 52%,
-      color-mix(in srgb, var(--c-teal-dark) 34%, var(--c-floor)) 100%
+    padding: clamp(var(--space-12), 7vw, calc(var(--space-12) * 2)) var(--gutter);
+    background: linear-gradient(
+      135deg,
+      var(--c-lit),
+      color-mix(in srgb, var(--c-raised) 78%, var(--c-ambient-deep)) 100%
     );
-    box-shadow: var(--shadow-panel);
     text-align: center;
+  }
+
+  /* The edge light paints at z-index 0 and is positioned, so it would sit above
+     in-flow text without this. One line, and it keeps the ring at the edge
+     where it belongs instead of over the words. */
+  .h2cta__panel > :not(.h2cta__amb) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .h2cta__amb {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .h2cta__field {
+    position: absolute;
+    inset-inline-start: 20%;
+    inset-block-start: -60%;
+    inline-size: 60%;
+    block-size: 160%;
+    border-radius: 50%;
+    filter: blur(120px);
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-ambient-deep) 42%, transparent),
+      transparent 66%
+    );
+    transform: translate3d(-6%, 4%, 0) scale(1);
+  }
+
+  .h2cta__grain {
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain);
+    background-size: 160px 160px;
+    opacity: 0.04;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .h2cta__field {
+      animation: h2cta-drift var(--m-drift) var(--m-ease-breath) infinite alternate;
+    }
+  }
+
+  /* Both ends displaced. A loop, not an arrival. */
+  @keyframes h2cta-drift {
+    from { transform: translate3d(-6%, 4%, 0) scale(1); }
+    to   { transform: translate3d(6%, -4%, 0) scale(1.08); }
+  }
+
+  .h2cta__brow {
+    margin-block-end: var(--stack-2);
   }
 
   .h2cta__title {
@@ -76,26 +175,27 @@ import Button from '../ui/Button.astro';
     font-family: var(--font-display);
     font-size: var(--t-h2);
     font-weight: var(--t-w-h2);
-    line-height: 1.12;
+    line-height: 1.08;
     letter-spacing: -0.02em;
     color: var(--c-text);
     max-width: 15.5em;
+    text-wrap: balance;
   }
 
   .h2cta__lede {
     margin: var(--stack-2) auto 0;
     font-family: var(--font-body);
     font-size: var(--t-lede);
-    line-height: 1.6;
+    line-height: 1.55;
     color: var(--c-text-sub);
     max-width: 40ch;
+    text-wrap: balance;
   }
 
+  /* `.btn-row` in styles/button-row.css owns the layout: it sizes every button
+     in the row to the widest label, which a flex row does not, and check-render
+     measures that parity. This adds the spacing above it and nothing else. */
   .h2cta__row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-3);
     margin-block-start: var(--space-8);
   }
 
@@ -106,5 +206,11 @@ import Button from '../ui/Button.astro';
     line-height: 1.55;
     color: var(--c-text-muted);
     max-width: 52ch;
+  }
+
+  @media (forced-colors: active) {
+    .h2cta__amb {
+      display: none;
+    }
   }
 </style>

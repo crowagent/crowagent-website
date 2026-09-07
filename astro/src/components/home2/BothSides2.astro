@@ -1,0 +1,423 @@
+---
+/**
+ * HOME 2.0: READ FROM EITHER END.
+ *
+ * The live homepage's BothSides, with its three stations and six readings
+ * verbatim. One spine, three stations on it, the supplier's reading on one
+ * side and the authority's on the other, and two beams that draw inward from
+ * their own ends as the reader scrolls.
+ *
+ * ── OPEN, NOT PANELLED ─────────────────────────────────────────────────────
+ *
+ * The live page draws the spine inside a raised panel with a lane label
+ * outside each corner. Here the spine runs across the measure on the page's
+ * own ground and the lane labels head their own lanes.
+ *
+ * ── THE RAIL IS DRAWN BY THE SCROLL, AND IT IS DRAWN AT EVERY WIDTH ────────
+ *
+ * It used to be two beams looping off stage on the ambient cycle, drawn only
+ * from 48rem up: on a phone there was nothing at all, and on a wide screen
+ * each beam sat off stage for three fifths of every cycle, so a reader
+ * arriving at the wrong moment saw a still line. Owner, 2026-09-06: no
+ * animation here on mobile or tablet.
+ *
+ * Now `data-reel` (scripts/reel.ts) writes `--reel` across this block's travel
+ * and each beam draws inward from its own end. At rest they meet in the
+ * middle, which is the section's argument: the supplier reads from one end,
+ * the authority from the other, and they arrive at the same passage. Neither
+ * beam can leave the rail, so nothing here can widen the page.
+ *
+ * ── STACKED IS TWO LANES, NOT ONE COLUMN ───────────────────────────────────
+ *
+ * Below 48rem the horizontal spine has no room, and a single centred column
+ * lost the whole argument. So the supplier's readings stand in the left lane,
+ * the authority's in the right, each station's chip on a vertical spine
+ * between them, and the two lane labels head their lanes.
+ *
+ * ── "OR DROPPED" IS THE ONE REFUSAL ────────────────────────────────────────
+ *
+ * The middle station's authority reading ends in a refusal, which is why the
+ * middle station is the middle station. It carries the refused role, the same
+ * one the gate, the hero badge and the trace use.
+ */
+import Section from '../layout/Section.astro';
+
+interface Station {
+  name: string;
+  supplier: string;
+  authority: string;
+  refused?: string;
+}
+
+const STATIONS: Station[] = [
+  {
+    name: 'Requirement',
+    supplier: 'Which measures apply',
+    authority: 'Publish the rubric',
+  },
+  {
+    name: 'Evaluation',
+    supplier: 'Answer from your library',
+    authority: 'Located word for word, ',
+    refused: 'or dropped',
+  },
+  {
+    name: 'After award',
+    supplier: 'Deliver what was priced',
+    authority: 'Audit the commitment',
+  },
+];
+---
+
+<Section
+  eyebrow="Both sides of the table"
+  title="Read from either end."
+  standfirst="The supplier writing the answer and the authority evaluating it are working on the same passage. It should be the same passage, cited the same way, on both screens."
+  id="both-sides"
+  class="h2bs"
+  cascade
+  atmosphere
+>
+  {/* NO `data-reel`. The rail is drawn rather than drawing, so nothing in
+      this block reads the number scripts/reel.ts writes, and measuring a
+      section on every frame for a value no rule uses is work for nothing. */}
+  <div class="h2bs__rig" data-lit data-lit-threshold="0.25">
+    <p class="meta h2bs__lane h2bs__lane--sup">
+      Supplier reads<span class="h2bs__dir" aria-hidden="true">&rarr;</span>
+      <span class="visually-hidden">left to right, from above the spine</span>
+    </p>
+
+    {/* On a phone the two lanes stand side by side and read downwards, so the
+        authority's label heads its own lane. The label after the spine carries
+        the wide-screen wording; only one of the two is ever on screen. */}
+    <p class="meta h2bs__lane h2bs__lane--top" aria-hidden="true">
+      Authority reads<span class="h2bs__dir">&darr;</span>
+    </p>
+
+    {/* A <figure>, as sections/BothSides.astro has always wrapped this spine.
+        It is a drawing, and alignment.css names a figure as one of the blocks
+        whose meaning is its own geometry rather than the page's centre line, so
+        the two lanes may point at the spine from either side. */}
+    <figure class="h2bs__fig">
+    <ol class="h2bs__spine" data-cascade>
+      <div class="h2bs__rail" aria-hidden="true">
+        {/* Two gradients meeting in the middle: teal to violet from the
+            supplier end, violet to orchid from the authority end. That is the
+            section's argument in colour, two parties arriving at one passage
+            from opposite sides, and it is worth keeping. What is gone is the
+            scrub that drew them and the two bright points that rode their
+            leading edges. */}
+        <i class="h2bs__beam h2bs__beam--sup"></i>
+        <i class="h2bs__beam h2bs__beam--auth"></i>
+      </div>
+
+      {
+        STATIONS.map((s, i) => (
+          <li class="h2bs__station" data-mid={i === 1 ? '' : undefined}>
+            <p class="h2bs__read h2bs__read--sup">
+              <span class="visually-hidden">Supplier: </span>
+              {s.supplier}
+            </p>
+            <span class="h2bs__tick" aria-hidden="true"></span>
+            <p class="chip h2bs__chip">{s.name}</p>
+            <span class="h2bs__tick" aria-hidden="true"></span>
+            <p class="h2bs__read h2bs__read--auth">
+              <span class="visually-hidden">Authority: </span>
+              {s.authority}
+              {s.refused && <span class="h2bs__refused">{s.refused}</span>}
+            </p>
+          </li>
+        ))
+      }
+    </ol>
+    </figure>
+
+    <p class="meta h2bs__lane h2bs__lane--auth">
+      <span class="h2bs__dir" aria-hidden="true">&larr;</span>Authority reads
+      <span class="visually-hidden">right to left, from below the spine</span>
+    </p>
+
+    <p class="h2bs__more">
+      <a href="/crowmark/">For suppliers</a>
+      <a href="/crowmark-buyers/">For buyers</a>
+    </p>
+  </div>
+</Section>
+
+<style>
+  .h2bs__rig {
+    position: relative;
+    max-width: var(--measure-mid);
+    margin-inline: auto;
+  }
+
+  .h2bs__lane {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    letter-spacing: 0.1em;
+    color: var(--c-text-muted);
+  }
+
+  .h2bs__lane--sup {
+    justify-content: flex-start;
+    margin-block-end: var(--space-6);
+  }
+
+  .h2bs__lane--auth {
+    justify-content: flex-end;
+    margin-block-start: var(--space-6);
+  }
+
+  .h2bs__lane--top {
+    display: none;
+  }
+
+  .h2bs__dir {
+    color: var(--c-verified);
+  }
+
+  .h2bs__fig {
+    margin: 0;
+  }
+
+  /* ── THE SPINE ───────────────────────────────────────────────────────── */
+  .h2bs__spine {
+    position: relative;
+    display: grid;
+    gap: var(--space-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .h2bs__spine {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+
+  /* `align-content: start`, AND IT IS THE WHOLE FIX FOR A CHIP OFF THE RAIL.
+     The three stations share one grid row, so they are stretched to the
+     tallest. Station 1's lower reading is one line where the others are two,
+     and a grid with auto rows distributes that slack EQUALLY ACROSS ITS ROWS
+     by default. Measured: its reading came out 52.3px against 47.6, its chip
+     32.6 against 27.8, and its chip centre landed 385.6 against a rail at
+     373.7. The chip was never misplaced, it was inflated. This sends the slack
+     to the bottom of the column, where it belongs, and the chips sit on the
+     rail because they are the same height again. */
+  .h2bs__station {
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    text-align: center;
+    row-gap: var(--space-2);
+  }
+
+  .h2bs__read {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.4;
+    max-width: 16ch;
+    text-wrap: balance;
+  }
+
+  .h2bs__read--sup {
+    color: var(--c-text);
+  }
+
+  .h2bs__read--auth {
+    color: var(--c-text-sub);
+  }
+
+  .h2bs__refused {
+    color: var(--c-refused);
+  }
+
+  .h2bs__tick {
+    display: block;
+    inline-size: 1px;
+    block-size: var(--space-6);
+    background-color: var(--c-border);
+  }
+
+  /* The chip sits ON the rail, so it carries the ground behind it. */
+  .h2bs__chip {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    border: 1px solid var(--c-border);
+    background-color: var(--c-floor);
+    color: var(--c-text);
+  }
+
+  [data-mid] .h2bs__chip {
+    border-color: color-mix(in srgb, var(--c-verified) 45%, var(--c-border));
+    box-shadow: 0 0 20px color-mix(in srgb, var(--c-verified) 22%, transparent);
+  }
+
+  /* ── THE RAIL ────────────────────────────────────────────────────────── */
+  .h2bs__rail {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    background-color: var(--c-border);
+  }
+
+  .h2bs__beam {
+    position: absolute;
+  }
+
+  /* Wide: a horizontal rail through the chips. */
+  @media (min-width: 48rem) {
+    .h2bs__rail {
+      inset-inline: 0;
+      inset-block-start: 50%;
+      block-size: 2px;
+      margin-block-start: -1px;
+      border-radius: var(--radius-pill);
+    }
+
+    .h2bs__beam {
+      inset-block: 0;
+      inline-size: 50%;
+    }
+
+    .h2bs__beam--sup {
+      inset-inline-start: 0;
+      background-image: var(--grad-draw);
+    }
+
+    .h2bs__beam--auth {
+      inset-inline-end: 0;
+      background-image: linear-gradient(270deg, var(--c-ambient-far), var(--c-ambient-end));
+    }
+  }
+
+  /* ── STACKED: TWO LANES AND A VERTICAL SPINE ─────────────────────────── */
+  @media (max-width: 47.999rem) {
+    .h2bs__rig {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: var(--space-4);
+    }
+
+    .h2bs__lane--sup {
+      grid-column: 1;
+      justify-content: flex-start;
+      margin-block-end: var(--space-6);
+    }
+
+    .h2bs__lane--sup .h2bs__dir {
+      display: none;
+    }
+
+    .h2bs__lane--top {
+      display: flex;
+      grid-column: 2;
+      justify-content: flex-end;
+      margin: 0 0 var(--space-6);
+      text-align: right;
+    }
+
+    .h2bs__lane--auth {
+      display: none;
+    }
+
+    /* ── ROOM, AND THE TRAVEL THAT COMES WITH IT ──────────────────────────
+     *
+     * Owner, 2026-09-06: the two lanes sit too close at both ends on a phone
+     * and the beams are not effective. Both complaints have one cause. The
+     * stations were 24px apart, so the whole spine was about 134px tall and
+     * each beam had 67px to travel: too short to read as motion however
+     * bright it is. Opening the rows to 40px roughly doubles the travel and
+     * gives the readings air at the same time, and the column gap widens with
+     * it so the chip is not wedged between two blocks of text. */
+    .h2bs__fig {
+      grid-column: 1 / -1;
+    }
+
+    .h2bs__spine {
+      gap: var(--space-10);
+    }
+
+    .h2bs__station {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-areas: 'sup chip auth';
+      column-gap: var(--space-4);
+      align-items: center;
+      justify-items: stretch;
+    }
+
+    .h2bs__tick {
+      display: none;
+    }
+
+    .h2bs__read {
+      max-width: none;
+      font-size: var(--t-caption);
+      line-height: 1.45;
+      text-wrap: pretty;
+    }
+
+    /* A little inset at the outer edge of each lane, so a reading never runs
+       to the section gutter and the pair reads as two columns rather than as
+       text pushed to both walls. */
+    .h2bs__read--sup {
+      grid-area: sup;
+      text-align: right;
+      padding-inline-start: var(--space-2);
+    }
+
+    .h2bs__read--auth {
+      grid-area: auth;
+      text-align: left;
+      padding-inline-end: var(--space-2);
+    }
+
+    .h2bs__chip {
+      grid-area: chip;
+      padding: 0.35rem 0.6rem;
+      letter-spacing: 0.1em;
+    }
+
+    .h2bs__rail {
+      inset-block: var(--space-2);
+      inset-inline-start: 50%;
+      inline-size: 2px;
+      margin-inline-start: -1px;
+      border-radius: var(--radius-pill);
+    }
+
+    .h2bs__beam {
+      inset-inline: 0;
+      block-size: 50%;
+    }
+
+    .h2bs__beam--sup {
+      inset-block-start: 0;
+      background-image: var(--grad-draw-y);
+    }
+
+    .h2bs__beam--auth {
+      inset-block-end: 0;
+      background-image: linear-gradient(0deg, var(--c-ambient-far), var(--c-ambient-end));
+    }
+
+    .h2bs__more {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .h2bs__more {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-6);
+    margin: var(--space-10) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+  }
+</style>

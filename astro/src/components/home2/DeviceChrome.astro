@@ -1,0 +1,116 @@
+---
+/**
+ * THE WINDOW CHROME. One recipe, three frames.
+ *
+ * The homepage draws three device frames: the hero workbench, the pinned
+ * product screen and the draft screen in the refusal section. Each one opened
+ * with the same bar — three traffic lights and a line of mono text — and each
+ * one declared that bar itself. Three copies of one recipe is the drift
+ * RULE 0-C exists to stop, and it was also the single biggest block of
+ * repeated CSS on the page, which is what put the site over its stylesheet
+ * budget once this page became the homepage.
+ *
+ * WHAT VARIES IS PASSED IN, AND IT IS ONLY THE LINE OF TEXT. The workbench
+ * writes a claim ("Checked by this page's own rule engine"), the product frame
+ * and the draft screen write a URL. So the caller supplies either `label` or a
+ * `host`/`path` pair, and anything that has to sit at the end of the bar goes
+ * in the default slot.
+ *
+ * THE LIGHTS ARE DECORATION AND SAY SO. `aria-hidden` on the bar's own marks:
+ * a screen reader that announces three coloured circles is describing a
+ * drawing, not the product.
+ */
+interface Props {
+  /** A plain line of text, centred. Used by the workbench. */
+  label?: string;
+  /** The host part of a URL, set in muted ink. */
+  host?: string;
+  /** The path part, set in full ink. Carries `data-story-path` when asked. */
+  path?: string;
+  /** Marks the path element for scripts/story.ts to rewrite. */
+  pathIsLive?: boolean;
+  /**
+   * `bar` is the dark chrome of a glass frame, and it is the only tone.
+   * A `light` variant shipped with this component and no caller ever passed
+   * it, so its rule matched nothing on any of 45 routes. Reinstate it when
+   * something needs it rather than keeping a tone the site does not draw.
+   */
+  tone?: 'bar';
+  class?: string;
+}
+
+const {
+  label,
+  host,
+  path,
+  pathIsLive = false,
+  tone = 'bar',
+  class: className = '',
+} = Astro.props;
+---
+
+<div class:list={['dvc', `dvc--${tone}`, className]}>
+  <span class="dvc__lights" aria-hidden="true"><i></i><i></i><i></i></span>
+
+  <span class="dvc__line">
+    {label}
+    {host && <span class="dvc__host">{host}</span>}
+    {path && (pathIsLive ? <span data-story-path>{path}</span> : <span>{path}</span>)}
+  </span>
+
+  <slot />
+</div>
+
+<style>
+  .dvc {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-block-end: 1px solid var(--c-border);
+  }
+
+  .dvc--bar {
+    background-color: color-mix(in srgb, var(--c-text) 3%, transparent);
+  }
+
+  .dvc__lights {
+    display: inline-flex;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+  }
+
+  .dvc__lights i {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: var(--radius-pill);
+    box-shadow: var(--gloss-inset);
+  }
+
+  .dvc__lights i:nth-child(1) { background: var(--c-chrome-close); }
+  .dvc__lights i:nth-child(2) { background: var(--c-chrome-minimise); }
+  .dvc__lights i:nth-child(3) { background: var(--c-chrome-maximise); }
+
+  .dvc__line {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: var(--lh-tight);
+    color: var(--c-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dvc__host {
+    color: var(--c-text-muted);
+  }
+
+  @media (max-width: 47.999rem) {
+    .dvc__line {
+      white-space: normal;
+    }
+  }
+</style>

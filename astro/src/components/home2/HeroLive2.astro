@@ -1,0 +1,1096 @@
+---
+/**
+ * HOME 2.0: THE LIVE HERO, WITH ITS WORKBENCH RE-PRESENTED.
+ *
+ * Owner, 2026-09-06: keep the live hero, with its Obligations, Weightings,
+ * A figure with no gate and Your own text tabs, and make that tabbed block
+ * premium. This is the live HeroStack with ONE thing changed: how the tabbed
+ * block is drawn. The eyebrow, the title, the lede, the two offers, the wash,
+ * the closing gate line, the three samples, the build-time analysis and the
+ * "Your own text" analyser are all the live page's, unchanged in words and in
+ * mechanism.
+ *
+ * ── WHY A COPY AND NOT AN EDIT OF sections/HeroStack.astro ─────────────────
+ *
+ * HeroStack is the live homepage's hero. A visual change to its tabbed block
+ * would ship to crowagent.ai on the next deploy, and this route exists so the
+ * owner can compare before anything ships. So the shell is copied verbatim
+ * (the header note in HeroStack.astro remains the record of every decision in
+ * it) and the workbench is redrawn here. When the owner adopts this route, one
+ * of the two files replaces the other and the duplication ends with it.
+ *
+ * ── THE CONTRACT WITH scripts/hero-terminal.ts IS KEPT TO THE LETTER ───────
+ *
+ * That script injects the fourth tab at runtime. It finds `.hmt`, `.hmt__tabs`,
+ * `.hmt__panes` and `.hmt__lead`, inserts the `#hmt-own` radio BEFORE the lead,
+ * appends a `label.hmt__tab[for=hmt-own]` and a `#hmt-p-own` pane carrying
+ * `.hmt__cap`, `#hmt-in.hmt__in` and an `ol.hmt__steps`, and copies this
+ * component's scope class onto each so these styles reach them. The autoplay
+ * advancer listens for an animation named `hmt-dwell`. Every one of those
+ * names and that DOM order survives below, so the script runs here without
+ * knowing this file exists.
+ *
+ * ── WHAT IS NEW: A WORKBENCH, NOT A LIST ───────────────────────────────────
+ *
+ * The block is drawn as the instrument it is: a frame on the site's one glass
+ * recipe, a title bar naming the rule engine, a segmented control for the four
+ * tabs with the autoplay dwell drawn inside the active segment, and a two-pane
+ * desk. The left pane is the clause as a numbered document; the right pane is
+ * the trace as three marked steps, Read, Match and Hold. The fourth tab keeps
+ * the same desk with the document replaced by the reader's own text.
+ *
+ * A pane switch wipes the desk in on clip-path, never opacity, so nothing on
+ * it is ever half-drawn, and under reduced motion it simply appears.
+ */
+import Button from '../ui/Button.astro';
+import DeviceChrome from './DeviceChrome.astro';
+import { analyse } from '../../lib/tender-matrix';
+import { readLine, matchLine } from '../../scripts/hero-terminal';
+
+const NL = String.fromCharCode(10);
+
+const SAMPLES = [
+  {
+    id: 'a',
+    tab: 'Obligations',
+    note: 'Each row is the clause verbatim. Whether you can meet it is not its call.',
+    text: [
+      '3.1 The supplier must provide a named account manager for the duration of the contract.',
+      '3.2 Tenderers shall submit a method statement of no more than 500 words.',
+      '3.3 Responses must be received by 12:00 on 14 March 2026.',
+    ].join(NL),
+  },
+  {
+    id: 'b',
+    tab: 'Weightings',
+    note: 'They add up to 110%, so these read as sub-criteria. No total is asserted.',
+    text: [
+      'Quality will be scored at 60% and price at 40% of the total award.',
+      'Bidders must hold Cyber Essentials Plus certification at the point of award.',
+      'Social value is weighted at 10% in line with PPN 026.',
+    ].join(NL),
+  },
+  {
+    id: 'c',
+    tab: 'A figure with no gate',
+    note: 'It found 40% and refused it. A figure outside evaluation context is not a weighting.',
+    text: [
+      'The authority spent 40% of its budget with local firms last year.',
+      'We are proud of our track record and hope suppliers will share our ambition.',
+    ].join(NL),
+  },
+] as const;
+
+const CHECKED = SAMPLES.map((s) => {
+  const m = analyse(s.text);
+  return {
+    ...s,
+    lines: s.text.split(NL),
+    read: m ? readLine(m) : '',
+    match: m ? matchLine(m) : '',
+  };
+});
+---
+
+<section class="hero" data-spot="off" aria-labelledby="hero-title">
+  <div class="hero__wash" data-field="on" aria-hidden="true">
+    <b class="hero__amb hero__amb--1"></b>
+    <i class="hero__amb hero__amb--2"></i>
+    <i class="sv-spot"></i>
+    <i class="sv-grain"></i>
+  </div>
+
+  <div class="hero__inner">
+    <p class="eyebrow hero__eyebrow fx-shimmer">Bid and tender software, supplier and buyer</p>
+
+    <h1 class="hero__title" id="hero-title">
+      <span>Qualify.</span> <span>Draft.</span> <span class="hero__prove">Prove it.</span>
+    </h1>
+
+    <p class="hero__lede">Every figure traced to evidence you already hold.</p>
+
+    <div class="btn-row">
+      <Button href="/contact/?enquiry=limited-access#contact-form">Request access</Button>
+      <Button href="/tools/tender-compliance-matrix/" variant="secondary">
+        Read a tender, free
+      </Button>
+    </div>
+
+    {/* THE WORKBENCH. DOM order is the script's contract: radios, lead, tabs,
+        panes, foot, all direct children of .hmt. See the header note. */}
+    <div class="surface surface--frame surface--row hmt">
+      {
+        CHECKED.map((s, i) => (
+          <input
+            class="hmt__radio"
+            type="radio"
+            name="hmt"
+            id={`hmt-${s.id}`}
+            checked={i === 0}
+          />
+        ))
+      }
+
+      <DeviceChrome class="hmt__lead" label="Checked by this page's own rule engine, at build time.">
+        {/* WCAG 2.2.2. The four samples advance on their own every seven
+            seconds, so a reader has to be able to stop them, and "it stops the
+            moment you touch it" is not a mechanism a screen-reader user can
+            find. `hidden` in the markup and revealed by the script only while
+            a timer is actually running, so under reduced motion, where nothing
+            advances, no control is offered. */}
+        <button class="control hmt__stop" type="button" data-hmt-stop aria-pressed="false" hidden>
+          <span class="hmt__stop-icon" aria-hidden="true"></span>
+          <span data-hmt-stop-label>Stop the tour</span>
+        </button>
+        <span class="meta hmt__lead-live" aria-hidden="true"><i></i>Rule engine</span>
+      </DeviceChrome>
+
+      <div class="hmt__tabs">
+        {/* The thumb: one filled pill that slides on a spring to the active
+            segment. Positioned by two custom properties the script measures.
+            Without the script the active label paints its own fill instead. */}
+        <i class="hmt__thumb" aria-hidden="true"></i>
+        {CHECKED.map((s) => <label class="hmt__tab" for={`hmt-${s.id}`}>{s.tab}</label>)}
+      </div>
+
+      <div class="hmt__panes">
+        {
+          CHECKED.map((s) => (
+            <div class="hmt__pane" id={`hmt-p-${s.id}`}>
+              <div class="surface--row hmt__doc">
+                <p class="meta hmt__doc-label">Tender text, as pasted</p>
+                <ol class="hmt__src">
+                  {s.lines.map((line) => (
+                    <li>{line}</li>
+                  ))}
+                </ol>
+              </div>
+              <ol class="hmt__steps">
+                <li><b>Read</b> {s.read}</li>
+                <li><b>Match</b> {s.match}</li>
+                <li><b>Hold</b> {s.note}</li>
+              </ol>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="meta hmt__foot">
+        <a href="/tools/tender-compliance-matrix/">Run it on your own tender</a>
+      </p>
+    </div>
+  </div>
+
+  <p class="meta hero__gate">
+    <span class="hero__gate-mark" aria-hidden="true"></span>
+    The engine cannot clear its own gate. A named person approves.
+  </p>
+</section>
+
+<style>
+  /* ── THE SHELL, COPIED FROM sections/HeroStack.astro ─────────────────── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--sec-pad-y);
+  }
+
+  .hero__wash {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    --par: 48px;
+  }
+
+  .hero__amb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    mix-blend-mode: screen;
+  }
+
+  .hero__amb--1 {
+    width: 662px;
+    height: 662px;
+    top: -172px;
+    left: -115px;
+    opacity: 0.55;
+    background: var(--orb-1);
+  }
+
+  .hero__amb--2 {
+    --hero-key-par: 40px;
+    --hero-key-sweep: 4%;
+    width: 605px;
+    height: 605px;
+    top: 29px;
+    left: 835px;
+    opacity: 0.22;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-text) 70%, transparent),
+      transparent 66%
+    );
+  }
+
+  @media (max-width: 560px) {
+    .hero__amb {
+      filter: blur(96px);
+      width: 380px;
+      height: 320px;
+    }
+  }
+
+  .hero__inner,
+  .hero__gate {
+    position: relative;
+    z-index: 1;
+    max-width: var(--measure);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .hero__inner {
+    text-align: center;
+  }
+
+  .hero__eyebrow {
+    margin-block-end: var(--stack-2);
+  }
+
+  .hero__title {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    line-height: 1.04;
+    letter-spacing: clamp(-0.02em, -0.052rem, -0.01em);
+    --hero-ink-pad: 0.16em;
+    color: var(--c-text);
+    text-wrap: balance;
+  }
+
+  .hero__title > span {
+    display: inline-block;
+    padding-block-end: var(--hero-ink-pad);
+    margin-block-end: calc(var(--hero-ink-pad) * -1);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .hero__title {
+      padding-block-end: var(--hero-ink-pad);
+      margin-block-end: calc(var(--stack-2) - var(--hero-ink-pad));
+    }
+
+    .hero__title > span:not(.hero__prove) {
+      background-image: var(--grad-heading);
+      background-size: 100% 1.06em;
+      background-repeat: repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  @supports (height: 1lh) {
+    .hero__title > span {
+      background-size: 100% 1lh;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .hero__title,
+    .hero__title > span {
+      background-image: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+    }
+  }
+
+  .hero__prove {
+    display: inline-block;
+    padding-inline-end: 0.04em;
+    margin-inline-end: -0.04em;
+    color: var(--c-ambient-start);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .hero__prove {
+      background-image: var(--grad-hero-text);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .hero__prove {
+      background-image: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+    }
+  }
+
+  .hero__lede {
+    margin: 0 auto var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.65;
+    max-width: 62ch;
+    color: var(--c-text-sub);
+  }
+
+  .hero__gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: var(--sec-gap) auto 0;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--c-text-sub);
+  }
+
+  .hero__gate-mark {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-verified);
+    box-shadow: 0 0 8px var(--c-verified-glow);
+  }
+
+  @media (max-width: 560px) {
+    .hero__gate-mark {
+      display: none;
+    }
+  }
+
+  /* ── THE WORKBENCH ───────────────────────────────────────────────────── */
+  .hmt {
+    --hmt-dwell: 7s;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: var(--measure-mid);
+    margin: var(--sec-gap) auto 0;
+    --surface-shadow:
+      var(--shadow-panel),
+      0 40px 120px -40px color-mix(in srgb, var(--c-ambient-deep) 55%, transparent);
+  }
+
+  .hmt__radio,
+  .hmt__own {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The title bar: lights, the rule engine's own claim, a live mark. */
+  /* DeviceChrome owns the bar: the flex row, the padding, the rule and the
+     ground. What is left here is the one thing this instance differs by, which
+     is that its line is a sentence rather than a URL. */
+  .hmt__lead {
+    color: var(--c-text-sub);
+  }
+
+
+
+
+  /* `.control` carries the ground, the hairline, the pointer response and the
+     focus ring. Local here: the size, the gap and the two-bar icon. */
+  .hmt__stop {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    min-block-size: 28px;
+    padding-inline: var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+  }
+
+  .hmt__stop-icon {
+    inline-size: 9px;
+    block-size: 9px;
+    flex: 0 0 auto;
+    background-color: currentColor;
+    clip-path: polygon(0 0, 34% 0, 34% 100%, 0 100%, 0 0, 66% 0, 100% 0, 100% 100%, 66% 100%, 66% 0);
+  }
+
+  .hmt__stop[aria-pressed='true'] .hmt__stop-icon {
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  @media (max-width: 47.999rem) {
+    .hmt__stop span:last-child {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  .hmt__lead-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    letter-spacing: 0.1em;
+    color: var(--c-verified);
+  }
+
+  .hmt__lead-live i {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-verified);
+    box-shadow: 0 0 8px var(--c-verified-glow);
+  }
+
+  @media (max-width: 47.999rem) {
+    .hmt__lead-live {
+      display: none;
+    }
+  }
+
+  /* The segmented control. One track, four segments, the active one filled
+     with the interactive ink and carrying the autoplay dwell along its foot. */
+  .hmt__tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin: var(--space-5) auto 0;
+    padding: 4px;
+    inline-size: fit-content;
+    max-inline-size: calc(100% - var(--gutter) * 2);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--c-floor) 60%, transparent);
+  }
+
+  /* On a phone the four segments do not fit one row. Rather than wrap into
+     two rows, which turned the thumb into a slab, the track becomes one row
+     that scrolls sideways, and the script keeps the active segment in view. */
+  @media (max-width: 47.999rem) {
+    .hmt__tabs {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      inline-size: calc(100% - var(--gutter) * 2);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+
+    .hmt__tabs::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* The sliding thumb. It rests at the measured position of the checked
+     segment and springs to the next one on the site's magnetic curve, the
+     same curve Button.astro uses for its pull. */
+  .hmt__thumb {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: var(--thumb-w, 0px);
+    block-size: var(--thumb-h, 0px);
+    translate: var(--thumb-x, 0px) var(--thumb-y, 0px);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-interactive);
+    box-shadow: var(--shadow-btn);
+    pointer-events: none;
+    transition:
+      translate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      inline-size 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      block-size 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .hmt__tabs:not([data-thumb='on']) .hmt__thumb {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hmt__thumb {
+      transition: none;
+    }
+  }
+
+  .hmt__tab {
+    position: relative;
+    z-index: 1;
+    /* Never shrinks: on a phone the row scrolls rather than squeezing a
+       label until it truncates. */
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 36px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    font-weight: 600;
+    line-height: var(--lh-tight);
+    color: var(--c-text-sub);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .hmt__tab:hover {
+      color: var(--c-text);
+      background-color: color-mix(in srgb, var(--c-text) 6%, transparent);
+    }
+  }
+
+  #hmt-a:checked ~ .hmt__tabs label[for='hmt-a'],
+  #hmt-b:checked ~ .hmt__tabs label[for='hmt-b'],
+  #hmt-c:checked ~ .hmt__tabs label[for='hmt-c'],
+  #hmt-own:checked ~ .hmt__tabs label[for='hmt-own'] {
+    background-color: var(--c-interactive);
+    color: var(--c-bg);
+    transition-delay: 0.12s;
+  }
+
+  /* Once the thumb is measured it carries the fill and every label paints
+     its ink by DIFFERENCE against what is beneath it: page ink over the dark
+     track stays page ink, page ink over the white thumb becomes dark. So the
+     text is legible at every instant of the thumb's travel, with no timing to
+     get wrong. Owner, 2026-09-06: the timed swap left text invisible mid-slide. */
+  /* The ink is instant under the difference blend, because a colour that
+     interpolates against a moving white thumb reads as a flicker. Everything
+     else keeps the shared pointer floor from styles/motion.css: narrowing
+     `transition-property` leaves a transition resolved, which is what
+     check-transitions asks for, where `transition: none` cancelled it. */
+  .hmt__tabs[data-thumb='on'] label {
+    color: var(--c-text);
+    mix-blend-mode: difference;
+    transition-property: background-color, box-shadow;
+  }
+
+  #hmt-a:checked ~ .hmt__tabs[data-thumb='on'] label[for='hmt-a'],
+  #hmt-b:checked ~ .hmt__tabs[data-thumb='on'] label[for='hmt-b'],
+  #hmt-c:checked ~ .hmt__tabs[data-thumb='on'] label[for='hmt-c'],
+  #hmt-own:checked ~ .hmt__tabs[data-thumb='on'] label[for='hmt-own'] {
+    background-color: transparent;
+    color: var(--c-text);
+  }
+
+  @media (hover: hover) {
+    .hmt__tabs[data-thumb='on'] label:hover {
+      background-color: transparent;
+    }
+  }
+
+  #hmt-a:focus-visible ~ .hmt__tabs label[for='hmt-a'],
+  #hmt-b:focus-visible ~ .hmt__tabs label[for='hmt-b'],
+  #hmt-c:focus-visible ~ .hmt__tabs label[for='hmt-c'],
+  #hmt-own:focus-visible ~ .hmt__tabs label[for='hmt-own'] {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  /* The autoplay dwell: a line along the segment's foot, in the verified ink
+     so it reads on the filled segment. Every segment CARRIES the line at rest,
+     scaled to nothing, so the active state only draws it and does not
+     introduce a mark (check-palette-roles.js rule 2). The name `hmt-dwell` is
+     the advancer's contract. */
+  .hmt__tab::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--space-3);
+    inset-block-end: 4px;
+    block-size: 2px;
+    border-radius: var(--radius-pill);
+    /* The ambient ramp on the bare track. On the filled thumb the label
+       paints by difference, so the rule beneath is overridden to page ink,
+       which reads there as a dark line. */
+    background-image: var(--grad-draw);
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .hmt__tabs[data-thumb='on'] .hmt__tab::after {
+    background-image: none;
+    background-color: var(--c-text);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hmt:not([data-auto='off']) #hmt-a:checked ~ .hmt__tabs label[for='hmt-a']::after,
+    .hmt:not([data-auto='off']) #hmt-b:checked ~ .hmt__tabs label[for='hmt-b']::after,
+    .hmt:not([data-auto='off']) #hmt-c:checked ~ .hmt__tabs label[for='hmt-c']::after {
+      animation: hmt-dwell var(--hmt-dwell) linear;
+    }
+
+    /* A pointer resting on the desk pauses the dwell. On a touch screen there
+       is no resting pointer, and a tap can leave :hover latched on the card,
+       which paused the autoplay for good on a phone. So hover pauses only
+       where hover is real; focus pauses everywhere. */
+    .hmt:focus-within .hmt__tabs label::after {
+      animation-play-state: paused;
+    }
+
+    @media (hover: hover) {
+      .hmt:hover .hmt__tabs label::after {
+        animation-play-state: paused;
+      }
+    }
+  }
+
+  @keyframes hmt-dwell {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* ── THE DESK ────────────────────────────────────────────────────────── */
+  .hmt__panes {
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+
+  @media (min-width: 48rem) {
+    .hmt__panes {
+      padding: var(--space-6) var(--space-6) var(--space-5);
+    }
+  }
+
+  .hmt__pane {
+    display: none;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 48rem) {
+    .hmt__pane {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+
+  #hmt-a:checked ~ .hmt__panes #hmt-p-a,
+  #hmt-b:checked ~ .hmt__panes #hmt-p-b,
+  #hmt-c:checked ~ .hmt__panes #hmt-p-c,
+  #hmt-own:checked ~ .hmt__panes #hmt-p-own {
+    display: grid;
+  }
+
+  /* A pane wipes in from the top when it is shown. clip-path only. */
+  @media (prefers-reduced-motion: no-preference) {
+    #hmt-a:checked ~ .hmt__panes #hmt-p-a,
+    #hmt-b:checked ~ .hmt__panes #hmt-p-b,
+    #hmt-c:checked ~ .hmt__panes #hmt-p-c,
+    #hmt-own:checked ~ .hmt__panes #hmt-p-own {
+      animation: hmt-wipe calc(var(--m-beat) * 0.8) var(--m-ease-land) both;
+    }
+  }
+
+  @keyframes hmt-wipe {
+    from { clip-path: inset(0 0 100% 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+
+  /* The document: the clause lines, numbered, on the floor step. */
+  .hmt__doc {
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-frame);
+    background-color: color-mix(in srgb, var(--c-floor) 62%, transparent);
+  }
+
+  .hmt__doc-label,
+  .hmt__cap {
+    display: block;
+    margin: 0 0 var(--space-3);
+    letter-spacing: 0.1em;
+    color: var(--c-text-muted);
+  }
+
+  .hmt__src {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: clause;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .hmt__src li {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    gap: var(--space-2);
+    padding-block: 5px;
+    border-block-start: 1px solid color-mix(in srgb, var(--c-text) 6%, transparent);
+    counter-increment: clause;
+  }
+
+  .hmt__src li:first-child {
+    border-block-start: 0;
+    padding-block-start: 0;
+  }
+
+  .hmt__src li::before {
+    content: counter(clause, decimal-leading-zero);
+    color: var(--c-text-muted);
+  }
+
+  /* The reader's own text takes the document's place, on the shared field
+     recipe from styles/forms.css, in the document's mono. */
+  /* The reader's box. Sunk into the desk with an inner shadow, edged in the
+     verified role at rest so the focus ring restates a mark it already has,
+     and lit on focus with a soft ring. */
+  .hmt__in {
+    inline-size: 100%;
+    min-block-size: 8.5rem;
+    resize: vertical;
+    text-align: start;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    border-color: color-mix(in srgb, var(--c-verified) 22%, var(--c-border));
+    background-color: color-mix(in srgb, var(--c-floor) 70%, transparent);
+    box-shadow: inset 0 2px 8px color-mix(in srgb, var(--c-floor) 75%, transparent);
+    cursor: text;
+    transition:
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .hmt__in:hover {
+      border-color: color-mix(in srgb, var(--c-verified) 45%, var(--c-border));
+    }
+  }
+
+  .hmt__in:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--c-verified) 55%, transparent);
+    outline-offset: 2px;
+    border-color: var(--c-verified);
+    background-color: color-mix(in srgb, var(--c-floor) 55%, transparent);
+    box-shadow:
+      inset 0 2px 8px color-mix(in srgb, var(--c-floor) 75%, transparent),
+      0 0 24px color-mix(in srgb, var(--c-verified) 22%, transparent);
+  }
+
+  .hmt__in::placeholder {
+    color: var(--c-text-muted);
+  }
+
+  /* iOS zooms the page into any field set under 16px. On a coarse pointer the
+     box takes the body size, which is the token that clears that line. */
+  @media (pointer: coarse) {
+    .hmt__in {
+      font-size: var(--t-body);
+    }
+  }
+
+  /* The reader's pane: one column. The box spans the desk, so it aligns with
+     the frame instead of sitting in half of it beside an empty trace, and the
+     trace fills in beneath it as the reader types. */
+  #hmt-p-own {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  #hmt-p-own .hmt__cap {
+    margin-block-end: 0;
+  }
+
+  #hmt-p-own .hmt__steps:empty {
+    display: none;
+  }
+
+  /* The trace: three marked steps. Read and Match carry the verified role,
+     Hold carries the refused role, because Hold is the gate: the line the
+     engine hands to a person. */
+  .hmt__steps {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  /* A flex line, not a grid: the row's text is an anonymous box beside the
+     label, and flex lets it sit on the same line and wrap inside itself. */
+  .hmt__steps :global(li) {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding-block: var(--space-3);
+    border-block-start: 1px solid var(--c-border);
+  }
+
+  .hmt__steps :global(li:first-child) {
+    border-block-start: 0;
+    padding-block-start: 0;
+  }
+
+  .hmt__steps :global(li)::before {
+    content: '';
+    flex: 0 0 auto;
+    inline-size: 10px;
+    block-size: 10px;
+    margin-block-start: 0.45em;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-verified);
+    box-shadow: 0 0 10px var(--c-verified-glow);
+  }
+
+  .hmt__steps :global(li:nth-child(3))::before {
+    background-color: var(--c-refused);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--c-refused) 60%, transparent);
+  }
+
+  .hmt__steps :global(b) {
+    display: inline-block;
+    flex: 0 0 auto;
+    margin-block-start: 3px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--c-verified) 14%, transparent);
+    letter-spacing: 0.1em;
+    color: var(--c-verified);
+  }
+
+  .hmt__steps :global(li:nth-child(3) b) {
+    background-color: color-mix(in srgb, var(--c-refused) 14%, transparent);
+    color: var(--c-refused);
+  }
+
+  /* The foot: one link out to the free tool, on the frame's foot rule. */
+  .hmt__foot {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-block-start: 1px solid var(--c-border);
+    text-align: center;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+
+  .hmt__foot a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-block-size: 32px;
+    font-family: var(--font-body);
+    font-size: var(--t-caption);
+  }
+
+  .hmt__foot a::after {
+    content: '\2192';
+    transition: translate var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .hmt__foot a:hover::after {
+      translate: 3px 0;
+    }
+  }
+</style>
+
+<script>
+  import { initHeroTerminal, holdLine } from '../../scripts/hero-terminal';
+  import type { TenderMatrix } from '../../lib/tender-matrix';
+
+  /*
+   * THE HOLD SENTENCE FOR A READER'S OWN CLAUSE. Same engine, same verdict.
+   *
+   * holdLine() says "It found percentages and refused them. A figure outside
+   * evaluation context is not a weighting." That is true, and on the third
+   * sample tab it is the whole point. But a reader who pastes an SLA ("99.95%
+   * availability") or a social value target ("15% increase in local spend")
+   * reads it as the tool failing on their clause, when what happened is that
+   * the requirements were read and counted and the percentages were correctly
+   * NOT read as scores. So the two cases with no weighting say what stood and
+   * why the percentages were left alone. The two weighting cases keep the
+   * live wording.
+   */
+  const stand = (m: TenderMatrix): string => {
+    const n = m.rows.length;
+    if (n === 0) return 'No requirement is stated in a form it can hold, so nothing is held.';
+    const rows = n === 1 ? 'The one requirement stands' : 'The ' + n + ' requirements stand';
+    return rows + ', and whether you can meet them is not its call.';
+  };
+
+  /* Percentages in the reader's text that were NOT read as weightings. The
+     engine does not export this count, so it is taken from the box itself with
+     the engine's own notion of a percentage, and it is a count only: the
+     preview does not pretend to know whether a figure is an uptime, a penalty
+     or a spend target. */
+  const PERCENT = /\d{1,3}(?:\.\d+)?\s*(?:%|per\s?cent)/gi;
+  const othersLine = (m: TenderMatrix): string => {
+    const box = document.getElementById('hmt-in') as HTMLTextAreaElement | null;
+    const total = box ? (box.value.match(PERCENT) || []).length : 0;
+    const others = Math.max(0, total - m.weightingCount);
+    if (others === 0) return '';
+    return (
+      ' ' +
+      (others === 1 ? 'One other percentage sits' : others + ' other percentages sit') +
+      ' outside an evaluation clause and ' +
+      (others === 1 ? 'is not read as a score.' : 'are not read as scores.')
+    );
+  };
+
+  const hold = (m: TenderMatrix): string => {
+    if (m.weightingConfidence === 'complete' || m.weightingConfidence === 'sub_criteria') {
+      return holdLine(m) + othersLine(m);
+    }
+    if (m.weightingConfidence === 'no_context_found') {
+      return (
+        'The percentages are not read as weightings: they sit outside an evaluation clause, ' +
+        'and a target or a penalty is not a score. ' +
+        stand(m)
+      );
+    }
+    if (m.weightingConfidence === 'none') {
+      return 'No weightings to read, because the clause carries no percentages. ' + stand(m);
+    }
+    return holdLine(m);
+  };
+
+  /* Same boot guard as pages/home-2.astro, and for the same measured reason:
+     every one of these queries the document and returns early if it is not
+     there yet. See the note at that call site. */
+  const bootHero = () => {
+    initHeroTerminal({ hold });
+
+  /* The reader's box gets a prompt, and the segmented control gets its
+     sliding thumb. Both are additions to a block that is complete without
+     them: no prompt is still an empty box with a label, and no thumb is a
+     filled label. */
+  (() => {
+    const box = document.getElementById('hmt-in') as HTMLTextAreaElement | null;
+    if (box) {
+      box.placeholder =
+        'Paste a clause from a tender. For example: Quality will be scored at 60% and price at 40%. ' +
+        'Responses must be received by 12:00 on 14 March.';
+    }
+
+    const hmt = document.querySelector<HTMLElement>('.hmt');
+    const tabs = hmt?.querySelector<HTMLElement>('.hmt__tabs');
+    if (!hmt || !tabs) return;
+
+    const place = () => {
+      const checked = hmt.querySelector<HTMLInputElement>('input[name="hmt"]:checked');
+      const label = checked && tabs.querySelector<HTMLElement>('label[for="' + checked.id + '"]');
+      if (!label) return;
+      tabs.style.setProperty('--thumb-x', label.offsetLeft + 'px');
+      tabs.style.setProperty('--thumb-y', label.offsetTop + 'px');
+      tabs.style.setProperty('--thumb-w', label.offsetWidth + 'px');
+      tabs.style.setProperty('--thumb-h', label.offsetHeight + 'px');
+      tabs.dataset.thumb = 'on';
+      /* A scrolling track keeps the active segment in view. Horizontal only,
+         so the page never moves. */
+      if (tabs.scrollWidth > tabs.clientWidth) {
+        const left = label.offsetLeft - (tabs.clientWidth - label.offsetWidth) / 2;
+        tabs.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      }
+    };
+
+    hmt.addEventListener('change', place);
+    window.addEventListener('resize', place, { passive: true });
+    /* Fonts change label widths as they arrive, so place again when ready. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+    place();
+  })();
+
+  /* The autoplay advancer, as on the live hero: the dwell line's animationend
+     moves to the next sample, the first press or key stops it, and reaching
+     the reader's own tab stops it too. */
+  (() => {
+    const hmt = document.querySelector('.hmt');
+    if (!hmt) return;
+    const radios = [...hmt.querySelectorAll<HTMLInputElement>('.hmt__radio')];
+    if (radios.length < 2) return;
+    const stop = () => hmt.setAttribute('data-auto', 'off');
+
+    /* The control. It reveals itself only while the tour is actually running,
+       reports its state through aria-pressed, and can put the tour back: a
+       stop the reader cannot undo is a worse control than none. Resuming
+       re-arms the dwell by returning to the first sample, because the dwell is
+       a CSS animation on the ACTIVE segment and there is no way to restart one
+       mid-flight without re-selecting. */
+    const stopBtn = hmt.querySelector<HTMLButtonElement>('[data-hmt-stop]');
+    const stopLabel = stopBtn?.querySelector<HTMLElement>('[data-hmt-stop-label]');
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (stopBtn && stopLabel && !reduced) {
+      stopBtn.hidden = false;
+      stopBtn.addEventListener('click', () => {
+        const stopping = hmt.getAttribute('data-auto') !== 'off';
+        if (stopping) {
+          stop();
+        } else {
+          hmt.removeAttribute('data-auto');
+          const first = hmt.querySelector<HTMLInputElement>('.hmt__radio');
+          if (first) {
+            first.checked = true;
+            first.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        stopBtn.setAttribute('aria-pressed', String(stopping));
+        stopLabel.textContent = stopping ? 'Play the tour' : 'Stop the tour';
+      });
+    }
+    /* A CHOICE stops the autoplay: a tab pressed, a key used, the box focused.
+       Not any pointer touching the card, because on a phone every scroll that
+       starts on the card is a pointerdown, and that stopped the autoplay before
+       a reader had seen a second sample. */
+    hmt.addEventListener('click', (event: Event) => {
+      const target = event.target as Element | null;
+      if (target && target.closest('.hmt__tab, .hmt__in')) stop();
+    });
+    hmt.addEventListener('keydown', stop, { once: true });
+    hmt.addEventListener('focusin', (event: Event) => {
+      const target = event.target as Element | null;
+      if (target && target.closest('.hmt__in')) stop();
+    });
+    hmt.addEventListener('animationend', (event: Event) => {
+      const e = event as AnimationEvent;
+      if (e.animationName !== 'hmt-dwell') return;
+      if (hmt.getAttribute('data-auto') === 'off') return;
+      const i = radios.findIndex((r) => r.checked);
+      if (i < 0) return;
+      const own = hmt.querySelector<HTMLInputElement>('#hmt-own');
+      const next = radios[i + 1] ?? own;
+      if (!next) return;
+      next.checked = true;
+      /* A programmatic check fires no change event, and the thumb places
+         itself on change. Say so, or the desk moves and the thumb stays. */
+      next.dispatchEvent(new Event('change', { bubbles: true }));
+      if (next === own) stop();
+    });
+  })();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootHero, { once: true });
+  } else {
+    bootHero();
+  }
+</script>

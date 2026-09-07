@@ -106,7 +106,13 @@ const REDUCED =
  * makes an element that does not move, never an element that cannot be read.
  * Both are checked against the built page rather than assumed.
  */
-const ITEMS = 'main :is(.surface, figure)';
+/* The children of any `[data-cascade]` joined on 2026-09-05, with §THE CASCADE
+   in styles/motion.css: the same item stagger, reachable by any row that asks.
+   `[data-draw]` was in this list too, for §THE DRAW. That recipe reached no
+   element on any of 45 routes and has been deleted, so the attribute is out of
+   here as well: a selector for something nothing carries costs a match on every
+   element of every page and guards nothing. */
+const ITEMS = 'main :is(.surface, figure, [data-cascade] > *)';
 const BLOCKS =
   'main > *:not(script, style, template):not(:only-child):not(:first-child),' +
   'main > *:only-child > *:not(script, style, template):not(:first-child)';

@@ -537,3 +537,42 @@
     opacity: 0;
   }
 }
+
+/* ══ 5. THE SEAM ══════════════════════════════════════════════════
+ *
+ * The brand ramp travelling along the line that separates the document from
+ * the footer.
+ *
+ * CARRIED BY: `.ca-footer-hairline`. One line, every route, and the only
+ * element on the site that moves without a reader having done anything and
+ * without being inside a component they are looking at.
+ *
+ * ADDED 2026-09-06 ON AN OWNER INSTRUCTION: "cant this be multi gradient
+ * colors use most of the colors and must feel like motion and line width must
+ * be slightly slim?" Footer.astro halved the weight and put it on --grad-seam;
+ * this is the motion half.
+ *
+ * IT MOVES THE BACKGROUND, NOT THE ELEMENT. A transform on a full-width 3px
+ * bar would either leave a gap at one end or need the bar to be wider than the
+ * viewport. Moving `background-position` by exactly one tile leaves the
+ * geometry alone, composites on the same layer, and loops with no seam because
+ * --grad-seam reads out to orchid and back to teal.
+ *
+ * LINEAR, AND ON --m-drift. An eased travel has a fast middle and a slow end,
+ * which on a continuous loop reads as a stutter twice a cycle. 18s across
+ * 1200px is about 67px a second: slow enough that a reader looking at the
+ * footer sees colour move rather than an animation play.
+ *
+ * NOTHING DEPENDS ON IT. The line is fully drawn at rest, so a browser with no
+ * animation support, a print, or a reader who asked for no motion gets the
+ * same four colours holding still. */
+@media (prefers-reduced-motion: no-preference) {
+  .ca-footer-hairline {
+    animation: fx-seam var(--m-drift) linear infinite;
+  }
+}
+
+@keyframes fx-seam {
+  from { background-position-x: 0; }
+  to   { background-position-x: 1200px; }
+}

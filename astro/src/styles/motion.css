@@ -1970,7 +1970,19 @@
      Same three values every other definition uses, so this is the same ring
      rather than a fifth one, and at (0,1,0) every existing definition wins,
      including the nav's, the form's, Button's and prose's, all of which are
-     more specific and none of which had to change. */
+     more specific and none of which had to change.
+
+     AND ON 2026-09-06 THIS BECAME THE ONLY DEFINITION FOR MOST OF THEM. That
+     compatibility was the right way in, but what it left behind was seventeen
+     copies of one recipe across eight stylesheets, which is the drift RULE 0-C
+     exists to stop: changing the site's focus colour meant seventeen edits, and
+     whichever one was missed is the one a keyboard user would have found.
+     Nineteen restatements were deleted, on a test narrow enough to be safe:
+     the body had to be these two declarations byte for byte, and every selector
+     in the rule had to end on an element this floor already covers. A ring with
+     its own offset, or one that paints a SIBLING when something is focused (the
+     hero workbench's tabs, the pricing billing toggle), is a different rule and
+     was left alone. Everything removed now renders from here, unchanged. */
   :where(a, button, summary, input, select, textarea,
          [tabindex], [role='button']):focus-visible {
     outline: 3px solid var(--c-interactive);
@@ -2320,5 +2332,72 @@
   }
   to {
     transform: translate3d(var(--hero-key-sweep, 3%), calc(-1 * var(--hero-key-par, 30px)), 0);
+  }
+}
+
+/* ============================================================================
+   § THE CASCADE: the card stagger, generalised to any row that asks for it.
+   ============================================================================
+
+   HOME 2.0, 2026-09-05. The item stagger above reaches `.surface` and `figure`
+   and nothing else, so a row of five stage nodes, three ledger figures or a
+   column of story steps arrived as one block. Every component that wanted the
+   stagger would have had to write its own, and check-motion.js rule 2 is right
+   to refuse that: an entrance belongs here.
+
+   So a container carries `data-cascade`, and its DIRECT children take the same
+   `sv-arrive-item` keyframe, on the same view timeline, with the same
+   `--arrive-i` step the cards use. Nothing new is invented: no new keyframe, no
+   new range, no new easing. The one thing that is new is the selector.
+
+   THE SAME THREE PROPERTIES THE CARD STAGGER HAS. It moves transform only, so
+   nothing is ever faded; `backwards` fill means the child sits at its lift until
+   the timeline starts and settles as it enters; and on an engine with no view
+   timeline the fallback trigger in scripts/arrive.ts marks the same children
+   `data-arrived="on"` and the time based branch below runs the same keyframe.
+   Reduced motion removes the animation name and the child is simply there.
+
+   SIX POSITIONS THEN THE CYCLE REPEATS, like the cards. A row of five and a
+   column of five both fit inside one cycle. */
+@layer components {
+  main [data-cascade] > * { --arrive-i: 0; }
+  main [data-cascade] > :nth-child(6n + 2) { --arrive-i: 1; }
+  main [data-cascade] > :nth-child(6n + 3) { --arrive-i: 2; }
+  main [data-cascade] > :nth-child(6n + 4) { --arrive-i: 3; }
+  main [data-cascade] > :nth-child(6n + 5) { --arrive-i: 4; }
+  main [data-cascade] > :nth-child(6n + 6) { --arrive-i: 5; }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      main [data-cascade] > * {
+        animation-name: sv-arrive-item;
+        animation-duration: auto;
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
+        animation-timeline: view();
+        animation-range:
+          entry calc(var(--arrive-i, 0) * var(--arrive-item-step))
+          entry calc(var(--arrive-i, 0) * var(--arrive-item-step) + var(--arrive-item-settle));
+      }
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      main [data-cascade] > *[data-arrived='on'] {
+        animation-name: sv-arrive-item;
+        animation-duration: var(--land-row-dur);
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
+        animation-delay: calc(var(--arrive-i, 0) * var(--land-step));
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    main [data-cascade] > *,
+    main [data-cascade] > *[data-arrived='on'] {
+      animation-name: none;
+    }
   }
 }

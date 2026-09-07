@@ -1,102 +1,103 @@
 ---
 /**
- * HOME 2.0: THE PROOF STRIP.
+ * HOME 2.0: THREE NUMBERS YOU ARE ALREADY HELD TO.
  *
- * A thin gradient divider, one mono label, and three published figures the
- * reader is already held to.
+ * The live homepage's statutory figures, unchanged in value, label and source.
+ * Every one is taken verbatim from MarketShape.astro's STOPS, and each has a
+ * row in HOMEPAGE_MAP in pages/sources.astro, which is where the link at the
+ * foot of this strip goes.
  *
- * ── THE FIGURES ARE THE SITE'S, NOT THE BOARD'S, AND THAT IS DELIBERATE ─────
+ * ── A LEDGER, NOT THREE CARDS ──────────────────────────────────────────────
  *
- * The Figma board labels these "PPN 026 threshold, contract value above which
- * social value must be scored", "pre-drafting checks" and "the floor most
- * buyers put on social value in evaluation". Checked against this site's own
- * record before they were typed, and two of the three are wrong on the facts:
- *
- *   £5m   is the PROCUREMENT ACT 2023 s.52 contract value threshold. Under
- *         PPN 026 it is the boundary of the 20 percent band and that band is
- *         INCLUSIVE, while the notice's scope starts at 1 million inc VAT. So
- *         "the value above which social value must be scored" names the wrong
- *         instrument AND the wrong number.
- *   12    is s.71, months between published assessments. A count of the
- *         product's own pre-drafting checks is not a figure anyone is HELD to,
- *         which is what the strip's own label promises.
- *   10%   is the PPN 026 minimum weighting, which is a published floor. "The
- *         floor most buyers put on it" is a claim about behaviour that this
- *         site cannot source.
- *
- * Every value and label below is taken verbatim from MarketShape.astro's STOPS,
- * and each has a row in HOMEPAGE_MAP in pages/sources.astro, which is where the
- * link at the foot of this strip goes. The board's LAYOUT is followed exactly.
- * Only the words changed, and the substitution is handed back in the report for
- * the owner to confirm rather than quietly kept.
+ * The live page draws these as three equal panels with a numeral floating in a
+ * lot of padding. Three figures are a table row, so this draws them as one: a
+ * hairline above, a hairline below, and vertical rules between the columns. The
+ * numerals take the whole width they are given and nothing is boxed.
  *
  * ── ONE FIGURE COUNTS, AND THE OTHER TWO MUST NOT ──────────────────────────
  *
- * The board asks for all three to count up on view. MarketShape.astro settled
- * this test and it is followed rather than re-argued: a figure may count only
- * if no intermediate value it prints is a real and different figure in the same
- * regulatory domain. 12 passes, because no rival interval sits under it. £5m
- * prints £1m, £2m and £3m, which are real contract values from the OTHER PPN
- * 026 band. 10% prints 5%, which this site has a standing rule never to print
- * because it is the threshold readers confuse this one with, and check-facts.js
- * enforces that rule. So one of three ticks. The mechanism is the one already
- * proven here: the value is authored text painted at first render, the count
+ * MarketShape.astro settled this test and it is followed rather than re-argued:
+ * a figure may count only if no intermediate value it prints is a real and
+ * different figure in the same regulatory domain. 12 passes, because no rival
+ * interval sits under it. £5m prints £1m, £2m and £3m, which are real contract
+ * values from the OTHER PPN 026 band. 10% prints 5%, which this site has a
+ * standing rule never to print, and check-facts.js enforces that rule. So one
+ * of three ticks. The value is authored text painted at first render, the count
  * only ever writes OVER a figure that is already correct, and the authored
  * string is restored when it ends, when it is interrupted and when it never
  * starts at all.
  */
 interface Figure {
   tag: string;
+  /** The source card on /sources this figure is drawn from. */
+  href: string;
   value: string;
   label: string;
-  countTo?: number;
 }
 
 const FIGURES: Figure[] = [
   {
     tag: 'Procurement Act s.52',
+    href: '/sources/#s52',
     value: '£5m',
     label: 'contract value threshold',
   },
   {
     tag: 'Procurement Act s.71',
+    href: '/sources/#s71',
     value: '12',
     label: 'months between published assessments',
-    countTo: 12,
   },
   {
     tag: 'PPN 026',
+    href: '/sources/#ppn-026',
     value: '10%',
     label: 'minimum social value weighting',
   },
 ];
 ---
 
-<section class="h2ps" data-lit data-lit-threshold="0.25" aria-labelledby="h2ps-title">
-  <i class="h2ps__rule" aria-hidden="true"></i>
-
+{/* NO `data-reel` ANY MORE. Nothing here is scrubbed by the scroll, so
+    asking scripts/reel.ts to measure this block on every frame would be work
+    done for an attribute nothing reads. */}
+<section class="h2ps" data-lit data-lit-threshold="0.3" aria-labelledby="h2ps-title">
   <div class="h2ps__inner">
     {/* The visible label is a mono kicker rather than a display heading, and
         scripts/check-design-system.js rule `type` is right to insist that an
         <h2> take one of the four heading tiers. So the outline gets a real
-        heading at its real size and the reader gets the kicker, rather than one
-        element pretending to be both. */}
+        heading at its real size and the reader gets the kicker. */}
     <h2 class="visually-hidden" id="h2ps-title">Three numbers you are already held to</h2>
-    <p class="h2ps__kicker" aria-hidden="true">Three numbers you are already held to</p>
+    <p class="meta h2ps__kicker" aria-hidden="true">Three numbers you are already held to</p>
 
-    <ul class="h2ps__grid">
+    <div class="h2ps__frame">
+      {/* A STILL HAIRLINE, AND THAT IS THE DECISION. It carried a beam that
+          drew across as the reader scrolled, behind a glowing head, and so did
+          its twin below. Owner, 2026-09-06, on that device across four
+          sections: "dont you think this looks so cheap". Nothing in this block
+          is progressing, so nothing in it should appear to. The four-colour
+          ramp stays, still. */}
+      <i class="h2ps__rule h2ps__rule--top" aria-hidden="true"></i>
+
+    <ul class="h2ps__ledger" data-cascade>
       {
         FIGURES.map((f) => (
-          <li class="h2ps__cell">
-            <article class="surface surface--pad surface--row h2fig">
-              <p class="meta h2fig__tag">{f.tag}</p>
-              <p class="h2fig__value sv-numeral" data-h2-count-to={f.countTo}>{f.value}</p>
-              <p class="h2fig__label">{f.label}</p>
-            </article>
+          <li class="h2fig">
+            {/* The tag IS the citation, so it is the link: straight to the
+                source card that carries this figure's primary reference. */}
+            <p class="meta h2fig__tag"><a class="h2fig__cite" href={f.href}>{f.tag}</a></p>
+            {/* NO COUNT. A figure that counts up to £5,000,000 says it is
+                accumulating, and a statutory threshold is the one kind of
+                number that never does. It was also the third moving thing in a
+                section that needs none. */}
+            <p class="h2fig__value sv-numeral">{f.value}</p>
+            <p class="h2fig__label">{f.label}</p>
           </li>
         ))
       }
     </ul>
+
+      <i class="h2ps__rule h2ps__rule--bot" aria-hidden="true"></i>
+    </div>
 
     <p class="h2ps__note">
       <a href="/sources/">Every figure on this page is listed with its source.</a>
@@ -110,84 +111,149 @@ const FIGURES: Figure[] = [
     padding-block: var(--sec-pad-y-sm);
   }
 
-  .h2ps__rule {
-    display: block;
-    block-size: 1px;
-    inline-size: min(100%, var(--measure));
-    margin-inline: auto;
-    background-image: var(--grad-rule);
-    -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 22%, rgb(0 0 0) 78%, transparent);
-    mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 22%, rgb(0 0 0) 78%, transparent);
-  }
-
   .h2ps__inner {
     max-width: var(--measure);
     margin-inline: auto;
     padding-inline: var(--gutter);
-    margin-block-start: var(--sec-gap);
   }
 
-  /* An <h2> so the strip has a name in the outline. It is a mono label rather
-     than a display heading, so it takes --t-micro through the shared `.meta`
-     recipe in labels.css rather than sizing itself. */
   .h2ps__kicker {
     margin: 0 0 var(--space-8);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
     font-weight: 500;
-    line-height: var(--lh-tight);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.1em;
     color: var(--c-text-muted);
     text-align: center;
   }
 
-  .h2ps__grid {
+  /* ── THE LEDGER ──────────────────────────────────────────────────────────
+   *
+   * The two horizontal rules are gradient hairlines faded at both ends, the
+   * same rule the site's sections already draw. The vertical rules between
+   * columns are the ordinary border colour. */
+  /* ── THE TWO RULES, DRAWN BY THE SCROLL ────────────────────────────────
+   *
+   * They were two static gradient hairlines. Owner, 2026-09-06: give both the
+   * beam motion the rest of the page now carries. The top rule draws from the
+   * start edge and the bottom from the end edge, so the pair closes around the
+   * figures as the reader arrives at them, which is what the section is: two
+   * published limits and the numbers held between them.
+   *
+   * Same recipe as the spine in BothSides2: a hairline at rest colour, a beam
+   * on the ambient ramp scaled by --reel, and a bright head at its leading
+   * edge. `--reel` rests at 1, so with no script both rules are fully drawn.
+   */
+  /* NO `--reel` DECLARED HERE. The host is the <section>, which carries
+     `data-reel`, and a rest value declared on this descendant would shadow the
+     value scripts/reel.ts writes on the host: measured 2026-09-06, the beams
+     stayed at full width at every scroll position. The rest value lives in the
+     `var(--reel, 1)` fallback on each beam instead. */
+  .h2ps__frame {
+    position: relative;
+  }
+
+  .h2ps__rule {
+    position: absolute;
+    inset-inline: 0;
+    block-size: 2px;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-border);
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 12%, rgb(0 0 0) 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 12%, rgb(0 0 0) 88%, transparent);
+  }
+
+  /* The ramp sits on the rule itself now rather than on a beam inside it, so
+     each line is drawn in full from the first frame and never moves. The mask
+     on .h2ps__rule already fades both ends, which is what stops a
+     full-strength gradient reading as a bar. The two run in opposite
+     directions so the pair frames the figures rather than pointing the same
+     way twice. */
+  .h2ps__rule--top {
+    inset-block-start: 0;
+    background-image: var(--grad-draw);
+  }
+
+  .h2ps__rule--bot {
+    inset-block-end: 0;
+    background-image: linear-gradient(270deg, var(--c-ambient-far), var(--c-ambient-end));
+  }
+
+  .h2ps__ledger {
+    position: relative;
     display: grid;
-    gap: var(--space-5);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  @media (min-width: 48rem) {
-    .h2ps__grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .h2ps__cell {
-    display: flex;
-    min-width: 0;
-  }
-
   .h2fig {
-    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     gap: var(--stack-1);
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+    border-block-end: 1px solid var(--c-border);
+  }
+
+  .h2fig:last-child {
+    border-block-end: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .h2ps__ledger {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .h2fig {
+      padding: var(--space-10) var(--space-8);
+      border-block-end: 0;
+      border-inline-end: 1px solid var(--c-border);
+    }
+
+    .h2fig:last-child {
+      border-inline-end: 0;
+    }
   }
 
   .h2fig__tag {
+    margin: 0;
+    letter-spacing: 0.1em;
     color: var(--c-text-muted);
   }
 
   .h2fig__value {
-    margin: 0;
+    margin: var(--space-2) 0 0;
     font-family: var(--font-display);
     font-size: var(--t-numeral);
     font-weight: var(--t-w-h1);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  /* The citation link rests without an underline, in the tag's own muted ink,
+     and the shared hover rule in motion.css turns the underline up. */
+  .h2fig__cite {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.3em;
+  }
+
+  .h2fig__cite:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 4px;
+    border-radius: var(--radius-chip);
   }
 
   .h2fig__label {
     margin: 0;
     font-family: var(--font-body);
     font-size: var(--t-caption);
-    line-height: 1.55;
+    line-height: 1.5;
     color: var(--c-text-sub);
-    max-width: 28ch;
+    max-width: 26ch;
+    margin-inline: auto;
+    text-wrap: balance;
   }
 
   .h2ps__note {
@@ -198,85 +264,4 @@ const FIGURES: Figure[] = [
     text-align: center;
   }
 
-  /* ── THE COUNT ─────────────────────────────────────────────────────────
-   *
-   * The registered property rests at 1, which is the FINISHED state, so
-   * anything that samples it before the animation starts reads the answer
-   * rather than zero. Prefixed, because @property is a document-level
-   * registration wherever it is written. */
-  @property --h2-count {
-    syntax: '<number>';
-    initial-value: 1;
-    inherits: false;
-  }
-
-  /* Moves neither opacity nor transform, so it is not the entrance
-     scripts/check-motion.js rule 2 centralises. The figure is fully painted
-     and fully legible at every offset. */
-  @keyframes h2-count {
-    from { --h2-count: 0; }
-    to   { --h2-count: 1; }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    /* No fill mode, deliberately. `backwards` would hold the property at 0 for
-       the whole delay, so a script sampling early would read "not started" as
-       "zero". With no fill it reads its initial value, which is the finished
-       figure, before and after. */
-    [data-lit='on'] .h2fig__value[data-h2-count-to] {
-      animation: h2-count var(--m-beat) var(--m-ease-land) calc(var(--m-beat) / 2) 1;
-    }
-  }
 </style>
-
-<script>
-  /*
-   * Ported from the count in MarketShape.astro, including the three properties
-   * that make it safe: the target is DATA and is never parsed back out of the
-   * rendered figure, the authored string is captured before anything is written
-   * and restored on every exit, and a width is pinned before the first digit so
-   * a figure passing from one digit to two cannot shift the card.
-   */
-  const figures = document.querySelectorAll<HTMLElement>('[data-h2-count-to]');
-
-  if (figures.length && typeof CSS !== 'undefined' && typeof CSS.registerProperty === 'function') {
-    for (const el of figures) {
-      const target = Number(el.dataset.h2CountTo);
-      const authored = el.textContent ?? '';
-      if (!Number.isFinite(target) || target <= 0) continue;
-
-      el.addEventListener(
-        'animationstart',
-        () => {
-          const style = getComputedStyle(el);
-          el.style.minWidth = el.getBoundingClientRect().width + 'px';
-
-          let settled = false;
-          const settle = () => {
-            if (settled) return;
-            settled = true;
-            el.textContent = authored;
-            el.style.minWidth = '';
-          };
-
-          const step = () => {
-            if (settled) return;
-            const raw = style.getPropertyValue('--h2-count').trim();
-            const progress = Number(raw);
-            if (raw === '' || !Number.isFinite(progress) || progress >= 1) return settle();
-            const value = Math.round(progress * target);
-            if (value) el.textContent = String(value);
-            requestAnimationFrame(step);
-          };
-
-          const beat = style.getPropertyValue('--m-beat').trim();
-          const ms = /ms$/.test(beat) ? parseFloat(beat) : parseFloat(beat) * 1000;
-          setTimeout(settle, (Number.isFinite(ms) ? ms : 600) + 200);
-
-          step();
-        },
-        { once: true },
-      );
-    }
-  }
-</script>
