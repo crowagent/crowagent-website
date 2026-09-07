@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-04T01:30:26.696Z",
+  "updated": "2026-09-07T09:15:10.699Z",
   "unreadable": [],
   "_deploy_why": "index.html renders DATA.deploy on WHICHEVER board is selected, and check-board-contract.js requires every field the page dereferences to exist on BOTH boards. This board carries its own answer rather than a copy of the platform's, because the owner's rule of 2026-08-09 is that this deployable is SEPARATE. A reader who lands on the Website tab must not infer that the platform's four-deploy budget applies here, and a reader on the Platform tab must not infer that the website spends it.",
   "deploy": {
@@ -2601,6 +2601,14 @@
       "title": "Home 2.0 premium transformation: real Figma screens, background wall with a perspective floor, 3D hero stage, bento stages, sticky tour with a moving focus frame, all inside the motion and design gates",
       "status": "CLEARED",
       "note": "SUPERSEDED BY THE PROMOTION IN A-251, 2026-09-06. This row proposed a further premium pass on the preview route (a background wall with a perspective floor, a 3D hero stage). The route it named no longer exists, and the direction the owner took on the day was the opposite one: on seeing the same gradient beam on four sections they said \"dont you think this looks so cheap try and poor?\", and the page was cut from four scroll-drawn rails to one plus a single settle at the refusal verdict. Adding a 3D stage on top of that would reverse a decision taken with the page in front of them. || WHAT THIS ROW ASKED FOR THAT WAS DONE ANYWAY, so nothing is silently dropped: the real product screens are in the pinned frame in the product story, the workbench is drawn as a device rather than a list, and the closing card carries the site's own edge light. || Reopen it as a new row against the shipped page if the owner still wants the stage."
+    },
+    {
+      "id": "A-253",
+      "src": "session-2026-09-07",
+      "sev": "P2",
+      "title": "The pinned product frame parks on a guessed column height, so a portrait tablet shows 700px of dead column beneath it",
+      "status": "FIXED",
+      "note": "FIXED 2026-09-07, IN THE TREE AND NOT ON THE LIVE SITE. Carried from the Home 2.0 promotion session, where it was recorded as not attempted. || THE REPORT. Owner, 2026-09-06, on an iPad Pro: the product section reads top-heavy. Measured 2026-09-07 at 1024x1366 with the story parked mid-section, 288px sat above the frame and 700px of dead column below it. || THE CAUSE, AND WHY EVERY DESKTOP READING LOOKED CORRECT. The pinned column parks by centring itself in the window, but the stylesheet cannot know how tall that column is. The screens are 16/10 and the column is 7fr of the grid, so the height is WIDTH-driven: 509px at 1440, 422px on a portrait tablet. The CSS centred a flat 32rem guess. At 1440 the guess is right to within 3px, which is why the defect lived only where the column is narrow, and an 18rem cap then bit on top of it at 1024. || WHAT WAS RULED OUT. Enlarging the frame by giving the screens a taller box was rejected on measurement, not taste: the masters are 2880x1800, exactly 16/10, so the frame already matches the source and object-fit cover in a taller box would crop the sides of the product screen. || THE FIX. scripts/story.ts publishes the column's measured height as --h2st-pin-h and keeps it current through a ResizeObserver, and Story2.astro centres THAT rather than a guess. The cap is deleted, because a centred column cannot park so low that it is cut off or that a stage scrolls by before it pins. The floor stays for short windows, where centring is deliberately abandoned so the frame clears the sticky header. The 32rem fallback keeps a no-JS page no worse than before at any size. || RESULT, same instrument. 1024x1366 was 288 above and 700 below, now 472 and 472. 1440x900 195 and 196. 1440x1080 286 and 286. 1024x1600 589 and 589. Imbalance 0.1px everywhere, against 412px before. The residual 44px between the frame and the column's centre is the stage-dots row hanging below the frame, which is intended. || THE GUARD, in the same commit. check-device-frames.js gains a parking rule at 1024x1366 and 1440x1080. It asserts TWO things because either alone passes while the mechanism is dead: that --h2st-pin-h is published and agrees with the rendered height, and that the parked column leaves equal room above and below. RED-PROVED both ways. Restoring the old capped formula fails 1024 by 368px and PASSES 1440 by 3.1px, which is the diagnosis confirmed. Killing the publisher fails both mechanism assertions while 1440 still passes the balance check by coincidence, which is why the mechanism assertion is not redundant. Short viewports are excluded by design and the exclusion is stated in the gate. || CERTIFICATION. Full chain re-run against this tree after the fix: 39 gates run, 39 passed, 0 failed, 720s. astro check 0 errors. || NOTHING IS PUSHED. A push to website main IS a Cloudflare Pages production deploy and needs its own explicit owner approval under RULE 0-G."
     }
   ],
   "directives": [
@@ -2650,5 +2658,5 @@
       "note": "From A-16."
     }
   ],
-  "nextId": 253
+  "nextId": 254
 }

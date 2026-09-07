@@ -263,26 +263,38 @@ const tipId = (s: Stage) => `${s.id}-banner`;
   }
 
   /* ── THE PINNED FRAME ──────────────────────────────────────────────────── */
-  /* ── WHERE THE FRAME PARKS, AND WHY IT IS NOT A FIXED OFFSET ────────────
+  /* ---- WHERE THE FRAME PARKS: CENTRE THE COLUMN THAT IS ACTUALLY THERE ----
    *
    * A flat `top` puts the frame near the top of the window whatever the window
-   * is. On a tall tablet that is top-heavy: the frame is about 420px in a
-   * 1366px viewport, so it sat 86px down with 860px of empty column beneath it
-   * while the text column beside it was full. Measured on the owner's iPad Pro
-   * on 2026-09-06, in the same pass as the stage heights.
+   * is, which on a tall tablet is top-heavy. So the offset centres the pinned
+   * column in the window instead. The subtlety is WHICH HEIGHT it centres.
    *
-   * So the offset grows with the room available, and stops. `(100vh - 32rem)/2`
-   * is the offset that would centre a frame of about 512px, the floor keeps it
-   * clear of the sticky header on a short window, and 18rem caps it so the
-   * frame never parks so low that the reader scrolls past a stage before it
-   * pins. At 1366 that is 288px down rather than 86, which balances the two
-   * columns; at 900 it is 194; below that the floor takes over. */
+   * This was `(100vh - 32rem) / 2` capped at `18rem`, a guess at the column's
+   * height. The guess is right at 1440, where the column really is 509px
+   * against the 512px assumed and the frame parked 194px down against an ideal
+   * of 195. It is wrong exactly where the owner reported the problem. The
+   * column is width-driven, because the screens are 16/10 and the column is
+   * 7fr of the grid, so on a 1024 portrait tablet it is 422px rather than 512
+   * and the ideal offset is 472px. The 18rem cap then bit on top of that.
+   * MEASURED 2026-09-07 at 1024x1366: 288px above the frame, 700px of dead
+   * column below it.
+   *
+   * So `story.ts` publishes the column's real height as `--h2st-pin-h` and
+   * keeps it current through a ResizeObserver, and this centres THAT. The
+   * result is symmetric by construction at every viewport, which is also why
+   * the cap is gone: a centred frame cannot park so low that it is cut off, or
+   * so low that a stage scrolls past before it pins, because the space it
+   * leaves above always equals the space below. The floor stays, because a
+   * SHORT window is the one case centring cannot serve. There `max()` holds
+   * the frame clear of the sticky header instead of tucking it underneath.
+   *
+   * The 32rem fallback is what a page whose JS has not run gets. It is the old
+   * assumption without the cap, so no-JS is no worse than before at any size. */
   .h2st__pin {
     position: sticky;
-    top: clamp(
+    top: max(
       calc(var(--space-12) * 1.8),
-      calc((100vh - 32rem) / 2),
-      18rem
+      calc((100vh - var(--h2st-pin-h, 32rem)) / 2)
     );
     z-index: 1;
     min-width: 0;

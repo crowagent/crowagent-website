@@ -280,6 +280,130 @@ for (const route of CANDIDATES) {
   }
 }
 
+/* == THE PARKING RULE: A PINNED FRAME IS CENTRED ON THE COLUMN THAT IS THERE ==
+ *
+ * THE REPORT. Owner, 2026-09-06, on an iPad Pro: the product section is
+ * top-heavy. Measured 2026-09-07 at 1024x1366 it was 288px above the frame and
+ * 700px of dead column below it.
+ *
+ * THE CAUSE, AND WHY A SOURCE SCAN COULD NOT HAVE FOUND IT. The offset centres
+ * the pinned column, but the stylesheet cannot know how tall that column is:
+ * the screens are 16/10 and the column is 7fr of the grid, so the height is
+ * WIDTH-driven and runs from 509px at 1440 to 422px on a portrait tablet. The
+ * CSS assumed a flat 32rem. That assumption is right at 1440, which is why
+ * every desktop reading looked correct and the defect lived only where the
+ * column is narrow. A grep for the rule would have found a plausible formula.
+ * Only a measurement at a tall, narrow viewport finds this.
+ *
+ * SO THIS MEASURES THE RENDERED PAGE, and it asserts two things rather than
+ * one, because either alone can pass while the mechanism is dead:
+ *
+ *   1  THE MECHANISM. `story.ts` must have published the column's real height
+ *      as `--h2st-pin-h`, and it must AGREE with the height the browser
+ *      reports. Without this, a page whose JS never ran falls back to the old
+ *      32rem guess, which at some viewport centres well by coincidence and
+ *      would score a clean pass over a dead observer.
+ *   2  THE OUTCOME. The parked column leaves the same room above it as below.
+ *
+ * ONLY TALL VIEWPORTS. On a SHORT window centring is deliberately abandoned:
+ * a floor holds the frame clear of the sticky header instead of tucking it
+ * underneath, so `above == below` is false there BY DESIGN and asserting it
+ * would be asserting the wrong rule. */
+const PARKED = [
+  { w: 1024, h: 1366, why: "the owner's iPad Pro in portrait, where the report came from" },
+  { w: 1440, h: 1080, why: 'a desktop tall enough that the floor cannot be what is measured' },
+];
+/* Sub-pixel layout plus the integer rounding of the published height. The
+   defect this replaces was 412px out, so this is tight by three orders. */
+const PARK_TOL = 8;
+
+for (const vp of PARKED) {
+  /* `reducedMotion` for the same reason measure-fidelity.mjs uses it: the
+     arrival animation leaves sections mid-transform, and getBoundingClientRect
+     folds a running translate into the box it reports. */
+  const ppage = await browser.newPage({
+    viewport: { width: vp.w, height: vp.h },
+    reducedMotion: 'reduce',
+  });
+  await ppage.goto(base + '/', { waitUntil: 'load' });
+  const label = `/ @${vp.w}x${vp.h}`;
+
+  /* PARK IT, THEN MEASURE IT, AND NOT IN THE SAME BREATH. The site sets a
+     smooth scroll-behavior, so a scrollTo ANIMATES: measuring two frames later
+     reads the journey and not the destination. That is not a hypothetical, it
+     is how the first run of this rule reported the column 3119px above the
+     fold. So the scroll is instant, and the settle is waited for. */
+  const parked = await ppage.evaluate(() => {
+    const steps = document.querySelector('.h2st__steps');
+    if (!steps) return false;
+    const r = steps.getBoundingClientRect();
+    window.scrollTo({
+      top: window.scrollY + r.top + r.height / 2 - window.innerHeight / 2,
+      behavior: 'instant',
+    });
+    return true;
+  });
+  if (parked) {
+    await ppage.waitForTimeout(400);
+    await ppage.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
+  }
+
+  const park = await ppage.evaluate(() => {
+    const host = document.querySelector('[data-story]');
+    const pin = document.querySelector('[data-story-pin]');
+    if (!host || !pin) return null;
+    const box = pin.getBoundingClientRect();
+    const hostBox = host.getBoundingClientRect();
+    return {
+      vh: window.innerHeight,
+      top: box.top, bottom: box.bottom, height: box.height,
+      published: getComputedStyle(host).getPropertyValue('--h2st-pin-h').trim(),
+      stickyTop: getComputedStyle(pin).top,
+      /* Two-column is MEASURED, not assumed from a breakpoint. Stacked, the
+         pin spans the host and this rule does not apply. */
+      stacked: box.width >= hostBox.width * 0.9,
+    };
+  });
+
+  if (!park) {
+    violations.push(`${label} — the homepage renders no [data-story-pin], so the parking rule measured nothing. An unmeasurable rule is a failure, never a skip`);
+    console.log(`    FAIL  ${label}  no pinned column`);
+    await ppage.close();
+    continue;
+  }
+  if (park.stacked) {
+    violations.push(`${label} — the story is STACKED at this viewport, so the parking rule measured nothing. This gate declares ${vp.w}x${vp.h} as a two-column case (${vp.why}); either the breakpoint moved or this entry is stale`);
+    console.log(`    FAIL  ${label}  stacked, not two-column`);
+    await ppage.close();
+    continue;
+  }
+
+  /* 1 — THE MECHANISM. */
+  const published = parseFloat(park.published);
+  if (!park.published || Number.isNaN(published)) {
+    violations.push(`${label} — the pinned column's height is not published as --h2st-pin-h, so the offset is centring the 32rem CSS fallback and not the column. story.ts publishes it; if its ResizeObserver has stopped running, this frame is parked on a guess again`);
+    console.log(`    FAIL  ${label}  --h2st-pin-h unset`);
+  } else if (Math.abs(published - park.height) > PARK_TOL) {
+    violations.push(`${label} — --h2st-pin-h says ${published}px and the column renders ${park.height.toFixed(1)}px. The published height has gone stale against what it describes, so the offset is centring a number that is no longer true`);
+    console.log(`    FAIL  ${label}  published ${published}px vs rendered ${park.height.toFixed(1)}px`);
+  }
+
+  /* 2 — THE OUTCOME. */
+  const above = park.top;
+  const below = park.vh - park.bottom;
+  const off = Math.abs(above - below);
+  const ok = off <= PARK_TOL;
+  console.log(
+    `    ${ok ? 'ok  ' : 'FAIL'}  ${label}  column ${park.height.toFixed(0)}px parked at ${park.stickyTop}: ${above.toFixed(0)}px above, ${below.toFixed(0)}px below (${off.toFixed(1)}px out)`,
+  );
+  if (!ok) {
+    violations.push(
+      `${label} — the pinned column leaves ${above.toFixed(0)}px above it and ${below.toFixed(0)}px below, ${off.toFixed(0)}px out of balance. It is meant to be centred in the window, and dead column below a frame is what the owner reported on 2026-09-06. The offset centres --h2st-pin-h, so either that height is wrong or something has capped the offset again`,
+    );
+  }
+  await ppage.close();
+}
+
 await browser.close();
 server.close();
 

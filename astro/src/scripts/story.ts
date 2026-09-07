@@ -87,6 +87,28 @@ export function initStory(): void {
       closeSpots();
     };
 
+    /* THE COLUMN'S REAL HEIGHT, PUBLISHED FOR THE STICKY OFFSET.
+       The frame parks by centring the pinned column in the window, and the
+       stylesheet cannot know how tall that column is: it is width-driven, so
+       it is 509px at 1440 and 422px on a 1024 portrait tablet. Centring the
+       CSS guess of 32rem left 288px above the frame and 700px of dead column
+       below it at 1024x1366, measured 2026-09-07. So publish what it measures.
+
+       Setting `top` cannot change the column's height, so observing the height
+       and writing the offset is not a feedback loop. A ResizeObserver rather
+       than a resize listener because the height also moves when a font loads
+       or an image settles, with no window resize to hear. */
+    const publishPinHeight = () => {
+      if (!pin) return;
+      const height = pin.getBoundingClientRect().height;
+      if (height > 0) host.style.setProperty('--h2st-pin-h', `${Math.round(height)}px`);
+    };
+
+    if (pin && typeof ResizeObserver === 'function') {
+      new ResizeObserver(publishPinHeight).observe(pin);
+    }
+    publishPinHeight();
+
     /* THE REFERENCE LINE. On a wide layout the frame sits beside the steps
        and the active step is the one nearest the middle of the viewport. On a
        stacked layout the frame is pinned ABOVE the steps and covers the top of
