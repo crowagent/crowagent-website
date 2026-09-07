@@ -214,7 +214,38 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
             status.textContent = 'Thanks. You are on the list.';
             btn.textContent = 'Subscribed';
           })
-          .catch(() => {
+          .catch((err) => {
+            /*
+             * [A-263 2026-09-07] THE ERROR IS LOGGED RATHER THAN DISCARDED.
+             *
+             * This was `.catch(() => {` and it threw the reason away. On
+             * 2026-09-07 the owner reported this form failing on production and
+             * the only evidence available anywhere was the sentence below,
+             * which is the same sentence for a 502, a 429, a CORS refusal and a
+             * dropped connection. Diagnosing it needed the SERVER logs, and the
+             * server is a different repository. A reader with the console open
+             * could tell us nothing.
+             *
+             * The cause that day was a Brevo API key returning 401 "Key not
+             * found", so /api/notify answered 502. The status was in the reject
+             * reason all along, one line above where it was being deleted.
+             *
+             * The MESSAGE the reader sees is deliberately unchanged: an HTTP
+             * status is not something to put in front of somebody trying to
+             * subscribe to a newsletter, and the email address is the escape
+             * hatch that still works when this endpoint does not.
+             */
+            console.error(
+              JSON.stringify({
+                level: 'error',
+                service: 'newsletter-form',
+                operation: 'subscribe',
+                endpoint: form.action,
+                source: form.dataset.source ?? null,
+                error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+                timestamp: new Date().toISOString(),
+              }),
+            );
             status.hidden = false;
             status.className = 'form__status form__status--bad nl__status';
             status.textContent =

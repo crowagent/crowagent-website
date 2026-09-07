@@ -357,7 +357,22 @@ import Button from '../ui/Button.astro';
             "Message received. We'll be in touch within three to five business days.";
           btn.textContent = 'Message sent';
         })
-        .catch(() => {
+        .catch((err) => {
+          /* [A-263 2026-09-07] Logged rather than discarded. See the same note
+             in NewsletterForm.astro: a swallowed reason made a production
+             outage undiagnosable from the browser, and the reader-facing
+             sentence is identical for a 502, a 429 and a CORS refusal. The
+             message shown is deliberately unchanged. */
+          console.error(
+            JSON.stringify({
+              level: 'error',
+              service: 'contact-form',
+              operation: 'submit',
+              endpoint: form.action,
+              error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+              timestamp: new Date().toISOString(),
+            }),
+          );
           status.hidden = false;
           status.className = 'form__status form__status--bad';
           status.textContent =

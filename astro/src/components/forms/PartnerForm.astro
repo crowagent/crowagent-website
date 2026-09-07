@@ -371,7 +371,24 @@ const PARTNER_TYPES = [
           status.textContent = "Enquiry received. We'll be in touch within 2 business days.";
           btn.textContent = 'Enquiry sent';
         })
-        .catch(() => {
+        .catch((err) => {
+          /* [A-263 2026-09-07] Logged rather than discarded. See the same note
+             in NewsletterForm.astro. This form is the one where it would have
+             mattered most: on production it still posts to the Formspree
+             endpoint this component was moved OFF, and the shipped CSP no
+             longer permits that origin, so every submission is refused by the
+             browser before it leaves the page. A discarded reason is exactly
+             the evidence that would have named it. */
+          console.error(
+            JSON.stringify({
+              level: 'error',
+              service: 'partner-form',
+              operation: 'submit',
+              endpoint: form.action,
+              error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+              timestamp: new Date().toISOString(),
+            }),
+          );
           status.hidden = false;
           status.className = 'form__status form__status--bad';
           status.textContent =
