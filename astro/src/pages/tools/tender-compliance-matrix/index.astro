@@ -538,7 +538,7 @@ const schema = [
           type="button"
           data-sig="all"
           aria-pressed="true"
-          aria-controls="matrix-rows">All rows <span class="tmxf__n">0</span></button
+          aria-controls="matrix-rows" data-label="All rows">All rows 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -546,7 +546,7 @@ const schema = [
           data-sig="obligation"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Obligations <span class="tmxf__n">0</span></button
+          hidden data-label="Obligations">Obligations 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -554,7 +554,7 @@ const schema = [
           data-sig="directive"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Numbered questions <span class="tmxf__n">0</span></button
+          hidden data-label="Numbered questions">Numbered questions 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -562,7 +562,7 @@ const schema = [
           data-sig="reference"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Clause references <span class="tmxf__n">0</span></button
+          hidden data-label="Clause references">Clause references 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -570,7 +570,7 @@ const schema = [
           data-sig="table"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Table rows <span class="tmxf__n">0</span></button
+          hidden data-label="Table rows">Table rows 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -578,7 +578,7 @@ const schema = [
           data-sig="mandatory"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Marked pass or fail <span class="tmxf__n">0</span></button
+          hidden data-label="Marked pass or fail">Marked pass or fail 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -586,7 +586,7 @@ const schema = [
           data-sig="deadline"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Dates and times <span class="tmxf__n">0</span></button
+          hidden data-label="Dates and times">Dates and times 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -594,7 +594,7 @@ const schema = [
           data-sig="limit"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Response limits <span class="tmxf__n">0</span></button
+          hidden data-label="Response limits">Response limits 0</button
         >
         <button
           class="control chip tmx-hit tmxf__chip"
@@ -602,7 +602,7 @@ const schema = [
           data-sig="weighting"
           aria-pressed="false"
           aria-controls="matrix-rows"
-          hidden>Weightings <span class="tmxf__n">0</span></button
+          hidden data-label="Weightings">Weightings 0</button
         >
       </div>
 
@@ -970,9 +970,20 @@ Section 5: Submission and Compliance
         if (on) visible++;
       }
 
+      /* [2026-09-08] THE COUNT IS THE CHIP'S OWN TEXT, NOT A CHILD ELEMENT.
+         It was a `<span class="tmxf__n">`, and check-treatments counted that
+         span as a FIFTH micro-label recipe on a site whose rule is four: the
+         chip is a canonical `.chip` WITH a box, and any text-bearing child
+         inside it is the same face and tracking WITHOUT one, which is a
+         different fingerprint by definition. No amount of styling could fix
+         that, because a child can never inherit its parent's border. Writing
+         the label and the count as one text node removes the element rather
+         than restyling it, and it reads better besides: the button's accessible
+         name becomes "Obligations 4" rather than a name and a detached
+         number. */
       for (const c of chips) {
-        const n = c.querySelector('.tmxf__n');
-        if (n) n.textContent = num(counts[c.dataset.sig || 'all'] || 0);
+        const label = c.dataset.label;
+        if (label) c.textContent = label + ' ' + num(counts[c.dataset.sig || 'all'] || 0);
       }
       /* `filterRows.length === 0` is a matrix with no rows at all, which the
          panel already explains in `r-none`. Saying "no rows match that filter"
@@ -1480,7 +1491,8 @@ Section 5: Submission and Compliance
      either file could share. `.control` still owns the hover and the focus
      ring, which is why neither appears in this block. */
   /* Tabular figures so a chip does not change width as its count goes 9 to 10.
-     It sits on the chip rather than on the number, see the note on .tmxf__n. */
+     It sits on the chip because the count IS the chip's own text: see the note
+     beside the updater in the script below for why there is no inner span. */
   .tmxf__chip {
     font-variant-numeric: tabular-nums;
   }
@@ -1496,19 +1508,6 @@ Section 5: Submission and Compliance
      ink token: --c-text-muted on the filled state would be a mid grey on the
      interactive fill. Tabular figures so the chip does not change width as its
      number goes from 9 to 10. */
-  /* [2026-09-08] THE COUNT CARRIES NO TYPOGRAPHY OF ITS OWN, and that is a
-     check-treatments requirement rather than a preference. The chip is already
-     `control chip tmx-hit tmxf__chip`, so it takes the shared `.chip` micro
-     label recipe from styles/labels.css. When this span stated its own
-     `font-variant-numeric` and `opacity` it rendered a FIFTH fingerprint on a
-     site whose rule is four, and check-treatments failed with `span.tmxf__n`
-     named. The tabular figures moved up to the chip, where they change nothing
-     for the label text because it has no digits, and the count now inherits the
-     chip exactly. Only the gap is left here, which is spacing and not a
-     treatment. */
-  .tmxf__n {
-    margin-inline-start: 0.4em;
-  }
 
   /* Takes the slack on a wide screen and drops to its own full row on a narrow
      one, which is what the 14rem basis buys: below roughly 30rem of bar there is
