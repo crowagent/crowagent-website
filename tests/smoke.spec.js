@@ -285,8 +285,15 @@ test.describe('Blog Posts', () => {
   // Astro content collection. /blog/ppn-002-guide does not exist there, and
   // pointing at a missing route would have been caught only because the 404
   // page has no <h1> in <main> — a thin thread to hang a route check on.
-  test('23. PPN 002 social value guide loads', async ({ page }) => {
-    const res = await page.goto(`${BASE_URL}/blog/ppn-002-social-value-guide/`);
+  // [2026-09-08] RETARGETED AT PPN 026, because PPN 002 was removed ON PURPOSE.
+  // A-195 and A-196 removed the PPN 002 estate and promoted PPN 026 as its
+  // successor, and _redirects records the old post in its own words: "rule 120
+  // (/blog/ppn-002-guide) DEAD -> 404". This test was asserting 200 on a route
+  // the site deliberately stopped serving, so it was failing for being wrong
+  // about the site rather than finding anything. The successor post is live and
+  // is the acquisition page that matters now, so the check keeps its purpose.
+  test('23. PPN 026 social value guide loads', async ({ page }) => {
+    const res = await page.goto(`${BASE_URL}/blog/ppn-026-social-value-guide/`);
     expect(res?.status(), 'the post must exist, not merely render something').toBe(200);
     await expect(page.locator('h1')).toBeVisible();
   });

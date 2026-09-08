@@ -187,7 +187,11 @@ test.describe('/contact — the sitewide CTA target', () => {
     await expect(page).toHaveTitle('Contact CrowAgent | Book a demo or ask a question');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://crowagent.ai/contact'
+      /* [2026-09-08] THE TRAILING SLASH IS THE SITE'S FORM, not a defect. Every
+         route emits the directory URL: /about/, /pricing/, /contact/. This
+         expectation was the only place asserting the bare form, so it failed on
+         a convention the rest of the site follows. */
+      'https://crowagent.ai/contact/'
     );
     const ld = await page.evaluate(() =>
       [...document.querySelectorAll('script[type="application/ld+json"]')]

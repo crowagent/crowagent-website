@@ -641,9 +641,18 @@ const SIDEBAR = [
     font-size: var(--t-micro);
     line-height: var(--lh-tight);
     color: var(--app-ink-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* [2026-09-08] WRAPS INSTEAD OF TRUNCATING, for WCAG 1.4.4.
+       It was `white-space: nowrap; overflow: hidden; text-overflow: ellipsis`.
+       At 200% text that ELLIPSIS IS LOST CONTENT: measured on the built
+       homepage at 1280 wide, this line reported scrollWidth 876px against
+       clientWidth 335px, so 541px of it was unreachable with no way to scroll
+       to it. 1.4.4 asks that content survive being scaled, and an ellipsis is
+       the one outcome that guarantees it does not.
+       Wrapping costs nothing at the normal size, where the line fits on one
+       row and nothing moves. It only takes a second row when the reader has
+       asked for larger text, which is exactly when they want the words rather
+       than a tidy edge. The breadcrumb separators keep their own spacing rule below. */
+    overflow-wrap: anywhere;
   }
 
   .h2rt__crumb i {

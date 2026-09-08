@@ -300,9 +300,29 @@ test.describe('[CARRY-25] 1.4.10 reflow at 320px (= 400% zoom) and 1.4.4 text at
     await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
 
     const band = await page.evaluate(() => {
-      const track = Array.from(document.querySelectorAll('body *')).find(
-        (el) => getComputedStyle(el).animationName !== 'none' && el.scrollWidth > 2000,
-      );
+      /* [2026-09-08] FOUND BY THE PROPERTY, NOT BY A MAGIC WIDTH. This looked
+         for an animated element wider than 2000px. Home 2.0's integrations
+         marquee measures 1681px, so the finder returned null and the test
+         failed with "the homepage must carry an auto-scrolling band" against a
+         band that is present, animating (h2mq-run) and already carries a
+         "Pause scrolling" button. The absolute threshold was describing the
+         OLD homepage's marquee rather than what makes a band a band.
+         What actually defines one is that it OVERFLOWS ITS OWN BOX while
+         animating, which is true at any width and stays true if the design
+         changes again. A generous floor is kept so an animated icon or a
+         gradient wash cannot be mistaken for a scrolling band. */
+      const track = Array.from(document.querySelectorAll('body *')).find((el) => {
+        if (getComputedStyle(el).animationName === 'none') return false;
+        const parent = el.parentElement;
+        if (!parent) return false;
+        /* A scrolling band is WIDER THAN THE BOX THAT CLIPS IT. Measured on
+           Home 2.0: .h2mq__track is 1681px inside a 1280px parent, and its own
+           scrollWidth equals its own clientWidth because the track is
+           translated rather than scrolled. So comparing the element with
+           ITSELF finds nothing, which is why the previous two attempts here
+           failed. The comparison that holds is against the PARENT. */
+        return el.scrollWidth > parent.clientWidth + 200 && el.scrollWidth > 600;
+      });
       if (!track) return null;
 
       /**
@@ -753,13 +773,26 @@ test.describe('[CARRY-25] 2.1.1 keyboard-only traversal of every interactive com
     // if the pattern those elements belong to is itself keyboard-operable — so
     // prove it, rather than letting the exclusion quietly hide a real trap.
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+    /* [2026-09-08] MOVED FROM / TO /crowmark/, BECAUSE THE PATTERN MOVED.
+       The denominator below was "the screenshot carousel and the journey
+       strip", and Home 2.0 replaced both: the homepage now carries ZERO
+       role="tab" elements, and its hero tabs are radio inputs and labels,
+       which are natively keyboard operable and are not this pattern.
+       Measured across the build, role="tab" now exists on /crowmark/ and
+       /crowmark-buyers/ and nowhere else.
+       WHAT THIS TEST IS FOR IS UNCHANGED. The traversal test skips
+       tabindex="-1" elements, and that exclusion is only honest if the
+       roving pattern those elements belong to is itself operable. That is a
+       claim about the PATTERN, not about one route, so it is proved where
+       the pattern actually lives. Moving it keeps the exclusion earned
+       rather than deleting the proof and keeping the excuse. */
+    await page.goto(`${BASE_URL}/crowmark/`, { waitUntil: 'domcontentloaded' });
 
     const tabs = page.locator('[role="tab"]');
     const count = await tabs.count();
     // NAMED denominator: the homepage carries the screenshot carousel and the
     // journey strip. If this ever reads 0 the test below proves nothing.
-    expect(count, 'the homepage must expose role="tab" controls to exercise').toBeGreaterThan(2);
+    expect(count, '/crowmark/ must expose role="tab" controls to exercise').toBeGreaterThan(2);
 
     const state = await page.evaluate(() => {
       const all = Array.from(document.querySelectorAll('[role="tab"]'));

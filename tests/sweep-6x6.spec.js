@@ -83,11 +83,29 @@ for (const v of VIEWPORTS) {
       return {
         floorToken: root.getPropertyValue('--c-floor').trim(),
         baseToken: root.getPropertyValue('--c-bg').trim(),
-        sections: sections.map((s, i) => ({
-          position: i + 1,
-          id: s.id || `(section ${i + 1})`,
-          background: getComputedStyle(s).backgroundColor,
-        })),
+        /* [2026-09-08] THE LADDER IS READ, NOT JUST THE background-color.
+           Home 2.0 added `data-ladder="soft"` on <main> (owner, 2026-09-05,
+           because a one pixel step between two near blacks read as a seam).
+           Under it an EVEN section still carries the base ground, but paints it
+           with a background-IMAGE gradient that runs floor to base to floor, so
+           its background-COLOR is legitimately transparent. Reading only the
+           colour made all six viewports fail on a design that was approved, and
+           the rule itself is unchanged: a section's ground is still a function
+           of its position. So the image is reported too and the assertion below
+           accepts either mechanism, while still failing a section that paints
+           the WRONG ground or paints one it should not. */
+        ladder: (document.querySelector('#main-content') || {}).dataset
+          ? (document.querySelector('#main-content').dataset.ladder || '')
+          : '',
+        sections: sections.map((s, i) => {
+          const cs = getComputedStyle(s);
+          return {
+            position: i + 1,
+            id: s.id || `(section ${i + 1})`,
+            background: cs.backgroundColor,
+            backgroundImage: cs.backgroundImage,
+          };
+        }),
       };
     });
 
@@ -112,8 +130,23 @@ for (const v of VIEWPORTS) {
     const wrong = [];
     for (const s of measured.sections) {
       const c = parseColour(s.background);
-      const isTransparent = !c || c.a === 0;
-      const paintsBase = !!c && c.a > 0 && c.r === base.r && c.g === base.g && c.b === base.b;
+      const colourTransparent = !c || c.a === 0;
+      const colourIsBase = !!c && c.a > 0 && c.r === base.r && c.g === base.g && c.b === base.b;
+
+      /* A soft rung paints the base through a gradient rather than a flat fill.
+         It counts as painting the base only if the base colour is genuinely in
+         that gradient, so a section painting some OTHER image still fails. */
+      const img = s.backgroundImage || 'none';
+      const gradientCarriesBase =
+        img !== 'none' &&
+        img.indexOf('gradient') !== -1 &&
+        (img.match(/rgba?\([^)]+\)/g) || []).some((v) => {
+          const g = parseColour(v);
+          return !!g && g.a > 0 && g.r === base.r && g.g === base.g && g.b === base.b;
+        });
+
+      const isTransparent = colourTransparent && (img === 'none' || !gradientCarriesBase);
+      const paintsBase = colourIsBase || gradientCarriesBase;
       const shouldBeFloor = s.position % 2 === 1;
 
       if (shouldBeFloor && !isTransparent) {
