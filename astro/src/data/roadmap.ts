@@ -53,33 +53,60 @@ export const PHASES: Phase[] = [
     name: 'Phase 1',
     status: 'live',
     date: 'Q2 2026',
+    /*
+     * BODIES REFRESHED 2026-09-08 against what is DEPLOYED, not against what is
+     * committed. The owner reported this page as not updated while a great deal
+     * had shipped, and they were right: these two paragraphs described CrowMark
+     * as it stood months earlier and named none of the bid workspace that went
+     * live with R2.7.1 on 24 August, nor the supplier relationship management
+     * suite that went live with R2.8.1 on 3 September. Every capability named
+     * below resolves to a route on the platform's origin/main, which is the tip
+     * Vercel reports READY in production.
+     */
     lead: 'CrowMark is in production today, in both variants: for suppliers and for buyers. It reads the source regulation directly, so the output you stand behind traces back to a rule rather than to a model.',
     items: [
       {
         title: 'CrowMark for Suppliers',
-        body: 'Contracts Finder and Find a Tender refreshed daily, tender document ingestion, answer drafting grounded in your own submitted bids, deterministic social-value calculation, post-award delivery evidence, and Procurement Act 2023 s.52 and s.71 KPI checks.',
+        body: 'Contracts Finder and Find a Tender refreshed daily, with prior information notices and framework or dynamic market expiry dates so a pipeline is visible before a tender opens. Upload the whole tender pack and get it briefed rather than read cover to cover. Drafting is grounded in your own submitted bids and answer library, with version history, diff, restore and track changes on every answer. Configurable review gates take bid or no bid as gate zero. Deterministic social-value calculation, post-award delivery evidence, and Procurement Act 2023 s.52 and s.71 KPI checks.',
         href: '/crowmark/',
       },
       {
         title: 'CrowMark for Buyers',
-        body: 'Build and publish requirements against a deterministic social value rubric, then locate the evidence for each one across every response received, quoted verbatim or dropped. CrowMark organises. Your evaluation panel scores.',
+        body:
+          "Build and publish requirements against a deterministic social value rubric, then locate the evidence for each one across every response received, quoted verbatim or dropped. CrowMark organises. Your evaluation panel scores. After award it keeps going: the commitments made in the winning bid become a tracked supplier profile, with scorecards, periodic review sessions, a risk radar, concerns and their corrective actions, a benefit and value realisation tracker, and a due diligence workspace.",
         href: '/crowmark-buyers/',
       },
     ],
   },
   {
+    /*
+     * DELIVERED, AND THE BAND KEEPS ITS QUARTER BECAUSE IT MET IT. This band
+     * read `status: 'progress'` against `date: 'Q3 2026'` until 2026-09-08,
+     * when both of its items were checked against the platform's own release
+     * record rather than against memory. Both had shipped.
+     *
+     * Passkeys landed in Release 2.6 as WS-8, verified live in a browser on
+     * 2026-07-26: enrolment, sign in on app.crowagent.ai, credential
+     * management in settings, and an RP ID set to the parent domain so one
+     * passkey works across the app and the portal. The `auth.passkeys` flag
+     * that gated it has since been dropped, so it is on for every account.
+     *
+     * THE BODY BELOW DESCRIBES A SECOND FACTOR AND NOT A PASSWORDLESS LOGIN,
+     * deliberately. Signing in with a passkey INSTEAD of a password is a
+     * different thing, it is not shipped, and this page must not imply it.
+     */
     name: 'Phase 2',
-    status: 'progress',
+    status: 'live',
     date: 'Q3 2026',
-    lead: 'Security and access work that builds on CrowMark. Dates are indicative and subject to change.',
+    lead: 'Delivered in Q3 2026. Security and access work that builds on CrowMark.',
     items: [
       {
         title: 'Passkeys (WebAuthn)',
-        body: 'Windows Hello and Touch ID sign-in as an alternative to TOTP multi-factor authentication for your CrowMark account.',
+        body: 'Windows Hello and Touch ID in place of a typed code, as an alternative second factor on your CrowMark account. One passkey covers the app and the portal, and you can list and revoke your credentials in settings.',
       },
       {
         title: 'Deeper grounded auto-fill (public sector)',
-        body: "Extending CrowMark's grounded AI drafting so it can read more of your uploaded evidence and propose social value narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. The model proposes, you decide.",
+        body: "CrowMark's grounded drafting reads the buyer's own published priorities alongside your uploaded evidence, and proposes social value narratives that cite what they came from for you to approve or edit. The model proposes, you decide.",
       },
     ],
   },
@@ -166,9 +193,17 @@ export const AI_LIVE: { heading: string; body: string; link?: { label: string; h
 /** Where the AI work is heading. Status in words, and a date only where committed. */
 export const AI_NEXT: { status: PhaseStatus; heading: string; body: string }[] = [
   {
-    status: 'progress',
+    /*
+     * MOVED TO `live` 2026-09-08, AND IT HAD TO MOVE OR THE PAGE CONTRADICTED
+     * ITSELF. This entry and the Phase 2 item of the same name are the same
+     * piece of work rendered twice on one page. When Phase 2 became delivered,
+     * a second block still reading "we are extending" with an indicative Q3
+     * date left /roadmap publishing two different answers about one feature.
+     * Whichever way that resolves, it cannot stay split.
+     */
+    status: 'live',
     heading: 'Deeper grounded auto-fill (public sector)',
-    body: 'CrowMark already drafts grounded bid answers from your own submitted bids. We are extending that pattern so it reads more of your uploaded evidence and proposes social value narratives directly, each suggestion citing the exact regulation behind it for you to approve or edit. Indicative timing Q3 2026, subject to change.',
+    body: "Shipped. CrowMark drafts grounded bid answers from your own submitted bids and answer library, and now reads the buyer's own published priorities alongside your uploaded evidence to propose social value narratives, each suggestion citing what it drew on for you to approve or edit.",
   },
   {
     status: 'research',
