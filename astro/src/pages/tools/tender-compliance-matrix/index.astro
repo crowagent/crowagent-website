@@ -1263,6 +1263,32 @@ Section 5: Submission and Compliance
       });
     }
 
+    /*
+     * THE `?sample=` READER, AND IT PRESSES THE PILL RATHER THAN REPEATING IT.
+     * A-271. The command palette wanted a "Run the matrix on a sample" action
+     * and could not have one, because a sample was reachable only by a click on
+     * this page and no URL could ask for it. That action was REFUSED rather than
+     * stubbed, on the grounds that a palette row landing the reader on an empty
+     * textarea having promised to run something is the same defect class as a
+     * control that reports success while doing nothing. This is the parameter
+     * that lets it exist.
+     *
+     * IT CLICKS THE BUTTON. It does not read the template, fill the box and
+     * submit, which would be a SECOND code path for a sample to drift on. That
+     * is the same reason the pills call `requestSubmit()` rather than
+     * `submit()`, recorded above. Whatever a pill does today the parameter does
+     * exactly that, including every future change to it, and adding a fourth
+     * sample still costs a <template> and a <Button> and no script change.
+     *
+     * AN UNKNOWN VALUE DOES NOTHING, DELIBERATELY AND SILENTLY. `?sample=x` for
+     * a sample that is not here leaves the reader on the normal empty page,
+     * which is the honest outcome: there is nothing to show and they did
+     * nothing wrong. Reporting a validation error for a URL they did not type
+     * would be the page blaming the reader for a bad link.
+     */
+    const wanted = new URLSearchParams(window.location.search).get('sample');
+    if (wanted) byId(`load-${wanted}`)?.click();
+
     const btnCsv = byId('btn-csv');
     const btnCopy = byId('btn-copy');
 
