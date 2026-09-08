@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T23:35:14.080Z",
+  "updated": "2026-09-08T00:16:55.507Z",
   "unreadable": [],
   "_deploy_why": "index.html renders DATA.deploy on WHICHEVER board is selected, and check-board-contract.js requires every field the page dereferences to exist on BOTH boards. This board carries its own answer rather than a copy of the platform's, because the owner's rule of 2026-08-09 is that this deployable is SEPARATE. A reader who lands on the Website tab must not infer that the platform's four-deploy budget applies here, and a reader on the Platform tab must not infer that the website spends it.",
   "deploy": {
@@ -2697,6 +2697,14 @@
       "title": "The contact form showed a failure for a submission the server accepted: a 10s client timeout shorter than the route's own work",
       "status": "FIXED",
       "note": "FIXED 2026-09-08. THE FORM WAS REPORTING A FAILURE FOR WORK THAT SUCCEEDED, which is the worst shape a form can fail in: the reader gives up, or sends again, and a duplicate is the BEST case. || HOW IT WAS FOUND. After the owner corrected CLOUDFLARE_TURNSTILE_SECRET, a real submission driven in a real browser on live still showed \"Something went wrong. Please email hello@crowagent.ai directly.\" The server told a different story: POST /api/contact/submit returned 200 at 23:31:09, and there were ZERO error logs across the surrounding 25 minutes, so Turnstile siteverify, the Supabase insert and the Brevo send all completed. The enquiry was accepted. The browser had already aborted at 10 seconds and painted a failure over it. || THE CAUSE. All three forms carried `AbortSignal.timeout(10000)`. The contact route does three things in series after the token arrives, Cloudflare /siteverify then a Supabase insert then a Brevo send, on a serverless function that may be cold. Measured warm, siteverify alone is 0.3 to 1.0s across three probes, so the tail is the other two plus the cold start. 10s was never headroom, it was a coin toss. || THE FIX. 30s on all three, chosen against the SERVER's own ceiling rather than as a round number: the function may run to the platform limit, and a client that gives up first converts a slow success into a reported failure. Erring long costs a reader a few more seconds of a spinner they can see. Erring short costs the enquiry. One number across the three forms so the next person changes one thing. || THIS ALSO CONFIRMS THE TURNSTILE FIX. The same request that timed out client-side is the one that returned 200 server-side, which is the first clean pass through /siteverify since the outage began. Before the secret was corrected the same shape returned 400 CAPTCHA verification failed. || TWO OF MY OWN MEASUREMENT ERRORS, RECORDED because they cost time and will recur. ONE: the Turnstile script is requested lazily on the form's first `focusin` (Turnstile.astro:191, `{ once: true }`), and the browser tool's form_input sets values WITHOUT firing focus events, so the widget never loaded and I twice read that as \"Turnstile is broken on live\". Driving it with a real click and keystrokes loaded it immediately, two challenge requests, both 200, correct sitekey. A programmatic value set is not a user interaction. TWO: a typed value landed in the email field rather than the name field, the empty name was correctly refused by client-side validation, and I briefly read that refusal as the same defect. Assert the field you think you filled."
+    },
+    {
+      "id": "A-265",
+      "src": "google-audit-2026-09-08",
+      "sev": "P2",
+      "title": "GOOGLE AUDIT 1 of 5, hero: owner chose option B, outcome-led headline and lede above the unchanged workbench",
+      "status": "DECIDED",
+      "note": "OWNER DECISION 2026-09-08, RECORDED BEFORE IMPLEMENTATION per W13. External audit by an external reviewer writing as a Google product UI/UX lead, five findings, reviewed ONE AT A TIME per W14. THIS ROW IS FINDING 1 OF 5. || THE FINDING. The homepage hero opens with a technical workbench and a three-verb headline, so a commercial buyer, a Head of Bidding or a Commercial Director, has to work out for themselves whether this stops their bid being disqualified. The reviewer recommended splitting the hero into an Executive view by default and an engine trace behind a pill. || A CORRECTION I OWE THE RECORD. I first waved this off on the grounds that Home 2.0 replaces the hero, so the finding was aimed at a page about to be deleted. THAT WAS WRONG, and the owner pushed back on it. HeroLive2.astro is the LIVE hero with ONLY the workbench re-drawn: the eyebrow, headline, lede, the two offers and the four tabs are unchanged. The critique therefore applies to the current build exactly as it applies to production. The owner's instruction on the reasoning as well as the conclusion is recorded as W12. || WHAT WAS OFFERED. A, build it as specified, Executive default with the trace behind a pill. B, outcome-led headline and lede above the UNCHANGED workbench, with the most buyer-legible tab as the default. C, both. D, change nothing, on the argument that a technical hero is deliberate positioning. || THE DECISION IS B. || THE REASONING BEHIND THE RECOMMENDATION, so a later reader can challenge it on the same terms. The hero is NOT a raw terminal, which is what the reviewer described: it is already an interactive demo with a \"Your own text\" tab that reads a visitor's own tender text, and that is a genuine asset rather than a liability. The real gap is narrower than the one named. The headline \"Qualify. Draft. Prove it.\" says what the product DOES in three verbs, and the lede \"Every figure traced to evidence you already hold\" describes the MECHANISM. Neither names what the buyer AVOIDS. That is the three second gap, not the presence of technical detail. Option A was argued against on the grounds that a two state toggle placed ON TOP of four existing tabs adds a second layer of chrome to a control that already has one, which usually costs comprehension rather than buying it. || SCOPE OF THE CHANGE, so it does not grow. Copy above the workbench, plus which tab is checked on load. The workbench itself, its four samples, its build-time analysis and the runtime \"Your own text\" injection contract with scripts/hero-terminal.ts are ALL untouched. || CONSTRAINTS THAT BIND THE NEW COPY. Any outcome claim must be verifiable, because check-facts.js polices exactly this class of statement and the site's discipline on claims is the reason it is trusted. No em dashes, British English (W3), no AI cliches (RULE 0-S). The hero copy appears in astro/scripts/content-parity.baseline.json, so that baseline moves with the change rather than the change being bent to fit the baseline."
     }
   ],
   "directives": [
@@ -2744,7 +2752,27 @@
       "id": "W10",
       "text": "Centre up to 3 lines; left-align beyond. A line count is a rendered fact, so the gate for it must measure the painted page.",
       "note": "From A-16."
+    },
+    {
+      "id": "W11",
+      "text": "PRODUCTION IS FROZEN until every known defect is fixed. Nothing deploys, however small the change or however green the gates.",
+      "note": "Owner, 2026-09-08: \"nothing must deploy into production untill everything is fixed\". Stated while /partners/ was still broken on live. It follows that a fix sitting in the tree is NOT a fix the owner can see, and saying \"fixed\" without saying \"and not deployed\" is a false report. The website is 31 commits behind and every fix from this session is in that gap."
+    },
+    {
+      "id": "W12",
+      "text": "Build what is BEST for CrowAgent, not what is quickest to justify or safest to defend. Do not reject an improvement because shipping it is inconvenient.",
+      "note": "Owner, 2026-09-08: \"we must implement what must be best for crowagent\", and \"why to hurry to deply into production if something can be improve so dont behave like idiot and think strategically\". Said after I framed an external UX recommendation as defer-or-reject rather than assessing its value. A deploy deadline is NOT a reason to decline an improvement."
+    },
+    {
+      "id": "W13",
+      "text": "RECORD THE OWNER DECISION BEFORE IMPLEMENTING IT. The record comes first, the code second.",
+      "note": "Owner, 2026-09-08: \"you must record all mydecisions first and then work on implementations\". A decision that exists only in a chat transcript is lost to the next session, and this repository no longer carries docs/ or specs/, so status/issues.json is the only record there is."
+    },
+    {
+      "id": "W14",
+      "text": "Present external audit findings ONE AT A TIME: a single plain line saying what it is, a recommendation, and the other options. Wait for the decision before moving on.",
+      "note": "Owner, 2026-09-08: \"show me google flagged items one by one with single line easy to understand description and your recommendation and other options, one by one and one at a time\". Do not batch them and do not assume a verdict."
     }
   ],
-  "nextId": 265
+  "nextId": 266
 }
