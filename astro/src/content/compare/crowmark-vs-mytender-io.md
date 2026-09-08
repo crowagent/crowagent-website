@@ -34,6 +34,38 @@ faq:
 
 <p class="cmp-lead"><strong>CrowMark is a UK bid and tender management suite priced from &pound;49 per month. mytender.io is a UK AI tender-writing platform, built at the University of Southampton, that does not publish a price.</strong> Both are aimed at bid data that cannot go through general public AI tools. This page compares them feature by feature, states CrowMark's prices, marks anything mytender.io does not publish as Not published, and dates every source.</p>
 
+<h2 id="what-buyers-check-first">What buyers check first</h2>
+<div class="cmp-sum">
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Traceability</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>Every &pound; and % in a draft is checked against a set of allowed figures computed from your own data, and the draft is rejected if a figure is not in that set. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a named person to approve it before you submit.</dd>
+<dt class="meta">mytender.io</dt>
+<dd>Not stated publicly. The sources at the foot of this page describe retrieval over your own content library and integrations with SharePoint, Salesforce and Google Drive. They document no check of this kind.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Data governance</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>AES-256 at rest, TLS 1.3 in transit, EU data residency, GDPR compliant, ICO registered, and built to ISO 27001 controls. <a href="/security/">Security</a> sets out each control and states which certifications CrowAgent does not hold.</dd>
+<dt class="meta">mytender.io</dt>
+<dd>Virtual Private Cloud deployment, reported by Future Worlds on 21 May 2025 and listed in the sources at the foot of this page. Encryption, data residency and registration detail are not documented there.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>UK regulatory alignment</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>A PPN 017 AI-use disclosure on every AI-assisted draft, social value calculated in code against the weighting the buyer published rather than by the AI, and post-award delivery evidence against Procurement Act 2023 sections 52 and 71.</dd>
+<dt class="meta">mytender.io</dt>
+<dd>The sources at the foot of this page state no position on PPN 017 disclosure, social value calculation or the Procurement Act 2023 post-award duties.</dd>
+</dl>
+</div>
+</div>
+<p class="cmp-sum-note">CrowMark's lines are first party and checkable against the product. The mytender.io lines repeat only what the vendor's published material or the dated sources at the foot of this page actually state. Where something is not published, this page says so rather than inferring it. The full table follows.</p>
+
 <h2 id="at-a-glance">At a glance</h2>
 <p class="rt-hint">Scroll the table sideways</p>
 <div class="cmp-scroll" tabindex="0" role="region" aria-label="Comparison table, CrowMark and mytender.io">

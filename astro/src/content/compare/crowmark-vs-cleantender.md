@@ -34,6 +34,38 @@ faq:
 
 <p class="cmp-lead"><strong>CrowMark is a sector-agnostic UK bid and tender management suite priced from &pound;49 per month. CleanTender is a soft facilities-management specialist, with a free tier and Pro at &pound;99 per month, tuned for cleaning, security, grounds, waste and catering bids.</strong> Both publish their pricing, so this is not a transparency contest. It is a question of scope and depth, and this page sets out both honestly with dated sources.</p>
 
+<h2 id="what-buyers-check-first">What buyers check first</h2>
+<div class="cmp-sum">
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Traceability</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>Every &pound; and % in a draft is checked against a set of allowed figures computed from your own data, and the draft is rejected if a figure is not in that set. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a named person to approve it before you submit.</dd>
+<dt class="meta">CleanTender</dt>
+<dd>Not stated publicly. The sources at the foot of this page describe Selection Questionnaire drafting with soft-FM vocabulary, a 0 to 100 qualification scan and a Compliance Vault. They document no check of this kind.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Data governance</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>AES-256 at rest, TLS 1.3 in transit, EU data residency, GDPR compliant, ICO registered, and built to ISO 27001 controls. <a href="/security/">Security</a> sets out each control and states which certifications CrowAgent does not hold.</dd>
+<dt class="meta">CleanTender</dt>
+<dd>Not documented in the sources at the foot of this page. This page states nothing about it.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>UK regulatory alignment</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>A PPN 017 AI-use disclosure on every AI-assisted draft, social value calculated in code against the weighting the buyer published rather than by the AI, and post-award delivery evidence against Procurement Act 2023 sections 52 and 71.</dd>
+<dt class="meta">CleanTender</dt>
+<dd>A TOMs and social value section is included in the Selection Questionnaire drafting, per the dated sources at the foot of this page. PPN 017 disclosure and the sections 52 and 71 post-award duties are not stated.</dd>
+</dl>
+</div>
+</div>
+<p class="cmp-sum-note">CrowMark's lines are first party and checkable against the product. The CleanTender lines repeat only what the vendor's published material or the dated sources at the foot of this page actually state. Where something is not published, this page says so rather than inferring it. The full table follows.</p>
+
 <h2 id="at-a-glance">At a glance</h2>
 <p class="rt-hint">Scroll the table sideways</p>
 <div class="cmp-scroll" tabindex="0" role="region" aria-label="Comparison table, CrowMark and CleanTender">

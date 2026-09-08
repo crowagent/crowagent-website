@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T22:17:28.019Z",
+  "updated": "2026-09-08T00:44:22.605Z",
   "release": "2.8.2",
   "note": "DERIVED, not authored. Generated from RELEASE-2.8.2-TRACKER.md and RELEASE-2.8.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement, and this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
@@ -9,12 +9,12 @@
     "crowagent-platform/docs/release-2.8.2/PHASE-ASSIGNMENT-*.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-09-07T22:17:27.069Z",
-    "sourceFingerprint": "104:1007839200",
+    "generatedAt": "2026-09-08T00:44:22.488Z",
+    "sourceFingerprint": "106:-2071522926",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 104,
-    "done": 19,
-    "remaining": 85,
+    "totalRaised": 106,
+    "done": 38,
+    "remaining": 68,
     "phases": {
       "1": {
         "items": 0,
@@ -57,11 +57,11 @@
         "onHold": 0
       },
       "6": {
-        "items": 85,
-        "open": 20,
+        "items": 68,
+        "open": 2,
         "built": 65,
         "wip": 0,
-        "decision": 0,
+        "decision": 1,
         "onHold": 0
       }
     },
@@ -206,7 +206,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 85,
+        "items": 68,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -233,14 +233,14 @@
         "why": "MID-PHASE — DOCS ONLY (D-40/D-93/D-32 record corrections). A documentation commit consumed a production deploy."
       }
     ],
-    "assignment": "docs/release-2.8.2/PHASE-ASSIGNMENT-2026-09-07.md"
+    "assignment": "docs/release-2.8.2/PHASE-ASSIGNMENT-2026-09-08.md"
   },
   "unreadable": [
     {
       "src": "crowagent-platform/scripts/deploy-phase-boundaries-2.8.2.json",
       "why": "No deploy budget has been declared for R2.8.2, so the panel below is the PREVIOUS release's and its spend does NOT apply here. RULE 0-R: the budget resets per release and is not inherited, so R2.8.2 starts at zero spent. Declare this release's boundaries in that file. Until then treat the numbers below as history."
     },
-    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 104:1007839200 vs 105:296707800). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 106:-2071522926 vs 106:-1293293696). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
   ],
   "issues": [
     {
@@ -271,8 +271,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-08",
+      "status": "CLEARED",
       "title": "[SEV:P2][LANE:INFRA] the staging secret gap is EIGHT keys, not nineteen, and one of them is probably the AI outage",
       "note": "MEASURED 2026-09-06 rather than carried forward. The original list of 19 is STALE: six of those connectors were deleted as dead in R282-ENV-DEAD-INTEGRATION-VARS-01 and have ZERO readers in the tree today, confirmed by counting readers across web/app, web/src, web/lib, apps/portal/src and api/app with tests excluded. SAGE_CLIENT_ID 0, XERO_CLIENT_ID 0, M365_CLIENT_ID 0, and RESEND_API_KEY 1 which is a deprecation comment. Nothing needs them. THE REAL GAP IS EIGHT KEYS, ordered by how much of the product they switch off: BREVO_API_KEY (41 readers), CRON_SECRET (34), BREVO_SMTP_KEY (17), COMPANIES_HOUSE_API_KEY (16), UPSTASH_REDIS_REST_URL and its token (9), CLOUDFLARE_TURNSTILE_SECRET (4), CA_MFA_TRUST_SECRET (4), HCAPTCHA_SECRET (3). None of the eight is present in any local env file, so none can be copied from this machine the way the Supabase staging key was. A STRONG LEAD ON A DIFFERENT ROW, worth following before more diagnosis: R282-E2E-AI-EVAL-SURFACES-NEVER-REACH-THE-API-01 established that three AI POSTs never reached Railway at all, and named the rate limiter failing CLOSED on a Redis outage as the leading unconfirmed candidate for a pre fetch exit. aiAssistantRateLimit runs on the VERCEL side, not on Railway, and UPSTASH_REDIS_REST_URL is in this gap list. The Railway staging service HAS its Upstash pair set, which is why that side was never suspicious. If the Vercel staging environment lacks them, the limiter fails closed, answers 503 and the request dies before fetch(railwayApi(...)), which is EXACTLY the observed shape. Not yet confirmed, because reading a Vercel environment needs a working token. Confirm it by reading the staging Vercel variables once the token is renewed, or by one authenticated staging request to /api/council/ai/eval-consistency with scorecards: [], which takes the deterministic branch and spends nothing at Gemini. WHY THIS ROW STAYS WITH THE OWNER: these are third party credentials, and creating or entering an API key or token is a "
     },
@@ -843,8 +843,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-08",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:INFRA] the tender opportunity feed has not ingested on STAGING since 2026-07-26, so staging is not representative for any Discover testing",
       "note": "FOUND while measuring R282-E2E-DISCOVER-CLOSED-TENDERS-FILTER-01 on 2026-09-06. It had no row, which is the silent drop shape, so it gets one. MEASURED: staging crowmark_opportunities newest ingested_at is 2026-07-26 06:00, six weeks ago, 277 rows of which 265 are closed. Production is healthy, newest ingested_at 2026-09-06 06:01, 688 rows, 282 still open. So the two environments diverge and the owner is now testing everything on staging per RULE 0-P, which means Discover, match scoring, saved searches and digests are all being judged against a dead corpus. NOT the pg_cron schedule: staging cron.job holds 3 jobs (the retention prunes) against production's 14, and NEITHER list contains an opportunity ingest, so ingestion is driven from the Railway API service and not from Postgres. CAUSE FOUND, and it is deliberate: api/app/tasks/scheduler.py:2140-2162, marker [STAGING-DISK-001]. _scheduler_enabled() reads SCHEDULER_ENABLED, defaults true, and start_scheduler() registers NOTHING when it is false, so the entire in app cron fleet including opportunity ingestion is skipped. SCHEDULER_ENABLED IS present on the staging Railway service crowagent-platform-staging (dd84d290), values redacted to this connection, and the code comment says in terms \"Set SCHEDULER_ENABLED=false on the staging Railway service\". With zero ingestion since 2026-07-26 that is convergent enough to state, though not read directly. THE STATED REASON HAS EXPIRED, which is the point of this row. The comment gives it as \"staging's ~1GB free tier disk\", which the continuous job_runs and webhook_retry_queue writes filled until Postgres crash looped, and concludes \"Staging is for schema/UI testing, not cron execution, the prod api owns the fleet\". Both halves are now out of date. Staging Supabase moved to Pro with Micro compute on 2026-09-03, so the disk premise is gone, and RULE 0-P now requires that ALL testing happens on staging and that staging matches production feature for feature, so \"not cron executio"
     },
@@ -932,7 +932,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P3][LANE:API] the opportunity feed API cannot narrow by deadline, so the new Discover filter pages over rows the server should never have sent",
       "note": "Split out of R282-E2E-DISCOVER-CLOSED-TENDERS-FILTER-01 on 2026-09-06 so a deployable follow up does not vanish when its parent row closes. api/app/routers/crowmark_opportunities.py:383 accepts cursor, limit, sector, min and max value, geography, jurisdiction and sort, and nothing about closes_at. FastAPI DISCARDS a query parameter no handler declares, which is why the status and deadline filters were correctly built in the client instead: sending the server a status would have been a control that reaches nothing. The cost of leaving it there is real but small today. The server still returns a page that is mostly closed and the client hides most of it, so a 20 row page can render 6, and pagination counts server rows rather than useful ones. Fix: declare a deadline or status parameter on the FastAPI handler, narrow in SQL over closes_at, and keep the client filter as the presentation layer rather than deleting it, because the two answer different questions and the client one must keep working against an older API. Needs a RAILWAY DEPLOY, which is why it is separate. Keep the null decision identical to the client's, a row with no closing date is NOT closed and must not be dropped by the Open default."
     },
@@ -1008,8 +1008,8 @@
       "sev": "P3",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-06",
+      "status": "FIXED",
       "title": "[SEV:P3][LANE:DATA] two production infra_subscriptions rows hold a mid cycle usage figure in a column that means plan price",
       "note": "Found while building the refresh feature on 2026-09-06, READ ONLY, not fixed. Both were created 2026-08-29 00:54 by the old auto sync, the same function that fabricated the four invoice rows already deleted under R282-PORTAL-COSTS-FABRICATED-RECEIPTS-01. Row 4cf864fc-ae69-4804-8dad-27e216a0f63e is \"Google Gemini API\" at £0.29, and 3e0243a9-6a53-4d70-8c0b-f535a21e541d is \"Anthropic Claude API\" at £0.09, both category ai_api and status active. EVERY OTHER ROW IN THE TABLE PREDATES THE SYNC, created 2026-03-20, which is what identifies these two rather than a guess about their values. They are not plan prices and nine pence is not a Claude plan. Nothing on the costs surface depends on them, because ledgerOnlyLines already suppresses them as AI aliases. OWNER APPROVED AND DELETED 2026-09-06. Snapshot at C:/Users/bhave/crowagent-snapshots/prod-infra-subscriptions-r282-corrupted-2026-09-06.json. Measured after: 18 rows remain, ZERO of them written after the initial 2026-03-20 load, so no other row carries the same corruption, and the active monthly total reads £255.00. Note their plan and renewal_date were both NULL, which is a second tell that they were never entered as real subscriptions."
     },
@@ -1041,8 +1041,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-08-29",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:COST] TWENTY EIGHT scheduled jobs run on production Railway and the billing audit cannot see any of them",
       "note": "Surfaced by the assessment research, which reported six, and I counted the file myself: api/app/tasks/scheduler.py registers 28 CronTrigger and interval jobs. THE BILLING AUDIT DOES NOT COVER THEM. scripts/staging/billing-leak-audit.mjs checks the repo, live Vercel, live GitHub and Railway SERVICES and environments. An APScheduler fleet living INSIDE one of those services is invisible to all thirteen checks, which is exactly the blind spot RULE 0-G exists to close, and it survived the 2026-09-03 sweep that disabled seven GitHub workflows and re pointed a Sentry monitor. The highest frequency triggers are every five minutes (minute=\"2-59/5\", roughly 8,000 runs a week), twice hourly, and two hourly jobs. STATE THE BILLING MODEL HONESTLY RATHER THAN ALARMING: Railway bills resources rather than invocations, so a job that wakes often and does little may cost almost nothing, and frequency is NOT cost here. The one with direct per run spend is regulatory_monitor, Mondays 07:00, which calls an LLM per changed page. SCHEDULER_ENABLED=false already switches the whole fleet off on staging, so the off switch exists and needs no code change, which is the RULE 0-G question answered. WHAT IS OWED: enumerate the 28 with their triggers and their per run cost, put the LLM calling ones in front of the owner, and extend the billing audit to read the scheduler registration so a job added later is seen. That last part is a guard and per RULE 0-G ships with whatever product fix it accompanies, never on its own."
     },
@@ -1063,8 +1063,8 @@
       "sev": "P1",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-07",
+      "status": "FIXED",
       "title": "[SEV:P1][LANE:PRODUCT] public.evaluation_evidence has existed since 2026-08-29 with no writer, and the decision record cannot issue without it",
       "note": "MEASURED ON PRODUCTION 2026-09-06, not inferred: the table exists, carries 14 columns, 7 constraints and 1 trigger, holds 0 rows, and a sweep of web/app, web/src, web/lib, apps/portal/src and api/app with tests excluded finds ZERO inserts or upserts and only 2 references in total. Real constraint engineering was built and nothing was ever wired to fill it. THE CONSEQUENCE IS NOT COSMETIC: the decision record route refuses to issue while a weighted criterion holds no evidence, which is correct behaviour and was tightened further today under R282-E2E-BUYER-AWARD-MISSING-PRICE-01, so the buyer product's flagship statutory artefact is unreachable for every organisation. CORRECTED 2026-09-06 BY MEASUREMENT: the claim that the decision record is \"structurally unreachable\" because it refuses without evidence IS WRONG, and it was mine to check. I verified the table had no writer, which is true, then repeated the unreachability claim from the strategy without verifying it. Measured: the 409 is incomplete_field at decision-record/route.ts:251, gated on field.rankability.fieldComplete, which award-weighting.ts:496 computes as rows.length > 0 && excluded.length === 0, being about missing PRICE and MARKS. NOTHING in that route requires an evaluation_evidence row. Proved both ways: with an empty corpus the record issues 201 with tier: null and reference_count: 0 on every criterion, and with a row admitted it issues with the tier stated and reference_count: 1. SO THE CORPUS WRITER DOES NOT UNBLOCK ISSUANCE. What it does is make the record able to say anything about HOW a score was supported, which is the section 50 duty to explain each score by reference to the tender. The value is unchanged and the mechanism was misdescribed. THE OWNER QUESTION THAT BLOCKS PHASE 1, and it must be settled BEFORE a single row is written: there are TWO evidence tables with zero writers, evaluation_evidence and crowmark_comparison_evidence. Only evaluation_evidence carries hard constraints and feeds "
     },
@@ -1130,7 +1130,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1][LANE:SECURITY] a complete SSRF guard exists and NOTHING imports it, while a credential bearing fetch runs against an operator set host",
       "note": "VERIFIED MYSELF, not taken on report, because it is the most serious finding in the provider analysis. web/lib/security/ssrf-safe-fetch.ts is fully built: scheme allowlist, private address blocking, DNS rebind pinning, fail closed. Importers measured per tree: web/lib 2 files which are the module and ITS OWN TEST, web/src 2 files which are both COMMENTS mentioning it rather than imports, web/app ZERO, apps/portal/src ZERO, packages ZERO. So it has NO production consumer anywhere, which is this codebase's signature defect applied to a security control. MEANWHILE, and this is why it matters rather than being tidy: apps/portal/src/lib/api/posthog-client.ts resolves its base from getCredential('POSTHOG_HOST'), an OPERATOR CONFIGURABLE value, trims trailing slashes and nothing else, then fetches it WITH authHeaders() attached, so the PostHog bearer token is sent to whatever host that value names. Not remotely exploitable by a customer, since it needs portal access, but it is precisely the shape the unused guard was written to prevent, and it becomes materially worse the moment provider configuration is widened as the owner asked. FIX: move the guard into packages/server-infra and route every credential derived fetch through it with a per provider host allowlist. This is the recommended FIRST step of any provider agnostic work, ahead of the features, because widening configurability without it widens this."
     },
@@ -1141,7 +1141,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:SECURITY] the integration encryption key cannot be rotated safely, and a decrypt failure is silent",
       "note": "From the provider analysis. portal_integrations has NO key version column, and apps/portal/src/lib/integrations/store.ts:47 CATCHES a decrypt error and falls back to the environment. So a key rotation would not raise, it would QUIETLY revert all 31 integrations to whatever the environment holds while the Integrations page still displayed them as configured. That is a silent failure wearing a green badge, and the same family as the Vercel ciphertext copied as a DSN earlier in this release. THE FIX ALREADY EXISTS IN THIS REPO and should be copied rather than designed: the CrowMark vault packs its payload as v1:<iv>:<tag>:<ciphertext>, so the version travels with the value. A decrypt failure must also be LOUD rather than falling through to a different source, because a credential silently coming from somewhere else is how an integration appears healthy while doing nothing."
     },
@@ -1151,8 +1151,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-08",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:COST] two Railway timers run 4,032 times a week maintaining webhook tables that nothing writes to",
       "note": "From the provider analysis. fire_event (api/app/services/webhook_delivery.py:171) has ZERO callers and its docstring names three that do not exist, so the outbound webhook fan out was built and never wired. The six table subsystem (webhook_endpoints, webhook_deliveries, webhook_dlq, webhook_retry_queue, webhook_idempotency, webhook_replay_log) is therefore empty by construction, while two timers in the in app scheduler maintain it roughly 4,032 times a week. That is spend with no product behind it, which is the exact class RULE 0-G exists to surface, and it is reported as LIABILITY rather than coverage. TWO HONEST OPTIONS AND ONE NON OPTION: wire the fan out so the infrastructure earns its keep, or switch the two timers off until it is wired. Leaving it undecided is the only answer that keeps paying without delivering. Note Railway bills resources rather than invocations, so the direct cost is small, but the tables and the retry queue are also the thing STAGING-DISK-001 once cited for filling a disk."
     },
@@ -1163,7 +1163,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:COST] the portal runs SEVEN Vercel crons that no cost audit has ever covered",
       "note": "VERIFIED MYSELF by reading apps/portal/vercel.json: health-check hourly, reap hourly at 20 past, mrr-snapshot daily 00:00, dependency-audit Mondays 09:00, trial-expiry daily 08:00, costs/snapshot daily 02:00, agent-performance daily 01:30. That is roughly 365 unattended runs a week on the PORTAL, and it is a THIRD unaudited timer surface alongside the 28 in app Railway jobs in R282-COST-INAPP-SCHEDULER-FLEET-UNAUDITED-01. scripts/staging/billing-leak-audit.mjs checks GitHub workflows, Vercel project settings and Railway services, and its cron allowlist did not surface these, so three separate scheduled fleets now exist that the 13 check audit does not enumerate. Owed: enumerate all seven with their per run cost, and extend the audit to read apps/portal/vercel.json crons so a timer added later is seen."
     },
@@ -1196,7 +1196,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1][LANE:PORTAL] the 12 month MRR chart repeats a single value across twelve columns",
       "note": "VERIFIED MYSELF on production: portal_mrr_snapshots holds exactly ONE row, and staging holds zero. The route serves real snapshots only when at least twelve months are covered, so it ALWAYS takes the flat back fill. The result is a chart whose SHAPE asserts twelve months of stable revenue, drawn from one measurement. There is a caption, in the smallest type in the legend row. This is the \"measure the thing, not the record of it\" defect rendered as a graph, and a shape is a stronger claim than a sentence, so a caption cannot carry the correction. Fix: refuse to draw the series until enough snapshots exist, and say how many months are actually covered, rather than drawing a flat line and explaining it in small print. Related: portal-mrr-snapshot is one of the seven portal crons, so the corpus does grow, one row a day, and the chart becomes honest on its own once twelve months exist."
     },
@@ -1206,8 +1206,8 @@
       "sev": "P1",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-08-21",
+      "status": "FIXED",
       "title": "[SEV:P1][LANE:BILLING] every row of the production price catalogue is test mode data, and Pricing Control will write live ids into the same table",
       "note": "VERIFIED MYSELF on production: stripe_price_catalogue holds 10 rows, ALL carrying metadata.stripe_mode of test, ZERO live, synced 2026-08-17, before the live cutover on 2026-09-04. Meanwhile Apply resolves the LIVE secret key (pricing/actions.ts:221) and upserts THAT SAME TABLE. So the first price change produces a table holding both sandbox and live rows with NO COLUMN separating them, and nothing downstream can tell which is which. SEPARATELY, six ACTIVE live Stripe prices are unmanageable: the live account carries 16 active prices, and six duplicate the canonical six exactly on amount and cadence but have a NULL lookup key. Pricing Control addresses prices only by lookup key, so those six are invisible to it while remaining active and chargeable. Fix before any price change: re sync the catalogue against the live account, and give the table a mode column so a mixed state is impossible rather than merely unlikely."
     },
@@ -1218,7 +1218,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:PORTAL] Business Hub Contracts states a fact it never checked and saves nothing it generates",
       "note": "biz/page.tsx:508 HARDCODES the section description \"No contracts generated yet\". It is a static prop over no query, so it will say that after the hundredth contract. Worse, generated documents live only in React state with no persistence call anywhere in the file, so closing the tab discards them, while the header promises \"draft, generate and send\" and there is no send. Two smaller siblings on the Revenue page: :713 hardcodes an upward trend arrow on Paying Customers, so it points up on a falling count, and :714 labels Active Trials \"Converting this month\" over nothing measured. Also /portal/customers/user-suspension accepts only a typed UUID with no search and no link in from Customers, which is why a working tool reads as unbuilt."
     },
@@ -1229,7 +1229,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P3][LANE:CERT] 17 test files mock a module with a bare factory, which can silently collect ZERO tests",
       "note": "Found because the SAME defect hid tests in TWO files today. A vi.mock with a bare factory REPLACES the whole module, so any export it omits vanishes, and if something in the import graph reads that export at MODULE SCOPE the file throws during collection and vitest prints a normal looking summary with no tests. That is the truncated log RULE 0-CERT names. page.award-weighting.test.tsx and evaluations/[id]/page.a11y.test.tsx were both doing this, the second hiding six existing assertions, and both are fixed with importOriginal. MEASURED THE REST RATHER THAN ASSUMING: 23 files mock @shared/lib/fetch-with-timeout, 6 safely with importOriginal and 17 with a bare factory. All 15 remaining at risk files were RUN, in two batches, and they collect 60 and 29 tests respectively, all passing. SO THIS IS LATENT, NOT LIVE, and it is recorded at P3 rather than inflated. It becomes live the moment that module gains an export one of them reads at module scope, which is exactly what happened twice today when ai-deadlines.ts began reading DEFAULT_TIMEOUT_MS. Fix is mechanical, importOriginal in all 17, and per RULE 0-G it rides with whatever change next touches each file rather than being a work item of its own."
     },
@@ -1251,7 +1251,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1][LANE:PORTAL] the workflows \"Run now\" button injects a fabricated customer into an engine that can send real email and roll back deployments",
       "note": "VERIFIED MYSELF because the severity turns on whether the engine really dispatches. workflows/page.tsx:81-90 builds a samplePayload of customer_id: 'cus_preview', customer_email: 'operator@crowagent.ai' and threshold_value: 1, with the comment saying it exists so event type workflows have parameters, and POSTs it to /api/workflows/run. That route calls the real runWorkflow engine, and engine.ts imports sendTransactional from the Brevo client, rollback from the Vercel client, redeployService from Railway, plus Stripe and GitHub clients. So a run can SEND REAL EMAIL, ROLL BACK A DEPLOYMENT and REDEPLOY A SERVICE. This is the opposite of a stub and it is why it belongs in this audit: a screen that looks like a preview is wired to production capability. MITIGATION THAT IS REAL AND SHOULD BE STATED: the route is behind requireStepUp, so it is not one careless click. STILL WRONG because the fabricated payload is the wrong shape of fix. A preview must not invent a customer and hand it to a dispatcher. Note the detail page at workflows/[id]/page.tsx:133 sends NO payload at all, so the two surfaces disagree about what a run even is. Fix: a real dry run mode that resolves and reports what WOULD dispatch without dispatching, or a required explicit payload with no default."
     },
@@ -1261,8 +1261,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-07",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:SECURITY] the security auth events screen is permanently empty while people sign in daily",
       "note": "VERIFIED MYSELF on production: auth.audit_log_entries holds ZERO rows while auth.sessions holds 4 live sessions. So the screen an operator opens DURING AN INCIDENT shows a clean empty table, and the natural reading is that nothing suspicious happened. That is absence of evidence presented as evidence of absence, on the one screen where that inversion matters most, and it is the same defect family as the hardcoded zero on the home page and the fabricated invoices. The likely cause is Supabase's own retention on that table rather than anything in this codebase, which makes it worse rather than better, because nothing here can fix it by writing more rows. Fix: state the retention and the window on the screen, and if the table is unusable, say so plainly rather than rendering an empty result that reads as an all clear. portal_audit_log by contrast holds 1,644 rows and is a working audit surface, so the platform is not short of evidence, only this view of it."
     },
@@ -1273,7 +1273,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:SECURITY] ten of fourteen access control statuses are written into the source, so the panel cannot report a regression",
       "note": "/api/security/controls carries status as a literal for 10 of 14 controls. It is HONEST, because it says unverified, and that matters and should not be lost. But \"Access Control Status\" reads as a live posture panel, and it would say exactly the same thing if branch protection or row level security were switched off tomorrow. A panel that cannot change is a picture of a policy rather than a measurement of one. RELATED AND MEASURED: /portal/security/api-keys renders an 11 entry hardcoded service catalogue joined to portal_audit_log where action = 'security.key_rotation', which returns ZERO rows on production, so every service reads \"Never rotated\" permanently. That statement is TRUE today, since nothing has written that action, and the page does have a live writer so it can change. The risk is the reading rather than the fact. SMALLER, same slice: /api/infra/staging-db:49 gates on raw process.env.SUPABASE_MANAGEMENT_TOKEN while every sibling Management API consumer resolves SUPABASE_MGMT_PAT from the credential store, which IS stored and connected, so the staging pause card can read \"not set\" beside two panels authenticated against the same API. And ops/page.tsx:20-24 still documents a Vercel fallback set that was removed."
     },
@@ -1316,8 +1316,8 @@
       "sev": "P2",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-08",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:PORTAL] the agent fleet is a three entry literal against a ten row registry, and the test surface bills real calls for assertions that do not match the agent",
       "note": "WITHDRAWN, AND I REPORTED IT TO THE OWNER BEFORE IT WAS WITHDRAWN. I called this unreconciled drift. IT IS NOT DRIFT: two migrations reconcile the two deliberately and the arithmetic is EXACT, 3 fleet plus 1 orchestrator plus 6 document generation equals 10. The agent caught its own error, and because I had already committed its mid flight draft the wrong finding sat in HEAD until this correction. THE NARROWER DEFECT THAT SURVIVES: the three agent pickers offer all ten rows UNDIFFERENTIATED, including three the registry marks phase2_locked, so an operator can select an agent the registry says is unavailable. The withdrawn claim follows for the record. FLEET_AGENTS is a THREE entry literal while agent_registry holds TEN, and four sibling pages offer a picker of all ten, so the fleet view and its own siblings disagree about what exists. The single execution row on production belongs to chief-of-staff, which is not in the literal, so it renders on no card. agents/fleet/route.ts contradicts itself in its own comments, saying three at line 3 and \"the 12 idle agents\" at line 114, which is a third number. SEPARATELY AND IT COSTS MONEY: /portal/agents/tests runs four HARDCODED test cases, energy payback and social value narrative assertions, that DO NOT VARY WITH THE AGENT SELECTED. Choose the Legal Agent and it is asked for a payback period, fails, and a rejected row with a confidence score lands in agent_execution_log from a real billed Anthropic call. ai_calls shows 2 runs ever, both 2026-06-05, so this has barely been used, which is the only reason it has not cost more. A LEAD FROM THE SAME AUDIT, CHASED AND CLEARED rather than left open: the agent migrations name their staging target as the project that ran out of disk and was DELETED, rebuilt on 2026-07-18. If that reference were EXECUTABLE, staging would answer queries with empty results rather than errors, and any suite green against it would be asserting nothing. MEASURED: the dead id appears in 84 files, ALL under"
     },
@@ -1328,7 +1328,7 @@
       "sevExplicit": true,
       "lane": "PRODUCT",
       "changed": null,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P2][LANE:SECURITY] two routers validate a user supplied URL and the newest one does not",
       "note": "VERIFIED MYSELF. Three routers in this repository accept a URL from a caller. api/app/routers/webhooks.py:189 and api/app/routers/zapier.py:227 BOTH attach a field_validator calling assert_safe_external_url. api/app/routers/crowmark_esourcing.py:257 validates portal_base_url with max_length=500 AND NOTHING ELSE, and that field has a LIVE INPUT PATH from web/src/features/crowmark/esourcing/api.ts:30. The value is stored at :358 and the connector layer carries a base_url_field concept, so a fetch against it is plausible. EXPLOITABILITY TODAY IS UNVERIFIED AND SAID SO RATHER THAN ASSUMED: the table holds zero rows and I did not trace an end to end fetch of the STORED value. THE FINDING IS THE INCONSISTENCY, NOT THE EXPLOIT. Two routers remembered the validator and the newest one did not, which is the strongest possible argument that an egress guard must be an ENFORCED DEFAULT rather than something each route remembers to call. It is the same shape as R282-SSRF-GUARD-HAS-NO-CONSUMER-01, where a complete guard sits unused in web/, and the same shape as the portal's single Supabase client serving nine grant paths. A rule that depends on memory has already failed once here. Fix with the guard promotion rather than by patching this one field."
     },
@@ -1393,10 +1393,21 @@
       "sev": "P0",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": null,
-      "status": "OPEN",
+      "changed": "2026-09-08",
+      "status": "FIXED",
       "title": "[SEV:P0][LANE:INFRA] the production Brevo REST key is revoked, so every newsletter signup on the website fails",
       "note": "LIVE ON PRODUCTION, reported by the owner from a Sentry notification at 22:05 on 2026-09-07 and confirmed in Sentry as CROWAGENT-WEB-55, 2 events, first seen 22:02, culprit POST /api/notify. Brevo answers 401 {\"message\":\"Key not found\",\"code\":\"unauthorized\"}. MEASURED, NOT INFERRED, on the parts that could be measured. The Brevo ACCOUNT is healthy: accounts_get_account returns the Crowagent Ltd organisation on the free plan with 298 send credits and the SMTP relay enabled, and lists_get_lists shows list 11 newsletter-subscribers and list 12 Compliance Digest both present. So the account and the lists are fine and the KEY is the fault, which is what Key not found means: the key was deleted or rotated at Brevo and the value on Vercel now names a key that no longer exists. WHAT THE VISITOR SEES, and it is the one good part: web/lib/email/index.ts:122 THROWS on a non 2xx and sendEmail resolves the SAME key through getBrevoApiKey(), so both halves of the route fail, !addedToList && !emailed holds and /api/notify answers 502. NewsletterForm.astro shows a success message only on a 2xx, so the reader gets \"Something went wrong. Please try again, or email hello@crowagent.ai\" rather than a fake confirmation. NOBODY IS BEING SILENTLY DROPPED, which is exactly what the A-263 fix earlier the same day was for. THIS IS A CREDENTIAL AND THEREFORE THE OWNER'S: creating or entering a third party API key is a line I hold. What is needed is one paste. Generate a REST API v3 key at Brevo, SMTP and API then API keys, the xkeysib- form, and set it as BREVO_API_KEY on the Vercel project crowagent-platform-web, then redeploy. Check the Railway service too, since api/notify has a sibling there and the same key broke in both places on 2026-07-03. TWO TRAPS THIS ESTATE HAS ALREADY HIT, do not repeat them: an xsmtp- SMTP key does NOT authenticate /v3/* and 401s exactly like this, and on 2026-07-03 a Stripe sk_live_ key was mis-pasted into this same variable and sent to Brevo as an auth header. "
+    },
+    {
+      "id": "R282-CRM-INSTANCE-URL-SKIPS-THE-GUARD-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:SECURITY] a caller supplied Salesforce host receives the organisation's OAuth credentials",
+      "note": "FOUND 2026-09-08 while promoting the SSRF guard, REPORTED RATHER THAN FIXED because the router sits outside that work's file ownership. It is the SAME defect as the PostHog client that row closed, in Python, and it is LIVE. api/app/routers/crm.py ConnectRequest.instance_url accepts a URL from the caller with no egress validation, and the stored value reaches app/services/crm_salesforce.py:136, which POSTs the organisation's Salesforce credentials to f'{self._instance_url}/services/oauth2/token'. So an operator supplied host receives an OAuth client secret and refresh token. This is worse than the eSourcing field that was fixed alongside it: there the exploitability was UNVERIFIED because the table held zero rows and no end to end fetch of the stored value was traced, whereas here the credential bearing fetch is written down and reachable. THE FIX IS ALREADY BUILT AND IS ONE IMPORT: api/app/schemas/safe_url.py now exports SafeExternalUrl and OptionalSafeExternalUrl, and the AST guard at api/tests/test_caller_supplied_url_fields_are_ssrf_guarded.py already ENUMERATES this field, so closing it is changing the annotation and removing the acknowledgement entry. Measured corpus at the time of writing: 10 caller supplied URL fields across app/routers, 4 guarded, and the other 6 named individually with a written reason rather than hidden behind a count. Needs a Railway deploy to take effect, which is not authorised."
     }
   ]
 }

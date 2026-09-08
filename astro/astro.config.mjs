@@ -379,8 +379,54 @@ export default defineConfig({
        * treat a nullish return as "use the default", so one predicate serves
        * both.
        */
-      assetsInlineLimit: (assetPath) =>
-        /TabSwitcher\.astro_astro_type_script/.test(assetPath) ? false : undefined,
+      /*
+       * THE TENDER MATRIX STYLESHEET STAYS INLINED, AND IT IS THE SAME
+       * THRESHOLD ANSWERED IN THE OPPOSITE DIRECTION. [2026-09-08, A-270]
+       *
+       * That route's sheet sat at 3,936 B, 160 B under the 4,096 B line, so it
+       * was inlined into its one document. A-266 added 754 B for the sample
+       * buttons and the filter bar, it reached 4,685 B, and Astro emitted it as
+       * a file instead. TWO THINGS BROKE, and only one of them was a number.
+       *
+       *   1. cssTotal went from 216.9 KB to 221.5 KB against a 220 KB budget,
+       *      because 3.9 KB that had been inside one page's HTML started being
+       *      counted as a stylesheet.
+       *   2. FAR WORSE, AND FOUND ONLY BECAUSE check-treatments CAUGHT IT: the
+       *      extra emitted sheet reordered the CSS bundle graph, and Home 2.0's
+       *      own `letter-spacing` overrides on `.meta` elements started WINNING
+       *      where labels.css had been winning before. Micro-label recipes went
+       *      from four to five and the homepage's label tracking changed from
+       *      1.04 to 1.30 on thirteen classes. Nobody asked for that, and it is
+       *      a visible typographic change on a page the owner has not yet
+       *      reviewed on a device. Proved by reverting the route and rebuilding:
+       *      the count returns to four.
+       *
+       * WHY INLINE IS RIGHT HERE AND EMITTING WAS RIGHT FOR TabSwitcher, which
+       * looks contradictory and is not. TabSwitcher's chunk is used by TWO
+       * routes, so emitting it buys one cached file instead of the same bytes
+       * written into two documents. This sheet serves ONE route, so emitting it
+       * adds a request and shares with nobody. The principle is unchanged, the
+       * arithmetic points the other way.
+       *
+       * MATCHED ON CONTENT, NOT ON NAME, because the predicate receives the
+       * hashed output path and THREE routes emit an `index.*.css`. `.tmxf__chip`
+       * is the filter bar's own class and appears in no other sheet.
+       *
+       * WHAT THIS DOES NOT FIX, and it has its own row: Home 2.0 restating
+       * `letter-spacing` on elements that already carry `.meta` is a real
+       * design-system violation that was merely MASKED by cascade order. It is
+       * left alone tonight because changing the tracking of thirteen classes on
+       * an unreviewed homepage, hours before a production deploy, is the larger
+       * risk. Removing those restatements is the durable fix.
+       */
+      assetsInlineLimit: (assetPath, content) => {
+        if (/TabSwitcher\.astro_astro_type_script/.test(assetPath)) return false;
+        if (/\.css$/.test(assetPath) && content) {
+          const text = typeof content === 'string' ? content : Buffer.from(content).toString('utf8');
+          if (text.includes('.tmxf__chip')) return true;
+        }
+        return undefined;
+      },
     },
   },
 });

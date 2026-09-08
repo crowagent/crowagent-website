@@ -239,7 +239,18 @@ const PARTNER_TYPES = [
 
   <Button type="submit" id="ptSubmitBtn">Submit enquiry</Button>
 
-  <p class="form__status" id="ptFormStatus" role="status" aria-live="polite" hidden></p>
+  {/* [A-269 2026-09-08] The spinner and the tick are both in the markup and the
+      state class shows one of them, so a transition changes a text node and a
+      class rather than rebuilding the children of a live region. Only
+      `.form__status-text` is ever written to. Same shape as the contact form,
+      which is the point: three forms, one submit vocabulary. */}
+  <p class="form__status" id="ptFormStatus" role="status" aria-live="polite" hidden>
+    <span class="form__spinner" aria-hidden="true"></span>
+    <svg class="form__tick" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span class="form__status-text"></span>
+  </p>
 
   <noscript>
     <p class="form__noscript">
@@ -259,9 +270,26 @@ const PARTNER_TYPES = [
     const btn = document.getElementById('ptSubmitBtn') as HTMLButtonElement | null;
     const status = document.getElementById('ptFormStatus');
     const consent = document.getElementById('pt-consent') as HTMLInputElement | null;
-    if (!btn || !status || !consent) return;
+    const statusText = status?.querySelector<HTMLElement>('.form__status-text') ?? null;
+    if (!btn || !status || !consent || !statusText) return;
 
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+
+    /* [A-269 2026-09-08] One place that changes the outcome region, so a stale
+       state class cannot survive behind a fresh sentence. See ContactForm. */
+    const setStatus = (state: 'busy' | 'ok' | 'bad', message: string) => {
+      status.className = `form__status form__status--${state}`;
+      statusText.textContent = message;
+      status.hidden = false;
+    };
+
+    /* aria-busy is what distinguishes a control that is working from one that
+       is broken. A disabled button on its own does not say which. */
+    const setBusy = (busy: boolean) => {
+      btn.disabled = busy;
+      if (busy) btn.setAttribute('aria-busy', 'true');
+      else btn.removeAttribute('aria-busy');
+    };
     const val = (id: string) => ($<HTMLInputElement>(id)?.value ?? '').trim();
 
     const REQUIRED = ['pt-name', 'pt-company', 'pt-role', 'pt-email', 'pt-type'];
@@ -322,9 +350,13 @@ const PARTNER_TYPES = [
         return;
       }
 
-      btn.disabled = true;
+      /* [A-269 2026-09-08] The wait is stated rather than left to a dead
+         button. This form posts to the Railway API, which runs its own
+         Turnstile check and its own persistence before it answers, so the
+         reader can be waiting several seconds with nothing to read. */
+      setBusy(true);
       btn.textContent = 'Sending...';
-      status.hidden = true;
+      setStatus('busy', 'Sending your enquiry...');
 
       /* Exactly the ten fields `PartnerEnquiryRequest` declares
          (`api/app/routers/partners.py`), nothing more. Optional fields go
@@ -358,7 +390,7 @@ const PARTNER_TYPES = [
             form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ||
             null,
         }),
-        /* [A-265 2026-09-08] 30s, for the reason measured on the contact form:
+        /* [A-264 2026-09-08] 30s, for the reason measured on the contact form:
            a real submission there returned 200 on the server while the reader
            was shown a failure, because the client aborted at 10s. This form
            posts to the Railway API, which does its own Turnstile check and its
@@ -372,9 +404,11 @@ const PARTNER_TYPES = [
           if (!r.ok) throw new Error(String(r.status));
           form.reset();
           setError('pt-consent', false);
-          status.hidden = false;
-          status.className = 'form__status form__status--ok';
-          status.textContent = "Enquiry received. We'll be in touch within 2 business days.";
+          setStatus('ok', "Enquiry received. We'll be in touch within 2 business days.");
+          /* aria-busy off, disabled on. The work has finished, and the form has
+             been reset, so a second press would post an empty enquiry. */
+          setBusy(false);
+          btn.disabled = true;
           btn.textContent = 'Enquiry sent';
         })
         .catch((err) => {
@@ -395,11 +429,8 @@ const PARTNER_TYPES = [
               timestamp: new Date().toISOString(),
             }),
           );
-          status.hidden = false;
-          status.className = 'form__status form__status--bad';
-          status.textContent =
-            'Something went wrong. Please email hello@crowagent.ai directly.';
-          btn.disabled = false;
+          setStatus('bad', 'Something went wrong. Please email hello@crowagent.ai directly.');
+          setBusy(false);
           btn.textContent = 'Submit enquiry';
         });
     });

@@ -104,6 +104,71 @@ const ENQUIRY_OPTIONS = [
 import Turnstile from './Turnstile.astro';
 import '../../styles/forms.css';
 import Button from '../ui/Button.astro';
+import { FOOTER } from '../../data/footer';
+
+/**
+ * [A-269 2026-09-08] TRUST ROW AT THE CONVERSION POINT.
+ *
+ * NOTHING HERE IS WRITTEN FRESH. Two of the three lines are read out of
+ * FOOTER.trustBadges, the array that already carries this site's verified
+ * security claims and, more to the point, the decision history behind each of
+ * them. Copying the strings would create a second place a claim can be edited,
+ * and the footer's own note records that the last time a claim on this site
+ * was reasoned about in isolation it was removed for a bad reason and had to
+ * be restored.
+ *
+ * WHY THESE TWO OF THE SIX. A procurement buyer reading this form is deciding
+ * where their organisation's data will sit and under whose law. "GDPR
+ * compliant" and "EU data residency" answer exactly that. AES-256, TLS 1.3 and
+ * ICO registration are true and they stay in the footer, but a row of six
+ * beside a submit button is a wall rather than an assurance.
+ *
+ * THE HEDGING IS THE FOOTER'S DECISION AND IS NOT REOPENED HERE. "GDPR
+ * compliant" is unhedged because compliance is self assessed by design and
+ * Article 42 certification is voluntary. "Built to ISO 27001 controls" is
+ * hedged because an accredited body confers that one. Read the note above
+ * `trustBadges` in data/footer.ts before changing either.
+ */
+function fromFooter(claim: string): string {
+  /* A build-time assertion rather than a comment asking the next person to be
+     careful. If the footer ever drops or rewords one of these, this page fails
+     to build instead of quietly shipping a claim the site no longer makes. */
+  if (!FOOTER.trustBadges.includes(claim)) {
+    throw new Error(
+      `ContactForm: "${claim}" is no longer in FOOTER.trustBadges. ` +
+        'The conversion-point trust row must not outlive the footer claim it quotes.',
+    );
+  }
+  return claim;
+}
+
+/**
+ * THE THIRD LINE IS THE ONE THE FOOTER DOES NOT CARRY, and it is sourced
+ * rather than asserted. content/legal/privacy.md: "We use Google Gemini and
+ * Anthropic Claude as AI sub-processors. No personal data is used to train
+ * their foundation models." content/legal/security.md says the same thing from
+ * the other side: "No personal data is sent to AI providers for training."
+ * privacy.md adds, for CrowMark specifically, that prompts and completions
+ * submitted via the API are not used to train Google's foundation models and
+ * that PII is stripped at the prompt boundary.
+ *
+ * The badge stays inside all three. It claims personal data and AI training,
+ * which is what those pages state, and it does not claim zero retention or a
+ * contractual guarantee, which they do not state in those words.
+ *
+ * WHAT WAS NOT SHIPPED. The external review proposed "Average Specialist
+ * Response Time: < 4 Business Hours". The standfirst and the success message
+ * on this same screen both say three to five business days, so that badge
+ * would have put a broken promise beside a true one. Dropped on the owner's
+ * decision, not softened.
+ */
+const AI_TRAINING_CLAIM = 'No personal data used for AI training';
+
+const TRUST_BADGES: string[] = [
+  fromFooter('GDPR compliant'),
+  fromFooter('EU data residency'),
+  AI_TRAINING_CLAIM,
+];
 ---
 
 <form
@@ -195,12 +260,44 @@ import Button from '../ui/Button.astro';
     </p>
   </div>
 
+  {/* [A-269 2026-09-08] Directly above the button, so the assurances are read
+      on the way to the press rather than after it, and so the button keeps its
+      adjacency to the live region below it. The tick is the same shape and the
+      same muted ink as the footer credibility row: a bullet, not a
+      certification. See the frontmatter for where each line comes from. */}
+  <ul class="form__trust" role="list" aria-label="How CrowAgent handles the information you send">
+    {
+      TRUST_BADGES.map((badge) => (
+        <li>
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          {badge}
+        </li>
+      ))
+    }
+  </ul>
+
   <Button type="submit" id="cpSubmitBtn">Send message</Button>
 
   {/* One live region for the outcome. role="status" is polite: a success is
       announced without interrupting, and the failure text is swapped in here
-      too rather than into a second region that competes with it. */}
-  <p class="form__status" id="cpFormStatus" role="status" aria-live="polite" hidden></p>
+      too rather than into a second region that competes with it.
+
+      [A-269 2026-09-08] IT NOW CARRIES THE SENDING STATE AS WELL. The spinner
+      and the tick are both in the markup and the state class shows one of
+      them, so a transition changes a text node and a class rather than
+      rebuilding the children of a live region. Only `.form__status-text` is
+      ever written to, which keeps what a screen reader announces to one
+      sentence. */}
+  <p class="form__status" id="cpFormStatus" role="status" aria-live="polite" hidden>
+    <span class="form__spinner" aria-hidden="true"></span>
+    <svg class="form__tick" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span class="form__status-text"></span>
+  </p>
 
   <noscript>
     <p class="form__noscript">
@@ -242,9 +339,30 @@ import Button from '../ui/Button.astro';
     const btn = document.getElementById('cpSubmitBtn') as HTMLButtonElement | null;
     const status = document.getElementById('cpFormStatus');
     const consent = document.getElementById('cp-consent') as HTMLInputElement | null;
-    if (!btn || !status || !consent) return;
+    const statusText = status?.querySelector<HTMLElement>('.form__status-text') ?? null;
+    if (!btn || !status || !consent || !statusText) return;
 
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+
+    /* [A-269 2026-09-08] ONE PLACE THAT CHANGES THE OUTCOME REGION.
+       Three call sites used to set `hidden`, `className` and `textContent`
+       separately, which is three chances to leave a stale state class behind a
+       fresh sentence. The class is rebuilt from scratch every time, so `busy`
+       cannot survive into `ok`. */
+    const setStatus = (state: 'busy' | 'ok' | 'bad', message: string) => {
+      status.className = `form__status form__status--${state}`;
+      statusText.textContent = message;
+      status.hidden = false;
+    };
+
+    /* The button's own state. `aria-busy` is what tells assistive tech the
+       control is working rather than broken, which a disabled button on its
+       own does not distinguish. */
+    const setBusy = (busy: boolean) => {
+      btn.disabled = busy;
+      if (busy) btn.setAttribute('aria-busy', 'true');
+      else btn.removeAttribute('aria-busy');
+    };
 
     /** Show or hide a field's error, and keep aria-invalid honest with it. */
     function setError(fieldId: string, show: boolean) {
@@ -328,9 +446,15 @@ import Button from '../ui/Button.astro';
         return;
       }
 
-      btn.disabled = true;
+      /* [A-269 2026-09-08] THE WAIT IS NOW STATED, NOT LEFT TO A DEAD BUTTON.
+         This route does Cloudflare /siteverify, a Supabase insert and a Brevo
+         send in series (see the timeout note below), so the reader can be
+         waiting several seconds. A disabled button and a hidden status region
+         is also exactly what a broken button looks like, and the reader's
+         options at that point are to leave or to send again. */
+      setBusy(true);
       btn.textContent = 'Sending...';
-      status.hidden = true;
+      setStatus('busy', 'Sending your message...');
 
       fetch(form.action, {
         method: 'POST',
@@ -346,7 +470,7 @@ import Button from '../ui/Button.astro';
           turnstile_token: tsToken,
         }),
         /*
-         * [A-265 2026-09-08] 10s WAS SHORTER THAN A SUCCESSFUL SUBMISSION.
+         * [A-264 2026-09-08] 10s WAS SHORTER THAN A SUCCESSFUL SUBMISSION.
          *
          * MEASURED ON PRODUCTION, not reasoned about. After the Turnstile
          * secret was corrected, a real submission from a real browser showed
@@ -374,10 +498,16 @@ import Button from '../ui/Button.astro';
           if (!r.ok) throw new Error(String(r.status));
           form.reset();
           setError('cp-consent', false);
-          status.hidden = false;
-          status.className = 'form__status form__status--ok';
-          status.textContent =
-            "Message received. We'll be in touch within three to five business days.";
+          setStatus(
+            'ok',
+            "Message received. We'll be in touch within three to five business days.",
+          );
+          /* aria-busy comes OFF while disabled stays ON. The work has finished,
+             so announcing it as still working would be false, but the form has
+             been reset and a second press would post an empty enquiry. A
+             duplicate is the thing the 10s abort was already causing. */
+          setBusy(false);
+          btn.disabled = true;
           btn.textContent = 'Message sent';
         })
         .catch((err) => {
@@ -396,11 +526,8 @@ import Button from '../ui/Button.astro';
               timestamp: new Date().toISOString(),
             }),
           );
-          status.hidden = false;
-          status.className = 'form__status form__status--bad';
-          status.textContent =
-            'Something went wrong. Please email hello@crowagent.ai directly.';
-          btn.disabled = false;
+          setStatus('bad', 'Something went wrong. Please email hello@crowagent.ai directly.');
+          setBusy(false);
           btn.textContent = 'Send message';
         });
     });

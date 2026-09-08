@@ -263,6 +263,14 @@
   /* ONE region for both success and failure. Two competing live regions is how
      a screen reader user gets told two things at once and hears neither. */
   .form__status {
+    /* [A-269 2026-09-08] A ROW, BECAUSE THE REGION NOW CARRIES A MARK.
+       The outcome used to be one sentence written into textContent. It now
+       holds a spinner, a tick and the sentence, so the box has to align them.
+       `.form__status[hidden]` below is two selectors of specificity and still
+       wins over this display, so a hidden region is still not laid out. */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin: 0;
     padding: var(--blk-pad);
     border-radius: var(--radius-panel);
@@ -272,6 +280,115 @@
   }
 
   .form__status[hidden] { display: none; }
+
+  /* ── [A-269 2026-09-08] SENDING, THEN SETTLED ───────────────────────────
+   *
+   * WHY THIS EXISTS, AND IT IS A DEFECT RESPONSE RATHER THAN DECORATION. On
+   * 2026-09-08 the contact form showed "Something went wrong" for an enquiry
+   * the server had accepted with a 200, because the client aborted at 10s
+   * while three calls were still in flight (A-264, and A-265 raised the
+   * timeout to 30s). The reader's only cue during those seconds was a
+   * disabled button, which is also what a broken button looks like. So the
+   * wait is now stated in the live region the outcome already owns, and the
+   * success is marked rather than only worded.
+   *
+   * ONE REGION STILL. A second element announcing "sending" would compete
+   * with this one, which is the exact thing the note above forbids.
+   *
+   * THE MARKS ARE SIBLINGS IN THE MARKUP AND THE CLASS PICKS ONE. Swapping
+   * innerHTML from script would rebuild the live region's contents on every
+   * transition, and a region whose children are replaced is announced
+   * differently by different screen readers. Only the text node changes. */
+  .form__spinner,
+  .form__tick {
+    display: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .form__status--busy .form__spinner,
+  .form__status--ok .form__tick { display: block; }
+
+  /* currentColor and `transparent` only, so the ring inherits whatever ink
+     the state has already chosen and introduces no colour of its own. The gap
+     in the ring is what reads as rotation, and under reduce it still reads as
+     a distinct mark rather than a full circle that could be mistaken for a
+     tick. */
+  .form__spinner {
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+  }
+
+  .form__tick {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* The busy state is neither verified nor refused nor at risk, so it borrows
+     none of those three hues. It is the neutral subdued ink and the plain card
+     edge, which is what "still working" should look like. */
+  .form__status--busy {
+    border: 1px solid var(--c-border);
+    color: var(--c-text-sub);
+  }
+
+  /* MOTION IS OPT-IN, AND THE STATE DOES NOT DEPEND ON IT. Under reduce the
+     spinner is a static broken ring and the tick simply appears; the sentence
+     inside the region carries the state either way, and the button label
+     changes with it. Nothing here is the only signal for anything. */
+  @media (prefers-reduced-motion: no-preference) {
+    .form__status--busy .form__spinner {
+      animation: form-spin 0.9s linear infinite;
+    }
+
+    .form__status--ok .form__tick {
+      animation: form-settle var(--dur-fast) var(--ease) both;
+    }
+  }
+
+  /* ── [A-269 2026-09-08] TRUST ROW AT THE CONVERSION POINT ───────────────
+   *
+   * Same treatment as the footer credibility row on purpose, down to the
+   * 14px muted tick. That row's own note records why the mark is
+   * --c-text-muted and not --c-verified: teal means VERIFIED on this site,
+   * and a tick in the verified hue certifies a claim no accredited body has
+   * certified. The mark is a bullet. The words carry the claim. */
+  .form__trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--stack-1) clamp(0.75rem, 2vw, 1.25rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .form__trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.2;
+    color: var(--c-text-sub);
+  }
+
+  .form__trust svg {
+    flex: none;
+    display: block;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--c-text-muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 
   .form__status--ok {
     border: 1px solid var(--c-border-glow);
@@ -301,4 +418,26 @@
   }
 
   .form__noscript a { color: var(--c-interactive); }
+}
+
+/* [A-269 2026-09-08] OUTSIDE THE LAYER, following motion.css and effects.css.
+   @keyframes are not subject to the cascade, so a layer buys them nothing and
+   only hides where they live. Both are gated by the reduced-motion query
+   above, so neither runs unless the reader has asked for motion. */
+@keyframes form-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* The from-state lives only here, so a browser that never runs the animation
+   still paints a fully opaque tick at its natural size.
+
+   [2026-09-08] `opacity: 0` WAS REMOVED FROM THE from-STATE. With it, this was
+   a component defining its own ENTRANCE, which check-motion refuses: an element
+   fading 0 to 1 into its resting state is the central arrival restated locally,
+   and styles/motion.css already gives every route that through <main>. The tick
+   is not arriving on the page, it is a control SETTLING into a state it already
+   occupies, so a scale is the honest description of it and the opacity was
+   never carrying the meaning. */
+@keyframes form-settle {
+  from { transform: scale(0.6); }
 }

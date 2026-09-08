@@ -117,8 +117,18 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
       See the warning at the top of this file about what verifies it. */}
   <Turnstile id={id} />
 
-  {/* One live region for both outcomes, same as the enquiry form. */}
-  <p class="form__status nl__status" role="status" aria-live="polite" hidden></p>
+  {/* One live region for both outcomes, same as the enquiry form.
+
+      [A-269 2026-09-08] It carries the sending state too now. Both marks are in
+      the markup and the state class shows one, so a transition changes a text
+      node and a class rather than rebuilding the children of a live region. */}
+  <p class="form__status nl__status" role="status" aria-live="polite" hidden>
+    <span class="form__spinner" aria-hidden="true"></span>
+    <svg class="form__tick" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span class="form__status-text"></span>
+  </p>
 
   <noscript>
     <p class="form__noscript">
@@ -146,9 +156,31 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
       const err = form.querySelector<HTMLElement>('.nl__err');
       const status = form.querySelector<HTMLElement>('.nl__status');
       const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-      if (!email || !err || !status || !btn) return;
+      const statusText = status?.querySelector<HTMLElement>('.form__status-text') ?? null;
+      if (!email || !err || !status || !btn || !statusText) return;
 
       const idle = btn.textContent ?? 'Subscribe';
+
+      /* [A-269 2026-09-08] One place that changes the outcome region. Four call
+         sites set `hidden`, `className` and `textContent` separately, which is
+         four chances to leave a stale state class behind a fresh sentence, and
+         four copies of the `nl__status` class. That class carries no styling
+         today, checked rather than assumed: it is the selector the query above
+         uses to find this region, so dropping it on a rebuild would leave the
+         next submit unable to find its own status line. */
+      const setStatus = (state: 'busy' | 'ok' | 'warn' | 'bad', message: string) => {
+        status!.className = `form__status form__status--${state} nl__status`;
+        statusText!.textContent = message;
+        status!.hidden = false;
+      };
+
+      /* aria-busy is what distinguishes a control that is working from one that
+         is broken. A disabled button on its own does not say which. */
+      const setBusy = (busy: boolean) => {
+        btn!.disabled = busy;
+        if (busy) btn!.setAttribute('aria-busy', 'true');
+        else btn!.removeAttribute('aria-busy');
+      };
 
       /** Error text and aria-invalid move together, so the red border is never
           the only signal that something is wrong. */
@@ -188,9 +220,11 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
         const tsToken =
           form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? null;
 
-        btn.disabled = true;
+        /* [A-269 2026-09-08] The wait is stated rather than left to a dead
+           button, which is also what a broken button looks like. */
+        setBusy(true);
         btn.textContent = 'Sending...';
-        status.hidden = true;
+        setStatus('busy', 'Adding your address...');
 
         fetch(form.action, {
           method: 'POST',
@@ -203,7 +237,7 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
             // strips it today; see the warning at the top of this file.
             turnstile_token: tsToken,
           }),
-          /* [A-265 2026-09-08] 30s, for the reason measured on the contact
+          /* [A-264 2026-09-08] 30s, for the reason measured on the contact
              form: a real submission there returned 200 on the server while the
              reader was shown a failure, because the client aborted at 10s.
              This endpoint is the lighter of the two and has been observed
@@ -238,16 +272,21 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
              */
             const data = await r.json().catch(() => ({}) as { subscribed?: boolean });
             form.reset();
-            status.hidden = false;
+            /* aria-busy off, disabled on, in both branches. The work has
+               finished either way, so announcing it as still working would be
+               false, and the field has been reset so a second press would post
+               an empty address. */
+            setBusy(false);
+            btn.disabled = true;
             if (data.subscribed === false) {
-              status.className = 'form__status form__status--warn nl__status';
-              status.textContent =
-                'Thanks. We have your address and will add you to the list shortly.';
+              setStatus(
+                'warn',
+                'Thanks. We have your address and will add you to the list shortly.',
+              );
               btn.textContent = 'Received';
               return;
             }
-            status.className = 'form__status form__status--ok nl__status';
-            status.textContent = 'Thanks. You are on the list.';
+            setStatus('ok', 'Thanks. You are on the list.');
             btn.textContent = 'Subscribed';
           })
           .catch((err) => {
@@ -282,11 +321,11 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
                 timestamp: new Date().toISOString(),
               }),
             );
-            status.hidden = false;
-            status.className = 'form__status form__status--bad nl__status';
-            status.textContent =
-              'Something went wrong. Please try again, or email hello@crowagent.ai.';
-            btn.disabled = false;
+            setStatus(
+              'bad',
+              'Something went wrong. Please try again, or email hello@crowagent.ai.',
+            );
+            setBusy(false);
             btn.textContent = idle;
           });
       });

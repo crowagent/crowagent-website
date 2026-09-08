@@ -34,6 +34,38 @@ faq:
 
 <p class="cmp-lead"><strong>CrowMark is a subscription UK bid and tender management suite from &pound;49 per month. SwiftBid is a per-bid AI writing service, charged at &pound;149 to &pound;749 a bid with no subscription.</strong> They price in completely different ways, so the honest comparison is about how often you bid and what you need around the draft. This page sets out both, states CrowMark's prices, and dates every source.</p>
 
+<h2 id="what-buyers-check-first">What buyers check first</h2>
+<div class="cmp-sum">
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Traceability</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>Every &pound; and % in a draft is checked against a set of allowed figures computed from your own data, and the draft is rejected if a figure is not in that set. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a named person to approve it before you submit.</dd>
+<dt class="meta">SwiftBid</dt>
+<dd>Not stated publicly. The sources at the foot of this page describe per-bid AI drafting from documents you supply, with optional human expert review at the Premium tier. They document no check of this kind.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Data governance</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>AES-256 at rest, TLS 1.3 in transit, EU data residency, GDPR compliant, ICO registered, and built to ISO 27001 controls. <a href="/security/">Security</a> sets out each control and states which certifications CrowAgent does not hold.</dd>
+<dt class="meta">SwiftBid</dt>
+<dd>Not documented in the sources at the foot of this page. This page states nothing about it.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>UK regulatory alignment</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>A PPN 017 AI-use disclosure on every AI-assisted draft, social value calculated in code against the weighting the buyer published rather than by the AI, and post-award delivery evidence against Procurement Act 2023 sections 52 and 71.</dd>
+<dt class="meta">SwiftBid</dt>
+<dd>The sources at the foot of this page state no position on PPN 017 disclosure, social value calculation or the Procurement Act 2023 post-award duties.</dd>
+</dl>
+</div>
+</div>
+<p class="cmp-sum-note">CrowMark's lines are first party and checkable against the product. The SwiftBid lines repeat only what the third-party sources at the foot of this page actually state, and those sources note that SwiftBid publishes no equivalent primary page we could verify directly. Where something is not published, this page says so rather than inferring it. The full table follows.</p>
+
 <h2 id="at-a-glance">At a glance</h2>
 <p class="rt-hint">Scroll the table sideways</p>
 <div class="cmp-scroll" tabindex="0" role="region" aria-label="Comparison table, CrowMark and SwiftBid">

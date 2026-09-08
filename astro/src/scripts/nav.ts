@@ -3,7 +3,12 @@
    mobile accordions.
    ============================================================================
 
-   THIS CODE HAS NOT CHANGED. It moved out of Nav.astro's <script> on
+   ONE LINE CHANGED ON 2026-09-08 (A-267): the rule that closes the menu when
+   something in it is activated now covers the palette button as well as the
+   anchors, and the note on it says why the order matters. The paragraph below
+   is about the move and is still accurate about that.
+
+   THIS CODE HAD NOT CHANGED. It moved out of Nav.astro's <script> on
    2026-08-04 under ADR 0010 and not a line of it was rewritten on the way. The
    move is a PAYLOAD decision, not a behaviour one: Astro inlines a hoisted
    component script into the document whenever it compiles to a single chunk
@@ -86,7 +91,28 @@ function initMobileMenu() {
 
   ham.addEventListener('click', () => setOpen(!menu!.classList.contains('open')));
   closeBtn.addEventListener('click', () => setOpen(false));
-  menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  /*
+   * ANYTHING THAT TAKES THE READER SOMEWHERE CLOSES THE MENU, AND `a` WAS NOT
+   * THE WHOLE OF THAT ANY MORE (A-267).
+   *
+   * The menu now carries a `[data-cmdk-open]` button that opens the command
+   * palette, and a button is not an anchor, so this line would have left the
+   * overlay standing behind the dialog. Two things go wrong when it does. The
+   * palette sets `body.overflow = 'hidden'` on open and clears it on close,
+   * while the menu is still open and still expects it hidden, so dismissing
+   * the palette would leave the page scrolling underneath an open menu. And
+   * closing the palette returns focus to whatever was focused when it opened,
+   * which would be a control inside an overlay the reader has finished with.
+   *
+   * THE ORDER IS SAFE AND IT IS NOT AN ACCIDENT. This listener is bound
+   * directly to the button, so it runs before the delegated document listener
+   * in scripts/command-palette.ts. setOpen(false) restores the overflow and
+   * puts focus back on the hamburger, and the palette then opens, records the
+   * hamburger as the element to return to, and takes the overflow itself.
+   */
+  menu
+    .querySelectorAll('a, [data-cmdk-open]')
+    .forEach((el) => el.addEventListener('click', () => setOpen(false)));
 }
 
 /*

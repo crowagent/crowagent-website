@@ -168,6 +168,47 @@ const menus = NAV.menus.map((menu) => ({
       <path d="M6 6l12 12M18 6L6 18"></path>
     </svg>
   </button>
+  {/* ── THE MENU'S OWN SEARCH ROW, A-267 ────────────────────────────────────
+   *
+   * WHAT WAS ACTUALLY WRONG, MEASURED BEFORE ANYTHING WAS WRITTEN. The review
+   * that produced A-267 said the palette is invisible and unreachable below
+   * 768px. It is not, and has not been since 2026-08-05: on the built site the
+   * header trigger is a 44 x 44 box at 390, 767 and 1023, computed display
+   * `flex`, and tapping it opens the palette with eight options and
+   * aria-activedescendant set. The block further down this file that kept it
+   * out of the hamburger hide is what did that.
+   *
+   * THE GAP THAT IS REAL IS THIS OVERLAY. `.ca-mob-menu` is fixed, inset 0,
+   * z-index 200 on an opaque --c-bg, so it covers the header entirely:
+   * `document.elementFromPoint` at the centre of the search trigger returns
+   * `.ca-mob-menu` once the menu is open. And the menu had no search of its
+   * own, `#mob-menu [data-cmdk-open]` matching zero elements. So the one
+   * gesture a touch reader makes when they are looking for a way around the
+   * site was also the gesture that took search off the screen.
+   *
+   * A LABELLED ROW, NOT A SECOND MAGNIFIER. The header control is an icon with
+   * an accessible name and no visible one, which is reachable but says nothing
+   * to a reader who has not met the pattern. In the menu there is room for the
+   * word, so it carries the same sentence the palette's own input carries.
+   *
+   * `control` IS THE SHARED TREATMENT, the same one `.ca-search-trigger` uses.
+   * The wash, the hairline and the pointer response come from styles/controls.css
+   * and only the geometry is stated below, which is the split that file's own
+   * note asks for.
+   *
+   * IT IS BEFORE THE NAV LANDMARK AND AFTER THE CLOSE BUTTON. Before, because
+   * a search affordance is not one of the "Primary mobile navigation" links
+   * the landmark is labelled for. After, because nav.ts focuses the first
+   * focusable element in the dialog on open and Close is the right first stop.
+   */}
+  <button type="button" class="control ca-mob-search" data-cmdk-open>
+    <svg class="ca-mob-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m21 21-4.3-4.3"></path>
+    </svg>
+    <span>Search pages, or jump to an action</span>
+  </button>
+
   <nav class="ca-mob-nav" aria-label="Primary mobile navigation">
     {
       menus.map(({ menu, active, links }) => (
@@ -855,10 +896,52 @@ const menus = NAV.menus.map((menu) => ({
     color: var(--c-text);
     cursor: pointer;
   }
+  /* ── THE SEARCH ROW, A-267 ────────────────────────────────────────────────
+   *
+   * GEOMETRY ONLY. `control` in the class list owns the wash, the hairline, the
+   * ink and the pointer response, for the reason styles/controls.css records at
+   * length: a shared recipe that also set size once took a 36px pill down to
+   * 27.8px, so size stays with the control that has to be hit.
+   *
+   * THE 4rem MOVED HERE FROM `.ca-mob-nav`, WHICH IS THE ONLY REASON THAT
+   * VALUE CHANGED BELOW. It was never about the nav. It clears the close
+   * button, which is absolutely positioned at top 1.25rem and is 44px tall, and
+   * the first thing under that button is now this row. The nav keeps a normal
+   * gap from the row above it instead. */
+  .ca-mob-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 4rem;
+    /* The WCAG 2.2 SC 2.5.8 floor, stated rather than left to the padding. */
+    min-block-size: var(--btn-h-sm);
+    padding: 0 0.9rem;
+    border-radius: var(--radius-chip);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    text-align: left;
+  }
+  /* Same treatment as .ca-mob-acc-chevron: the glyph's presentation is a
+     declaration paid for once in the stylesheet, not four attributes repeated
+     on every rendered copy in all 46 documents. */
+  .ca-mob-search-icon {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
   .ca-mob-nav {
     display: flex;
     flex-direction: column;
-    margin-top: 4rem;
+    /* Was 4rem. See the note on .ca-mob-search above: the clearance the close
+       button needs now sits on the row that is actually beneath it. */
+    margin-top: 1.25rem;
     gap: 0.25rem;
   }
   .ca-mob-toplink {

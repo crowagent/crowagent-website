@@ -34,6 +34,38 @@ faq:
 
 <p class="cmp-lead"><strong>CrowMark is a UK bid and tender management suite for public-sector suppliers, priced from &pound;49 per month. AutogenAI is an enterprise AI bid-writing engine sold on request to bid teams of five or more.</strong> They aim at different buyers. This page compares them feature by feature, states CrowMark's prices, marks any figure AutogenAI does not publish as Not published, and lists every source with a date.</p>
 
+<h2 id="what-buyers-check-first">What buyers check first</h2>
+<div class="cmp-sum">
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Traceability</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>Every &pound; and % in a draft is checked against a set of allowed figures computed from your own data, and the draft is rejected if a figure is not in that set. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a named person to approve it before you submit.</dd>
+<dt class="meta">AutogenAI</dt>
+<dd>Not stated publicly. The sources at the foot of this page describe retrieval over a content library the customer builds from its own past bids, and an automated compliance review. They document no check of this kind.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>Data governance</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>AES-256 at rest, TLS 1.3 in transit, EU data residency, GDPR compliant, ICO registered, and built to ISO 27001 controls. <a href="/security/">Security</a> sets out each control and states which certifications CrowAgent does not hold.</dd>
+<dt class="meta">AutogenAI</dt>
+<dd>Not documented in the sources at the foot of this page. This page states nothing about it.</dd>
+</dl>
+</div>
+<div class="cmp-sum-card surface surface--pad surface--row">
+<h3>UK regulatory alignment</h3>
+<dl class="cmp-sum-dl">
+<dt class="meta cmp-sum-us">CrowMark</dt>
+<dd>A PPN 017 AI-use disclosure on every AI-assisted draft, social value calculated in code against the weighting the buyer published rather than by the AI, and post-award delivery evidence against Procurement Act 2023 sections 52 and 71.</dd>
+<dt class="meta">AutogenAI</dt>
+<dd>Procurement Act 2023 alignment is stated in the dated comparison at the foot of this page. PPN 017 disclosure and a dedicated social value calculation are not stated publicly.</dd>
+</dl>
+</div>
+</div>
+<p class="cmp-sum-note">CrowMark's lines are first party and checkable against the product. The AutogenAI lines repeat only what the vendor's published material or the dated sources at the foot of this page actually state. Where something is not published, this page says so rather than inferring it. The full table follows.</p>
+
 <h2 id="at-a-glance">At a glance</h2>
 <p class="rt-hint">Scroll the table sideways</p>
 <div class="cmp-scroll" tabindex="0" role="region" aria-label="Comparison table, CrowMark and AutogenAI">

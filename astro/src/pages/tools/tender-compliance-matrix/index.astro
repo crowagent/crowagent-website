@@ -235,6 +235,97 @@ const schema = [
     id="matrix"
   >
     <form class="form matrix-form" id="matrix-form" novalidate>
+      {/*
+        ── THREE WAYS IN, ABOVE THE BOX RATHER THAN BELOW IT ──────────────────
+
+        This replaces the single "Load a sample" button that sat in the button
+        row under the textarea. Two things were wrong with that arrangement and
+        both are the same fault seen from either end: a reader with no tender
+        pack to hand met an empty box first and the only thing they could
+        actually press second, and one sample can only ever show one shape of
+        document. A pack of question schedules and a pack of drawings and clause
+        tables produce completely different matrices, and a visitor whose work
+        looks like the second learns nothing from the first.
+
+        THE THREE ARE CHOSEN FOR THE RULES THEY EXERCISE, NOT FOR THE SECTORS
+        THEY NAME. Run against src/lib/tender-matrix.ts on 2026-09-08, they
+        return no two alike:
+
+          Facilities services   9 rows. 4 obligations, 2 numbered questions,
+                                2 pass or fail, 1 date, 1 word limit, and three
+                                weightings summing to exactly 100 percent, so
+                                the panel shows the complete-set note. It also
+                                carries a VAT rate and a settlement discount,
+                                which are percentages the tool must NOT read as
+                                weightings, and does not.
+          Construction works   13 rows. 3 flattened table rows, part-lettered
+                                clause references (A.1.1), three different
+                                stated subjects (Contractor, Authority,
+                                Sub-contractor), a page limit rather than a word
+                                limit, and six weightings summing to 150 percent
+                                because sub-criteria are listed beside their
+                                parents, so the panel shows the sub-criteria
+                                note instead. No dates and no numbered questions.
+          Digital services      8 rows. 4 numbered questions, two word limits,
+                                two lines marked pass or fail, one dated and
+                                timed deadline, and NO weightings at all, so the
+                                weighting notes stay hidden.
+
+        EVERY ONE IS WRITTEN FOR THIS PAGE AND SAYS SO IN ITS FIRST TWO LINES,
+        which is the point the note under the pills repeats. Nothing here is
+        lifted from a published tender, no real organisation is named, and none
+        of them implies that anybody has evaluated or endorsed this tool. A page
+        whose whole claim is that it never invents cannot open with a sample
+        that borrows somebody else's authority.
+
+        THE VISIBLE LABEL IS THE SECTOR AND THE ACCESSIBLE NAME EXTENDS IT. A
+        button reading only "Construction works" tells a screen reader nothing
+        about what pressing it does, and moving that into `aria-label` would
+        replace the visible text rather than extend it, which is the WCAG 2.5.3
+        failure. A visually hidden span keeps the visible words inside the
+        accessible name and adds the rest.
+      */}
+      <p class="matrix-form__sample" id="tmx-samples-label">
+        No tender to hand? Try one of three short worked examples written for this page. None is a
+        real tender and none is taken from one. Each contains a different mix of the things the
+        rules below look for, including percentages that are deliberately not weightings.
+      </p>
+      {/*
+        BUTTONS IN A `.btn-row`, NOT CHIPS, AND check-render.js SETTLED IT. The
+        first build of this row used the `control chip` recipe /glossary's filter
+        takes, and the gate failed it twice in the same run for two different
+        reasons that turned out to be the same reason. Its bespoke-button rule
+        reported three "control(s) styled as a button without being one", and its
+        ALLOW_BESPOKE entry for `.gx-chip` says exactly why a filter is allowed
+        to look like that and this is not: "a filter is a state you are in rather
+        than an action you take". Loading a sample is an action. Its width rule
+        then reported the row at a 25px spread, 180/172/155, because a chip's
+        width is its label. `.btn-row` in styles/button-row.css sizes every
+        button in a row to the widest, and stacks them full width below 30rem.
+
+        THE ID CARRIES THE KEY, because Button.astro forwards a named set of
+        props rather than spreading attributes, so `data-sample` would be
+        dropped. `id` IS forwarded, and its note in that file records the same
+        constraint being met the same way for the contact form's submit button.
+      */}
+      <div class="btn-row">
+        <Button type="button" variant="secondary" id="load-facilities">
+          Facilities services<span class="visually-hidden"
+            >: load this sample and build its matrix</span
+          >
+        </Button>
+        <Button type="button" variant="secondary" id="load-construction">
+          Construction works<span class="visually-hidden"
+            >: load this sample and build its matrix</span
+          >
+        </Button>
+        <Button type="button" variant="secondary" id="load-digital">
+          Digital services<span class="visually-hidden"
+            >: load this sample and build its matrix</span
+          >
+        </Button>
+      </div>
+
       <div class="field">
         <label class="field__label" for="tenderText">
           Tender text
@@ -295,34 +386,16 @@ const schema = [
 
       <div class="btn-row">
         <Button type="submit">Build the matrix</Button>
-        <Button type="button" variant="secondary" id="btn-sample">Load a sample</Button>
         <Button type="reset" variant="secondary">Clear</Button>
       </div>
 
       {/*
-        ── THE SAMPLE IS THE FIRST THING MOST VISITORS CAN ACTUALLY DO ─────────
-        A tool whose only input is pasted tender text asks a first-time reader to
-        go and find a tender pack before it will show them anything. Most
-        arrivals have no ITT open, so the honest default state of this page is a
-        blank box and a button that does nothing for them.
-
-        THE TEXT LIVES IN THE MARKUP, not in the script, for the reason recorded
-        at the head of this file: the JavaScript budget is the tightest on the
-        site and this extract is roughly 900 bytes of copy. In a <template> it is
-        paid for in the per-route HTML budget, which has room, and it is inert
-        until the button is pressed.
-
-        IT IS LABELLED AS WRITTEN FOR THE PURPOSE, and that matters on a page
-        whose whole claim is that it never invents. It is not a real tender and
-        does not pretend to be one; it is written to contain one of each thing
-        the rules below look for, so that what comes back can be checked against
-        the rules as published.
+        THE SAMPLE TEXT LIVES IN THE MARKUP, not in the script, for the reason
+        recorded at the head of this file: the JavaScript budget is the tightest
+        on the site and the three extracts are roughly 2.6 KB of copy between
+        them. In a <template> each is paid for in the per-route HTML budget,
+        which has room, and all three stay inert until a pill is pressed.
       */}
-      <p class="matrix-form__sample">
-        The sample is a short worked example written for this page. It is not a real
-        tender, and it contains one of each thing the rules below look for, including
-        two percentages that are deliberately not weightings.
-      </p>
 
       {/* Same reasoning as the calculator's: this form has no action and reads
           the text entirely in the browser, so with scripts off pressing the
@@ -414,6 +487,155 @@ const schema = [
     </div>
 
 
+    {/*
+      ── READING TWO HUNDRED ROWS ───────────────────────────────────────────
+
+      The engine caps a run at MAX_ROWS, which is 300, and an ITT section that
+      fills it is not unusual: the three samples return 8, 9 and 13 rows from
+      roughly 850 characters each, so a 20 KB paste lands in the low hundreds.
+      Until now the only way to find the deadline row in that stack was to
+      scroll it, and the summary panel above states counts a reader could not
+      then act on. This bar is what turns those counts into a way through.
+
+      THE CHIPS ARE THE SIGNALS THE ENGINE ALREADY EMITS, AND THAT IS THE WHOLE
+      DESIGN CONSTRAINT. The obvious build is a subject filter: Quality,
+      Commercial, Social Value. That is exactly the keyword classifier the note
+      above `CATEGORY` in lib/tender-matrix.ts records as removed and not coming
+      back, because a category is a judgement about what a requirement is ABOUT
+      and is not in the document. A signal is. `obligation` means the line
+      contains the word "shall" or one of its siblings, `deadline` means a date
+      was read out of it. Filtering on those adds no opinion the matrix did not
+      already carry, which is the condition this feature had to meet: it changes
+      what is LISTED and nothing about what was DECIDED.
+
+      SO ARE THE LABELS. Every one of the eight is the wording the ledger above
+      already uses for the same fact, so "Obligations" over the list and
+      "Obligations found" in the panel cannot come to mean two different things.
+
+      A CHIP WITH NO ROWS IS HIDDEN RATHER THAN SHOWN AT ZERO. The digital
+      services sample returns no weightings and no table rows, so two of the
+      eight can only ever filter to an empty list on that run. They are hidden
+      when the analysis produces none, and the decision is taken from the whole
+      matrix rather than from the word filter, so typing does not make the row
+      of chips jump about under the pointer.
+
+      THE COUNTS MOVE WITH THE WORD FILTER, WHICH IS THE POINT OF PUTTING THEM
+      THERE. A count that ignored the typed word would state a number the reader
+      cannot get to. Each chip states what pressing it would show, given what is
+      already typed.
+
+      THERE IS NO CLEAR BUTTON, unlike /glossary, and that is deliberate rather
+      than an omission. `type="search"` gives Chromium and Safari their own
+      clear glyph. The glossary suppresses that glyph because it had drawn its
+      own one a few pixels away and was rendering two, so the fix there was to
+      keep one. Here nothing has been drawn, so the native one is the one, and
+      Escape clears the field on every browser either way.
+    */}
+    <div class="tmxf" id="matrix-filter" hidden>
+      <div class="tmxf__chips" role="group" aria-label="Filter the matrix by what the rules read">
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="all"
+          aria-pressed="true"
+          aria-controls="matrix-rows">All rows <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="obligation"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Obligations <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="directive"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Numbered questions <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="reference"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Clause references <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="table"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Table rows <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="mandatory"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Marked pass or fail <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="deadline"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Dates and times <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="limit"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Response limits <span class="tmxf__n">0</span></button
+        >
+        <button
+          class="control chip tmx-hit tmxf__chip"
+          type="button"
+          data-sig="weighting"
+          aria-pressed="false"
+          aria-controls="matrix-rows"
+          hidden>Weightings <span class="tmxf__n">0</span></button
+        >
+      </div>
+
+      <div class="tmxf__find">
+        <label class="visually-hidden" for="matrix-q">Filter the rows by word</label>
+        <input
+          class="field__input tmx-hit"
+          id="matrix-q"
+          type="search"
+          autocomplete="off"
+          placeholder="Filter by word, such as insurance or portal"
+          aria-controls="matrix-rows"
+          aria-describedby="matrix-shown"
+        />
+      </div>
+
+      {/*
+        `role="status"` is already implicitly polite and atomic. Both are
+        restated for the reason /glossary states them: older screen readers do
+        not honour the implication uniformly, and an atomic region is what makes
+        this read as a phrase rather than as a changed digit.
+      */}
+      <p class="meta tmxf__count" id="matrix-shown" role="status" aria-live="polite" aria-atomic="true"></p>
+    </div>
+
+    {/* Sits above the list rather than below it, because the list is empty at
+        the moment this is shown and a reader who has just filtered a long
+        matrix down to nothing is looking at the bar, not at the fold. */}
+    <p class="basis" id="matrix-none" hidden>
+      No rows match that filter. Clear the word, or choose All rows. The CSV and Markdown exports
+      above are unaffected: they always carry every row the rules matched.
+    </p>
+
     <ol
       id="matrix-rows"
       class="matrix"
@@ -426,8 +648,11 @@ const schema = [
     {/* One row, authored in markup and cloned per result. The structure and the
         class names stay in the template where they can be read, and the script
         does nothing but put text into four places and add chips. */}
-    {/* Read by the "Load a sample extract" button. Inert until then. */}
-    <template id="sample-text">INVITATION TO TENDER - GROUNDS MAINTENANCE SERVICES
+    {/* Read by the sample pills above the textarea. Inert until one is pressed.
+        Each opens by saying what it is, so a reader who pastes one somewhere
+        else still carries the label with it. */}
+    <template id="sample-facilities">ILLUSTRATIVE EXTRACT - GROUNDS MAINTENANCE SERVICES
+Written for this page. It is not a real tender.
 
 Section 1: Instructions to Tenderers
 
@@ -450,6 +675,46 @@ Social Value 10%
 Price 30%
 
 Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</template>
+
+    <template id="sample-construction">ILLUSTRATIVE EXTRACT - SCHOOL ROOF REPLACEMENT WORKS
+Written for this page. It is not a real tender.
+
+Part A: Contract Requirements
+
+A.1 The Contractor shall provide a construction phase plan before works begin on site.
+A.1.1  Asbestos survey  YES  Survey report
+A.1.2  Site waste plan  YES  Method statement
+A.1.3  Scaffold design  N/A  Not applicable to this lot
+A.2 The Authority is required to give access to the site between 07:00 and 18:00 on weekdays.
+A.3 Method statements must not exceed 4 pages per work package.
+A.4 The Sub-contractor shall hold public liability cover throughout the works.
+
+Part B: Award Criteria and Weightings
+
+Tenders will be evaluated against the criteria below. Each sub-criterion is scored within its parent.
+Quality 50%
+Programme and sequencing 20%
+Site safety 20%
+Waste and recycling 10%
+Price 40%
+Social Value 10%</template>
+
+    <template id="sample-digital">ILLUSTRATIVE EXTRACT - CASE MANAGEMENT SOFTWARE
+Written for this page. It is not a real tender.
+
+Section 4: Selection Questionnaire
+
+Q1 Describe your approach to migrating data from the incumbent system. Maximum 750 words.
+Q2 Confirm that your organisation holds a current information security certification. This is a pass/fail requirement.
+Q3 Provide details of your service desk cover, in no more than 500 words.
+Q4 Set out how the Supplier will meet the stated availability target.
+
+Section 5: Submission and Compliance
+
+5.1 Responses must be uploaded to the portal no later than 14:00 on 30 April 2026.
+5.2 Failure to submit a completed questionnaire will result in exclusion.
+5.3 The Buyer is not permitted to accept amendments after the closing time.
+5.4 Tenderers are required to keep their pricing open for 90 days from the closing date.</template>
 
     <template id="matrix-row">
       <li class="matrix__row">
@@ -654,6 +919,107 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
       input.removeAttribute('aria-invalid');
     };
 
+    /*
+     * ── THE FILTER OVER THE RESULT ──────────────────────────────────────────
+     *
+     * It reads the rendered rows and hides some of them. It never re-analyses,
+     * never re-orders and never touches `currentMatrix`, so the CSV and the
+     * Markdown carry every row the rules matched whatever is on screen. That is
+     * stated to the reader in the empty-state paragraph as well as here, because
+     * an export that quietly followed the filter is the one way this feature
+     * could change what the tool reports.
+     *
+     * EACH ROW IS MEASURED ONCE, WHEN IT IS BUILT. The alternative is reading
+     * `textContent` off up to 300 <li> elements on every keystroke, which is
+     * work the row already knows the answer to. `hay` is the whole rendered row
+     * lower-cased, so the word filter reaches the reference, the requirement,
+     * the verbatim quote and the chips, which is everything the reader can see.
+     */
+    interface FilterRow {
+      li: HTMLElement;
+      hay: string;
+      sigs: string[];
+    }
+
+    const bar = byId('matrix-filter');
+    const query = byId('matrix-q') as HTMLInputElement | null;
+    const shownLine = byId('matrix-shown');
+    const noneLine = byId('matrix-none');
+    const chips = Array.from(document.querySelectorAll<HTMLElement>('.tmxf__chip'));
+    let filterRows: FilterRow[] = [];
+    let activeSig = 'all';
+
+    const applyFilter = () => {
+      const q = query ? query.value.trim().toLowerCase() : '';
+
+      /* Counts are taken against the WORD filter only and never against the
+         pressed chip, so each chip states what pressing it would show rather
+         than what is showing now. Counted against the pressed chip instead,
+         every chip but one would read 0 the moment a filter was on, which is
+         true and useless. */
+      const counts: Record<string, number> = { all: 0 };
+      let visible = 0;
+      for (const row of filterRows) {
+        const hit = q === '' || row.hay.indexOf(q) !== -1;
+        if (hit) {
+          counts.all++;
+          for (const s of row.sigs) counts[s] = (counts[s] || 0) + 1;
+        }
+        const on = hit && (activeSig === 'all' || row.sigs.indexOf(activeSig) !== -1);
+        row.li.hidden = !on;
+        if (on) visible++;
+      }
+
+      for (const c of chips) {
+        const n = c.querySelector('.tmxf__n');
+        if (n) n.textContent = num(counts[c.dataset.sig || 'all'] || 0);
+      }
+      /* `filterRows.length === 0` is a matrix with no rows at all, which the
+         panel already explains in `r-none`. Saying "no rows match that filter"
+         over it would blame the reader's filter for a result the rules produced
+         before any filter existed. */
+      if (noneLine) noneLine.hidden = visible !== 0 || filterRows.length === 0;
+      if (shownLine) {
+        shownLine.textContent =
+          visible === filterRows.length
+            ? `${num(visible)} ${visible === 1 ? 'row' : 'rows'}`
+            : `${num(visible)} of ${num(filterRows.length)} rows`;
+      }
+    };
+
+    /* Back to All rows and an empty box. Called by every path that replaces the
+       result, because a second document analysed under the first one's filter
+       would hide rows the reader never chose to hide. */
+    const resetFilter = () => {
+      activeSig = 'all';
+      if (query) query.value = '';
+      for (const c of chips) c.setAttribute('aria-pressed', String((c.dataset.sig || '') === 'all'));
+    };
+
+    for (const c of chips) {
+      /* `click` covers the keyboard: a <button> fires it on Enter and on Space,
+         so there is no key handler here and no second path to keep in step. */
+      c.addEventListener('click', () => {
+        activeSig = c.dataset.sig || 'all';
+        for (const other of chips) {
+          other.setAttribute('aria-pressed', String(other === c));
+        }
+        applyFilter();
+      });
+    }
+
+    if (query) {
+      query.addEventListener('input', applyFilter);
+      query.addEventListener('keydown', (e) => {
+        /* Safari and Firefox draw no clear glyph inside a search field, so
+           Escape is the one way out that every browser has. */
+        if (e.key === 'Escape') {
+          query.value = '';
+          applyFilter();
+        }
+      });
+    }
+
     /* THE LAST MATRIX ANALYSED, WHICH IS WHAT THE TWO EXPORT BUTTONS EXPORT.
        Declared beside the thing that clears it rather than beside the buttons
        that read it, because forgetting to clear it is the failure that matters:
@@ -667,6 +1033,13 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
       list.hidden = true;
       list.replaceChildren();
       currentMatrix = null;
+      /* The bar goes with the rows it filters. Left up over an empty list it is
+         a control with nothing under it, which is the fault this page's own
+         "what it does not do" section is written against. */
+      if (bar) bar.hidden = true;
+      if (noneLine) noneLine.hidden = true;
+      filterRows = [];
+      resetFilter();
       /* THE CLIPBOARD FALLBACK IS A SIBLING OF THE PANEL, NOT A CHILD OF IT, so
          hiding the panel leaves it on screen holding the whole of the previous
          matrix. That is the exact failure the note on the reset handler below
@@ -803,35 +1176,78 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
       byId('copy-fallback')?.remove();
 
       const frag = document.createDocumentFragment();
-      for (const r of m.rows) frag.append(rowOf(r));
+      /* Built and measured in the same pass. `textContent` is read off the row
+         while it is still in the fragment, which is before it is laid out, so
+         none of this costs a reflow. */
+      filterRows = [];
+      const present = new Set<string>();
+      for (const r of m.rows) {
+        const li = rowOf(r);
+        /* The filter's contract, written where it can be inspected rather than
+           held only in the array below. /glossary states the same thing on its
+           cards as `data-cat`. It is `data-sig` and a space-separated LIST here
+           because a row genuinely carries several signals at once, so equality
+           against a single category would be the wrong shape. */
+        li.dataset.sig = r.signals.join(' ');
+        filterRows.push({
+          li,
+          hay: (li.textContent || '').toLowerCase(),
+          sigs: r.signals,
+        });
+        for (const s of r.signals) present.add(s);
+        frag.append(li);
+      }
       list.replaceChildren(frag);
       list.hidden = m.rows.length === 0;
+
+      /* Chip visibility is decided from the WHOLE matrix, once per analysis, so
+         typing in the word filter cannot make the row of chips reflow under the
+         pointer. What moves with the typing is the numbers on them. */
+      for (const c of chips) {
+        const sig = c.dataset.sig || '';
+        c.hidden = sig !== 'all' && !present.has(sig);
+      }
+      resetFilter();
+      if (bar) bar.hidden = m.rows.length === 0;
+      applyFilter();
 
       panel.hidden = false;
       reveal(panel);
     });
 
     /*
-     * THE SAMPLE LOADER. It fills the box and submits, rather than filling the
+     * THE SAMPLE PILLS. Each fills the box and submits, rather than filling the
      * box and leaving the reader to find the button: the whole point is to show
      * someone with no tender pack to hand what the tool returns, and a second
      * required click is where that intent gets lost.
      *
      * `requestSubmit` and NOT `submit`, which is the difference between the two
      * that matters here. `form.submit()` bypasses submit event handlers
-     * entirely, so the page would reload and show nothing; `requestSubmit()`
-     * fires the handler above exactly as pressing the button does.
+     * entirely, so the page would reload and show nothing. `requestSubmit()`
+     * fires the handler above exactly as pressing the button does, which means
+     * a pill takes the same validation, the same error region and the same
+     * scroll as a paste. There is no second code path for a sample to drift on.
+     *
+     * THE BUTTON NAMES ITS TEMPLATE RATHER THAN CARRYING ITS TEXT. `load-x` and
+     * `sample-x` are the two halves of one key, so adding a fourth sample is a
+     * <template> and a <Button> and no script change at all. The key is read
+     * from the id rather than from a `data-` attribute for the reason recorded
+     * beside the buttons: Button.astro forwards `id` and does not forward
+     * `data-sample`.
      */
-    const btnSample = byId('btn-sample');
-    const sampleTpl = byId('sample-text') as HTMLTemplateElement | null;
-    if (btnSample && sampleTpl) {
-      btnSample.addEventListener('click', () => {
+    for (const pill of form.querySelectorAll<HTMLElement>('[id^="load-"]')) {
+      const tpl = byId(`sample-${pill.id.slice(5)}`) as HTMLTemplateElement | null;
+      /* A pill pointing at a template that is not there would otherwise wipe the
+         textarea and submit an empty form, which reports a validation error the
+         reader did nothing to cause. */
+      if (!tpl) continue;
+      pill.addEventListener('click', () => {
         /* `.content.textContent`, NOT `.innerHTML`. The template holds plain
-           text, so the parsed fragment already carries it decoded; reading the
+           text, so the parsed fragment already carries it decoded. Reading the
            markup instead would mean hand-unescaping &amp;, &lt; and &gt;, which
-           is three entities today and a bug the first time the sample gains a
+           is three entities today and a bug the first time a sample gains a
            fourth. It also keeps the whole tool free of any innerHTML read. */
-        input.value = (sampleTpl.content.textContent || '').trim();
+        input.value = (tpl.content.textContent || '').trim();
         form.requestSubmit();
       });
     }
@@ -991,6 +1407,124 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
     margin: 0;
     font-family: var(--font-body);
     font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  /* ── THE FILTER CHIPS ─────────────────────────────────────────────────────
+   *
+   * Nothing about how a chip looks is written here: `.chip` in styles/labels.css
+   * owns the box, the hairline, the radius and the tracking, and `.control` in
+   * styles/controls.css owns the wash, the hairline, the ink under a pointer and
+   * the focus ring. The sample buttons above take `.btn-row` and Button.astro
+   * and so need no rule at all. */
+  .tmxf__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--stack-1);
+  }
+
+  /* THE ONE LOCAL THING IS THE TARGET, and it is behaviour rather than look, so
+     it is stated once on every control that has to be hit rather than per block.
+     `.chip` grows a control to 36px, which clears the WCAG 2.2 SC 2.5.8 floor of
+     24 but not the 44 this site's own rule asks for, and /glossary's filter chips
+     already take 44 on the argument that a control you have to aim at is not a
+     date. The search field is on the same line because `.field__input` is sized
+     for a form field on its own row rather than for a control in a bar. */
+  .tmx-hit {
+    min-height: 44px;
+  }
+
+  /* ── THE FILTER BAR ───────────────────────────────────────────────────────
+   *
+   * STICKY FROM 48rem UP AND STATIC BELOW IT, which is the one decision in this
+   * block that is not obvious. A filter that scrolls away is no use over two
+   * hundred rows, and that is the whole argument for docking it. Against it:
+   * Nav.astro is `position: sticky; top: 0` and 73px tall at every width, so a
+   * second docked bar is a second band of furniture the reader cannot get rid
+   * of. scripts/check-sticky-budget.js measured that stack on /pricing at 189px
+   * on a 390x844 phone, 22.4 percent of the window against its 18 percent
+   * budget, and its second rule is that at most ONE bar may dock below 767px.
+   * That gate covers /pricing and not this route, so those figures are not a
+   * measurement of THIS bar. They are the reason not to find out the hard way:
+   * this bar wraps to three rows on a phone, where /pricing's wrapped to two.
+   *
+   * `top` IS THE NAV HEIGHT, NOT 0. A second sticky at 0 parks in the same band
+   * and the nav paints over it. pricing.astro records the same 73px and the same
+   * reason, and notes there is no token for it because it was the first
+   * component outside the nav that needed to know. It is the second. */
+  .tmxf {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--stack-1) var(--stack-2);
+    margin-top: var(--sec-gap);
+    padding: var(--stack-1) 0;
+    border-block: 1px solid var(--c-border);
+    /* Opaque, because rows scroll under a docked bar. pricing.astro's own note
+       records a translucent bar bleeding page text through it (P1-002). */
+    background-color: var(--c-bg);
+  }
+
+  @media (min-width: 48rem) {
+    .tmxf {
+      position: sticky;
+      top: 73px;
+      /* Above the rows and below the nav, which is 100. */
+      z-index: 20;
+    }
+  }
+
+  /* The selected state, and it is the same one /glossary's chips take: the
+     interactive token as a fill with the page ground as ink. Written here
+     because Astro scopes a page's styles to that page, so there is no selector
+     either file could share. `.control` still owns the hover and the focus
+     ring, which is why neither appears in this block. */
+  /* Tabular figures so a chip does not change width as its count goes 9 to 10.
+     It sits on the chip rather than on the number, see the note on .tmxf__n. */
+  .tmxf__chip {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tmxf__chip[aria-pressed='true'] {
+    background-color: var(--c-interactive);
+    border-color: var(--c-interactive);
+    color: var(--c-bg);
+  }
+
+  /* The count rides inside the chip and must stay readable against BOTH of the
+     chip's two grounds, so it steps back with opacity rather than with a muted
+     ink token: --c-text-muted on the filled state would be a mid grey on the
+     interactive fill. Tabular figures so the chip does not change width as its
+     number goes from 9 to 10. */
+  /* [2026-09-08] THE COUNT CARRIES NO TYPOGRAPHY OF ITS OWN, and that is a
+     check-treatments requirement rather than a preference. The chip is already
+     `control chip tmx-hit tmxf__chip`, so it takes the shared `.chip` micro
+     label recipe from styles/labels.css. When this span stated its own
+     `font-variant-numeric` and `opacity` it rendered a FIFTH fingerprint on a
+     site whose rule is four, and check-treatments failed with `span.tmxf__n`
+     named. The tabular figures moved up to the chip, where they change nothing
+     for the label text because it has no digits, and the count now inherits the
+     chip exactly. Only the gap is left here, which is spacing and not a
+     treatment. */
+  .tmxf__n {
+    margin-inline-start: 0.4em;
+  }
+
+  /* Takes the slack on a wide screen and drops to its own full row on a narrow
+     one, which is what the 14rem basis buys: below roughly 30rem of bar there is
+     no room for chips and a field side by side. */
+  .tmxf__find {
+    flex: 1 1 14rem;
+  }
+
+  /* Everything about the search field is `.field__input` from styles/forms.css
+     and its target height is `.tmx-hit` above, so nothing is written for it
+     here. The empty-state paragraph takes `.basis`, which is this page's own
+     closing-note recipe and already sets the measure, the face and the muted
+     ink it wants. Both are recorded because an absence is otherwise read as an
+     omission. */
+  .tmxf__count {
+    margin: 0;
     color: var(--c-text-muted);
   }
 
