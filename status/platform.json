@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-08T00:44:22.605Z",
+  "updated": "2026-09-08T02:25:11.114Z",
   "release": "2.8.2",
   "note": "DERIVED, not authored. Generated from RELEASE-2.8.2-TRACKER.md and RELEASE-2.8.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement, and this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
@@ -9,12 +9,12 @@
     "crowagent-platform/docs/release-2.8.2/PHASE-ASSIGNMENT-*.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-09-08T00:44:22.488Z",
-    "sourceFingerprint": "106:-2071522926",
+    "generatedAt": "2026-09-08T02:25:10.925Z",
+    "sourceFingerprint": "167:646787552",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 106,
-    "done": 38,
-    "remaining": 68,
+    "totalRaised": 167,
+    "done": 57,
+    "remaining": 110,
     "phases": {
       "1": {
         "items": 0,
@@ -57,15 +57,14 @@
         "onHold": 0
       },
       "6": {
-        "items": 68,
-        "open": 2,
-        "built": 65,
+        "items": 110,
+        "open": 35,
+        "built": 68,
         "wip": 0,
-        "decision": 1,
+        "decision": 7,
         "onHold": 0
       }
-    },
-    "stale": true
+    }
   },
   "legend": {
     "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
@@ -206,7 +205,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 68,
+        "items": 110,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -239,8 +238,7 @@
     {
       "src": "crowagent-platform/scripts/deploy-phase-boundaries-2.8.2.json",
       "why": "No deploy budget has been declared for R2.8.2, so the panel below is the PREVIOUS release's and its spend does NOT apply here. RULE 0-R: the budget resets per release and is not inherited, so R2.8.2 starts at zero spent. Declare this release's boundaries in that file. Until then treat the numbers below as history."
-    },
-    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 106:-2071522926 vs 106:-1293293696). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+    }
   ],
   "issues": [
     {
@@ -1408,6 +1406,677 @@
       "status": "FIXED",
       "title": "[SEV:P1][LANE:SECURITY] a caller supplied Salesforce host receives the organisation's OAuth credentials",
       "note": "FOUND 2026-09-08 while promoting the SSRF guard, REPORTED RATHER THAN FIXED because the router sits outside that work's file ownership. It is the SAME defect as the PostHog client that row closed, in Python, and it is LIVE. api/app/routers/crm.py ConnectRequest.instance_url accepts a URL from the caller with no egress validation, and the stored value reaches app/services/crm_salesforce.py:136, which POSTs the organisation's Salesforce credentials to f'{self._instance_url}/services/oauth2/token'. So an operator supplied host receives an OAuth client secret and refresh token. This is worse than the eSourcing field that was fixed alongside it: there the exploitability was UNVERIFIED because the table held zero rows and no end to end fetch of the stored value was traced, whereas here the credential bearing fetch is written down and reachable. THE FIX IS ALREADY BUILT AND IS ONE IMPORT: api/app/schemas/safe_url.py now exports SafeExternalUrl and OptionalSafeExternalUrl, and the AST guard at api/tests/test_caller_supplied_url_fields_are_ssrf_guarded.py already ENUMERATES this field, so closing it is changing the annotation and removing the acknowledgement entry. Measured corpus at the time of writing: 10 caller supplied URL fields across app/routers, 4 guarded, and the other 6 named individually with a written reason rather than hidden behind a count. Needs a Railway deploy to take effect, which is not authorised."
+    },
+    {
+      "id": "R282-RBAC-MEASUREMENT-AND-SPEC-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "BUILT",
+      "title": "[SEV:P1][LANE:SECURITY] there was no RBAC specification, and both files that claimed one cited a deleted document",
+      "note": "Enforcement surface, counted: web/app/api 306 live routes, 193 upper bound and 81 lower bound authorisation checked, 111 identity or plan only, 23 public by design. api/app/routers 553 routes, 318 checked, 190 (34%) identity only. apps/portal 158 API routes, 128 guarded. apps/portal PAGES: 70 of 70 with zero authorisation checks. 70 mutating web routes carry no role check, 68 carry neither role nor entitlement."
+    },
+    {
+      "id": "R282-RBAC-UNKNOWN-ROLE-IS-NOT-A-VIEWER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:SECURITY] a principal with no membership row could record a bid sign off",
+      "note": "RESIDUAL RISK, stated: a runtime role === 'viewer' comparison meaning \"least privilege\" would NOT have been found by the compiler. The audit log surface was checked by hand and is unaffected, because audit_log_rbac._normalise_role falls back to viewer for anything outside STORED_ROLES and on THAT surface viewer appears in one category only, so it can only narrow. That fallback is now the documented line keeping the two surfaces apart."
+    },
+    {
+      "id": "R282-RBAC-REVOCATION-DOES-NOT-REVOKE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:SECURITY] de provisioning a member left their database access intact",
+      "note": "MEASURED BEFORE CHANGING ANYTHING, production: profiles with an org 4, org_users 4, organisation_members 4 all accepted and none revoked, revoked rows still reachable through another branch: 0. So the defect has never fired. It fires on the FIRST revocation, which is exactly when nobody is looking for it, and it is silent in both directions: the UI shows the member gone and the database still answers them."
+    },
+    {
+      "id": "R282-RBAC-API-KEYS-HAVE-NO-ROLE-GATE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:SECURITY] any member could mint, rotate and revoke every API key the organisation holds",
+      "note": "The paywall is DELIBERATELY UNTOUCHED and is filed separately as R282-RBAC-API-KEYS-PAYWALL-READS-A-DEAD-COLUMN-01. Removing a paywall is the owner's decision, not a defect fix, even when the column it reads is measured stale."
+    },
+    {
+      "id": "R282-RBAC-PORTAL-SETTINGS-BLOCKS-MFA-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:SECURITY] four of five portal roles could not enrol MFA on a portal where MFA is opt in",
+      "note": "The users split from the spec's 3.3 has NOT shipped, and settings is still founder only rather than founder plus admin. Granting it to admin widens administrative reach over other people and over integrations, which is an owner decision."
+    },
+    {
+      "id": "R282-RBAC-TEAM-PATCH-HAS-NO-ROLE-CHECK-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "CLEARED",
+      "title": "[SEV:P1][LANE:SECURITY] the audit reported that PATCH /api/team/[...path] has no manage_team check and no self target check",
+      "note": "Recording a NEGATIVE finding so it is not re investigated. The audit's residual error direction was UNDERSTATING enforcement, which this confirms."
+    },
+    {
+      "id": "R282-RBAC-RLS-IS-ROLE-BLIND-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:SECURITY] 168 of 193 writable tenant tables let any member write at any role",
+      "note": "Design written in RBAC-SPEC.md 2.4. Blast radius is every write path in the product, so it moves table by table with the policy rewritten and proved per batch, never as one migration."
+    },
+    {
+      "id": "R282-RBAC-API-BYPASSES-RLS-ON-EVERY-PATH-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:SECURITY] api/ holds exactly one Supabase client and it is service_role",
+      "note": "Cron and webhook callers carry no user JWT and stay on service_role by design. They are listed rather than converted, which is the part that must be written down or the guard becomes unpassable."
+    },
+    {
+      "id": "R282-RBAC-PORTAL-PAGES-HAVE-NO-AUTHORISATION-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:SECURITY] 70 of 70 portal pages carry zero authorisation checks",
+      "note": "Related and separate: readableModules is documented as driving \"sidebar visibility on the client\" and has ZERO production callers, confirmed by a repo wide grep excluding node_modules. The sidebar renders every link to every role, so a viewer sees navigation to pages whose API will refuse them."
+    },
+    {
+      "id": "R282-RBAC-THREE-DEFINITIONS-OF-FOUNDER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:SECURITY] two founder checks on the SAME request can disagree",
+      "note": "Removing an address would then revoke nothing, which is correct and expected: the database row is the grant."
+    },
+    {
+      "id": "R282-RBAC-AUTHENTICATED-HOLDS-TRUNCATE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:SECURITY] the authenticated role holds TRUNCATE on 357 tables",
+      "note": "Reversible by re granting, changes no data, and no application path uses any of the three. Staging first, then production, with a grant count asserted on both sides."
+    },
+    {
+      "id": "R282-RBAC-GUARD-ESTATE-PROVES-WHO-NOT-WHAT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:SECURITY] nine security guards over the route corpus, and none of them asks about permission",
+      "note": "This is the guard that would have caught R282-RBAC-API-KEYS-HAVE-NO-ROLE-GATE-01 on the day it shipped. Per RULE 0-G it is not a work item of its own and ships inside the commit that closes the first batch of the 70."
+    },
+    {
+      "id": "R282-RBAC-FIVE-ROLE-STORES-DISAGREE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:DATA] two of four production users hold conflicting roles right now",
+      "note": "profiles is also the branch of user_org_ids() that had no revocation check, which is R282-RBAC-REVOCATION-DOES-NOT-REVOKE-01. One store is the durable fix for both."
+    },
+    {
+      "id": "R282-RBAC-UNENFORCED-CAPABILITIES-SHOWN-TO-CUSTOMERS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:UX] the product tells a customer that five permissions are role controlled when none of them is",
+      "note": "manage_api_keys came off this list on 2026-09-08 and is now enforced. Seven to go."
+    },
+    {
+      "id": "R282-RBAC-API-KEYS-PAYWALL-READS-A-DEAD-COLUMN-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P2][LANE:BILLING] the API key paywall reads a decommissioned column and refuses paying customers",
+      "note": "Two options: re point it at the live entitlement source, or delete it and let manage_api_keys plus the entitlement guard carry the decision."
+    },
+    {
+      "id": "R282-RBAC-UNRESOLVED-FLOOR-STILL-GRANTS-READ-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P3][LANE:SECURITY] an unidentifiable principal can still read",
+      "note": "Deny by default (spec P1 principle P2) would say the floor is empty. Availability during an incident says otherwise. Both are defensible and only one person gets to choose."
+    },
+    {
+      "id": "R282-RBAC-VIEWER-IS-THE-REVIEWER-SEAT-AND-IS-NOT-LABELLED-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:UX] the seat the product calls read only can approve a bid",
+      "note": "Fix is copy plus possibly a distinct seat name, not a matrix change. Renaming the stored value would be a migration across five stores and is not proposed."
+    },
+    {
+      "id": "R282-RBAC-PORTAL-PROFILE-BYPASSES-GUARD-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:SECURITY] one portal route works around the guard by leaving it out",
+      "note": "A route excluded from the guard estate is invisible to it, so it also does not count toward the contract test's floors."
+    },
+    {
+      "id": "R282-RBAC-PORTAL-GUARD-CONTRACT-FLOORS-ARE-STALE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "CI",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:CI] the portal route guard floors sit 18 below the tree",
+      "note": "The same class as every count baseline: the number is only a control while it tracks the tree."
+    },
+    {
+      "id": "R282-RBAC-CLEAR-SESSION-UNAUTHENTICATED-GET-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:SECURITY] an unauthenticated GET destroys session state",
+      "note": "Found by the web audit alongside the route corpus walk."
+    },
+    {
+      "id": "R282-STAGING-PORTAL-DNS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "BUILT",
+      "title": "[SEV:P1][LANE:INFRA] staging.portal.crowagent.ai CNAME at Cloudflare",
+      "note": "Completes R282-PORTAL-STAGING-ENVIRONMENT-01. The portal now has the same shape as the web staging environment: a custom environment with no branch matcher, deployed only by CLI prebuilt upload, so no push and no GitHub Actions run can reach it."
+    },
+    {
+      "id": "R282-PORTAL-STAGING-VERCEL-AUTH-GATES-THE-CUSTOM-ENVIRONMENT-DOMAIN-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "BUILT",
+      "title": "[SEV:P2][LANE:INFRA] all_except_custom_domains does not exempt a custom ENVIRONMENT domain",
+      "note": "Two ways to get a real 200 back, both owner decisions: mint a Protection Bypass for Automation secret on the project and send it as x-vercel-protection-bypass, or set ssoProtection.deploymentType to preview so custom environments are exempt alongside production. The second widens exposure of the staging portal to anyone with the URL."
+    },
+    {
+      "id": "R282-BID-ANSWER-SAVE-500-ON-PRODUCTION-PYTHON-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "DECISION",
+      "title": "[SEV:P0][LANE:API] every bid answer save has returned 500 on production since 2026-08-24",
+      "note": "CUSTOMER CONSEQUENCE: a bid writer types a method statement, presses save, gets a 500, and the text never persists. On the most important artefact CrowMark produces. NEEDS A RAILWAY DEPLOY, WHICH IS NOT AUTHORISED. Landed in 12797ea9 on origin/main, so it is live now."
+    },
+    {
+      "id": "R282-BID-DEADLINE-STORED-AT-MIDNIGHT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:UX] a 17:00 tender close was recorded 17 hours early",
+      "note": "Three related deadline defects are OPEN below and this fix does not touch them."
+    },
+    {
+      "id": "R282-BID-SQ-SAVE-DESTROYS-EVERY-OTHER-ANSWER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:UX] saving one selection questionnaire answer silently reverted the other nine",
+      "note": "Same class as the work loss surfaces already closed this release."
+    },
+    {
+      "id": "R282-BID-EVIDENCE-ORPHAN-FILE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P2][LANE:DATA] a failed evidence row left the uploaded bytes unreachable in the bucket",
+      "note": ""
+    },
+    {
+      "id": "R282-BID-SOCIAL-VALUE-ARITHMETIC-IS-CORRECT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "CLEARED",
+      "title": "[SEV:P3][LANE:API] the social value duration multiplier was checked against the live library and is right",
+      "note": "The classifier is guarded against a HANDCRAFTED list rather than the live library, which is the open row below."
+    },
+    {
+      "id": "R282-BID-DEADLINE-REMINDER-BURNS-ITS-SLOT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P0][LANE:API] a solo bid manager gets no deadline warning and the ledger records all three as sent",
+      "note": ""
+    },
+    {
+      "id": "R282-BID-NOTHING-SWEEPS-OPPORTUNITY-CLOSES-AT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:API] a bookmarked opportunity never produces a reminder",
+      "note": ""
+    },
+    {
+      "id": "R282-BID-NO-SUBMIT-PATH-CHECKS-A-DEADLINE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P1][LANE:API] a bid can be marked submitted a year after the tender closed, silently",
+      "note": ""
+    },
+    {
+      "id": "R282-BID-MODEL-QUESTION-CHECK-PERSISTS-NOTHING-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:UX] a five paragraph method statement and its PPN 002 assessment live only in React state",
+      "note": ""
+    },
+    {
+      "id": "R282-BID-MONTHLY-REPORT-ALWAYS-REPORTS-FAILURE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:UX] the Evidence page says the report failed while the server billed for it and stored it",
+      "note": "A control that reports failure while succeeding, which is the same defect class as one reporting success while failing, and costs the customer a retry and the platform a second generation."
+    },
+    {
+      "id": "R282-BID-FIVE-MUTATIONS-FILTER-ON-ID-ALONE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:SECURITY] tenancy defence in depth on five CrowMark mutations",
+      "note": "Left together rather than fixed four and reported one, because measures.py was being edited by another agent in the same window."
+    },
+    {
+      "id": "R282-BID-DELETE-CONTRACT-IS-AN-EXISTENCE-ORACLE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:SECURITY] DELETE /contracts/{id} tells a caller whether a foreign contract exists",
+      "note": "Low value on its own, and it is the kind of thing an assessor asks about."
+    },
+    {
+      "id": "R282-BID-UNIT-CLASSIFIER-GUARDED-AGAINST-A-HANDCRAFTED-LIST-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "CI",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:CI] the social value guard does not read the live measures library",
+      "note": "Per RULE 0-G this ships inside the next commit that touches the measures library, never as a work item of its own."
+    },
+    {
+      "id": "R282-BID-FORMATDATE-HAS-NO-TIMEZONE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:UX] the server render and the client hydration disagree about the closing DAY",
+      "note": "Surfaced by the deadline work above and is a separate fix."
+    },
+    {
+      "id": "R282-BID-CONTRACTS-ARE-CREATED-WITH-A-NULL-DEADLINE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:UX] a bid started from an opportunity does not inherit its closing date",
+      "note": "The pair of this and the reminder rows is why deadlines were the weakest area of the bidding audit."
+    },
+    {
+      "id": "R282-RAG-EMPTY-CORPUS-READ-AS-AN-ANSWER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P0][LANE:AI] a zero result retrieval sent the model NO corpus and returned its priors as an answer",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-SILENT-TRUNCATION-AND-PHANTOM-CITATIONS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:AI] the answer cited passages the model never saw",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-REEMBED-REPAIR-REPORTED-AND-NEVER-RAN-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:AI] the re embed repair returned success for the TENDER corpus and never executed",
+      "note": "Another control reporting success while doing nothing."
+    },
+    {
+      "id": "R282-RAG-GROUNDING-TENANT-GUARD-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P2][LANE:SECURITY] the grounding retrieval accepted an empty organisation id",
+      "note": "The audit found NO cross tenant leak in retrieval.py, which it called the best documented module in the repo: a NULL org collapses to the shared corpus only, retrieve raises on a falsy org, and _enforce_tenancy re checks every row."
+    },
+    {
+      "id": "R282-RAG-SUPERSEDED-TENDER-STILL-CITABLE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P0][LANE:AI] a bid can quote the REPLACED version of an ITT with a confident citation",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-SIMILARITY-FLOOR-DEFEATED-BY-ITS-OWN-FALLBACK-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:AI] the relevance floor is bypassed exactly when it fires",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-DELETING-A-CONTRACT-ORPHANS-ITS-CHUNKS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:DATA] deleted content stays embedded and retrievable forever",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-INGEST-CAP-IS-ROWS-WHERE-THE-SPEND-IS-CALLS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:AI] a 200 chunk upload takes days to become searchable, and a 500 page document loses two thirds of itself",
+      "note": ""
+    },
+    {
+      "id": "R282-RAG-EMBED-COST-CEILING-DEGRADES-OPEN-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:AI] the embedding spend guard fails OPEN on a ledger outage",
+      "note": ""
+    },
+    {
+      "id": "R282-MCP-WRITE-CEILING-REACHED-NOTHING-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:AI] the AI billing tool ran at three times its documented rate",
+      "note": "THE STARTING HYPOTHESIS WAS WRONG AND IT MATTERS: /api/v1/public/mcp/v2 is NOT unauthenticated. JWT exempt is not auth exempt. authorization is a required Header so a missing one is rejected at validation, then SHA-256 key lookup with constant time compare, expiry and revocation, a dual source tenancy assertion that 403s when api_keys.organisation_id disagrees with current org_users membership, and a CrowMark paid tier floor. No anonymous caller reaches a tool. Zero network, filesystem, subprocess or eval primitives anywhere in app/mcp/**, by AST scan with comments stripped."
+    },
+    {
+      "id": "R282-MCP-INPUT-SCHEMA-IS-ADVERTISING-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P2][LANE:API] exclude_expired=false returned the opposite of what the caller asked, with a 200",
+      "note": "A CORRECTION THE AGENT MADE ON ITSELF, worth keeping: its first red proof had one case stay GREEN, because limits folds the rate amount into the storage key so two buckets separate anyway and the constant it was testing is not load bearing. It replaced the mutation and rewrote the constant's comment to say plainly that no test distinguishes it. It also removed an existing assertion that could not fail, whose second branch was true of any decorated function."
+    },
+    {
+      "id": "R282-MCP-READONLY-CONNECTOR-HAS-NO-PER-KEY-LIMIT-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:API] the LIVE MCP connector is rate limited per IP, so tenants throttle each other",
+      "note": ""
+    },
+    {
+      "id": "R282-MCP-V2-HAS-NO-CONSUMER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P2][LANE:API] the write capable MCP surface is consumed by nothing",
+      "note": ""
+    },
+    {
+      "id": "R282-MCP-SMALLER-FINDINGS-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:API] four small MCP findings, none exploitable",
+      "note": "Information disclosure is NONE in production: _docs_enabled = not settings.is_production, so openapi.json, /docs and /redoc are all None there. On staging they are on."
+    },
+    {
+      "id": "R282-AI-SURFACES-MISSING-FROM-THE-CENTRAL-TABLES-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:AI] four AI surfaces could not be re pointed by the incident lever and inherited the wrong ceiling",
+      "note": "The ledger is honest and what it says is grim: 4,385 rows since 2026-05-24, GBP 0.5638 total spend, 3,142 rows carrying an error (71.7%), all from two already fixed classes (2,388 ANTHROPIC_API_KEY is not set, 572 a 404 on a fictional embedding model). Last 7 days: 2 calls, 0 errors. 13 surfaces in DEFAULT_MODELS have NEVER written a ledger row, so they are unused rather than unlogged."
+    },
+    {
+      "id": "R282-AI-TIMER-SURFACES-HAD-NO-COST-CEILING-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": "2026-09-08",
+      "status": "FIXED",
+      "title": "[SEV:P1][LANE:AI] two AI surfaces spend on a timer with no recorded cost decision",
+      "note": "Directly RULE 0-G: a timer spends money while nobody is looking."
+    },
+    {
+      "id": "R282-AI-COUNCIL-AWARD-LETTER-HAS-NO-OUTPUT-GATE-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:AI] the guardrail built for legal letters has zero callers, and the letter that needs it has none",
+      "note": "A guard that reaches nothing, sitting beside the surface it was written for."
+    },
+    {
+      "id": "R282-AI-TRUNCATED-HAS-NO-READER-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:AI] a bid answer that stops mid sentence is returned to the customer with no marker",
+      "note": ""
+    },
+    {
+      "id": "R282-AI-HAIKU-IS-UNLICENSED-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P2][LANE:AI] four Haiku surfaces run without the golden eval the platform rule requires",
+      "note": ""
+    },
+    {
+      "id": "R282-AI-DEAD-SURFACE-DETECTOR-COVERS-1-IN-17-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P2][LANE:AI] the dead surface detector can see one surface in seventeen",
+      "note": "Another control whose denominator is the finding."
+    },
+    {
+      "id": "R282-AI-COUNCIL-PREREAD-CLASSIFICATION-DISAGREES-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "DECISION",
+      "title": "[SEV:P2][LANE:AI] one surface is classified customer prose and runs Claude, and the codebase argues with itself about it",
+      "note": ""
+    },
+    {
+      "id": "R282-AI-PORTAL-IS-A-SECOND-AI-RUNTIME-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:AI] the portal runs its own Anthropic client on Vercel, outside the ledger",
+      "note": "Zero generation bypasses in api/ or web/, verified by SDK import grep plus an AST walk for AIClient(...) construction. gemini_rag.py:18 imports genai and makes zero provider calls, it owns the shared client object and the cross worker rate limiter, so it is not a bypass."
+    },
+    {
+      "id": "R282-AI-CHATBOT-APP-WRITES-A-NULL-ORG-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P3",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P3][LANE:AI] the per organisation spend ceiling missed half the rows on the surface it exists for",
+      "note": ""
+    },
+    {
+      "id": "R282-AI-REDUNDANT-MODEL-ARG-AT-FOUR-CALL-SITES-01",
+      "src": "R2.8.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "lane": "PRODUCT",
+      "changed": null,
+      "status": "OPEN",
+      "title": "[SEV:P1][LANE:AI] the incident lever still cannot re point four surfaces",
+      "note": "The table row landing is what makes this safe to remove, so it is a deliberate second step rather than an omission."
     }
   ]
 }
