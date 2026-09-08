@@ -89,6 +89,23 @@ export const HEROES: Record<string, Hero> = {
     alt: 'Two colleagues holding printed reports of bar charts side by side, one pointing at a row with a pencil',
   },
   /*
+   * ITS OWN PHOTOGRAPH, AND THAT IS THE RULE RATHER THAN A PREFERENCE. This
+   * entry briefly shared `reviewing-charts-together` with the post above,
+   * because on 2026-09-08 the pool held exactly ten masters for ten posts.
+   * The owner's instruction that every post carries a different picture is
+   * the same one commit `9c5827ef` already acted on once, when eight posts
+   * were sharing four photographs, so a reuse here was a regression and not
+   * a compromise. A new master was licensed instead. See A-276.
+   */
+  'ppn-026-what-has-published-and-what-has-not': {
+    file: 'pins-marking-dates-on-a-calendar',
+    alt: 'A calendar page marked with four red push pins and one date circled in red pen',
+  },
+  'life-after-award-kpis-contract-performance': {
+    file: 'clipboard-check-in-a-stockroom',
+    alt: 'A person in a dark jacket and lanyard holding a clipboard of ruled forms with a pen, standing beside stockroom shelving with a bright window behind',
+  },
+  /*
    * REPLACED 2026-08-04, and this one retires a deliberate decision rather than
    * a weak picture, so the decision is written down.
    *

@@ -118,6 +118,24 @@ const PHOTOS = [
        picture look washed out in the first place. */
     lift: 1.16,
   },
+  {
+    base: "clipboard-check-in-a-stockroom",
+    source: "clipboard-check-in-a-stockroom.jpg",
+    crop: "centre",
+    /* Added 2026-09-08 for the eleventh post. Shot into a bright window with the
+       subject in shadow against it, so it closes up on a dark page exactly the
+       way office-files-on-shelves did. Same correction, same reason, and it is
+       recorded in PHOTO-CREDITS.md rather than applied as a CSS filter. */
+    lift: 1.18,
+  },
+  {
+    base: "pins-marking-dates-on-a-calendar",
+    source: "pins-marking-dates-on-a-calendar.jpg",
+    crop: "centre",
+    /* No `lift`. It is already a bright, high key picture, and the correction
+       the other two carry exists for photographs that close up on a dark page.
+       Lifting this one would blow the paper out. */
+  },
   { base: "workshop-owner-at-a-laptop", source: "workshop-owner-at-a-laptop.jpg", crop: "centre" },
   { base: "hm-treasury-whitehall", source: "hm-treasury-whitehall.jpg", crop: "centre" },
   { base: "reviewing-charts-together", source: "reviewing-charts-together.jpg", crop: "centre" },
