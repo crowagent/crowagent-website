@@ -48,6 +48,12 @@ export interface BlogPostingInput {
   publishDate: Date;
   updatedDate?: Date;
   image?: string;
+  /** A named human author, where the post has one. See `author` below. */
+  author?: string;
+  /** That author's role, kept out of `name` so the Person is named accurately. */
+  authorRole?: string;
+  /** Person for a human byline, Organization for a standing team. */
+  authorType?: 'Person' | 'Organization';
 }
 
 /**
@@ -70,7 +76,24 @@ export function blogPosting(input: BlogPostingInput): Record<string, unknown> {
     datePublished: input.publishDate.toISOString().slice(0, 10),
     dateModified: (input.updatedDate ?? input.publishDate).toISOString().slice(0, 10),
     image: new URL(input.image ?? SITE.defaultOgImage, SITE.origin).href,
-    author: { '@id': `${SITE.origin}/#organization` },
+    /*
+     * A NAMED PERSON WHERE THE POST CARRIES ONE, AND THE ORGANISATION OTHERWISE.
+     * The visible byline and this node are rendered from the SAME frontmatter
+     * field, so a post cannot credit somebody on the page while telling a
+     * crawler the company wrote it. Ten of the eleven posts carry no `author`
+     * and keep the organisation, which is accurate rather than a fallback.
+     */
+    author: input.author
+      ? {
+          '@type': input.authorType ?? 'Person',
+          name: input.author,
+          /* `jobTitle` is a Person property. A team does not have one, and the
+             role field is left unset on those posts in any case. */
+          ...(input.authorRole && (input.authorType ?? 'Person') === 'Person'
+            ? { jobTitle: input.authorRole }
+            : {}),
+        }
+      : { '@id': `${SITE.origin}/#organization` },
     publisher: { '@id': `${SITE.origin}/#organization` },
   };
 }

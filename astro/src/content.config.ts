@@ -39,6 +39,30 @@ const blog = defineCollection({
     readingTime: z.number().optional(),
     draft: z.boolean().default(false),
     /*
+     * A NAMED HUMAN BYLINE, AND IT IS OPTIONAL BECAUSE MOST POSTS DO NOT HAVE
+     * ONE. Ten of the eleven posts are unattributed and stay that way: adding a
+     * name to them now would be a claim about who wrote them, not a formatting
+     * choice. Where this is set it drives BOTH the visible byline and the
+     * BlogPosting `author` node, from this one string, so the page and the
+     * structured data cannot come to disagree.
+     */
+    author: z.string().optional(),
+    /*
+     * THE ROLE IS A SEPARATE FIELD AND NOT PART OF THE NAME. Folding it into
+     * `author` would put "Founder, CrowAgent" inside the schema.org Person
+     * `name`, which is a claim that the person is called that. Kept apart, the
+     * byline reads as a byline and the structured data carries `jobTitle`.
+     */
+    authorRole: z.string().optional(),
+    /*
+     * A BYLINE IS NOT ALWAYS A PERSON. "CrowMark Regulatory Desk" is a standing
+     * team, and schema.org models that as an Organization. Emitting it as a
+     * Person would assert that a human being is named that, which is the same
+     * class of error as folding a job title into a name. Defaults to Person
+     * because that is what a byline usually is.
+     */
+    authorType: z.enum(['Person', 'Organization']).default('Person'),
+    /*
      * FAQs are MODELLED, not hand-written into the body. 5 of the 8 legacy
      * posts carry an FAQPage JSON-LD block, and a parity run found none of it
      * survived the port. Putting the pairs in frontmatter means the visible

@@ -53,6 +53,16 @@ interface Props {
   category: string;
   readingTime?: number;
   /*
+   * A named human byline, where the post carries one. Optional because ten of
+   * the eleven posts do not, and the meta row simply omits the segment rather
+   * than printing an empty separator.
+   */
+  author?: string;
+  /** The author's role, printed after their name and carried as `jobTitle`. */
+  authorRole?: string;
+  /** Person for a human byline, Organization for a standing team. */
+  authorType?: 'Person' | 'Organization';
+  /*
    * Question/answer pairs from the post's frontmatter. Optional because only
    * 5 of the 8 posts carry them; faqPage() returns an empty array for the
    * rest rather than an FAQPage with zero questions, which is a structured
@@ -77,6 +87,9 @@ const {
   updatedAt,
   category,
   readingTime,
+  author,
+  authorRole,
+  authorType,
   faq,
   seoTitle,
 } = Astro.props;
@@ -116,7 +129,17 @@ const trail = [
 ];
 
 const schema = [
-  blogPosting({ title, description, path, publishDate: publishedAt, updatedDate: updatedAt, image }),
+  blogPosting({
+    title,
+    description,
+    path,
+    publishDate: publishedAt,
+    updatedDate: updatedAt,
+    image,
+    author,
+    authorRole,
+    authorType,
+  }),
   breadcrumbs([
     ...trail,
     { name: title, path },
@@ -257,6 +280,12 @@ const canonicalUrl = routeUrl(path);
         <PageHeader title={title} eyebrow={category}>
           <p class="meta art__meta">
             <time datetime={publishedAt.toISOString()}>{dateFormatter.format(publishedAt)}</time>
+            {author && (
+              <>
+                <span aria-hidden="true">&middot;</span>
+                <span>By {author}{authorRole ? `, ${authorRole}` : ''}</span>
+              </>
+            )}
             {readingTime && (
               <>
                 <span aria-hidden="true">&middot;</span>
