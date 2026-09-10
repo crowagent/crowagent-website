@@ -187,6 +187,46 @@ const args = process.argv.slice(2);
 const urlArg = args.find((a) => a.startsWith('--url='));
 const distArg = args.find((a) => !a.startsWith('--'));
 
+/*
+ * [R28-WEB-4A] The catch-all's Cache-Control, read out of the same bytes.
+ *
+ * WHY THIS LIVES IN A CSP GATE. It is not a caching assertion. Cloudflare does
+ * not inject its JavaScript Detections bootstrap when the origin response
+ * carries `no-transform`, and that bootstrap is an INLINE script whose
+ * `__CF$cv$params` carries the request's own cf-ray, so its sha256 differs on
+ * every response and no hash allowlist can ever cover it. `no-transform` is
+ * therefore the only thing standing between the policy and a permanent
+ * enforce-mode violation on every HTML page. It is a CSP requirement wearing a
+ * caching header's clothes, and it belongs with the other requirements that
+ * live outside the artefact because nothing in `dist` can imply them.
+ *
+ * WHAT IT DEFENDS AGAINST, MEASURED. The owner approved it on 2026-09-02 and
+ * 175a877e shipped it. 83a74c53 on 2026-09-07, a commit about deleting the
+ * legacy estate, cut 78 lines out of that block and took the line with them.
+ * Nothing failed. Live crowagent.ai served the Cloudflare Pages default with no
+ * `no-transform` in it and `__CF$cv$params` on 3 of 3 pages fetched, for three
+ * days, while every gate stayed green. A header this file does not assert is a
+ * header any unrelated cleanup can delete.
+ *
+ * IT ASSERTS A PROPERTY, NOT A LITERAL. The directive must be present in the
+ * catch-all's Cache-Control whatever the rest of that value says, so tuning the
+ * TTL does not trip it and does not tempt anyone to soften it.
+ */
+function catchAllCacheControl(text) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.trimEnd() === '/*');
+  if (start === -1) return null;
+  const values = [];
+  for (let i = start + 1; i < lines.length; i += 1) {
+    /* A rule ends at the next line in column 0 that is not a comment. Blank
+       lines and `#` banners sit inside a block and must not end it. */
+    if (/^\S/.test(lines[i]) && !lines[i].startsWith('#')) break;
+    const m = lines[i].match(/^\s*Cache-Control:\s*(.+)$/i);
+    if (m) values.push(m[1].trim());
+  }
+  return values;
+}
+
 /** Reads the policy, and refuses to proceed on anything it cannot vouch for. */
 async function readPolicy() {
   if (urlArg) {
@@ -197,7 +237,14 @@ async function readPolicy() {
       console.error(`csp-required: ${url} returned HTTP ${res.status} with NO Content-Security-Policy header.`);
       process.exit(1);
     }
-    return { policy: header, source: `${url} (live response header)` };
+    /* Live mode reads the response header, which is the merged result rather
+       than the rule. That is the stronger reading of the two: it is what the
+       browser actually received. */
+    return {
+      policy: header,
+      source: `${url} (live response header)`,
+      cacheControl: [res.headers.get('cache-control')].filter(Boolean),
+    };
   }
 
   const dist = distArg || process.env.CSP_DIST || path.join(__dirname, '..', 'dist');
@@ -206,15 +253,22 @@ async function readPolicy() {
     console.error(`csp-required: no _headers in ${dist} — run copy-cf-config.js first.`);
     process.exit(1);
   }
-  const match = fs.readFileSync(headersFile, 'utf8').match(/^\s*Content-Security-Policy:\s*(.+)$/m);
+  const text = fs.readFileSync(headersFile, 'utf8');
+  const match = text.match(/^\s*Content-Security-Policy:\s*(.+)$/m);
   if (!match) {
     console.error(`csp-required: ${headersFile} contains no Content-Security-Policy line.`);
     process.exit(1);
   }
-  return { policy: match[1].trim(), source: path.relative(process.cwd(), headersFile) };
+  const cacheControl = catchAllCacheControl(text);
+  if (cacheControl === null) {
+    console.error(`csp-required: ${headersFile} has no \`/*\` catch-all rule at all.`);
+    console.error('  This is a parse failure, not a policy failure. Refusing to report on it.');
+    process.exit(1);
+  }
+  return { policy: match[1].trim(), source: path.relative(process.cwd(), headersFile), cacheControl };
 }
 
-const { policy, source } = await readPolicy();
+const { policy, source, cacheControl } = await readPolicy();
 
 /** directive -> source list, from the policy string and nothing else. */
 const declared = {};
@@ -238,6 +292,20 @@ if (Object.keys(declared).length < 5 || !declared['script-src'] || !declared['de
 if (REQUIRED.length === 0) {
   console.error('csp-required: the REQUIRED list is empty, so this gate asserts nothing. That is a defect in the gate.');
   process.exit(1);
+}
+
+/* [R28-WEB-4A] See catchAllCacheControl above for why a caching directive is a
+   CSP requirement here. Two ways this can be wrong, and both are checked: the
+   directive missing, and MORE THAN ONE Cache-Control on the catch-all, because
+   Cloudflare Pages concatenates a header rather than overriding it and which
+   value an edge then honours is undefined. */
+const transform = [];
+if (cacheControl.length === 0) {
+  transform.push('the /* catch-all sets no Cache-Control at all, so Cloudflare Pages serves its own default and that default has no no-transform in it');
+} else if (cacheControl.length > 1) {
+  transform.push(`the /* catch-all sets ${cacheControl.length} Cache-Control lines (${cacheControl.join(' | ')}); Pages concatenates them and which one an edge honours is undefined`);
+} else if (!/(^|[\s,])no-transform($|[\s,])/i.test(cacheControl[0])) {
+  transform.push(`the /* catch-all Cache-Control is "${cacheControl[0]}" and carries no no-transform`);
 }
 
 /** Resolves the directive the browser would actually consult. */
@@ -309,6 +377,18 @@ if (weakened.length) {
   console.error('  than extends it. If an origin is genuinely needed, name it.\n');
 }
 
+if (transform.length) {
+  console.error('\ncsp-required: the JavaScript Detections guard is OFF\n');
+  transform.forEach((t) => console.error(`  ${t}`));
+  console.error('\n  Cloudflare injects its JS Detections bootstrap into the HTML at the edge unless');
+  console.error('  the origin response carries `no-transform`. That script is INLINE and its');
+  console.error('  __CF$cv$params carries the request\'s own cf-ray, so its sha256 differs on every');
+  console.error('  response and NO hash allowlist can ever cover it. Without no-transform this');
+  console.error('  policy is in permanent enforce-mode violation on every HTML page.');
+  console.error('\n  Fix it by appending no-transform to the /* rule\'s existing Cache-Control value,');
+  console.error('  never by adding a second Cache-Control line and never by weakening script-src.\n');
+}
+
 if (failures.length) {
   console.error(`\ncsp-required: ${failures.length} required origin(s) NOT permitted by the policy this build ships\n`);
   for (const f of failures) {
@@ -320,9 +400,21 @@ if (failures.length) {
   console.error('  render an error, does not return a non-2xx, and does not appear in any');
   console.error('  build output. The only symptom is a capability that quietly stops working,');
   console.error('  which is how CROWAGENT-WEB-N ran for 74 days.\n');
-  process.exit(1);
 }
 
-if (weakened.length) process.exit(1);
-
-console.log(`\n  all ${REQUIRED.length} required origins are named by the policy this build ships, and no directive was weakened to get there`);
+/*
+ * `process.exitCode` rather than `process.exit()`, and the difference is not
+ * cosmetic. MEASURED on Windows: in `--url` mode the undici socket from the
+ * live fetch is still open when the process is torn down, and `process.exit(1)`
+ * trips `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` in libuv, which
+ * replaces the intended exit 1 with 127. A gate that reports a crash code
+ * instead of a failure code still blocks, but it tells the reader the gate
+ * broke rather than the policy did. Setting the code and letting the event loop
+ * drain reports 1 in both modes.
+ */
+if (failures.length || weakened.length || transform.length) {
+  process.exitCode = 1;
+} else {
+  console.log(`\n  all ${REQUIRED.length} required origins are named by the policy this build ships, and no directive was weakened to get there`);
+  console.log(`  the /* catch-all carries no-transform, so Cloudflare injects no unhashable inline script into the HTML`);
+}

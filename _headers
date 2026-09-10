@@ -323,7 +323,55 @@
   # switched off, which is why turning BFM off measured no change at all.
   #
   # SCOPE: this rides on the /* catch-all, so it reaches HTML at clean URLs.
-  # /js/*, /styles.min.css, # --- [A-258, 2026-09-07] THREE RULES WERE DELETED HERE, AND THE FILES THEY
+  # Every rule below that sets Cache-Control on a path that actually ships
+  # UNSETS it first, so no asset inherits this value. MEASURED on live at
+  # 2026-09-09 23:41 UTC rather than assumed: /Assets/og-image.png returns
+  # exactly one Cache-Control, public, max-age=31536000, immutable, and so does
+  # /_assets/index.CcJb2CIe.css from the block copy-cf-config.js appends. The
+  # rules that do NOT unset, /changelog.xml and the six noindex internal paths,
+  # all return 404 on live, so they match no served request and can concatenate
+  # with nothing.
+  #
+  # [R28-WEB-4A] THE LINE BELOW WAS DELETED BY ACCIDENT AND IS RESTORED HERE.
+  # 175a877e shipped it on 2026-09-02 as the owner's decision. 83a74c53 on
+  # 2026-09-07, "A-261 remove the legacy estate completely, 833 files and 92,000
+  # lines", cut 78 lines out of this block while meaning to remove only /js/*,
+  # /styles.min.css and /scripts.min.js. It took the catch-all's Cache-Control,
+  # its CDN-Cache-Control, its Surrogate-Control and the whole /*.html rule with
+  # them. The cut began in the MIDDLE of the comment line above, which is why
+  # that line read "# /js/*, /styles.min.css," followed by the next comment's
+  # banner until this repair. That splice is the only visible trace it left.
+  #
+  # HOW THE REVERT WAS FOUND, and it was not from this file. Live crowagent.ai
+  # served Cache-Control: public, max-age=0, must-revalidate, which is the
+  # Cloudflare Pages default that appears when no rule sets one, with no
+  # no-transform in it, and __CF$cv$params was present on 3 of 3 pages fetched.
+  # Sentry CROWAGENT-WEB-4A carries the matching report, csp_blocked inline,
+  # script-src-elem, disposition enforce, on a real visitor at 2026-09-09
+  # 14:41 UTC, and Sentry has the issue as REGRESSED rather than new.
+  #
+  # NOT ESTABLISHED, and it needs the Cloudflare Pages deploy history rather
+  # than this repository: whether the line ever reached production at all. It
+  # was committed 2026-09-02 and deleted 2026-09-07, and the site was carrying
+  # an undeployed backlog across that window, so it may have gone to production
+  # as a no-op inside a single deploy that both added and removed it. That
+  # question changes the history, not the fix.
+  #
+  # THE VALUE IS NOT THE ONE 175a877e SHIPPED, AND THAT IS DELIBERATE. That was
+  # max-age=0, s-maxage=300, stale-while-revalidate=60, and it needed
+  # CDN-Cache-Control: no-store stacked on top to close the 2026-08-01 incident
+  # where a new homepage sat invisible for 87 minutes. The Pages default that
+  # replaced it is STRICTER, so that incident did not reopen: cf-cache-status
+  # read REVALIDATED on /, /pricing/ and /crowmark/. Keeping the default and
+  # appending only no-transform changes exactly one thing.
+  #
+  # STILL NOT MEASURED, and it can only be checked after a deploy: whether
+  # no-transform costs the Brotli encoding on the HTML document. Baseline taken
+  # with no-transform absent, content-encoding: br. Re-fetch / after this ships
+  # and assert br survives.
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+# --- [A-258, 2026-09-07] THREE RULES WERE DELETED HERE, AND THE FILES THEY
 # COVERED ARE GONE TOO.
 #
 # `/js/*`, `/styles.min.css` and `/scripts.min.js` cached the legacy root tree.
@@ -358,7 +406,13 @@
   ! Surrogate-Control
   Cache-Control: public, max-age=31536000, immutable
   Surrogate-Control: max-age=31536000
-  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
+  # Re-asserted because the catch-all USED to set `CDN-Cache-Control: no-store`.
+  # CORRECTED [R28-WEB-4A]: it no longer does. 83a74c53 deleted that line from
+  # the catch-all on 2026-09-07 along with the rest of the block, and it was not
+  # restored with the Cache-Control above, because the Pages default that HTML
+  # now inherits already yields cf-cache-status REVALIDATED. The
+  # unset and the re-assert here stay regardless: they are what makes this rule
+  # independent of whatever the catch-all carries, which is the whole point.
   # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
   CDN-Cache-Control: public, max-age=31536000, immutable
 
