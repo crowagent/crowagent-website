@@ -1019,10 +1019,22 @@ function render(){
      which polls any board that has no `views`. */
   const upEl = document.getElementById('updated');
   const raw = DATA.updated;
+  /* [R282-BOARD-FRESHNESS-DATE-01 2026-09-12, owner request "i need time stamp
+     with date on this"] `toLocaleString()` DOES carry the date, and it was still
+     not answering the question. In en-GB it renders "12/09/2026, 17:13:02", a
+     run of digits where the date and the clock look alike, on a line a reader
+     is scanning for one fact. The date is now spelled with a named month and a
+     weekday, so "Sat 12 Sep 2026" cannot be misread as a time and cannot be
+     confused with a US ordering either. */
   let when = raw;
   try {
     const d = new Date(raw);
-    if (!isNaN(d.getTime())) when = d.toLocaleString();
+    if (!isNaN(d.getTime())) {
+      when = d.toLocaleString(undefined, {
+        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+    }
   } catch (e) { /* fall back to the raw string: a bad date must not blank the line */ }
   /* [R282-BOARD-FRESHNESS-AGE-01 2026-09-12, owner request] THE ABSOLUTE TIME
      WAS NOT ANSWERING THE QUESTION BEING ASKED.
@@ -1050,7 +1062,7 @@ function render(){
   const stale = mins >= 10;
   upEl.innerHTML =
     '<b style="color:' + (stale ? 'var(--warn,#c47f16)' : 'var(--ok,#2f9e6b)') + '">' +
-    'Data written ' + age + '</b> &middot; ' + when + ' your local time' +
+    'Data written ' + age + '</b> &middot; ' + when + ' (your local time)' +
     (stale ? ' &middot; the generator has not run since, so newer commits are NOT on this board' : '') +
     '. This page re-reads ' + BOARDS[board].file + ' every 20 seconds.';
   upEl.title = 'Source timestamp, UTC: ' + raw;
