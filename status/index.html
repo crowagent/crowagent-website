@@ -114,7 +114,10 @@
   .legend{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);color:var(--sub);font-size:14px}
   .legend b{color:var(--text)}
   .legend li{margin:5px 0}
-  .updated{color:var(--sub);font-size:13px;margin-top:10px}
+  /* [R282-BOARD-FRESHNESS-AGE-01] Was 13px in the muted subtext colour at the
+     bottom of the legend, which is why a present and correct freshness line
+     still had the owner asking whether the board was updated. */
+  .updated{color:var(--text);font-size:14px;margin-top:10px}
   /* [R262-D-76] Deliberately sits directly under the stat tiles and is styled
      brighter than .updated: the tiles show position, this shows movement, and
      movement is the thing a flat OPEN count was hiding. */
@@ -1021,9 +1024,35 @@ function render(){
     const d = new Date(raw);
     if (!isNaN(d.getTime())) when = d.toLocaleString();
   } catch (e) { /* fall back to the raw string: a bad date must not blank the line */ }
-  upEl.textContent =
-    'Data last written ' + when + ' (your local time). This page re-reads ' +
-    BOARDS[board].file + ' every 20 seconds.';
+  /* [R282-BOARD-FRESHNESS-AGE-01 2026-09-12, owner request] THE ABSOLUTE TIME
+     WAS NOT ANSWERING THE QUESTION BEING ASKED.
+
+     The owner asked "is this updated?" four times in one day while this line
+     was present, correct and rendering. A wall clock time makes a reader do the
+     arithmetic themselves, against a board that only regenerates when the
+     generator is run, so the honest answer is an AGE and not an instant.
+
+     The age is recomputed on every poll, so it counts up on screen while the
+     board sits still. Over ten minutes it turns amber and says so in words,
+     because a freshness indicator that looks identical at one minute and at one
+     hour is the thing that made the question necessary. */
+  const ageMs = Date.now() - new Date(raw).getTime();
+  const mins = Math.floor(ageMs / 60000);
+  let age;
+  if (!isFinite(ageMs) || ageMs < 0) age = 'just now';
+  else if (mins < 1) age = 'seconds ago';
+  else if (mins === 1) age = '1 minute ago';
+  else if (mins < 60) age = mins + ' minutes ago';
+  else {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    age = h + (h === 1 ? ' hour ' : ' hours ') + m + ' min ago';
+  }
+  const stale = mins >= 10;
+  upEl.innerHTML =
+    '<b style="color:' + (stale ? 'var(--warn,#c47f16)' : 'var(--ok,#2f9e6b)') + '">' +
+    'Data written ' + age + '</b> &middot; ' + when + ' your local time' +
+    (stale ? ' &middot; the generator has not run since, so newer commits are NOT on this board' : '') +
+    '. This page re-reads ' + BOARDS[board].file + ' every 20 seconds.';
   upEl.title = 'Source timestamp, UTC: ' + raw;
 }
 
