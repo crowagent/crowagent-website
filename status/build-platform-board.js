@@ -504,8 +504,57 @@ if (fs.existsSync(TRACKER)) {
    is recognised structurally rather than by guessing at its wording. */
 const isSeparatorRow = (l) => /^\|[\s:|-]+\|\s*$/.test(String(l || '')) && /-/.test(String(l || ''));
 
+/* [R282-BOARD-ITEM-TIME-01 2026-09-12, owner: "i still cant see timestamp ... i
+   can only see the date but not the time"] THE HEADER HAD A CLOCK AND NO ITEM DID.
+   Every item's `changed` is the date typed into its status cell, and a tracker
+   cell records a DAY, so nine rows closed across one evening all read
+   "2026-09-12" with nothing to order them by.
+
+   The time is taken from git, not typed: `git blame --line-porcelain` gives the
+   committer time of the last commit that touched each tracker line, which is a
+   measurement nobody can forget to update. A line edited but not yet committed
+   blames to the all zero sha, and for those the tracker file's own mtime is used
+   and the item is marked `changedAtSource: 'uncommitted edit'`, so a reader can
+   tell a recorded change from one still sitting in the working tree.
+
+   Failure is stated, never silent: if git cannot run, every item keeps its date
+   and `unreadable` carries the reason. */
+function blameLineTimes(file) {
+  const times = [];
+  try {
+    const out = require('child_process').execFileSync(
+      'git', ['blame', '--line-porcelain', '--', path.basename(file)],
+      { cwd: path.dirname(file), encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 },
+    );
+    const mtime = fs.statSync(file).mtime.toISOString();
+    let sha = null;
+    let line = 0;
+    for (const l of out.split('\n')) {
+      const head = /^([0-9a-f]{40}) \d+ (\d+)/.exec(l);
+      if (head) { sha = head[1]; line = Number(head[2]); continue; }
+      const ct = /^committer-time (\d+)$/.exec(l);
+      if (ct && line) {
+        const uncommitted = /^0+$/.test(sha);
+        times[line - 1] = uncommitted
+          ? { at: mtime, source: 'uncommitted edit' }
+          : { at: new Date(Number(ct[1]) * 1000).toISOString(), source: 'commit ' + sha.slice(0, 8) };
+      }
+    }
+    return { times, error: null };
+  } catch (err) {
+    return { times, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 if (fs.existsSync(TRACKER)) {
   const lines = fs.readFileSync(TRACKER, 'utf8').split('\n');
+  const blame = blameLineTimes(TRACKER);
+  if (blame.error) {
+    unreadable.push({
+      src: RELEASE.file,
+      why: 'Item times are unavailable, only dates are shown, because git blame failed: ' + blame.error.slice(0, 300),
+    });
+  }
   let section = '';
   /* §1b above OWNS the "Owner actions" table and deliberately files every row
      as DECISION — those are items outstanding on the owner, not engineering
@@ -712,6 +761,9 @@ if (fs.existsSync(TRACKER)) {
       sevExplicit,
       lane,
       changed: statusDate ? statusDate[1] : null,
+      /* [R282-BOARD-ITEM-TIME-01] When this row was last changed, date AND time. */
+      changedAt: blame.times[li] ? blame.times[li].at : null,
+      changedAtSource: blame.times[li] ? blame.times[li].source : null,
       status: norm,
       title: task,
       note: plain(cells.slice(3).join(' — ')).slice(0, 2000),

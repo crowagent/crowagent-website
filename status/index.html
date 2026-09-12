@@ -117,7 +117,10 @@
   /* [R282-BOARD-FRESHNESS-AGE-01] Was 13px in the muted subtext colour at the
      bottom of the legend, which is why a present and correct freshness line
      still had the owner asking whether the board was updated. */
-  .updated{color:var(--text);font-size:14px;margin-top:10px}
+  /* [R282-BOARD-UPDATED-AT-TOP-01] Now the first line under the navigation, so it
+     is sized and framed as the first thing read, not as a footnote. */
+  .updated{color:var(--text);font-size:15px;margin:14px 0 12px;padding:10px 14px;
+    border:1px solid var(--line);border-radius:10px}
   /* [R262-D-76] Deliberately sits directly under the stat tiles and is styled
      brighter than .updated: the tiles show position, this shows movement, and
      movement is the thing a flat OPEN count was hiding. */
@@ -575,6 +578,15 @@
     <div class="subnav" id="docswitch" hidden></div>
   </nav>
 
+  <!-- [R282-BOARD-UPDATED-AT-TOP-01 2026-09-12, owner: "i also want time and date
+       when board updated the last"] THE LINE EXISTED AND NOBODY COULD SEE IT. It
+       rendered the date, the clock and the age correctly, and it sat at the very
+       BOTTOM of the page inside the legend, below the deploy panel and every item,
+       measured in a 1400x1000 Chromium render as absent from the first screen. The
+       first screen instead said "92 items changed today (2026-09-12)", a date
+       with no time, which is the only freshness a reader actually met. It now sits
+       directly under the navigation, above the tiles. -->
+  <p class="updated" id="updated"></p>
   <div class="warn" id="warn" hidden></div>
   <!-- Things the GENERATOR could not read, plus the write-back queue: board
        items corrected against the artefact that the release documents do not
@@ -626,7 +638,6 @@
     <ul id="legend"></ul>
     <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
     <p id="directives"></p>
-    <p class="updated" id="updated"></p>
   </div>
 </div>
 
@@ -926,9 +937,31 @@ function render(){
   const product = shown.filter(i => !isCi(i));
   const ci = shown.filter(isCi);
 
+  /* [R282-BOARD-ITEM-TIME-01 2026-09-12, owner: "i can only see the date but not
+     the time"] Each item now shows when it last changed, date and time in the
+     reader's local zone, taken from git by the generator. An item whose row is
+     edited but not yet committed says so, because that time is the file's and
+     not a recorded change. An item with no time keeps its date, labelled as a
+     date, rather than pretending to a precision it does not have. */
+  const changedLabel = (i) => {
+    if (i.changedAt) {
+      const d = new Date(i.changedAt);
+      if (!isNaN(d.getTime())) {
+        const txt = d.toLocaleString(undefined, {
+          weekday: 'short', day: '2-digit', month: 'short',
+          hour: '2-digit', minute: '2-digit',
+        });
+        const pending = i.changedAtSource === 'uncommitted edit';
+        return '<div class="note" title="' + esc('UTC ' + i.changedAt + ', ' + (i.changedAtSource || '')) + '">' +
+          'Last changed ' + esc(txt) + (pending ? ' (edit not yet committed)' : '') + '</div>';
+      }
+    }
+    return i.changed ? '<div class="note">Last changed ' + esc(i.changed) + ' (date only)</div>' : '';
+  };
+
   const rowHtml = (i) => `
     <tr>
-      <td class="id">${esc(i.id)}</td>
+      <td class="id">${esc(i.id)}${changedLabel(i)}</td>
       <td><span class="sev" style="color:var(${SEVC[i.sev]})">${i.sev}</span></td>
       <td><span class="pill" style="background:var(${COLOUR[i.status]||'--unknown'});color:var(--bg)">${esc(i.status)}</span></td>
       <td><strong>${esc(i.title)}</strong><div class="note">${esc(i.note||'')}</div></td>
@@ -991,9 +1024,19 @@ function render(){
   if (movementEl) {
     if (movedToday.length) {
       const byStatus = movedToday.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {});
+      /* [R282-BOARD-ITEM-TIME-01] The latest change's clock time, from the same
+         git derived `changedAt` each row shows, so "changed today" says when. */
+      const latest = movedToday.map(i => i.changedAt).filter(Boolean).sort().pop();
+      let latestTxt = '';
+      if (latest) {
+        const d = new Date(latest);
+        if (!isNaN(d.getTime())) {
+          latestTxt = ', latest at ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        }
+      }
       movementEl.innerHTML =
         '<b>' + movedToday.length + ' item' + (movedToday.length === 1 ? '' : 's') +
-        ' changed today (' + esc(today) + ')</b>: ' +
+        ' changed today (' + esc(today) + esc(latestTxt) + ')</b>: ' +
         Object.entries(byStatus).map(([k, v]) => esc(k) + ' ' + v).join(', ');
     } else {
       movementEl.textContent = 'No items changed state today (' + today + ').';
@@ -1061,7 +1104,10 @@ function render(){
   }
   const stale = mins >= 10;
   upEl.innerHTML =
-    '<b style="color:' + (stale ? 'var(--warn,#c47f16)' : 'var(--ok,#2f9e6b)') + '">' +
+    /* [R282-BOARD-UPDATED-AT-TOP-01] Declared tokens only. This read
+       `var(--warn,#c47f16)` and `var(--ok,#2f9e6b)`, two tokens nothing declares
+       with raw literals as fallbacks, which check-board-contract.js reported red. */
+    '<b style="color:' + (stale ? 'var(--wip)' : 'var(--fixed)') + '">' +
     'Data written ' + age + '</b> &middot; ' + when + ' (your local time)' +
     (stale ? ' &middot; the generator has not run since, so newer commits are NOT on this board' : '') +
     '. This page re-reads ' + BOARDS[board].file + ' every 20 seconds.';
@@ -1376,7 +1422,7 @@ async function load(){
        poll. Issue-board chrome under a prose page, on all four views. Verified in
        the browser, where legendbox.hidden read false on the CI view. */
     for (const id of ['filters','deploy','summary','movement','srcnote','legend',
-                      'stats','legendbox','warn','unreadable']) {
+                      'stats','legendbox','warn','unreadable','updated']) {
       const el = document.getElementById(id); if (el) el.hidden = true;
     }
     document.getElementById('issuetable').hidden = true;
@@ -1396,7 +1442,7 @@ async function load(){
      unhiding it here would show an empty panel for a frame before render() hid it
      again. */
   for (const id of ['filters','summary','movement','srcnote','legend',
-                    'stats','legendbox']) {
+                    'stats','legendbox','updated']) {
     const el = document.getElementById(id); if (el) el.hidden = false;
   }
   /* `warn` and `unreadable` are NOT restored here. render() owns them and decides
