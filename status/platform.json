@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-16T22:50:23.254Z",
+  "updated": "2026-09-16T23:57:11.113Z",
   "release": "2.8.2",
   "note": "DERIVED, not authored. Generated from RELEASE-2.8.2-TRACKER.md and RELEASE-2.8.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement, and this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
@@ -7129,9 +7129,9 @@
       "sev": "P1",
       "sevExplicit": true,
       "lane": "PRODUCT",
-      "changed": "2026-09-14",
-      "changedAt": "2026-09-13T21:55:33.000Z",
-      "changedAtSource": "commit 9b145699",
+      "changed": "2026-09-16",
+      "changedAt": "2026-09-16T23:56:27.810Z",
+      "changedAtSource": "uncommitted edit",
       "status": "WIP",
       "title": "[SEV:P1][LANE:CFA] owner decision D60: once Vercel Authentication is off, every raw *.vercel.app URL of the staging web app and of the portal answers the public internet, so the apps must refuse any request that did not pass Cloudflare Access",
       "note": "CODE BUILT AND GUARDED, CUTOVER NOT EXECUTED (it needs Cloudflare, Vercel settings and deploys, all the owner's). ROOT CAUSE: Cloudflare Access only guards traffic that reaches Cloudflare. A raw deployment URL never does, and neither app checked for an Access token, so Vercel Authentication was the only thing between a stranger and a staging or portal deployment. BUILT: shared verifier packages/server-infra/src/cloudflare-access.ts (Web Crypto, no new dependency, jose is in neither package.json), RS256 signature BEFORE any claim is read, iss, aud, exp, nbf, JWKS cached one hour and refetched on an unknown kid at most every 30 s so a random kid cannot turn every request into a fetch, never throws. Web gate web/src/shared/lib/proxy/cloudflare-access-gate.ts wired in web/proxy.ts directly after the robots.txt block and BEFORE the CSRF gate and the /api hot path short circuit, because that short circuit returns with no auth and a gate after it would protect no API route. Web scope keyed on the DEPLOYMENT: app.crowagent.ai and any production deployment never checked, every host of a non production deployment checked, only /api/health segment exempt. A spoofed Host: app.crowagent.ai cannot reach staging code because Vercel routes by host. Portal gate apps/portal/src/lib/security/cloudflare-access-gate.ts wired in apps/portal/src/middleware.ts after the trust header strip and BEFORE PUBLIC_PATHS, every host, exempt only health and the seven Vercel cron paths WITH Bearer CRON_SECRET (Vercel Cron calls the production deployment URL, D30). Portal config.matcher widened with '/' and '/login/:path*', which rendered on a raw URL with no middleware at all, and / passes straight through after the gate so the landing is unchanged. MISSING CONFIG FAILS CLOSED on a deployed runtime (VERCEL=1, any VERCEL_ENV, or a non local APP_ENVIRONMENT) with one structured error log. Engineering call recorded: web and portal read no APP_ENVIRONMENT today, so the Vercel system variables are the pri"
