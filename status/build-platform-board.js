@@ -984,6 +984,23 @@ const VERDICT_VOCAB = [
   [/\bBLOCKED\b/, 'DECISION'], [/\bDEFERRED\b/, 'DECISION'],
   [/\bN\/A\b/, 'CLEARED'], [/\bSUPERSEDED\b/, 'CLEARED'], [/\bWILL[- ]NOT[- ]DO\b/, 'CLEARED'],
   [/\bWONTFIX\b/, 'CLEARED'], [/\bWITHDRAWN\b/, 'CLEARED'],
+  /* [R282-BOARD-STANDING-TERM-01 2026-09-19] STANDING IS DELIBERATELY ABSENT HERE,
+   * and this comment exists so the next reader knows it was decided rather than
+   * forgotten.
+   *
+   * This list is not the classifier. bucketOf() above is, it reads the FIRST TOKEN
+   * of a status cell, and it already files STANDING correctly from the shared
+   * vocabulary. This list is the last-mention-wins pass over defect-register
+   * HEADINGS, a heuristic that matches a bare English word anywhere in a heading.
+   *
+   * Every term above is a word that cannot occur by accident in this corpus.
+   * STANDING is not: "the finding STANDS", "a standing rule", "STANDING RULE" in an
+   * all-caps heading. Measured before deciding, the R2.8.2 corpus carries that word
+   * family in ordinary prose, and there is no RELEASE-2.8.2-DEFECT-REGISTER.md for
+   * this pass to read in the first place. So adding it would buy nothing and would
+   * let prose flip a live row into a state that reads as settled.
+   *
+   * To mark a row STANDING, write STANDING as the first token of its status cell. */
 ];
 
 /** Verdict tokens in a line, in position order — emoji-marked, bolded, or final. */
@@ -1468,6 +1485,12 @@ const board = {
     WIP: 'Diagnosed, in progress.',
     CLEARED: 'Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A.',
     'ON HOLD': 'Parked, and NOT actionable by us. Blocked on something the owner has declined or cannot do yet, such as a paid plan tier or an external dependency. Tracker verdict HELD, ON HOLD or PARKED. Distinct from DECISION, which is waiting on an owner ANSWER we have asked for.',
+    /* [R282-BOARD-STANDING-TERM-01 2026-09-19, owner decision] A directive is not
+       a work item and it is not a closed one either. Counted in neither the done
+       figure nor the outstanding queue, the same treatment ON HOLD gets. See the
+       $notes entry for STANDING in scripts/status-vocabulary.json for why NOT WORK
+       and its CLEARED bucket were refused for this. */
+    STANDING: 'A rule, bar or definition that binds every session and has no completion condition. Never active work and never done. Tracker verdict STANDING.',
   },
   /* The page renders these under the legend. They were absent, and index.html
      called .map() on them unconditionally, so the Platform tab threw and the
