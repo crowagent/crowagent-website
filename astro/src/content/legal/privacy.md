@@ -127,9 +127,9 @@ Supabase EU Railway EU Vercel Edge Cloudflare Edge Stripe US/EU PostHog EU Sentr
 
 **Integrations you connect:** You control which third-party services you link, and you can disconnect any of them at any time from your settings.
 
-- **Accounting ledger (legacy, existing customers only):** If you link Xero or QuickBooks Online, we access only the invoice, contact, and payment-status data you authorise, on a read-only basis, to power debtor analytics. We never write back to your ledger and never move money. A Sage connector is in development and not yet live.
+- **Accounting ledger:** The Xero and QuickBooks Online connectors have been withdrawn, and there is no Sage connector. We do not link to an accounting ledger, we do not read one, and we never move money. Where you upload a spreadsheet that you exported from an accounting package yourself, we read only the file you upload, and we send nothing back to the package it came from.
 - **Single sign-on:** You can sign in with a Microsoft (Entra ID) or Google account. We receive only the identity profile needed to authenticate you (name, email, and a stable account identifier). We do not read your mailbox, files, or directory through sign-in.
-- **Security posture (legacy, existing customers only):** Read-only Microsoft 365 and Google Workspace posture connectors are in development. Once available they will read only the security-configuration signals you authorise (such as MFA coverage, secure score, and device-compliance status) to pre-fill security-certification evidence. They request read-only scopes only and never change a setting in your tenant. Until then, you upload that evidence yourself.
+- **Notification and document delivery:** You can connect Slack, Microsoft Teams, or Google Drive. Slack and Microsoft Teams receive only the notification messages we post and the names of the channels you offer as a destination. Google Drive is requested on the drive.file scope, which reaches only the files this app creates in your Drive and never the files already there. The read-only Microsoft 365 and Google Workspace security posture connectors have been withdrawn. We do not read your security configuration, and you upload security-certification evidence yourself.
 
 ## International data transfers
 
