@@ -55,7 +55,41 @@ const REPO_ROOT = path.join(__dirname, '..', '..');
  * beside `robots.txt`, which is the other AI-discoverability file and is
  * already carried this way. One root source, one copy step, one place to look.
  */
-const FILES = ['_headers', '_redirects', 'robots.txt', 'llms.txt', 'llms-full.txt'];
+/*
+ * [2026-09-20] `.well-known/security.txt` ADDED, AND IT IS THE SAME DEFECT AS
+ * `llms.txt` ABOVE, ONE MIGRATION LATER.
+ *
+ * MEASURED, not inferred: `https://crowagent.ai/.well-known/security.txt`
+ * returned HTTP 404 on 2026-09-20. The file is tracked at the repo root, is in
+ * neither this list nor `astro/public/`, and has therefore never been in
+ * `astro/dist`. Same cause as llms.txt: it stopped being served on 2026-08-05
+ * when the Cloudflare Pages deploy source moved from the flat-file root to this
+ * build, and nothing edited it. It is a file in the tree that the deploy source
+ * never copied.
+ *
+ * IT NAMES THE URL IT FAILS TO REACH. The file's own body declares
+ * `Canonical: https://crowagent.ai/.well-known/security.txt`. RFC 9116 section
+ * 2.5.2 makes Canonical the location the file asserts it is published at, so a
+ * 404 there is the file contradicting itself, and a researcher following the
+ * documented route gets nothing. This is the RFC 9116 published path for
+ * reporting a vulnerability, so its absence is a security-process defect rather
+ * than a missing static asset.
+ *
+ * IT IS NESTED, AND THE FIVE ABOVE ARE FLAT, so the write below now creates the
+ * parent directory. Without that `fs.writeFileSync` throws ENOENT on a fresh
+ * `dist`, which would fail the deploy build rather than fail quietly, but only
+ * after this list had already been changed. `path.posix` is used to build the
+ * URL-shaped entry and `path.join` to resolve it on disk, so the single entry
+ * reads the same on Windows and on the Linux builder.
+ *
+ * IT BELONGS IN THIS LIST RATHER THAN IN `astro/public/` for the reason given
+ * for llms.txt: the root is the one source for deployment-contract files, and a
+ * second copy in `astro/public/` would be a second place for the Contact and
+ * Expires lines to drift out of step. Unlike the icons in `astro/public/`, which
+ * have no root original, this file already exists at the root and is the
+ * original.
+ */
+const FILES = ['_headers', '_redirects', 'robots.txt', 'llms.txt', 'llms-full.txt', '.well-known/security.txt'];
 
 /**
  * Immutable caching for Astro's content-hashed output. Appended rather than
@@ -93,7 +127,10 @@ if (missing.length) {
 for (const file of FILES) {
   const source = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
   const content = file === '_headers' ? source + ASTRO_HEADERS : source;
-  fs.writeFileSync(path.join(DIST, file), content, 'utf8');
+  const target = path.join(DIST, file);
+  /* Nested entries only. `recursive: true` is a no-op when dist already exists. */
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, content, 'utf8');
 }
 
 /*
@@ -228,6 +265,20 @@ const checks = [
   ['llms.txt', /^#\s+\S/m, 'its H1 title line'],
   ['llms.txt', /https:\/\/crowagent\.ai\//, 'at least one absolute crowagent.ai link'],
   ['llms-full.txt', /^#\s+\S/m, 'its H1 title line'],
+  // RFC 9116 makes exactly two fields mandatory: Contact (2.5.3) and Expires
+  // (2.5.5). A file missing either is not a security.txt, it is a text file at
+  // a well-known path, and it would 200 and satisfy any liveness check while
+  // telling a researcher nothing about where to send a report. Same failure
+  // mode the llms.txt checks above exist to refuse. Canonical is checked too
+  // because this file asserts its own URL and that assertion is what the 404
+  // fixed here contradicted.
+  ['.well-known/security.txt', /^Contact:\s*\S/m, 'its mandatory Contact field (RFC 9116 s2.5.3)'],
+  ['.well-known/security.txt', /^Expires:\s*\S/m, 'its mandatory Expires field (RFC 9116 s2.5.5)'],
+  [
+    '.well-known/security.txt',
+    /^Canonical:\s*https:\/\/crowagent\.ai\/\.well-known\/security\.txt\s*$/m,
+    'its Canonical line pointing at the URL it is served from',
+  ],
 ];
 
 const failures = [];
@@ -238,6 +289,38 @@ for (const [file, pattern, label] of checks) {
 
 if (failures.length) {
   failures.forEach((f) => console.error(`cf-config: ${f}`));
+  process.exit(1);
+}
+
+/*
+ * EXPIRES IS THE ONE FIELD THAT GOES STALE ON ITS OWN, so presence is not
+ * enough and a regex cannot tell a future date from a past one. RFC 9116 s2.5.5
+ * says a consumer MUST ignore the file once the date has passed, so an expired
+ * security.txt serves a 200 that every researcher's tooling is required to
+ * discard. That is indistinguishable from the 404 this block was written
+ * alongside, and it is why the date is asserted rather than assumed.
+ *
+ * THIS FAILS THE BUILD DELIBERATELY. The alternative, a warning, is how a date
+ * field reaches its expiry with nobody reading the log. THE DATE IS THE OWNER'S
+ * TO SET: this never rewrites it, it only refuses to ship a file that has
+ * already lapsed, and the message says which line to edit.
+ */
+const securityTxt = fs.readFileSync(path.join(DIST, '.well-known', 'security.txt'), 'utf8');
+const expiresLine = securityTxt.match(/^Expires:\s*(\S+)\s*$/m);
+const expiresAt = expiresLine ? new Date(expiresLine[1]) : null;
+
+if (!expiresAt || Number.isNaN(expiresAt.getTime())) {
+  console.error(
+    `cf-config: .well-known/security.txt has an Expires value that is not a valid RFC 3339 timestamp: ${
+      expiresLine ? expiresLine[1] : '(none)'
+    }`
+  );
+  process.exit(1);
+}
+if (expiresAt.getTime() <= Date.now()) {
+  console.error(
+    `cf-config: .well-known/security.txt EXPIRED at ${expiresAt.toISOString()}. RFC 9116 s2.5.5 requires consumers to ignore it, so publishing it reports nothing. Set a new Expires date at the repo root and rebuild.`
+  );
   process.exit(1);
 }
 
