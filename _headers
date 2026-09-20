@@ -86,7 +86,13 @@
 #      said the marketing site "ships /manifest.json for the PWA shim". It does
 #      not. https://crowagent.ai/manifest.json returns 404, because
 #      astro/scripts/copy-cf-config.js publishes only _headers, _redirects,
-#      robots.txt, llms.txt and llms-full.txt. The directive itself is kept: it
+#      robots.txt, llms.txt, llms-full.txt and, since 2026-09-20,
+#      .well-known/security.txt. THE TWO 404s ARE NOT THE SAME DEFECT, and the
+#      difference is worth keeping straight: security.txt EXISTED at the repo
+#      root and was simply never copied, which is the llms.txt failure repeated
+#      and is board row A-286. No manifest.json exists anywhere in this
+#      repository, so nothing was dropped and there is nothing to copy. The
+#      directive itself is kept: it
 #      is correct policy for a manifest the site may one day ship, and removing
 #      a CSP directive is a live-header change with no benefit. Without an explicit
 #      `manifest-src` directive Chrome falls back to default-src which
@@ -302,8 +308,15 @@
   # every clean-URL page was edge+browser cached for 4 HOURS and site changes
   # took up to 4h to appear (2026-06-03 fix). Versioned/immutable assets
   # restore their 1-year edge cache via their own rules further down.
+  # ── SUPERSEDED 2026-09-20 BY THE OWNER DECISION ON A-285, AT THE FOOT OF THIS
+  #    BLOCK. `no-transform` IS NO LONGER ON THE VALUE BELOW. Everything from
+  #    here down to that decision is kept as the record of why it was added, why
+  #    it was restored, and what it was measured to cost. None of it describes
+  #    what ships today. The rule about NEVER adding a second `Cache-Control:`
+  #    line still stands and is still enforced by the gate.
+  #
   # [R28-CSP-BLOCKS-A-RUNTIME-INJECTED-SCRIPT-ON-EVERY-LIVE-PAGE-01, owner
-  # decision 2026-09-02] `no-transform` is APPENDED to the value above, never
+  # decision 2026-09-02] `no-transform` was APPENDED to the value below, never
   # added as a second `Cache-Control:` line. Cloudflare Pages CONCATENATES a
   # header when an earlier rule already set it, which is the measured 2026-08-01
   # bug recorded further down this file where a stylesheet carried two
@@ -365,11 +378,93 @@
   # read REVALIDATED on /, /pricing/ and /crowmark/. Keeping the default and
   # appending only no-transform changes exactly one thing.
   #
-  # STILL NOT MEASURED, and it can only be checked after a deploy: whether
+  # MEASURED 2026-09-20, AND THE ANSWER IS YES. This block previously read
+  # "STILL NOT MEASURED, and it can only be checked after a deploy: whether
   # no-transform costs the Brotli encoding on the HTML document. Baseline taken
   # with no-transform absent, content-encoding: br. Re-fetch / after this ships
-  # and assert br survives.
-  Cache-Control: public, max-age=0, must-revalidate, no-transform
+  # and assert br survives." It has now been re-fetched. br does NOT survive.
+  #
+  # WHAT WAS MEASURED, with Accept-Encoding: br, gzip against the live origin.
+  # EVERY HTML DOCUMENT returns no content-encoding header at all: /pricing/
+  # 78,675 bytes, /crowmark/ 94,684, /compare/ 45,087, /contact/ 61,186,
+  # /blog/ 63,200. An audit lane put the same reading at 47 of 47 routes.
+  #
+  # / LOOKED LIKE IT SURVIVED AND DID NOT, which is the trap this note would
+  # otherwise have set for the next reader. / returned content-encoding: br on
+  # cf-cache-status: REVALIDATED, a cached object predating the change, and the
+  # baseline above was taken on exactly that page. Re-fetched with a cache
+  # buster it returns 89,032 bytes, no content-encoding, cf-cache-status: MISS.
+  #
+  # THE ATTRIBUTION IS SOUND BECAUSE OF THE ASSET CONTROL, not because the
+  # timing fits. Every /_assets/* file still returns content-encoding: br,
+  # measured on /_assets/index.CcJb2CIe.css at cf-cache-status: HIT. Those
+  # files are served under the more specific /_assets/* rule appended by
+  # astro/scripts/copy-cf-config.js, which carries NO no-transform. Every HTML
+  # document falls under this catch-all, which does. HAD THE ASSETS ALSO BEEN
+  # UNCOMPRESSED the cause would have been something global, a zone setting or
+  # an account change, and this line would have been exonerated. They are not.
+  #
+  # ── A-285 DECIDED. THE OWNER MADE THE CALL EXPLICITLY ON 2026-09-20: REMOVE
+  #    no-transform, ACCEPT THE CSP VIOLATION. THE QUESTION IS CLOSED ─────────
+  #
+  # The paragraph that stood here said the token stays until the owner decides,
+  # and told the next reader not to delete it as a performance fix without that
+  # call. That warning was honoured rather than overruled. The call exists, it
+  # is the owner's own, and it is recorded on A-285. Compression for every
+  # visitor on every page beats the suppression of one telemetry report.
+  #
+  # WHAT COMES BACK, STATED PRECISELY, because the decision was made on this
+  # understanding and a later reader must be able to check it was true.
+  # Cloudflare resumes injecting its JavaScript Detections bootstrap into the
+  # HTML at the edge. The shipped script-src is hash based, copy-cf-config.js
+  # computes 16 sha256 digests from dist, and that bootstrap is INLINE and
+  # carries the request's own cf-ray in `__CF$cv$params`, so its digest differs
+  # on every response and no allowlist can ever cover it. It is therefore
+  # blocked under `enforce` on every HTML page. The whole of the loss is:
+  #
+  #   REPORT ONLY, NOT A BREAKAGE. The blocked script is Cloudflare's own bot
+  #   telemetry. It is not in this repository, it is not in dist, no page
+  #   references it, and no site behaviour depends on it. The block further up
+  #   reached the same finding independently and recorded it as "NO USER-FACING
+  #   LOSS ... the page works identically with the script blocked. That is why
+  #   it is a P3." The site's own 16 inline scripts are covered by their own
+  #   hashes and are untouched by this.
+  #
+  #   NOTHING CONSUMES THE SIGNAL IT WOULD HAVE PRODUCED. Reading
+  #   cf.bot_management.js_detection.passed needs Enterprise Bot Management and
+  #   this is a Free zone, and Bot Fight Mode is already off (fight_mode: false,
+  #   read from the zone 2026-09-02). So no bot posture changes either way.
+  #
+  #   IT IS NOT FREE, AND THIS IS THE PRICE PAID. One CSP report per HTML page
+  #   view reaches the report endpoints named above, and Sentry
+  #   CROWAGENT-WEB-4A will regress again and stay noisy. Noise in a report
+  #   stream is the accepted cost of the compression. Do NOT silence it by
+  #   weakening script-src, which would hand every injected inline script
+  #   permission to run, and which the gate refuses anyway.
+  #
+  # THE GATE WAS INVERTED IN THE SAME CHANGE RATHER THAN DELETED.
+  # astro/scripts/check-csp-required-origins.js runs LAST in `build:deploy`,
+  # which is the script Cloudflare Pages itself runs, and it FAILED the build
+  # whenever this value carried no no-transform. Left alone it would have turned
+  # this fix into a failed deploy. It now asserts the opposite, that
+  # no-transform is ABSENT, so this decision is defended exactly the way the old
+  # one was and no unrelated cleanup can quietly put the 45 to 95 KB back. Its
+  # separate check that there is never a SECOND Cache-Control line on this rule
+  # is untouched and still needed, for the concatenation reason above.
+  #
+  # VERIFY AFTER THE NEXT DEPLOY. This is the whole test, and nothing in this
+  # repository can run it, because the transform happens at the edge:
+  #
+  #   curl -sI -H "Accept-Encoding: br, gzip" https://crowagent.ai/crowmark/
+  #
+  #   PASS: a `content-encoding: br` line is present (gzip also passes), and
+  #         `cache-control` carries no `no-transform`.
+  #   FAIL: no content-encoding line at all, which means either the token is
+  #         back or the deploy did not carry this change.
+  #   Read `cf-cache-status` on the SAME response and trust only a value other
+  #   than HIT. A HIT can serve an object stored before the deploy, which is the
+  #   exact trap that made / look compressed when it was not.
+  Cache-Control: public, max-age=0, must-revalidate
 
 # --- [A-258, 2026-09-07] THREE RULES WERE DELETED HERE, AND THE FILES THEY
 # COVERED ARE GONE TOO.

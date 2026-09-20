@@ -208,9 +208,47 @@ const distArg = args.find((a) => !a.startsWith('--'));
  * days, while every gate stayed green. A header this file does not assert is a
  * header any unrelated cleanup can delete.
  *
- * IT ASSERTS A PROPERTY, NOT A LITERAL. The directive must be present in the
- * catch-all's Cache-Control whatever the rest of that value says, so tuning the
- * TTL does not trip it and does not tempt anyone to soften it.
+ * IT ASSERTS A PROPERTY, NOT A LITERAL. The directive's presence is asserted
+ * whatever the rest of that value says, so tuning the TTL does not trip it and
+ * does not tempt anyone to soften it.
+ *
+ * ── [A-285, OWNER DECISION 2026-09-20] THE ASSERTION IS NOW INVERTED. IT
+ *    REQUIRES `no-transform` TO BE ABSENT ──────────────────────────────────
+ *
+ * Everything above is still true about what `no-transform` DOES. What changed
+ * is the price, which had never been measured until it shipped. Measured live
+ * on 2026-09-20 with `Accept-Encoding: br, gzip`: 47 of 47 sitemap routes
+ * returned NO `Content-Encoding` at all. /crowmark/ came back as 94,684 bytes
+ * uncompressed, / as 89,032 on a `cf-cache-status: MISS` after looking
+ * compressed on a stale REVALIDATED object. Every `/_assets/*` file still
+ * returned `content-encoding: br` under its own more specific rule, and THAT
+ * CONTROL IS WHAT ATTRIBUTES THE CAUSE: had the assets been uncompressed too
+ * the cause would have been global and this directive exonerated.
+ *
+ * So the directive was costing roughly 45 to 95 KB per page over the wire
+ * instead of roughly 12 to 15 KB, for every visitor on every page, to suppress
+ * a report-only CSP violation on a Cloudflare bot-telemetry script that no site
+ * behaviour depends on and whose signal nothing on this Free zone can read. The
+ * owner made the call explicitly on 2026-09-20: remove it, accept the
+ * violation. `_headers` carries the full decision and the accepted cost.
+ *
+ * WHY THIS GATE IS INVERTED RATHER THAN DELETED, and it is the same argument
+ * that put it here. This script runs LAST in `build:deploy`, the chain
+ * Cloudflare Pages itself runs, so as written it would have failed the deploy
+ * of the very fix the owner asked for. Deleting the check instead would leave
+ * the decision undefended, and the paragraph above is the record of what
+ * happens then: an unrelated cleanup deleted the last one and every gate stayed
+ * green for three days. A performance fix nothing asserts is a fix any
+ * unrelated cleanup can undo, so the assertion is kept and turned around.
+ *
+ * THE SECOND CHECK IS UNCHANGED AND STILL NEEDED. More than one Cache-Control
+ * line on the catch-all is still a failure, whatever the values are, because
+ * Cloudflare Pages concatenates rather than overrides and which value an edge
+ * then honours is undefined.
+ *
+ * TO REVERSE THIS, if the owner ever re-takes the trade: put `no-transform`
+ * back on the catch-all's single Cache-Control value AND flip this assertion
+ * back. Changing one without the other reds the deploy.
  */
 function catchAllCacheControl(text) {
   const lines = text.split(/\r?\n/);
@@ -294,18 +332,20 @@ if (REQUIRED.length === 0) {
   process.exit(1);
 }
 
-/* [R28-WEB-4A] See catchAllCacheControl above for why a caching directive is a
-   CSP requirement here. Two ways this can be wrong, and both are checked: the
-   directive missing, and MORE THAN ONE Cache-Control on the catch-all, because
-   Cloudflare Pages concatenates a header rather than overriding it and which
-   value an edge then honours is undefined. */
+/* [R28-WEB-4A, inverted by A-285] See catchAllCacheControl above for why a
+   caching directive is asserted in a CSP gate, and why the assertion now runs
+   the other way. Two ways this can be wrong, and both are checked: the
+   directive PRESENT, which costs the Brotli encoding on every HTML document,
+   and MORE THAN ONE Cache-Control on the catch-all, because Cloudflare Pages
+   concatenates a header rather than overriding it and which value an edge then
+   honours is undefined. A catch-all with no Cache-Control at all is NOT a
+   failure under A-285: the Pages default carries no no-transform, so HTML is
+   compressed, which is the outcome this now defends. */
 const transform = [];
-if (cacheControl.length === 0) {
-  transform.push('the /* catch-all sets no Cache-Control at all, so Cloudflare Pages serves its own default and that default has no no-transform in it');
-} else if (cacheControl.length > 1) {
-  transform.push(`the /* catch-all sets ${cacheControl.length} Cache-Control lines (${cacheControl.join(' | ')}); Pages concatenates them and which one an edge honours is undefined`);
-} else if (!/(^|[\s,])no-transform($|[\s,])/i.test(cacheControl[0])) {
-  transform.push(`the /* catch-all Cache-Control is "${cacheControl[0]}" and carries no no-transform`);
+if (cacheControl.length > 1) {
+  transform.push(`the /* catch-all sets ${cacheControl.length} Cache-Control lines (${cacheControl.join(' | ')}), Pages concatenates them and which one an edge honours is undefined`);
+} else if (cacheControl.length === 1 && /(^|[\s,])no-transform($|[\s,])/i.test(cacheControl[0])) {
+  transform.push(`the /* catch-all Cache-Control is "${cacheControl[0]}" and it carries no-transform, which Cloudflare honours by serving every HTML document UNCOMPRESSED`);
 }
 
 /** Resolves the directive the browser would actually consult. */
@@ -378,15 +418,15 @@ if (weakened.length) {
 }
 
 if (transform.length) {
-  console.error('\ncsp-required: the JavaScript Detections guard is OFF\n');
+  console.error('\ncsp-required: the /* catch-all Cache-Control breaks the A-285 decision\n');
   transform.forEach((t) => console.error(`  ${t}`));
-  console.error('\n  Cloudflare injects its JS Detections bootstrap into the HTML at the edge unless');
-  console.error('  the origin response carries `no-transform`. That script is INLINE and its');
-  console.error('  __CF$cv$params carries the request\'s own cf-ray, so its sha256 differs on every');
-  console.error('  response and NO hash allowlist can ever cover it. Without no-transform this');
-  console.error('  policy is in permanent enforce-mode violation on every HTML page.');
-  console.error('\n  Fix it by appending no-transform to the /* rule\'s existing Cache-Control value,');
-  console.error('  never by adding a second Cache-Control line and never by weakening script-src.\n');
+  console.error('\n  A-285, owner decision 2026-09-20: `no-transform` must NOT be on the catch-all.');
+  console.error('  Measured live, it cost the Brotli encoding on 47 of 47 routes, roughly 45 to 95 KB');
+  console.error('  per page over the wire instead of roughly 12 to 15 KB, for every visitor. The');
+  console.error('  owner accepted the CSP violation it was suppressing, which is report-only: a');
+  console.error('  blocked Cloudflare bot-telemetry script that no site behaviour depends on.');
+  console.error('\n  Fix it by removing no-transform from the /* rule\'s single Cache-Control value.');
+  console.error('  Never add a second Cache-Control line, and never weaken script-src.\n');
 }
 
 if (failures.length) {
@@ -416,5 +456,5 @@ if (failures.length || weakened.length || transform.length) {
   process.exitCode = 1;
 } else {
   console.log(`\n  all ${REQUIRED.length} required origins are named by the policy this build ships, and no directive was weakened to get there`);
-  console.log(`  the /* catch-all carries no-transform, so Cloudflare injects no unhashable inline script into the HTML`);
+  console.log(`  the /* catch-all carries no no-transform (A-285), so Cloudflare compresses the HTML documents`);
 }
