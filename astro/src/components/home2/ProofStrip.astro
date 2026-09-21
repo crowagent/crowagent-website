@@ -14,18 +14,39 @@
  * hairline above, a hairline below, and vertical rules between the columns. The
  * numerals take the whole width they are given and nothing is boxed.
  *
- * ── ONE FIGURE COUNTS, AND THE OTHER TWO MUST NOT ──────────────────────────
+ * ── NOTHING COUNTS HERE TODAY, AND TWO OF THE THREE NEVER MAY ──────────────
+ *
+ * A-220. THIS HEADER USED TO SAY "one of three ticks" AND THE CODE BELOW HAS
+ * NEVER DONE THAT, so a reader of this file believed 12 animated when it does
+ * not. The header is corrected rather than the behaviour, because which of the
+ * two is right is the owner's call and not this file's. What is fixed here is
+ * only that the file stopped describing itself.
+ *
+ * MEASURED 2026-09-21, and this is the negative case: a count could still be
+ * real if some shared script painted it after load. There is no <script> in
+ * this file at all, the only count engine on the site lives in
+ * MarketShape.astro and keys on `[data-count-to]`, and this template emits no
+ * such attribute. The built home page carries three `h2fig__value` and ZERO
+ * `data-count-to`, and neither this component nor index.astro has changed
+ * since that build (fcbe48fe, 2026-09-07). So the section is static.
+ *
+ * ── THE TEST THAT STILL BINDS, WHICHEVER WAY THE OWNER CALLS IT ────────────
  *
  * MarketShape.astro settled this test and it is followed rather than re-argued:
  * a figure may count only if no intermediate value it prints is a real and
  * different figure in the same regulatory domain. 12 passes, because no rival
- * interval sits under it. £5m prints £1m, £2m and £3m, which are real contract
- * values from the OTHER PPN 026 band. 10% prints 5%, which this site has a
- * standing rule never to print, and check-facts.js enforces that rule. So one
- * of three ticks. The value is authored text painted at first render, the count
- * only ever writes OVER a figure that is already correct, and the authored
- * string is restored when it ends, when it is interrupted and when it never
- * starts at all.
+ * interval sits under it. £5m FAILS: it prints £1m, £2m and £3m, which are real
+ * contract values from the OTHER PPN 026 band. 10% FAILS worst: it prints 5%,
+ * which this site has a standing rule never to print and check-facts.js
+ * enforces. So £5m and 10% are forbidden from counting no matter what is
+ * decided about 12, and that half is not open.
+ *
+ * IF 12 IS EVER GIVEN ITS COUNT BACK, the contract is the one MarketShape
+ * already implements: the value is authored text painted at first render, the
+ * count only ever writes OVER a figure that is already correct, and the
+ * authored string is restored when it ends, when it is interrupted and when it
+ * never starts at all. Correctness is satisfied either way, because a figure
+ * that never animates cannot print a wrong intermediate.
  */
 interface Figure {
   tag: string;
@@ -85,10 +106,13 @@ const FIGURES: Figure[] = [
             {/* The tag IS the citation, so it is the link: straight to the
                 source card that carries this figure's primary reference. */}
             <p class="meta h2fig__tag"><a class="h2fig__cite" href={f.href}>{f.tag}</a></p>
-            {/* NO COUNT. A figure that counts up to £5,000,000 says it is
-                accumulating, and a statutory threshold is the one kind of
-                number that never does. It was also the third moving thing in a
-                section that needs none. */}
+            {/* NO COUNT, ON ALL THREE, WHICH IS WHAT SHIPPED. This comment sits
+                inside the map, so it governs every figure and not only £5m. A
+                figure that counts up to £5,000,000 says it is accumulating, and
+                a statutory threshold is the one kind of number that never does.
+                It was also the third moving thing in a section that needs none.
+                The header records which of the three could ever be given a
+                count back, and that £5m and 10% may not. */}
             <p class="h2fig__value sv-numeral">{f.value}</p>
             <p class="h2fig__label">{f.label}</p>
           </li>
