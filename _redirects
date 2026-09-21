@@ -7,7 +7,7 @@
 # Cloudflare stops honouring rules past roughly the 110th-115th non-comment rule
 # in this file. Rules below that point are parsed but never fire, silently.
 #
-#   CURRENT COUNT: 87 rules.  BUDGET: keep it under 100.
+#   CURRENT COUNT: 91 rules.  BUDGET: keep it under 100.
 #   Check with:  grep -vE '^\s*#|^\s*$' _redirects | wc -l
 #
 # Measured on production 2026-07-30 by curling crowagent.ai directly:
@@ -564,6 +564,62 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # redirect and accept the PNG, and generating a genuine multi-resolution .ico would
 # add an image-encoding dependency to the build for one legacy path.
 /favicon.ico                  /favicon-32.png                                              301
+
+# ── 17c. TWO ROUTES THAT NEVER EXISTED AND ARE ARRIVED AT FROM OUTSIDE ──────
+#
+# A-228, owner decision 2026-09-01: "redirect both to the nearest real page",
+# implemented 2026-09-21. Measured live 2026-09-20: /compare/crowmark-vs-manual
+# and /how-it-works both returned 404 with cf-cache-status BYPASS, so neither
+# reading was a cached artefact, and both 404 bodies were 10,172 bytes, the same
+# branded error page.
+#
+# NOTHING ON THIS SITE LINKS EITHER ONE, and that is measured rather than
+# assumed. Across astro/src, _redirects, _headers, robots.txt, llms.txt and
+# llms-full.txt there are ZERO occurrences of crowmark-vs-manual, and every
+# how-it-works string is an in-page anchor: id="how-it-works" on /crowmark/ and
+# /crowmark-buyers/, href="#how-it-works" in the crowmark page nav, and one CSS
+# comment in card-row.css. Re-verified 2026-09-21, unchanged. So these two rules
+# serve only the reader arriving from OUTSIDE, an external link or a stale
+# index, which a grep of this repository cannot see and which is the only
+# remaining exposure. That is also why this is a P3 and not a P2.
+#
+# WHY /compare/crowmark-vs-manual HAS NO PAGE. The route is generated from the
+# `compare` content collection by /compare/[...slug].astro, and that collection
+# holds four entries: autogenai, cleantender, mytender-io, swiftbid. "Manual" is
+# not a competitor with an entry, so the slug has never been built. /compare/
+# itself returns 200 and lists the four, so it substitutes for the intent.
+#
+# WHY /how-it-works GOES TO /crowmark/. Identified rather than assumed, per the
+# decision. `git log --all --diff-filter=A` finds no how-it-works page ever
+# added to this repository, so there is no former page to honour. The content
+# lives as a SECTION on two routes, and /crowmark/ is the one whose own in-page
+# nav labels it "How it works" (crowmark.astro:187), so it is the page that
+# advertises the phrase. /crowmark-buyers/ carries the same id but never names
+# it in its nav.
+#
+# NO FRAGMENT IN THE DESTINATION. /crowmark/#how-it-works would land the reader
+# on the section itself, and it is NOT used, because Cloudflare's own Pages
+# redirects documentation says nothing about fragment handling in this file and
+# the only way to settle it is a production deploy. A destination that might
+# ship dead is worse than one that lands a little high on a page that carries
+# the section, so this takes the verified form. If a deploy is being spent on
+# something else, the fragment is worth measuring then.
+#
+# BOTH URL FORMS FOR BOTH ROUTES, and the reason differs from blocks 6 and 17.
+# There the slashed form was the form that once returned 200 and is therefore
+# the form crawlers hold. NEITHER OF THESE WAS EVER SERVED IN ANY FORM, so no
+# form is privileged, and header point 3 says canonicalisation does not run at
+# all when no file backs the path: a rule on /how-it-works would never be
+# reached by /how-it-works/. The form an external author typed is unknowable,
+# so both are written. Cost: 4 rules, 87 to 91, against a budget of 100.
+#
+# ⚠️ PLAIN `301`, NEVER `301!` — see the note in block 3. A `!` ships DEAD here.
+# ⚠️ DESTINATIONS CARRY THEIR TRAILING SLASH, header point 7, or the visitor is
+#    handed a 301 and then a 308.
+/compare/crowmark-vs-manual   /compare/                                                    301
+/compare/crowmark-vs-manual/  /compare/                                                    301
+/how-it-works                 /crowmark/                                                   301
+/how-it-works/                /crowmark/                                                   301
 
 # ── 18. CATCH-ALL 404 ───────────────────────────────────────────────────────
 # WS-AUDIT-030 (2026-05-10). Any URL not matched by a file on disk or by a rule
