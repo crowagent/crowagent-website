@@ -1268,8 +1268,13 @@ function deployState() {
            top and every `| id | status | item |` header vote in the counts —
            which is exactly R262-D-144, a summary row counted as an item. */
         if (isSeparatorRow(l) || isSeparatorRow(lines[i + 1])) continue;
-        const id = plain((l.split('|')[1] || ''));
-        if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(id) || !/\d/.test(id)) continue;
+        /* [R282-MP-S48-FINAL-STATUS-REPORT-01] The generated
+           table gained leading priority columns (`| # | tier | class | id |`), so the id is
+           no longer cell 1. Take the first cell that reads as an identifier. Reading cell 1
+           only counted 0 items for every phase and reported the phase as a gap. */
+        const isId = (c) => /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(c) && /\d/.test(c);
+        const id = l.split('|').slice(1).map((c) => plain(c)).find(isId);
+        if (!id) continue;
         itemsByPhase[cur]++;
       }
     }
