@@ -1337,8 +1337,13 @@ function deployState() {
            top and every `| id | status | item |` header vote in the counts —
            which is exactly R262-D-144, a summary row counted as an item. */
         if (isSeparatorRow(l) || isSeparatorRow(lines[i + 1])) continue;
-        const id = plain((l.split('|')[1] || ''));
-        if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(id) || !/\d/.test(id)) continue;
+        /* [R284 2026-10-03] The id is no longer always the FIRST cell:
+           assign-phases.mjs now writes `| # | tier | class | id | ...`, so reading
+           cell 1 got "1", "2" ... and counted every phase as 0 items while the
+           file held 54. Take the first cell that IS an identifier instead. */
+        const id = l.split('|').slice(1).map((c) => plain(c))
+          .find((c) => /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(c) && /\d/.test(c)) || '';
+        if (!id) continue;
         itemsByPhase[cur]++;
       }
     }
