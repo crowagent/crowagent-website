@@ -1,0 +1,223 @@
+<!--
+  ════════════════════════════════════════════════════════
+  [R284-AI-ONBOARDING-ON-BOARD-01] AI ONBOARDING. Written 2026-10-09 on owner
+  instruction: "you must also cover the instruction for other AI like gemini,
+  kiro and others to follow all the rule and practices defined for
+  deployments, for testing, for pipeline, for rules etc, all the details must
+  be covered", then "ai onboarding also must be included in
+  http://localhost:8099/#architecture".
+
+  Fragment injected by index.html. No style block, no script element, no colour
+  literal (check-board-contract.js). This page SUMMARISES
+  crowagent-platform/docs/AI-ONBOARDING-GUIDE.md. The guide is canonical, and a
+  rule changed there is changed here in the same commit.
+  ════════════════════════════════════════════════════════
+-->
+
+<div class="dochead">
+  <p class="kicker">AI onboarding</p>
+  <p class="title">One guide, every AI tool, the same rules</p>
+  <p class="lede">Claude, Gemini, Kiro, Codex, Cursor and Copilot all work in this estate. Each opens
+  its own entry file first, and every entry file sends it to one guide:
+  <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>. This page is the map of that guide:
+  which file each tool reads, what each role may do, and the deployment, testing, pipeline,
+  secret and working rules that bind all of them.</p>
+  <p class="dated">Written 9 October 2026 from the guide, the entry files and the measurements of
+  the 8 October session (production ship of <code>9031f5fd1</code>, the full key rotation and the
+  two incidents it caused). Canonical rule text: <code>crowagent-platform/ENGINEERING-STANDARDS.md</code>,
+  with detailed wording in the workspace <code>CLAUDE.md</code>. Where this page and the guide
+  disagree, the guide wins.</p>
+</div>
+
+<div class="kpi">
+  <div><b>1</b><span>onboarding guide for every tool. No brief, no work</span></div>
+  <div><b>3</b><span>roles: the driver, a build or verification slice, the staging walker</span></div>
+  <div><b>0</b><span>pushes, deploys, migrations or key changes by any AI without the owner's per act approval</span></div>
+  <div><b>1 tool</b><span>has a hook that blocks printing secrets (Claude Code). Every other tool enforces it itself</span></div>
+</div>
+
+<details class="toc">
+  <summary>On this page</summary>
+  <ol>
+    <li><a href="#ai-entry">Which file each tool opens first</a></li>
+    <li><a href="#ai-roles">Roles: who may do what</a></li>
+    <li><a href="#ai-deploy">Deployment rules</a></li>
+    <li><a href="#ai-test">Testing rules</a></li>
+    <li><a href="#ai-pipeline">Pipeline and CI rules</a></li>
+    <li><a href="#ai-secrets">Secrets and credentials</a></li>
+    <li><a href="#ai-work">Working rules: scope, measurement, style, identity</a></li>
+    <li><a href="#ai-brief">Briefs and reports</a></li>
+  </ol>
+</details>
+
+<h2 id="ai-entry"><span class="n">Section 1</span>Which file each tool opens first</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Tool</th><th>Opens first</th><th>Then</th></tr></thead>
+  <tbody>
+    <tr><td><b>Claude Code</b></td><td>workspace <code>CLAUDE.md</code>, then <code>crowagent-platform/CLAUDE.md</code> (loaded automatically)</td><td>the onboarding guide, the live release tracker</td></tr>
+    <tr><td><b>Codex, Cursor, Copilot</b> and any tool that reads <code>AGENTS.md</code></td><td><code>AGENTS.md</code> at the workspace root, in <code>crowagent-platform/</code> and in <code>crowagent-website/</code></td><td>the onboarding guide</td></tr>
+    <tr><td><b>Google Gemini</b></td><td><code>GEMINI.md</code> at the workspace root, in <code>crowagent-platform/</code> and in <code>crowagent-website/</code></td><td>the onboarding guide, then its written brief</td></tr>
+    <tr><td><b>Kiro</b></td><td><code>.kiro/steering/engineering-standards.md</code> (workspace) and <code>crowagent-platform/.kiro/steering/crowagent-guide.md</code>, both always included</td><td>the onboarding guide, then its <code>KIRO-BRIEF-*.md</code></td></tr>
+    <tr><td><b>Any other tool</b></td><td><code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code> directly</td><td><code>ENGINEERING-STANDARDS.md</code> RULE 0 to RULE 0-P</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">Refreshed 9 October 2026. The workspace root <code>AGENTS.md</code>, <code>GEMINI.md</code>
+and Kiro steering were stale: they pointed at a moved rules file, an old approval phrase, a full
+build before every push (which RULE 0-T forbids) and a decommissioned folder. All three were
+rewritten, every entry file now carries the secrets rule, and <code>crowagent-website</code> gained
+its own <code>AGENTS.md</code> and <code>GEMINI.md</code>. <code>crowagent-website/CLAUDE.md</code>
+still describes an older transformation spec, and the guide overrides it.</div>
+
+<h2 id="ai-roles"><span class="n">Section 2</span>Roles: who may do what</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Role</th><th>Who</th><th>May</th><th>Must not</th></tr></thead>
+  <tbody>
+    <tr><td><b>Driver</b></td><td>the desktop Claude Code session</td><td>write briefs, decide HOW, commit by pathspec, run <code>staging:promote</code>, walk journeys in a real browser, apply migrations with approval, push and promote with the owner's per push approval, fix a P0 on live production at once and tell the owner</td><td>spend without a cost statement, push without approval, decide scope</td></tr>
+    <tr><td><b>Build or verification slice</b></td><td>Kiro, a Claude subagent or cloud session</td><td>work the slice its brief names, edit only the paths named, run targeted tests, write its report</td><td>git of any kind, push, deploy, migrations, <code>vercel.json</code>, the tracker, any key or variable</td></tr>
+    <tr><td><b>Staging walker</b></td><td>Google Gemini</td><td>walk <code>staging-app.crowagent.ai</code> with DevTools at 1280x800 and 390x844, record console, network, accessibility and layout findings</td><td>change code, data or settings outside the test accounts, touch production, send real email, buy anything</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ai-deploy"><span class="n">Section 3</span>Deployment rules</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+<p><b>One path to production.</b> Local <code>main</code>, committed and clean, then
+<code>pnpm staging:promote</code> (web, then <code>--project portal</code> after committing the web
+record), prove it on staging, <code>pnpm staging:verify</code>, then
+<code>pnpm prod:promote --approval "&lt;owner text with the sha7&gt;"</code>. No push by hand, no
+dashboard deploy, no merge button.</p></div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+<p><b>One approval is one push.</b> The approval text names the commit's 7 character sha. A
+standing yes, a plan or silence is not approval. Count pushes across every session of a release,
+never more than two per session, and state the cost before asking: which workflows fire and which
+Vercel and Railway deploys follow.</p></div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+<p><b>RULE 0.</b> No Vercel preview, ever. Every non <code>main</code> git deployment must settle
+<code>CANCELED</code>. Never edit a <code>vercel.json</code> off <code>main</code>. A push to
+<code>crowagent-website</code> <code>main</code> is a production deploy of the live site.</p></div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+<p><b>A variable change needs a rebuild.</b> Vercel applies a changed variable only on the next
+build, and <code>NEXT_PUBLIC_*</code> values are baked into the browser bundle. After an instant
+rollback, the next build must be promoted explicitly. A migration that changes what deployed code
+reads or writes ships in the same promotion as that code.</p></div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+<p><b>Audit after every push and deploy.</b> Every target verified against the sha, every non
+<code>main</code> row <code>CANCELED</code>, the product proven on the live host. A partial deploy is
+never reported as done. Only the driver deploys, rolls back or promotes.</p></div></div>
+
+<h2 id="ai-test"><span class="n">Section 4</span>Testing rules</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Rule</th><th>What it means in practice</th></tr></thead>
+  <tbody>
+    <tr><td><b>RULE 0-T</b> targeted only</td><td>run the files that cover the change plus their guard. A full suite is a certification act at the end of a release, never a way to check a fix</td></tr>
+    <tr><td><b>RULE 0-CERT</b></td><td>certification is a property of the log: green, against the current tree, with a collected count comparable to its siblings. Close the gap since the last green run, never rerun everything</td></tr>
+    <tr><td><b>RULE 0-L</b> shared machine</td><td>measure free RAM first, never start heavy work below 2 GB free, one heavyweight (<code>next build</code>, full <code>tsc</code>, a test shard) at a time, never kill a process you did not start</td></tr>
+    <tr><td>Read the count</td><td>a starved run prints a normal looking green over nothing. Read the collected count, never the colour</td></tr>
+    <tr><td>Where tests run</td><td>this machine first, always. Test users, seeds, probes and Playwright runs belong on staging only, never production. Tests mock the AI client, a real paid AI call from a test is a defect</td></tr>
+    <tr><td>Commands</td><td>API: <code>./.venv/Scripts/python.exe -m pytest &lt;files&gt; -p no:cacheprovider -n 0</code> from <code>api/</code>. Web: <code>./node_modules/.bin/vitest run &lt;one file&gt;</code> from <code>web/</code>. Staging e2e: <code>--config=playwright.discovery.config.ts</code> with <code>BASE_URL=https://staging-app.crowagent.ai</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ai-pipeline"><span class="n">Section 5</span>Pipeline and CI rules</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Rule</th><th>In one line</th></tr></thead>
+  <tbody>
+    <tr><td><b>RULE 0-G</b></td><td>CI, gate and test work is never a work item of its own, only the guard inside a product fix. Never push to see whether CI passes</td></tr>
+    <tr><td>Cost first</td><td>anything that can spend money (a timer, a workflow, a deploy, a paid API or AI call, a cloud resource) needs a cost statement in numbers and explicit owner approval before the work. Recurring cost is a liability, never coverage</td></tr>
+    <tr><td>No timers</td><td>no GitHub workflow has a <code>schedule:</code> trigger, and none may be added. A new Vercel cron, Railway job or pg_cron job needs the same cost statement and approval</td></tr>
+    <tr><td>Gates locally</td><td><code>pnpm gates:local</code> runs the cheap half of CI on this machine for zero Actions minutes. Both promote scripts run it at the sha</td></tr>
+    <tr><td>Billing audit</td><td><code>pnpm billing:audit</code> before every promotion. A FAIL row is a P0. 16 of 16 PASS on 8 October 2026</td></tr>
+    <tr><td>Free tiers</td><td>Brevo, PostHog and Cloudflare stay free. Never propose a paid plan, add on or trial, not even as an option</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ai-secrets"><span class="n">Section 6</span>Secrets and credentials</h2>
+
+<div class="callout bad">Between August and October 2026 live keys leaked into transcripts and saved
+permission rules three ways, every key was rotated on 8 October, and the rotation itself took
+production down twice. Every rule here is the fix for something that happened. Claude Code is
+blocked by a hook. <b>Gemini, Kiro and every other tool have no hook and must enforce these rules
+themselves.</b></div>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Never</th><th>Instead</th></tr></thead>
+  <tbody>
+    <tr><td>put a key on a command line</td><td>read it inside the process from the environment or a gitignored file. A tool that saves approved commands saves the key with them</td></tr>
+    <tr><td>run anything that prints values: <code>railway variables</code>, <code>vercel env pull</code> to the screen, <code>cat .env*</code>, <code>printenv</code>, MCP reads of variable values</td><td>fingerprint it: pipe into <code>python -I ~/.claude/hooks/envfp.py</code>, which prints the name, a 10 character hash, the length and the key type only</td></tr>
+    <tr><td>paste a key into chat, a report, a commit, a test, a fixture or a log</td><td>name it. If a tool shows you one, report which key and where, by name only</td></tr>
+    <tr><td>copy a key through chat or an MCP call</td><td>copy it in process, store to store, and print fingerprints</td></tr>
+    <tr><td>rotate, revoke, disable or change a key or variable (any AI other than the driver)</td><td>leave it to the owner and the driver</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><b>Rotation order, or production breaks.</b> Create the new key, put it in every store (Railway
+services, Vercel production and the Vercel <code>staging</code> environment, the portal
+Integrations table <code>portal_integrations</code>, the two local <code>.env.local</code> files),
+rebuild what reads it, prove it works through <code>/readyz</code> and a live page, and only then
+revoke the old key. The portal reads its Integrations table before its Vercel variables, so a token
+updated only in Vercel is ignored.</p>
+
+<p><b>Supabase.</b> Both projects use <code>sb_publishable</code> and <code>sb_secret</code> keys.
+Legacy JWT anon and service_role keys are disabled on production and staging since 8 October 2026.
+Env file backups were all deleted on 8 October because several held live keys. Never create one.</p>
+
+<h2 id="ai-work"><span class="n">Section 7</span>Working rules: scope, measurement, style, identity</h2>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Rule</th><th>In one line</th></tr></thead>
+  <tbody>
+    <tr><td>Full scope</td><td>never skip, defer, simplify or silently drop. If something cannot be done, stop and say exactly why. Scope verdicts are the owner's, so present them as questions</td></tr>
+    <tr><td><b>RULE 0-V</b> measure before claiming</td><td>a grep is a claim, not a finding. Name the measurement and how it could have failed. Assert the status code and landed URL before measuring a page</td></tr>
+    <tr><td><b>RULE 0-R</b> one live tracker</td><td>new work goes in the highest <code>RELEASE-*-TRACKER.md</code>. Work with no row is a silent drop</td></tr>
+    <tr><td>Two products only</td><td>CrowMark and CrowMark Buyer. Never build CrowAgent Core, CrowCash, CrowCyber, CrowESG or CSRD Checker. Never "council" or "PPN 002" in anything a user reads</td></tr>
+    <tr><td><b>RULE 0-C</b> design tokens</td><td>colour, type and spacing come from the central tokens only. A hardcoded value is a defect</td></tr>
+    <tr><td><b>RULE 0-S</b> style</td><td>no semicolons, no em or en dashes in prose, no banned vocabulary, British English, in chat, commits, comments, docs and copy alike</td></tr>
+    <tr><td>Code quality</td><td>no <code>@ts-ignore</code>, no <code>eslint-disable</code>, no empty catch, no <code>any</code>, structured JSON logging, <code>getUser()</code> never <code>getSession()</code>, RLS on every tenant table, AI calls through the shared <code>AIClient</code></td></tr>
+    <tr><td>Identity</td><td>everything is authored as <code>Crow Agent &lt;crowagent.platform@gmail.com&gt;</code>. Never the owner's personal name or email. A pre-commit hook enforces it</td></tr>
+    <tr><td>Git</td><td>another session may share the index, so commit by pathspec, never <code>git add .</code>. Never force push a protected branch or rewrite history</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ai-brief"><span class="n">Section 8</span>Briefs and reports</h2>
+
+<div class="step"><div class="num">1</div><div class="body">
+<p><b>No brief, no work.</b> Any AI other than the driver works only from a written brief under
+<code>crowagent-platform/docs/release-&lt;version&gt;/</code>, for example
+<code>KIRO-BRIEF-&lt;WAVE&gt;.md</code> or <code>GEMINI-BRIEF-&lt;TOPIC&gt;.md</code>. If the brief
+and the guide disagree, stop and say so.</p></div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+<p><b>The report names everything.</b> Every file changed, the collected, passed and failed counts
+per test file, each fix marked code fix or test fix with its reason, rows DONE or NOT DONE, and
+anything not done with the exact reason. Written to the file the brief names, normally
+<code>docs/release-&lt;version&gt;/kiro-reports/&lt;NAME&gt;-REPORT.md</code>.</p></div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+<p><b>Report only what you measured.</b> Never guess a cause and present it as a finding. Before
+handing back, grep your own text for semicolons, the two dashes and the banned words. That grep is
+the evidence.</p></div></div>
+
+<p class="sm">Prepared by Crow Agent, 9 October 2026. Source of every rule:
+<code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>, <code>ENGINEERING-STANDARDS.md</code>
+and the workspace <code>CLAUDE.md</code>. This page is the map, those files are the territory.</p>

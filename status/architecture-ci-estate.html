@@ -36,7 +36,10 @@
   console, the Railway console, the production Supabase <code>cron.job</code> table and the Railway
   scheduler source. Triggers, workflow counts and cron counts re-read on 4 October 2026 from the
   workflow files of both repositories and the production database. The money figures are the August
-  snapshot and were NOT re-measured. The single onboarding source for every AI tool is
+  snapshot. <b>Refreshed on 9 October 2026</b>: Actions usage for September and October read from
+  the GitHub organisation billing API, gating job counts and required checks re-read, the
+  production <code>pg_cron</code> jobs re-listed, and the scheduler counted by
+  <code>pnpm billing:audit</code>. The single onboarding source for every AI tool is
   <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>.</p>
 </div>
 
@@ -48,13 +51,19 @@
   pull request, so neither runs on a promotion. Their cheap half runs on this machine as
   <code>pnpm gates:local</code>, 33 gates, zero Actions minutes. A push to <code>main</code> fires at
   most four workflow files, three of them path filtered.
+  <b>9 October 2026:</b> the bill has collapsed. Actions used 1,270 minutes in September, $8.53
+  gross and <b>$0.37 billed</b>, and 105 minutes in October to date, $0 billed, against 10,658
+  minutes and $39.80 billed in August. The required checks on <code>main</code> are still
+  <code>Run Tests</code> and <code>All CI Gates Pass</code>. The two gating workflows now carry 17
+  jobs (7 and 10), down from 21. The 8 October push of <code>9031f5fd1</code> built nothing from git
+  on Vercel: all 4 git deployments settled CANCELED.
 </div>
 
 <div class="kpi">
   <div><b style="color:var(--open)">$52</b><span>GitHub per month in August, all in. Railway was $5</span></div>
   <div><b>76%</b><span>of August Actions minutes were the TWO workflows that gate merges</span></div>
-  <div><b>0</b><span>scheduled workflows in either repository on 4 October</span></div>
-  <div><b>29 + 4</b><span>workflow files in the platform and the website on 4 October</span></div>
+  <div><b>$0.37</b><span>GitHub Actions billed in September 2026 (1,270 min), $0 so far in October</span></div>
+  <div><b>0 / 29 + 4</b><span>scheduled workflows / workflow files in the platform and the website on 9 October</span></div>
 </div>
 
 <div class="callout bad">
@@ -144,8 +153,8 @@ is only visible on the billing page, never from run duration.</figcaption>
 <code>crowagent-website</code> (<code>astro-gates</code>, <code>og-image-rebuild</code>,
 <code>robots-guard</code>, <code>smoke-test</code>). On 29 August branch protection on
 <code>main</code> required exactly two checks, read live from the API: <code>Run Tests</code> and
-<code>All CI Gates Pass</code>. Whether that is still the required set was not re-read on 4
-October. The Trigger column below was corrected on 4 October. The minutes and the proposals are
+<code>All CI Gates Pass</code>. Re-read from the API on 9 October 2026: still exactly those two.
+The Trigger column below was corrected on 4 October. The minutes and the proposals are
 the August snapshot.</p>
 
 <div class="tblwrap">
@@ -215,13 +224,13 @@ free or already paid for. This is the part of the estate that is working.</p>
   <tbody>
     <tr>
       <td><b>Supabase pg_cron</b><br><span class="muted">drives the <code>/api/cron/*</code> routes</span></td>
-      <td class="num">13 active on 4 October (14 on 29 August)</td><td class="num">~240 in August</td>
+      <td class="num">13 active, re-listed 9 October (14 on 29 August)</td><td class="num">212 on 9 October (~240 in August)</td>
       <td>Nothing extra. Scheduling runs inside Postgres and the work at the far end is a Vercel
           invocation well inside the included quota.</td>
     </tr>
     <tr>
       <td><b>Railway APScheduler</b><br><span class="muted"><code>api/app/tasks/scheduler.py</code> and <code>guard_jobs.py</code></span></td>
-      <td class="num">~32</td><td class="num">continuous</td>
+      <td class="num">32 static jobs plus 1 dynamic registrar (billing audit, 8 October)</td><td class="num">continuous. The Stripe DLQ drain runs daily since 9031f5fd1</td>
       <td><b>Free at the margin.</b> The container is always on and billed whether or not a job
           fires, so every job already there costs only its CPU seconds, including one on a 5 minute
           cadence.</td>
@@ -245,7 +254,7 @@ free or already paid for. This is the part of the estate that is working.</p>
 </div>
 
 <details>
-  <summary>The 14 Supabase pg_cron jobs read from production on 29 August (13 active on 4 October, not re-listed)</summary>
+  <summary>The 13 active Supabase pg_cron jobs, re-listed from production on 9 October 2026</summary>
   <div class="dbody">
     <div class="tblwrap">
     <table class="doc-tbl">
@@ -254,8 +263,8 @@ free or already paid for. This is the part of the estate that is working.</p>
         <tr><td><code>email-dispatch</code></td><td>every 2 hours</td><td class="num">84</td></tr>
         <tr><td><code>scheduled-reports</code></td><td>every 4 hours</td><td class="num">42</td></tr>
         <tr><td><code>service-health</code></td><td>every 6 hours</td><td class="num">28</td></tr>
-        <tr><td><code>status-incident-notify</code></td><td>every 6 hours</td><td class="num">28</td></tr>
-        <tr><td><code>dunning</code>, <code>onboarding-emails</code>, <code>portal-mrr-snapshot</code>, <code>trial-ending-d1</code>, <code>stripe-cleanup-incomplete</code>, 3 retention prunes</td><td>daily</td><td class="num">56</td></tr>
+        <tr><td><code>status-incident-notify</code></td><td>daily (was every 6 hours in August)</td><td class="num">7</td></tr>
+        <tr><td><code>dunning</code>, <code>onboarding-emails</code>, <code>trial-ending-d1</code>, <code>stripe-cleanup-incomplete</code>, 3 retention prunes (<code>portal-mrr-snapshot</code> is no longer a pg_cron job)</td><td>daily</td><td class="num">49</td></tr>
         <tr><td><code>compliance-calendar-digest</code>, <code>monitoring-digest</code></td><td>weekly</td><td class="num">2</td></tr>
       </tbody>
     </table>
@@ -288,14 +297,16 @@ free or already paid for. This is the part of the estate that is working.</p>
 
 <div class="step"><div class="num">1</div><div class="body">
   <b>Reduce the JOB count in the two gating workflows.</b>
-  <span>21 jobs, each rounded up to a whole billed minute, on every push. This attacks the 76
+  <span>21 jobs in August, 17 on 9 October (7 in <code>ci.yml</code>, 10 in
+  <code>crowagent-platform-ci.yml</code>), each rounded up to a whole billed minute. This attacks the 76
   percent directly and changes no behaviour. It matters MORE now that the true driver is known to be
   per job round up rather than wall clock time.</span>
 </div></div>
 
 <div class="step"><div class="num">2</div><div class="body">
   <b>Resolve Lighthouse CI.</b>
-  <span>19 of 19 red while gating nothing. Fix it and make it a required check, or delete it. Do not
+  <span>19 of 19 red in August, and still never green: of its last 10 runs (to 7 October) 2 failed
+  and 8 were skipped, while gating nothing. Fix it and make it a required check, or delete it. Do not
   leave it billing on every pull request and reporting to nobody.</span>
 </div></div>
 
@@ -354,8 +365,10 @@ free or already paid for. This is the part of the estate that is working.</p>
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <h2 id="ci-bills"><span class="n">Section 5</span>The actual bills, and the lock now applied</h2>
 
-<p class="sm">This section is the August 2026 snapshot. It was not re-measured on 4 October. Read the
-GitHub organisation billing console before quoting any figure from it.</p>
+<p class="sm">The table below is the August 2026 snapshot. Read the GitHub organisation billing
+console before quoting any figure from it. <b>Re-measured 9 October 2026 from the billing API:</b>
+Actions September 1,270 minutes, $8.53 gross, $0.37 billed. October to date 105 minutes, $0.85
+gross, $0 billed. Seats and Railway were not re-read.</p>
 
 <div class="tblwrap">
 <table class="doc-tbl">

@@ -243,13 +243,24 @@ for (const file of boards) {
       and the pixel is wrong. This is what caught the typo class during the
       2026-08-29 rebuild.
    ════════════════════════════════════════════════════════════════════════════ */
-const DOCS = [
+/* [R284-AI-ONBOARDING-ON-BOARD-01 2026-10-09] The list is DERIVED from the
+   views index.html offers, unioned with the original five. It used to be a
+   hardcoded array, so the AI onboarding page added on 2026-10-09 was offered by
+   the board and skipped by this check: a control that reaches nothing. The
+   negative result: drop the union and add a doc with a colour literal to
+   index.html, and this check would still print green for it. */
+const DOCS = Array.from(new Set([
   'architecture-tenancy.html',
   'architecture-ci-estate.html',
   'architecture-target-state.html',
   'architecture-release-and-environments.html',
   'architecture-developer-guide.html',
-];
+  ...Array.from(
+    require('fs').readFileSync(require('path').join(__dirname, 'index.html'), 'utf8')
+      .matchAll(/doc:\s*'([^']+\.html)'/g),
+    (m) => m[1],
+  ),
+]));
 
 /* Strip comments and numeric entities the SAME way for every file, index.html
    included. The first version derived the :root block from the RAW page and then

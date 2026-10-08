@@ -28,7 +28,10 @@
   both Supabase projects, the Stripe API and the GitHub CLI. First production promotion through
   this path: commit <code>ca75732d</code>, 4 September 00:33 UTC. Corrected on 4 October 2026
   against <code>promote-staging.mjs</code>, <code>promote-production.mjs</code>,
-  <code>scripts/vercel-build-ignore.sh</code>, the live Railway API and a curl of every host. The
+  <code>scripts/vercel-build-ignore.sh</code>, the live Railway API and a curl of every host.
+  <b>Refreshed on 9 October 2026</b> after the production promotion of <code>9031f5fd1</code> (8
+  October), the full key rotation and the two incidents it caused: Stripe, Supabase keys, the
+  portal ignore command, the variable stores and the key runbooks (D and E) were re-measured. The
   single onboarding source for every AI tool is
   <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>.</p>
 </div>
@@ -71,16 +74,20 @@
     <tr><td><b>Local</b></td><td><code>next dev</code> on 3000, <code>next start</code> on 3001</td><td>Supabase staging <code>ipgrnwvfnumgvnxkpxsc</code></td><td>Railway <code>crowagent-platform-staging</code></td><td>sandbox, test mode</td><td>agents, engineers</td></tr>
     <tr><td><b>Staging</b></td><td><code>staging-app.crowagent.ai</code>, Vercel custom environment <code>staging</code> on <code>crowagent-platform-web</code></td><td>Supabase staging</td><td>Railway <code>crowagent-platform-staging</code>, branch <code>api-staging</code></td><td>sandbox, test mode</td><td>beta testers in one of five beta tenants, every automated test, every experiment</td></tr>
     <tr><td><b>Staging portal</b></td><td><code>staging-portal.crowagent.ai</code>, Vercel custom environment <code>staging</code> on <code>crowagent-portal</code></td><td>Supabase staging</td><td>Railway staging service</td><td>sandbox, test mode</td><td>founders and core team only</td></tr>
-    <tr><td><b>Production</b></td><td><code>app.crowagent.ai</code>, Vercel production. Portal at <code>portal.crowagent.ai</code></td><td>Supabase production <code>gujtuecjzfiqsdnzgyvo</code></td><td>Railway <code>crowagent-platform</code> and <code>crowagent-worker</code>, branch <code>railway-production</code></td><td>DISPUTED, see the note below</td><td>the four platform accounts in one organisation, and paying customers</td></tr>
+    <tr><td><b>Production</b></td><td><code>app.crowagent.ai</code>, Vercel production. Portal at <code>portal.crowagent.ai</code></td><td>Supabase production <code>gujtuecjzfiqsdnzgyvo</code></td><td>Railway <code>crowagent-platform</code> and <code>crowagent-worker</code>, branch <code>railway-production</code></td><td>live secret key, mode flag <code>test</code>. See the note below</td><td>the four platform accounts in one organisation, and paying customers</td></tr>
   </tbody>
 </table>
 </div>
 
 <div class="callout bad">
-  <b>Production Stripe mode is unverified.</b> The live cutover of 4 September wrote live keys to
-  Vercel and Railway production. Owner notes from 27 to 29 September record production as test
-  mode, with Stripe Tax registration deferred until switching live. Measure it before acting on
-  either statement, and never touch a live key.
+  <b>Production Stripe key and mode flag disagree (measured 8 and 9 October 2026).</b> Railway
+  <code>crowagent-platform</code> and <code>crowagent-worker</code> both hold the same
+  <code>sk_live</code> secret key, rotated on 8 October, and the API's <code>/readyz</code> Stripe
+  balance check passes with it. But <code>NEXT_PUBLIC_STRIPE_MODE</code> on Railway production reads
+  <code>test</code>. Owner notes from 27 to 29 September record production as test mode with Stripe
+  Tax deferred. Which is intended is the owner's decision and is not settled. Do not act on either
+  reading, never charge a live card, and never touch a live key. The Vercel values are write only
+  and were not read.
 </div>
 
 <p class="sm">Both front ends are invitation only. The same access lock runs on both, against its own
@@ -114,7 +121,10 @@ working tree is refused.</p>
   production install command, which is the deploy rehearsal RULE 0-D asks for. No GitHub Actions
   minute, no push, no git deployment. Web is the default. The portal is its own run,
   <code>pnpm staging:promote --project portal</code>, after the web record is committed, because the
-  web run leaves <code>promotions.jsonl</code> dirty.</span>
+  web run leaves <code>promotions.jsonl</code> dirty. The run downloads
+  <code>.env.staging.local</code>, which holds staging keys, into
+  <code>~/crowagent-scratch/promote/&lt;sha&gt;/.vercel/</code>. Delete those folders once the record
+  is committed.</span>
 </div></div>
 
 <div class="step"><div class="num">3</div><div class="body">
@@ -176,8 +186,9 @@ working tree is refused.</p>
   <b>It prints the cost, then deploys, because git no longer does.</b>
   <span>Since 26 September (owner option A) a push to <code>main</code> builds nothing on the web
   project. The cost statement lists the workflows that fire on a push to <code>main</code> (four
-  files carry that trigger, three of them path filtered) and warns that the portal's inline ignore
-  command still starts one git built portal deployment. Then, in order: <code>git push origin
+  files carry that trigger, three of them path filtered). The portal's ignore command now skips
+  git builds too (<code>0745f7464</code>): the 8 October push of <code>9031f5fd1</code> produced 4 git
+  deployments across web and portal and all 4 settled CANCELED. Then, in order: <code>git push origin
   main</code> with <code>CA_PUSH_APPROVAL</code>, which is the record of what production runs. Only
   when <code>api/</code> changed, the same sha to <code>railway-production</code>, which deploys
   <code>crowagent-platform</code> and <code>crowagent-worker</code>. Then web and portal as source
@@ -222,16 +233,23 @@ Bitwarden, legacy price ids and others).</p>
     <tr><td><b>Vercel web, <code>staging</code> environment</b></td><td>The same names with staging values: staging Supabase, staging Railway URL, sandbox Stripe with its own webhook secret, <code>NEXT_PUBLIC_CA_ENV=staging</code>, no PostHog key on purpose</td><td><code>node scripts/staging/vercel-staging-admin.mjs sync-env-vars</code> (values from identity overrides, <code>web/.env.local</code> and readable production rows). Sensitive values the API cannot read back are pasted in the dashboard under environment "staging".</td></tr>
     <tr><td><b>Railway <code>crowagent-platform</code></b></td><td>Production API: Supabase production, Stripe live key and webhook secret, Gemini and Anthropic keys, Brevo, Upstash, <code>PLATFORM_SECRET_KEY</code>, <code>ALLOWED_ORIGINS</code></td><td>Dashboard, or the logged in Railway CLI (<code>railway variable set</code> and <code>delete</code>). Any change redeploys the service.</td></tr>
     <tr><td><b>Railway <code>crowagent-platform-staging</code></b></td><td>Same names with staging values, <code>ENVIRONMENT=staging</code>, <code>ALLOWED_ORIGINS</code> includes the staging domain</td><td>As above. Proven at runtime by a CORS preflight from the staging origin.</td></tr>
+    <tr><td><b>Portal Integrations store</b>, table <code>public.portal_integrations</code> on production</td><td>The portal's own encrypted token store, read FIRST, before the Vercel variable of the same name: <code>GITHUB_TOKEN</code>, <code>SENTRY_AUTH_TOKEN</code>, <code>STRIPE_SECRET_KEY</code>, <code>GEMINI_API_KEY</code>, <code>VERCEL_TOKEN</code>, <code>RAILWAY_API_TOKEN</code>, <code>POSTHOG_PERSONAL_API_KEY</code> and others</td><td>Portal, Settings, Integrations, by the owner. A token rotated only in Vercel is ignored while a row exists. Read <code>key_name</code>, <code>status</code> and <code>updated_at</code> only.</td></tr>
     <tr><td><b>Supabase, both projects</b></td><td>Auth providers (email and Google. Azure was absent on production on 3 September, current state unverified), Site URL and redirect list, session time box 168 h and inactivity 24 h</td><td>Dashboard only. Staging Site URL is the staging domain.</td></tr>
-    <tr><td><b>Local <code>web/.env.local</code></b></td><td>Targets STAGING Supabase and STAGING Railway. Never production.</td><td>Hand edited. Gitignored. The staging sync reads it.</td></tr>
+    <tr><td><b>Local <code>web/.env.local</code> and <code>apps/portal/.env.local</code></b></td><td>Target STAGING Supabase and STAGING Railway, with the staging <code>sb_secret</code> and Stripe test key since 8 October. Never production.</td><td>Hand edited. Gitignored. The staging sync reads the web file.</td></tr>
   </tbody>
 </table>
 </div>
 
 <div class="callout">
-  <b>Never copy from <code>web/.env.local.staging-bak</code>.</b> It points at the Supabase project
-  <code>yxyuqssqgdkcygnenfjh</code>, deleted in July. The current staging project is
-  <code>ipgrnwvfnumgvnxkpxsc</code>.
+  <b>Supabase keys since 8 October 2026.</b> Both projects use <code>sb_publishable</code> keys
+  (browser, <code>SUPABASE_ANON_KEY</code>) and <code>sb_secret</code> keys
+  (<code>SUPABASE_SERVICE_ROLE_KEY</code>), and the legacy JWT anon and service_role keys are DISABLED
+  on both (an old service_role key answers 401). One production secret is shared by the Railway API
+  and worker and the Vercel web and portal production targets. Every env file backup
+  (<code>*.bak</code>, <code>*.prod-bak</code>, <code>*.staging-bak</code> and similar) was deleted on 8
+  October because several held live keys. Never create one. Staging is
+  <code>ipgrnwvfnumgvnxkpxsc</code>. The project <code>yxyuqssqgdkcygnenfjh</code> was deleted in
+  July.
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -240,8 +258,9 @@ Bitwarden, legacy price ids and others).</p>
 <p><code>pnpm billing:audit</code> runs <code>scripts/staging/billing-leak-audit.mjs</code>, each check
 red proved in its test file. <code>--quick</code> runs the repo checks without the network and is
 what the pre-push hook uses. Any FAIL row is a P0. A <code>DIVERGE</code> row is an unpromoted cost
-cut, not a leak (D105). The check list below was written on 4 September and was not recounted on 4
-October.</p>
+cut, not a leak (D105). Run live on 8 October 2026: 16 checks, 16 PASS, 0 FAIL, 0 DIVERGE (two
+DIVERGE rows that read stale 13 September records were retired once the cron cuts shipped). The
+list below groups those checks.</p>
 
 <div class="tblwrap">
 <table class="doc-tbl">
@@ -270,9 +289,9 @@ any infrastructure change, and weekly by hand. A timer would be the thing it exi
   <span>Live webhook endpoint created for <code>app.crowagent.ai/api/stripe/webhooks</code>, the
   archived live CrowMark product reactivated (its lookup keyed prices would have failed checkout),
   live secret key pasted by the owner into Vercel and Railway, live webhook secret and mode written
-  by the cutover script, one promotion. Staging stays on the sandbox for ever. Later owner notes
-  (27 to 29 September) record production as test mode, so the current mode is unverified, see
-  section 1.</span>
+  by the cutover script, one promotion. Staging stays on the sandbox for ever. Measured 8 and 9
+  October: the production key is live but the mode flag reads test, see section 1. That
+  disagreement is the owner's to settle.</span>
 </div></div>
 
 <div class="step"><div class="num">B</div><div class="body">
@@ -289,6 +308,27 @@ any infrastructure change, and weekly by hand. A timer would be the thing it exi
   <code>ENGINEERING-STANDARDS.md</code> and the root <code>CLAUDE.md</code>. When a convenience
   and the document disagree, the document wins. If a step is impossible, stop and put the question
   to the owner with the cost in numbers.</span>
+</div></div>
+
+<div class="step"><div class="num">D</div><div class="body">
+  <b>Rotating a key, in this order (learned 8 October 2026).</b>
+  <span>Create the new key. Put it in every store that holds it: Railway services, Vercel production
+  AND the Vercel <code>staging</code> environment, the portal Integrations table, the local
+  <code>.env.local</code> files. Fingerprint each store to prove they match, never print a value.
+  Rebuild what reads it, because Vercel applies a variable only on the next build. Prove it on
+  <code>/readyz</code> and a live page. Only then revoke the old key. Getting this wrong cost two
+  incidents on 8 October: about an hour of production API errors when the old Supabase secret was
+  revoked first, and every signed in page down when a staging key reached a Vercel production
+  variable. The rules for every AI tool are in the onboarding guide, section 3.7.</span>
+</div></div>
+
+<div class="step"><div class="num">E</div><div class="body">
+  <b>Restoring production after a bad variable.</b>
+  <span>An instant rollback to the last good deployment (<code>vercel rollback &lt;url&gt;</code>)
+  needs no build and restored web and portal within seconds on 8 October. After a rollback the next
+  build does not take the domain by itself, so promote it explicitly (<code>vercel promote
+  &lt;url&gt;</code>). Then correct the variable and rebuild. Only the driver does this, and the owner
+  is told straight after.</span>
 </div></div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -333,10 +373,11 @@ them the app's first edge gate 302s the request before it reaches the BFF.</p>
   (<code>STAGING_SUPABASE_PUBLISHABLE_KEY</code>) is the staging <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>,
   nothing separate. And a guard that checks the staging project ref must read it from
   <code>NEXT_PUBLIC_SUPABASE_URL</code> (which contains <code>ipgrnwvfnumgvnxkpxsc</code> as plain
-  text), never from the anon key, whose ref is inside an opaque JWT payload.
+  text), never from the anon key. Since 8 October the anon key is an <code>sb_publishable</code> key,
+  which carries no project ref at all, and the old JWT anon key is disabled.
 </div>
 
-<p class="sm">Measured on 4 October 2026 by curl with no credential: <code>staging-app</code>,
+<p class="sm">Measured on 4 October 2026 and again on 9 October 2026, unchanged, by curl with no credential: <code>staging-app</code>,
 <code>staging-portal</code> and <code>portal</code> answer a 302 to Cloudflare Access,
 <code>app.crowagent.ai/login</code> answers 200, and the old two level host
 <code>staging.app.crowagent.ai</code> answers 403. Test accounts by environment variable name, and

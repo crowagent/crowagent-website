@@ -23,7 +23,8 @@
   <p class="dated">Commands read from <code>package.json</code> (root, web, portal, astro), the API
   <code>Procfile</code>, <code>.github/workflows</code> and <code>web/playwright.config.ts</code> on
   4 September 2026. Corrected on 4 October 2026 against the scripts, the workflow files and the
-  live Railway API. The single onboarding source for every AI tool is
+  live Railway API. <b>Refreshed on 9 October 2026</b>: the portal ignore fix, the env file
+  clean up, the secrets rules and the new AI onboarding page. The single onboarding source for every AI tool is
   <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>, and where this page and that guide
   disagree, the guide is the newer measurement.</p>
 </div>
@@ -88,9 +89,11 @@ talks to production.</p>
 <div class="step"><div class="num">2</div><div class="body">
   <b>Environment files.</b>
   <span><code>web/.env.local</code> targets staging Supabase and staging Railway and is
-  gitignored. Copy <code>web/.env.example</code> for a fresh machine. Never copy from
-  <code>web/.env.local.staging-bak</code>, it names a Supabase project deleted in July. The
-  pre-commit hook refuses any <code>.env</code> file and any commit that carries the owner's
+  gitignored. Copy <code>web/.env.example</code> for a fresh machine. <code>apps/portal/.env.local</code>
+  is the same for the portal. Every env file backup was deleted on 8 October 2026 because several
+  held live keys, so never create one. Never print an env file or a key: confirm a value by
+  fingerprint (<code>... | python -I ~/.claude/hooks/envfp.py</code>), as the onboarding guide
+  section 3.7 requires of every AI tool. The pre-commit hook refuses any <code>.env</code> file and any commit that carries the owner's
   personal identity.</span>
 </div></div>
 
@@ -156,7 +159,7 @@ talks to production.</p>
     <tr><td><code>scripts/staging/billing-leak-audit.mjs</code></td><td>repo and live checks against Vercel, GitHub and Railway</td><td>before promotions, after infra changes</td></tr>
     <tr><td><code>scripts/staging/vercel-staging-admin.mjs</code></td><td><code>status</code>, <code>ensure-env</code>, <code>ensure-domain</code>, <code>sync-env-vars</code>, <code>ensure-public-staging</code>, <code>ensure-prod-identity</code>, <code>prune-dead-vars</code></td><td>staging environment administration</td></tr>
     <tr><td><code>scripts/staging/stripe-live-cutover.mjs</code></td><td>writes the live Stripe set to Vercel and Railway production from a gitignored local file</td><td>done once, kept for key rotation</td></tr>
-    <tr><td><code>scripts/vercel-build-ignore.sh</code></td><td>the web project's Vercel ignore command: skip EVERY git triggered build, <code>main</code> included, since owner option A on 26 September. The portal keeps its inline ignore command in <code>apps/portal/vercel.json</code>, which still builds <code>main</code></td><td>runs on Vercel, never edit off main</td></tr>
+    <tr><td><code>scripts/vercel-build-ignore.sh</code></td><td>the web project's Vercel ignore command: skip EVERY git triggered build, <code>main</code> included, since owner option A on 26 September. The portal's <code>apps/portal/vercel.json</code> ignore command skips git builds too since <code>0745f7464</code>, measured on the 8 October push: 4 of 4 git deployments CANCELED</td><td>runs on Vercel, never edit off main</td></tr>
     <tr><td><code>scripts/arch-lint-web.mjs</code>, <code>arch-lint-bff.mjs</code>, <code>arch-lint-py.mjs</code>, <code>arch-lint-responsive.mjs</code></td><td>architecture boundaries with committed baselines</td><td><code>npm run lint:arch-web</code> and siblings before a promotion that moves code between layers</td></tr>
     <tr><td><code>scripts/donotbuild-scan.mjs</code></td><td>fails if a decommissioned product or a forbidden capability reappears</td><td>CI on push, and locally</td></tr>
     <tr><td><code>scripts/verify-api-shard-coverage.mjs</code>, <code>verify-ci-wired-markers.mjs</code>, <code>verify-chassis-ratchet.mjs</code>, <code>verify-client-chunk-budget.mjs</code></td><td>certification helpers: shard coverage, wired gate markers, chassis ratchet, chunk budget</td><td>release certification</td></tr>
@@ -254,7 +257,7 @@ talks to production.</p>
     <tr><td><code>no-untracked-todos.yml</code></td><td>push to main touching <code>web/app</code>, <code>web/lib</code> or <code>web/src</code></td><td>no TODO without a tracker row</td></tr>
     <tr><td><code>regime-threshold-scan.yml</code></td><td>push to main or <code>release/**</code> touching the regulated constant and market spec files</td><td>procurement regime thresholds match the source of record</td></tr>
     <tr><td><code>ci.yml</code>, <code>crowagent-platform-ci.yml</code></td><td>pull request only</td><td>the promotion path opens no pull request, so neither fires on a promotion. <code>pnpm gates:local</code> runs their cheap half on this machine instead</td></tr>
-    <tr><td>Vercel builds</td><td>none from git on web</td><td>the web ignore script skips every git ref. The portal's inline ignore command still builds <code>main</code>, one extra build the cost statement warns about. Production web and portal are source uploads made by <code>promote-production.mjs</code>, built on the fixed Standard machine, unbilled. Every other branch lands CANCELED</td></tr>
+    <tr><td>Vercel builds</td><td>none from git on web</td><td>the web ignore script skips every git ref. The portal's ignore command now skips them too (<code>0745f7464</code>, 4 of 4 CANCELED on 8 October). A changed variable reaches production only on the next build. Production web and portal are source uploads made by <code>promote-production.mjs</code>, built on the fixed Standard machine, unbilled. Every other branch lands CANCELED</td></tr>
     <tr><td>Railway</td><td>push to <code>railway-production</code>, made only by the promote script when <code>api/</code> changed</td><td><code>crowagent-platform</code> and <code>crowagent-worker</code> redeploy. Staging is <code>crowagent-platform-staging</code> on <code>api-staging</code>, and a push there has been measured not to redeploy, so read the Railway deployment list</td></tr>
     <tr><td>Scheduled workflows</td><td>none</td><td>seven were still running nightly and weekly on 3 September, mostly red. All disabled and their triggers removed. The audit fails if one returns</td></tr>
   </tbody>
@@ -285,6 +288,7 @@ genuinely cannot run locally.</p>
     <tr><td>RULE 0-T and 0-CERT</td><td>targeted regression while building. Certification is a property of the log: green, current tree, comparable collection</td></tr>
     <tr><td>RULE 0-V</td><td>a grep is a claim. Name the measurement and how it could have failed before stating a finding</td></tr>
     <tr><td>Identity</td><td>every generated artefact is authored by <code>Crow Agent</code>, <code>crowagent.platform@gmail.com</code>. The pre-commit hook enforces it</td></tr>
+    <tr><td>Secrets</td><td>never put a key on a command line, never print one, never paste one. Rotate in the order create, place everywhere, rebuild, prove, then revoke. Onboarding guide section 3.7, and the AI onboarding page beside this one</td></tr>
   </tbody>
 </table>
 </div>

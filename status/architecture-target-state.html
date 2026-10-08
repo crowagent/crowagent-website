@@ -46,16 +46,23 @@
   <p class="dated">Every number on this page was counted on production on 29 August 2026. Nothing
   is estimated. Where a figure is not here, it was not measured, and it is left out rather than
   guessed. Corrected on 4 October 2026: the dead project is gone, the two crossing foreign keys were
-  re-read on production and are still there, and the portal now sits behind Cloudflare Access. The
-  single onboarding source for every AI tool is
+  re-read on production and are still there, and the portal now sits behind Cloudflare Access.
+  Refreshed on 9 October 2026: the foreign keys and Supabase projects were counted again on
+  production (callout below and the measurement section), the dead repository is now deleted, and
+  the credential model changed with the 8 October key rotation. The single onboarding source for every AI tool is
   <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>.</p>
 </div>
 
 <div class="callout">
-  <b>Status on 4 October 2026.</b> Step 0 is done: the <code>crowagent-internal</code> Vercel
-  project was deleted on 29 August and its repository archived. Steps 1 to 6 have not started: both
-  <code>platform_connector_*</code> foreign keys to <code>organisations</code> still exist on
-  production, and the estate still runs exactly two Supabase projects. A third Supabase project is
+  <b>Status on 9 October 2026.</b> Step 0 is done and complete: the <code>crowagent-internal</code>
+  Vercel project was deleted on 29 August, and its GitHub repository and local folder were deleted
+  on 8 October. Steps 1 to 6 have not started: re-measured on production on 9 October, both
+  <code>platform_connector_*</code> foreign keys to <code>organisations</code> still exist, and the
+  Supabase API lists exactly two projects, both in <code>eu-west-1</code>. One new fact sharpens step
+  3: since the 8 October rotation, ONE production <code>sb_secret</code> key is shared by the Railway
+  API, the Railway worker, the web app and the portal, so a portal credential leak is still a
+  customer database leak. Supabase allows several secret keys per project, so the portal can hold
+  its own, revocable on its own, before any database split. A third Supabase project is
   a new cloud resource, so it needs the RULE 0-G cost statement and the owner's approval first. The
   portal and the app now have separate auth by owner decision (12 September), and Cloudflare Access
   answers first on <code>portal.crowagent.ai</code>, <code>staging-portal.crowagent.ai</code> and
@@ -81,8 +88,8 @@
   </div>
   <div class="q b">
     <h4>The dead project</h4>
-    <p><b><code>crowagent-internal</code> is gone.</b> Vercel project deleted on 29 August, repository
-    archived. Never build there.</p>
+    <p><b><code>crowagent-internal</code> is gone.</b> Vercel project deleted on 29 August, GitHub
+    repository and local folder deleted on 8 October. Never recreate it.</p>
   </div>
 </div>
 
@@ -139,7 +146,7 @@
     <text class="hdmute" x="648" y="56">crowagent-internal</text>
     <line class="e-ghost" x1="646" y1="51" x2="800" y2="51"/>
     <text class="sm"  x="648" y="76">project deleted 29 August</text>
-    <text class="sm"  x="648" y="94">repository archived</text>
+    <text class="sm"  x="648" y="94">repository deleted</text>
 
     <path class="e"     d="M168,102 L168,178" marker-end="url(#tsn-a)"/>
     <path class="e-bad" d="M464,102 L464,178" marker-end="url(#tsn-b)"/>
@@ -216,7 +223,7 @@
     <text class="hdmute" x="648" y="56">crowagent-internal</text>
     <line class="e-ghost" x1="646" y1="51" x2="800" y2="51"/>
     <text class="sm"  x="648" y="80">project deleted</text>
-    <text class="sm"  x="648" y="96">repository archived</text>
+    <text class="sm"  x="648" y="96">repository deleted</text>
 
     <!-- The portal reaches its OWN database directly, and reaches customer data
          ONLY through the platform API. Drawing the second arrow into the customer
@@ -331,7 +338,15 @@ boundary. Counted over every foreign key in <code>public</code> on production.</
 <figcaption>Bars are to scale, which is the whole argument. The portal is held to customer data by
 two keys against the 474 that hold customer data to itself, and both crossings are
 <code>platform_connector_*</code> rows referencing <code>organisations</code>. Neither carries owner
-confidential data.</figcaption>
+confidential data. <b>Recounted on production on 9 October 2026</b>, with the same table rule (portal
+side means the <code>portal_</code>, <code>founder_</code> and <code>platform_</code> tables plus
+<code>health_history</code>, <code>sales_pipeline</code>, <code>headcount_plan</code>,
+<code>rd_log</code>, <code>risk_register</code>, <code>mrr_snapshots</code> and
+<code>infra_cost_history</code>, references to <code>auth</code> excluded): 583 foreign keys in
+<code>public</code>, 567 inside customer data, 14 inside the portal across 35 portal side tables, and
+still exactly 2 crossing, the same two connector keys. The bars keep the 29 August figures. The
+argument is unchanged because the crossing count is unchanged. The 9 Buyer to Supplier keys were not
+recounted.</figcaption>
 </figure>
 
 <div class="kpi">
@@ -512,8 +527,8 @@ joined, and those nine keys are the product rather than debt.</p>
 
 <div class="step"><div class="num">0</div><div class="body">
   <b>Delete the dead portal. DONE on 29 August.</b>
-  <span>The owner deleted the <code>crowagent-internal</code> Vercel project and archived the
-  repository. It served nothing: no custom domain, <code>"live": false</code>, and
+  <span>The owner deleted the <code>crowagent-internal</code> Vercel project on 29 August, and its
+  GitHub repository and local folder on 8 October. It served nothing: no custom domain, <code>"live": false</code>, and
   <code>portal.crowagent.ai</code> stayed up when it was paused.</span>
 </div></div>
 
@@ -540,7 +555,9 @@ joined, and those nine keys are the product rather than debt.</p>
   <b>Give the portal a service identity on the platform API.</b>
   <span>Named credential, explicit scopes, audit trail. Replace the portal's remaining direct reads
   of customer tables with API calls. This is the step that turns a shared secret into a revocable
-  one, and it is the real security win.</span>
+  one, and it is the real security win. A first, cheap half is available today: give the portal its
+  own <code>sb_secret</code> key in Supabase instead of the one it shares with the API, the worker and
+  the web app (measured by fingerprint on 8 October), so revoking it cannot take customers down.</span>
 </div></div>
 
 <div class="step"><div class="num">4</div><div class="body">
