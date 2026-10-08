@@ -47,6 +47,7 @@
     <li><a href="#ai-secrets">Secrets and credentials</a></li>
     <li><a href="#ai-work">Working rules: scope, measurement, style, identity</a></li>
     <li><a href="#ai-brief">Briefs and reports</a></li>
+    <li><a href="#ai-guards">Enforced guardrails, per tool</a></li>
   </ol>
 </details>
 
@@ -217,6 +218,32 @@ anything not done with the exact reason. Written to the file the brief names, no
 <p><b>Report only what you measured.</b> Never guess a cause and present it as a finding. Before
 handing back, grep your own text for semicolons, the two dashes and the banned words. That grep is
 the evidence.</p></div></div>
+
+<h2 id="ai-guards"><span class="n">Section 9</span>Enforced guardrails, per tool</h2>
+
+<p>A written rule binds a careful agent. These controls bind every agent. Each was red proved on 9
+October 2026. Full detail: onboarding guide section 3.8.</p>
+
+<div class="tblwrap">
+<table class="doc-tbl">
+  <thead><tr><th>Layer</th><th>Binds</th><th>What it refuses</th><th>Proof</th></tr></thead>
+  <tbody>
+    <tr><td><b>Git pre-commit</b>, <code>scripts/guardrails/guardrails.mjs</code> from <code>.husky/</code> (platform, website) and <code>.githooks/</code> (workspace root)</td><td>every tool, because every tool commits through git</td><td>a non Crow Agent author or the owner's personal identity, any added secret value, deleting or renaming a rule file, removing any RULE identifier, gutting a rule file, any change to a hook or the checker</td><td>7 unit tests, 7 end to end cases in a throwaway repository, and a planted key refused by all three live hooks</td></tr>
+    <tr><td><b>Git pre-push</b></td><td>every tool</td><td>a push to platform <code>main</code>, <code>railway-production</code> or <code>staging</code>, or to website <code>main</code> (a production deploy), without the owner's approval text naming the sha7</td><td>website guard: refused without approval, passed with it, other branches unaffected</td></tr>
+    <tr><td><b>Claude Code PreToolUse hooks</b></td><td>every Claude session, which cannot skip them</td><td>secrets on a command line or printed, credential files printed, <code>--no-verify</code> and hook rewiring, force push, <code>git add .</code>, approval variables set by the agent, direct Vercel, Railway, Supabase CLI, <code>gh</code> and <code>wrangler</code> deploys or changes, deleting rule files, MCP deploy and variable tools, and any edit to the guards themselves</td><td>43 cases, plus live refusals of <code>git add -A</code> and an edit to a guard file</td></tr>
+    <tr><td><b>Gemini CLI settings</b>, <code>~/.gemini/settings.json</code></td><td>Gemini</td><td>53 shell command prefixes (mutating git, deploy CLIs, promote scripts, deletes, environment dumps, process kills) and 36 Vercel and Railway MCP write and variable tools</td><td>setting key verified in the installed CLI 0.62.0 code. Not run live, because that is a paid call</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout bad"><b>Not enforced yet, and said plainly.</b> <code>git commit --no-verify</code>
+skips client hooks: Claude is blocked from it and Gemini cannot run <code>git commit</code> at all,
+but Kiro, Codex, Cursor and Copilot are bound by the written rule only. Server side GitHub push rules
+would close that gap and may cost money, so they wait for a cost statement and the owner's approval.
+Kiro's own blocking hooks exist, but how they receive the tool input was not confirmed, so none was
+added on a guess. Only the owner may set <code>CA_RULES_CHANGE_APPROVAL</code>,
+<code>CA_GUARDRAILS_CHANGE_APPROVAL</code> or <code>CA_PUSH_APPROVAL</code>, in the owner's own
+shell.</div>
 
 <p class="sm">Prepared by Crow Agent, 9 October 2026. Source of every rule:
 <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>, <code>ENGINEERING-STANDARDS.md</code>
