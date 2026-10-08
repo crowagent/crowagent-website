@@ -41,4 +41,13 @@
 # files that required scripts.js. `npm test` now prints why and exits 1. What
 # guards what ships is the gate chain: cd astro && npm run build. The Playwright
 # specs under tests/ are unaffected and never ran under jest.
+# [R284-AGENT-GUARDRAILS-01 2026-10-09] A PUSH TO main IS A PRODUCTION CLOUDFLARE DEPLOY, and
+# until today this hook let it through with no approval at all. Now it needs the owner's per push
+# approval text naming the pushed sha7 in CA_PUSH_APPROVAL, the same shape as guard 0b in
+# crowagent-platform. Any other branch is unaffected. Fails closed if the checker is missing.
+__g="../crowagent-platform/scripts/guardrails/guardrails.mjs"
+if [ ! -f "$__g" ]; then
+  echo "BLOCKED: guardrail checker not found at $__g." >&2; exit 1
+fi
+node "$__g" pre-push-approval || exit 1
 exit 0
