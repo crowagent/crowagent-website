@@ -34,14 +34,27 @@
   with stop usage on, which is the backstop rather than the fix.</p>
   <p class="dated">Measured 29 August 2026 from the live GitHub API, the GitHub organisation billing
   console, the Railway console, the production Supabase <code>cron.job</code> table and the Railway
-  scheduler source.</p>
+  scheduler source. Triggers, workflow counts and cron counts re-read on 4 October 2026 from the
+  workflow files of both repositories and the production database. The money figures are the August
+  snapshot and were NOT re-measured. The single onboarding source for every AI tool is
+  <code>crowagent-platform/docs/AI-ONBOARDING-GUIDE.md</code>.</p>
+</div>
+
+<div class="callout good">
+  <b>What changed since this page was written (4 October 2026).</b> No workflow in either
+  repository has a <code>schedule:</code> trigger any more: the last seven were disabled on 3
+  September. <code>ci.yml</code> and <code>crowagent-platform-ci.yml</code> run on pull requests
+  only, and the promotion path (<code>pnpm prod:promote</code>) pushes <code>main</code> with no
+  pull request, so neither runs on a promotion. Their cheap half runs on this machine as
+  <code>pnpm gates:local</code>, 33 gates, zero Actions minutes. A push to <code>main</code> fires at
+  most four workflow files, three of them path filtered.
 </div>
 
 <div class="kpi">
-  <div><b style="color:var(--open)">$52</b><span>GitHub per month, all in. Railway is $5</span></div>
-  <div><b>76%</b><span>of Actions minutes are the TWO workflows that gate merges</span></div>
-  <div><b>2%</b><span>of Actions consumption is scheduled work. The crons were never the cost</span></div>
-  <div><b>2 of 30</b><span>workflows produce a required check. The other 28 gate nothing</span></div>
+  <div><b style="color:var(--open)">$52</b><span>GitHub per month in August, all in. Railway was $5</span></div>
+  <div><b>76%</b><span>of August Actions minutes were the TWO workflows that gate merges</span></div>
+  <div><b>0</b><span>scheduled workflows in either repository on 4 October</span></div>
+  <div><b>29 + 4</b><span>workflow files in the platform and the website on 4 October</span></div>
 </div>
 
 <div class="callout bad">
@@ -127,32 +140,38 @@ is only visible on the billing page, never from run duration.</figcaption>
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <h2 id="ci-inventory"><span class="n">Section 2</span>The full inventory, and what gates what</h2>
 
-<p>30 workflows in <code>crowagent-platform</code>, 6 in <code>crowagent-website</code>. Branch
-protection on <code>main</code> requires exactly two checks, read live from the API:
-<code>Run Tests</code> and <code>All CI Gates Pass</code>. Everything else runs, bills, and blocks
-nothing.</p>
+<p>On 4 October: 29 workflow files in <code>crowagent-platform</code>, 4 in
+<code>crowagent-website</code> (<code>astro-gates</code>, <code>og-image-rebuild</code>,
+<code>robots-guard</code>, <code>smoke-test</code>). On 29 August branch protection on
+<code>main</code> required exactly two checks, read live from the API: <code>Run Tests</code> and
+<code>All CI Gates Pass</code>. Whether that is still the required set was not re-read on 4
+October. The Trigger column below was corrected on 4 October. The minutes and the proposals are
+the August snapshot.</p>
 
 <div class="tblwrap">
 <table class="doc-tbl">
   <thead><tr><th>Workflow</th><th>Trigger</th><th class="num">Min / 8d</th><th>Gates?</th><th>Proposal</th></tr></thead>
   <tbody>
-    <tr><td><code>ci.yml</code> CI Quality Gates</td><td>push main/staging, PR</td><td class="num">416</td><td>YES, <code>All CI Gates Pass</code></td><td><span class="pill p-keep">Keep on GitHub</span></td></tr>
-    <tr><td><code>crowagent-platform-ci.yml</code></td><td>push main/staging, PR</td><td class="num">310</td><td>YES, <code>Run Tests</code></td><td><span class="pill p-keep">Keep on GitHub</span></td></tr>
+    <tr><td><code>ci.yml</code> CI Quality Gates</td><td>PR to dev, staging or main. No push trigger since 2 September</td><td class="num">416</td><td>YES in August, <code>All CI Gates Pass</code></td><td><span class="pill p-keep">Keep on GitHub. Runs locally as <code>pnpm gates:local</code></span></td></tr>
+    <tr><td><code>crowagent-platform-ci.yml</code></td><td>PR to main, dispatch</td><td class="num">310</td><td>YES in August, <code>Run Tests</code></td><td><span class="pill p-keep">Keep on GitHub</span></td></tr>
     <tr><td>Dependabot security updates</td><td>automatic</td><td class="num">47</td><td>no</td><td><span class="pill p-keep">Keep, GitHub only feature</span></td></tr>
-    <tr><td><code>apps-portal-build.yml</code></td><td>push main/staging, PR</td><td class="num">41</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
-    <tr><td><code>lighthouse-ci.yml</code></td><td>PR, dispatch</td><td class="num">30</td><td>no</td><td><span class="pill p-drop">19 of 19 RED. Delete or fix</span></td></tr>
+    <tr><td><code>apps-portal-build.yml</code></td><td>push to main or staging, PR, skips markdown and docs only changes</td><td class="num">41</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>lighthouse-ci.yml</code></td><td>PR to main</td><td class="num">30</td><td>no</td><td><span class="pill p-drop">19 of 19 RED in August. Delete or fix</span></td></tr>
     <tr><td><code>a11y-and-auth-flows.yml</code></td><td>PR</td><td class="num">19</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
-    <tr><td><code>donotbuild-scan.yml</code></td><td>push main/staging, PR</td><td class="num">11</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
-    <tr><td><code>portal-e2e.yml</code></td><td>schedule 1st and 15th</td><td class="num">9</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
-    <tr><td><code>security-scan.yml</code> OWASP ZAP</td><td>schedule weekly</td><td class="num">9</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
-    <tr><td><code>regime-threshold-scan.yml</code></td><td>push main, PR</td><td class="num">6</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
-    <tr><td><code>lighthouse-nightly.yml</code></td><td>schedule weekly</td><td class="num">6</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
-    <tr><td><code>stripe-price-drift.yml</code></td><td>was schedule weekly</td><td class="num">&lt;5</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
-    <tr><td>Website <code>smoke-test</code></td><td>was schedule every 15 min</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
-    <tr><td>Website <code>robots-guard</code></td><td>was schedule daily</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
-    <tr><td><code>no-untracked-todos.yml</code>, <code>migration-apply-check.yml</code>, <code>rls-parity.yml</code>, <code>ui-audit.yml</code>, <code>eval-gate.yml</code></td><td>push main, PR</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
-    <tr><td><code>perf-cdp-nightly.yml</code>, <code>portal-lighthouse.yml</code>, <code>weekly-security-scan.yml</code>, <code>e2e-core-journeys.yml</code>, <code>e2e-critical-journeys.yml</code></td><td>schedule or PR</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Railway</span></td></tr>
-    <tr><td>8 <code>workflow_dispatch</code> only utilities</td><td>manual</td><td class="num">0 idle</td><td>no</td><td><span class="pill p-free">Free until run. Leave</span></td></tr>
+    <tr><td><code>donotbuild-scan.yml</code></td><td>push to main or staging, PR, skips markdown and docs only changes</td><td class="num">11</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>portal-e2e.yml</code></td><td>dispatch only. Schedule removed 3 September</td><td class="num">9</td><td>no</td><td><span class="pill p-keep">Done, no timer</span></td></tr>
+    <tr><td><code>security-scan.yml</code> OWASP ZAP</td><td>dispatch only. Schedule removed 3 September</td><td class="num">9</td><td>no</td><td><span class="pill p-keep">Done, run by hand before a release</span></td></tr>
+    <tr><td><code>regime-threshold-scan.yml</code></td><td>push to main or <code>release/**</code> touching the regulated constant and market spec files</td><td class="num">6</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>lighthouse-nightly.yml</code></td><td>dispatch only. Schedule removed 3 September</td><td class="num">6</td><td>no</td><td><span class="pill p-keep">Done, no timer</span></td></tr>
+    <tr><td><code>stripe-price-drift.yml</code></td><td>dispatch only</td><td class="num">&lt;5</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
+    <tr><td>Website <code>smoke-test</code></td><td>push to website main, dispatch. Schedule removed</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway, hourly job <code>marketing_smoke_check</code></span></td></tr>
+    <tr><td>Website <code>robots-guard</code></td><td>push to website main, dispatch. Schedule removed</td><td class="num">separate repo</td><td>no</td><td><span class="pill p-keep">MOVED to Railway</span></td></tr>
+    <tr><td><code>no-untracked-todos.yml</code></td><td>push to main touching <code>web/app</code>, <code>web/lib</code> or <code>web/src</code>, PR</td><td class="num">&lt;5</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>migration-apply-check.yml</code>, <code>rls-parity.yml</code>, <code>ui-audit.yml</code>, <code>eval-gate.yml</code></td><td>PR only, path filtered</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>perf-cdp-nightly.yml</code>, <code>weekly-security-scan.yml</code></td><td>dispatch only. Schedules removed 3 September</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-keep">Done, no timer</span></td></tr>
+    <tr><td><code>portal-lighthouse.yml</code></td><td>PR touching <code>apps/portal</code>, dispatch. Schedule removed 3 September</td><td class="num">&lt;5</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td><code>e2e-core-journeys.yml</code>, <code>e2e-critical-journeys.yml</code>, <code>portal-e2e-pr.yml</code></td><td>PR only, path filtered</td><td class="num">&lt;5 each</td><td>no</td><td><span class="pill p-move">Fold into the gate</span></td></tr>
+    <tr><td>dispatch only utilities (<code>ai-golden-eval</code>, <code>brevo-bootstrap</code>, <code>cf-pages-redeploy-marketing</code>, <code>cloudflare-bootstrap</code>, <code>email-worker-deploy</code>, <code>portal-env-bootstrap</code>, <code>post-deploy-verify</code>)</td><td>manual</td><td class="num">0 idle</td><td>no</td><td><span class="pill p-free">Free until run. Each run needs its own ask</span></td></tr>
   </tbody>
 </table>
 </div>
@@ -196,36 +215,37 @@ free or already paid for. This is the part of the estate that is working.</p>
   <tbody>
     <tr>
       <td><b>Supabase pg_cron</b><br><span class="muted">drives the <code>/api/cron/*</code> routes</span></td>
-      <td class="num">14</td><td class="num">~240</td>
+      <td class="num">13 active on 4 October (14 on 29 August)</td><td class="num">~240 in August</td>
       <td>Nothing extra. Scheduling runs inside Postgres and the work at the far end is a Vercel
           invocation well inside the included quota.</td>
     </tr>
     <tr>
-      <td><b>Railway APScheduler</b><br><span class="muted"><code>api/app/tasks/scheduler.py</code></span></td>
-      <td class="num">~29</td><td class="num">continuous</td>
+      <td><b>Railway APScheduler</b><br><span class="muted"><code>api/app/tasks/scheduler.py</code> and <code>guard_jobs.py</code></span></td>
+      <td class="num">~32</td><td class="num">continuous</td>
       <td><b>Free at the margin.</b> The container is always on and billed whether or not a job
           fires, so every job already there costs only its CPU seconds, including one on a 5 minute
           cadence.</td>
     </tr>
     <tr>
-      <td><b>Vercel cron</b></td>
-      <td class="num">0</td><td class="num">0</td>
-      <td><span class="pill p-dead">Inert</span> Vercel never reads <code>web/vercel.json</code>,
-          because the project's Root Directory is the repository root.</td>
+      <td><b>Vercel cron, portal</b><br><span class="muted"><code>apps/portal/vercel.json</code></span></td>
+      <td class="num">7</td><td class="num">85</td>
+      <td>Every 6 hours: health check and the workflow reaper. Daily: MRR snapshot, trial expiry,
+          cost snapshot, agent performance. Weekly: dependency audit. Allowlisted by path in
+          <code>scripts/staging/billing-allowlist.json</code>, and an eighth fails the billing audit.</td>
     </tr>
   </tbody>
 </table>
 </div>
 
 <div class="callout bad">
-  <b>Do not plan around Vercel cron.</b> The <code>regions</code>, <code>ignoreCommand</code> and
-  <code>crons</code> blocks in <code>web/vercel.json</code> are all dead for the same reason.
-  Anything that looks like a Vercel cron in this repository is not running, so it must never be
-  counted as coverage.
+  <b>The web project has no Vercel cron.</b> <code>web/vercel.json</code> no longer exists, and when
+  it did Vercel never read it, because the web project's Root Directory is the repository root.
+  Product cron for the customer app is Supabase pg_cron calling <code>/api/cron/*</code>. Never add
+  a cron anywhere without the RULE 0-G cost statement and owner approval.
 </div>
 
 <details>
-  <summary>The 14 Supabase pg_cron jobs, read from production</summary>
+  <summary>The 14 Supabase pg_cron jobs read from production on 29 August (13 active on 4 October, not re-listed)</summary>
   <div class="dbody">
     <div class="tblwrap">
     <table class="doc-tbl">
@@ -280,10 +300,10 @@ free or already paid for. This is the part of the estate that is working.</p>
 </div></div>
 
 <div class="step"><div class="num">3</div><div class="body">
-  <b>Move the remaining scheduled audits to Railway.</b>
-  <span>Three are already there. The rest removes all unattended overnight spend at zero marginal
-  cost, though at 2 percent of consumption the saving is small and it is worth doing for the
-  discipline rather than the money.</span>
+  <b>Move the remaining scheduled audits to Railway. DONE.</b>
+  <span>On 3 September every remaining <code>schedule:</code> trigger was removed and the
+  workflows disabled, and <code>pnpm billing:audit</code> now fails if one returns. No GitHub
+  workflow in either repository runs on a timer.</span>
 </div></div>
 
 <div class="step"><div class="num">4</div><div class="body">
@@ -333,6 +353,9 @@ free or already paid for. This is the part of the estate that is working.</p>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <h2 id="ci-bills"><span class="n">Section 5</span>The actual bills, and the lock now applied</h2>
+
+<p class="sm">This section is the August 2026 snapshot. It was not re-measured on 4 October. Read the
+GitHub organisation billing console before quoting any figure from it.</p>
 
 <div class="tblwrap">
 <table class="doc-tbl">

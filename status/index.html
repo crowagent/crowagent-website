@@ -5,11 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>CrowAgent status</title>
+<!-- [R283-BOARD-PLATFORM-ARTIFACT-01] IBM Plex Sans and Mono, the typefaces of the
+     owner's published board artifact. Used only by the Platform tab. Offline the
+     stacks fall back to the system faces and nothing else changes. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
   :root{
     --bg:#05070E; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.11);
     --text:#fff; --sub:#A9B6D2; --teal:#2DD4BF;
-    --p0:#FF6B6B; --p1:#FFB454; --p2:#7C8BA8;
+    --p0:#FF6B6B; --p1:#FFB454; --p2:#7C8BA8; --p3:#64748B;
     --fixed:#2DD4BF; --built:#5EC8F0; --wip:#FFB454; --open:#FF6B6B;
     --decision:#C792EA; --hold:#7C8BA8; --norepro:#8FA3C0;
     /* CORRECTED and DECIDED were declared in the legend from the start and had
@@ -47,6 +53,35 @@
        is how a full-bleed row drifts out of alignment with the page. */
     --gutter:20px;
     --measure:1180px;
+
+    /* [R283-BOARD-PLATFORM-ARTIFACT-01] THE PLATFORM TAB PALETTE, prefixed pb.
+       The Platform tab now matches the owner's published R2.8.3 board artifact,
+       which has a light theme and a dark theme. The light values are the pb
+       tokens themselves. The dark values carry a dk suffix and are declared HERE
+       as well, because check-board-contract.js reads only this first :root block
+       and treats a literal anywhere else as a defect. The dark blocks further
+       down therefore swap var() for var() and hold no literal. None of the
+       tokens above this note changed, so the other tabs keep their palette. */
+    --pb-bg:#F3F5F9; --pb-panel:#FFFFFF; --pb-panel2:#EEF2F7; --pb-ink:#0F1B2E;
+    --pb-muted:#5B6B82; --pb-line:#DCE3EC;
+    --pb-accent:#0E8C7F; --pb-accent-soft:#D7F1EE;
+    --pb-fixed:#15803D; --pb-fixed-bg:#DCFCE7; --pb-built:#1D4ED8; --pb-built-bg:#DBEAFE;
+    --pb-wip:#B45309; --pb-wip-bg:#FEF3C7; --pb-open:#B91C1C; --pb-open-bg:#FEE2E2;
+    --pb-decision:#6D28D9; --pb-decision-bg:#EDE9FE;
+    --pb-p0:#7F1D1D; --pb-p1:#DC2626; --pb-p2:#D97706; --pb-p3:#64748B;
+    --pb-scheme:light;
+
+    --pb-bg-dk:#0A1322; --pb-panel-dk:#101C31; --pb-panel2-dk:#15233C; --pb-ink-dk:#E6EDF7;
+    --pb-muted-dk:#93A3BC; --pb-line-dk:#22324F;
+    --pb-accent-dk:#2DD4BF; --pb-accent-soft-dk:#0F3A3A;
+    --pb-fixed-dk:#4ADE80; --pb-fixed-bg-dk:#0F2E1E; --pb-built-dk:#7FA7FF; --pb-built-bg-dk:#15254A;
+    --pb-wip-dk:#FBBF24; --pb-wip-bg-dk:#3A2A0A; --pb-open-dk:#F87171; --pb-open-bg-dk:#3A1414;
+    --pb-decision-dk:#C4B5FD; --pb-decision-bg-dk:#2A1F4A;
+    --pb-p0-dk:#FCA5A5; --pb-p1-dk:#F87171; --pb-p2-dk:#FBBF24; --pb-p3-dk:#94A3B8;
+    --pb-scheme-dk:dark;
+    /* Per element hooks the render sets inline, one per status or severity. The
+       defaults here only make them resolve before render has run. */
+    --pb-c:var(--pb-accent); --pb-sevc:var(--pb-p3); --pb-pc:var(--pb-muted); --pb-pbg:var(--pb-panel2);
   }
   *{box-sizing:border-box}
   /* [R28-BOARD-NAV-01] `hidden` DID NOT HIDE, and that is not a quirk, it is how
@@ -554,10 +589,573 @@
   @media (prefers-reduced-motion: reduce){
     #docbody *{transition:none !important;animation:none !important}
   }
+
+  /* ════════════════════════════════════════════════════════════════════════
+     [R283-BOARD-PLATFORM-ARTIFACT-01] THE PLATFORM TAB, drawn like the owner's
+     published R2.8.3 board artifact.
+
+     SCOPE. Every rule below is keyed on body.pbmode or on a pb- class, and
+     load() sets pbmode only while the Platform tab is showing. The Website tab
+     and the architecture views never match any of it.
+
+     CLASS NAMES ARE PREFIXED ON PURPOSE. The artifact calls its parts .bar,
+     .legend, .controls, .pill, .sev and .note, and this page already styles
+     every one of those names for the other boards. Reusing them would have
+     made each rule here fight an older rule there, the same leak the
+     R28-BOARD-DOCCSS-01 note above records for the CI document.
+
+     THEME. Light by default, dark when the reader's system asks for it or a
+     host sets data-theme, exactly as the artifact does. The dark blocks swap
+     tokens for tokens and hold no literal, see the note on :root.
+
+     THE OLDER TOKENS ARE REMAPPED UNDER pbmode so the parts this tab keeps
+     from before, the deploy panel, the notices and the tab row, pick up the
+     same palette instead of painting white text on a light page. ═══════════ */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --pb-bg:var(--pb-bg-dk); --pb-panel:var(--pb-panel-dk); --pb-panel2:var(--pb-panel2-dk);
+      --pb-ink:var(--pb-ink-dk); --pb-muted:var(--pb-muted-dk); --pb-line:var(--pb-line-dk);
+      --pb-accent:var(--pb-accent-dk); --pb-accent-soft:var(--pb-accent-soft-dk);
+      --pb-fixed:var(--pb-fixed-dk); --pb-fixed-bg:var(--pb-fixed-bg-dk);
+      --pb-built:var(--pb-built-dk); --pb-built-bg:var(--pb-built-bg-dk);
+      --pb-wip:var(--pb-wip-dk); --pb-wip-bg:var(--pb-wip-bg-dk);
+      --pb-open:var(--pb-open-dk); --pb-open-bg:var(--pb-open-bg-dk);
+      --pb-decision:var(--pb-decision-dk); --pb-decision-bg:var(--pb-decision-bg-dk);
+      --pb-p0:var(--pb-p0-dk); --pb-p1:var(--pb-p1-dk); --pb-p2:var(--pb-p2-dk); --pb-p3:var(--pb-p3-dk);
+      --pb-scheme:var(--pb-scheme-dk);
+    }
+  }
+  :root[data-theme="dark"]{
+    --pb-bg:var(--pb-bg-dk); --pb-panel:var(--pb-panel-dk); --pb-panel2:var(--pb-panel2-dk);
+    --pb-ink:var(--pb-ink-dk); --pb-muted:var(--pb-muted-dk); --pb-line:var(--pb-line-dk);
+    --pb-accent:var(--pb-accent-dk); --pb-accent-soft:var(--pb-accent-soft-dk);
+    --pb-fixed:var(--pb-fixed-dk); --pb-fixed-bg:var(--pb-fixed-bg-dk);
+    --pb-built:var(--pb-built-dk); --pb-built-bg:var(--pb-built-bg-dk);
+    --pb-wip:var(--pb-wip-dk); --pb-wip-bg:var(--pb-wip-bg-dk);
+    --pb-open:var(--pb-open-dk); --pb-open-bg:var(--pb-open-bg-dk);
+    --pb-decision:var(--pb-decision-dk); --pb-decision-bg:var(--pb-decision-bg-dk);
+    --pb-p0:var(--pb-p0-dk); --pb-p1:var(--pb-p1-dk); --pb-p2:var(--pb-p2-dk); --pb-p3:var(--pb-p3-dk);
+    --pb-scheme:var(--pb-scheme-dk);
+  }
+
+  body.pbmode, body.archmode, body.webmode{
+    --bg:var(--pb-bg); --text:var(--pb-ink); --sub:var(--pb-muted); --line:var(--pb-line);
+    --card:var(--pb-panel); --card2:var(--pb-panel2); --teal:var(--pb-accent);
+    --fixed:var(--pb-fixed); --built:var(--pb-built); --wip:var(--pb-wip);
+    --open:var(--pb-open); --decision:var(--pb-decision); --cleared:var(--pb-muted);
+    --hold:var(--pb-muted); --norepro:var(--pb-muted);
+    --p0:var(--pb-p0); --p1:var(--pb-p1); --p2:var(--pb-p2); --p3:var(--pb-p3);
+    color-scheme:var(--pb-scheme);
+    background:var(--pb-bg);color:var(--pb-ink);padding:0;
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:14px;line-height:1.5}
+  body.pbmode .wrap, body.archmode .wrap, body.webmode .wrap{max-width:var(--measure);padding:28px var(--gutter) 56px;
+    display:flex;flex-direction:column;gap:22px}
+  /* The older platform chrome this layout replaces. Hidden by CSS rather than
+     the hidden attribute, because load() and render() already own that
+     attribute on these elements for the other boards. */
+  body.pbmode #boardheading, body.pbmode #boardsub, body.pbmode #updated,
+  body.pbmode #stats, body.pbmode #movement, body.pbmode #srcnote,
+  body.pbmode #filters, body.pbmode #issuetable, body.pbmode #legendbox{display:none}
+  body.pbmode .warn{margin:0}
+  body.pbmode .deploy{margin:0;border-radius:10px}
+  body.pbmode .boardnav{margin:0;padding:0 0 14px}
+  body.pbmode .tabs button, body.archmode .tabs button, body.webmode .tabs button{border:1px solid var(--pb-line);background:var(--pb-panel);
+    color:var(--pb-ink);border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;
+    min-height:32px;font-weight:400;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+  body.pbmode .tabs button:hover, body.archmode .tabs button:hover, body.webmode .tabs button:hover{border-color:var(--pb-muted)}
+  body.pbmode .tabs button[aria-pressed="true"], body.archmode .tabs button[aria-pressed="true"], body.webmode .tabs button[aria-pressed="true"]{background:var(--pb-accent-soft);
+    border-color:var(--pb-accent);color:var(--pb-ink);font-weight:600}
+
+  /* ════════════════════════════════════════════════════════════════════════
+     ARCHITECTURE & TENANCY BOARD DESIGN SYSTEM (matching the Platform theme)
+     ════════════════════════════════════════════════════════════════════════ */
+  body.archmode #updated,
+  body.archmode #stats, body.archmode #movement, body.archmode #srcnote,
+  body.archmode #filters, body.archmode #issuetable, body.archmode #legendbox,
+  body.archmode #pbhead, body.archmode #pbtop, body.archmode #pbitems, body.archmode #pbfoot{display:none}
+  body.archmode .boardnav{margin:0;padding:0 0 10px;display:flex;flex-direction:column;gap:14px}
+
+  body.archmode #boardheading{margin:0;font-size:26px;line-height:1.35;font-weight:700;
+    letter-spacing:-.01em;color:var(--pb-ink)}
+  body.archmode #boardheading span{color:var(--pb-accent)}
+  body.archmode #boardsub{color:var(--pb-muted);margin:2px 0 0;font-size:14px;line-height:1.5;max-width:960px}
+
+  body.archmode .subnav{margin:0;display:flex;flex-direction:column;gap:12px}
+  body.archmode .subnav .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+    margin:0;color:var(--pb-muted);font-size:12.5px}
+  body.archmode .subnav .crumb b{color:var(--pb-ink);font-weight:600}
+  body.archmode .subnav .crumb .sep{opacity:.4;margin:0 2px}
+  body.archmode .subnav .views{display:grid;gap:10px;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  body.archmode .subnav .views button{display:flex;flex-direction:column;justify-content:flex-start;
+    background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:10px;
+    padding:12px 14px;color:var(--pb-ink);cursor:pointer;text-align:left;
+    transition:border-color .15s ease,background .15s ease;min-height:68px}
+  body.archmode .subnav .views button strong{display:block;font-size:13.5px;font-weight:600;
+    color:var(--pb-ink);line-height:1.3}
+  body.archmode .subnav .views button span{display:block;font-size:11.5px;color:var(--pb-muted);
+    line-height:1.35;margin-top:4px}
+  body.archmode .subnav .views button:hover{border-color:var(--pb-accent);background:var(--pb-panel2)}
+  body.archmode .subnav .views button[aria-pressed="true"]{background:var(--pb-accent-soft);
+    border-color:var(--pb-accent);box-shadow:0 0 0 1px var(--pb-accent)}
+  body.archmode .subnav .views button[aria-pressed="true"] strong{color:var(--pb-accent);font-weight:700}
+  body.archmode .subnav .views button[aria-pressed="true"] span{color:var(--pb-ink);opacity:.85}
+  body.archmode .subnav .aside{margin:2px 0 0;font-size:12.5px;color:var(--pb-muted)}
+  body.archmode .subnav .aside a{color:var(--pb-accent);text-decoration:none}
+  body.archmode .subnav .aside a:hover{text-decoration:underline}
+
+  /* Document Body Layout & Components under Architecture */
+  body.archmode #docbody{max-width:100%;margin:0;display:flex;flex-direction:column;gap:18px}
+
+  body.archmode #docbody .dochead{margin:0 0 8px;padding:20px 22px;background:var(--pb-panel);
+    border:1px solid var(--pb-line);border-radius:10px}
+  body.archmode #docbody .dochead .kicker{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--pb-accent);font-weight:700;margin:0 0 6px}
+  body.archmode #docbody .dochead .title{font-size:24px;line-height:1.3;letter-spacing:-.015em;
+    margin:0 0 8px;font-weight:700;color:var(--pb-ink)}
+  body.archmode #docbody .dochead .lede{font-size:14.5px;line-height:1.55;color:var(--pb-ink);margin:0 0 8px}
+  body.archmode #docbody .dochead .dated{font-size:12px;color:var(--pb-muted);line-height:1.45;
+    border-top:1px solid var(--pb-line);padding-top:10px;margin:10px 0 0}
+
+  body.archmode #docbody h2{font-size:19px;line-height:1.3;letter-spacing:-.01em;font-weight:700;
+    margin:28px 0 10px;padding-top:18px;border-top:1px solid var(--pb-line);color:var(--pb-ink)}
+  body.archmode #docbody h2:first-of-type{border-top:0;padding-top:0;margin-top:10px}
+  body.archmode #docbody h2 .n{color:var(--pb-muted);font-weight:600;font-size:11px;letter-spacing:.08em;
+    display:block;text-transform:uppercase;margin-bottom:3px}
+  body.archmode #docbody h3{font-size:15px;font-weight:600;margin:18px 0 6px;color:var(--pb-ink)}
+  body.archmode #docbody h4{font-size:13.5px;font-weight:600;margin:14px 0 4px;color:var(--pb-ink)}
+  body.archmode #docbody p{margin:8px 0;line-height:1.55;color:var(--pb-ink)}
+  body.archmode #docbody li{margin:5px 0;line-height:1.5;color:var(--pb-ink)}
+  body.archmode #docbody a{color:var(--pb-built);text-decoration:none}
+  body.archmode #docbody a:hover{text-decoration:underline}
+  body.archmode #docbody code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;
+    background:var(--pb-panel2);border:1px solid var(--pb-line);border-radius:5px;
+    padding:1.5px 5.5px;color:var(--pb-ink)}
+  body.archmode #docbody .lede{font-size:15px;line-height:1.55;color:var(--pb-ink)}
+  body.archmode #docbody .src{color:var(--pb-muted);font-size:12px;margin-top:4px}
+  body.archmode #docbody .src a{color:var(--pb-muted)}
+  body.archmode #docbody .muted{color:var(--pb-muted)}
+
+  body.archmode #docbody .toc{border:1px solid var(--pb-line);background:var(--pb-panel);
+    border-radius:10px;padding:8px 16px 14px;margin:12px 0}
+  body.archmode #docbody .toc > summary{cursor:pointer;padding:8px 0;font-size:11.5px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--pb-muted);font-weight:600;
+    list-style:none;min-height:36px;display:flex;align-items:center;gap:8px}
+  body.archmode #docbody .toc > summary::-webkit-details-marker{display:none}
+  body.archmode #docbody .toc > summary::before{content:"+";color:var(--pb-accent);font-weight:700;
+    font-size:14px;line-height:1;width:10px}
+  body.archmode #docbody .toc[open] > summary::before{content:"\2013"}
+  body.archmode #docbody .toc ol{margin:8px 0 0;padding:0;list-style:none;counter-reset:toc;
+    display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  body.archmode #docbody .toc li{margin:0;counter-increment:toc}
+  body.archmode #docbody .toc a{display:flex;align-items:center;padding:7px 10px;border-radius:6px;
+    text-decoration:none;color:var(--pb-ink);font-size:13px;line-height:1.35;
+    background:var(--pb-panel2);border:1px solid transparent;transition:all .15s ease}
+  body.archmode #docbody .toc a::before{content:counter(toc) ".";color:var(--pb-muted);
+    font-size:11.5px;font-variant-numeric:tabular-nums;margin-right:8px;font-family:"IBM Plex Mono",monospace}
+  body.archmode #docbody .toc a:hover{border-color:var(--pb-accent);color:var(--pb-accent);background:var(--pb-panel)}
+
+  body.archmode #docbody .kpi, body.archmode #docbody .bar{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+  body.archmode #docbody .kpi div, body.archmode #docbody .bar .stat{
+    background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:8px;
+    padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+  body.archmode #docbody .kpi b, body.archmode #docbody .bar .stat b{
+    font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2;color:var(--pb-ink)}
+  body.archmode #docbody .kpi span, body.archmode #docbody .bar .stat span{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--pb-muted);line-height:1.3}
+
+  body.archmode #docbody .qgrid, body.archmode #docbody .cards{
+    display:grid;gap:12px;margin:12px 0;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  body.archmode #docbody .q, body.archmode #docbody .card{
+    border:1px solid var(--pb-line);background:var(--pb-panel);border-radius:10px;
+    padding:14px 16px;border-left:4px solid var(--pb-line)}
+  body.archmode #docbody .q.a, body.archmode #docbody .card.ok{border-left-color:var(--pb-fixed)}
+  body.archmode #docbody .q.b, body.archmode #docbody .card{border-left-color:var(--pb-open)}
+  body.archmode #docbody .q.c, body.archmode #docbody .card.warn{border-left-color:var(--pb-wip)}
+  body.archmode #docbody .q.d, body.archmode #docbody .card.aim{border-left-color:var(--pb-accent)}
+  body.archmode #docbody .q h4, body.archmode #docbody .card h4{
+    margin:0 0 6px;font-size:13.5px;font-weight:600;letter-spacing:.02em;color:var(--pb-ink)}
+  body.archmode #docbody .q p, body.archmode #docbody .card p{
+    margin:0;font-size:13px;line-height:1.5;color:var(--pb-muted)}
+  body.archmode #docbody .q p b, body.archmode #docbody .card p b,
+  body.archmode #docbody .card h4 b{color:var(--pb-ink)}
+  body.archmode #docbody .card .no{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--pb-open);font-weight:700;display:block;margin-bottom:4px}
+  body.archmode #docbody .card details{margin:0;border:0;background:none}
+  body.archmode #docbody .card details > summary{padding:6px 0;min-height:32px;color:var(--pb-accent)}
+  body.archmode #docbody .card .dbody{padding:4px 0 0;border-top:0;font-size:13px;background:none;color:var(--pb-muted)}
+
+  body.archmode #docbody .statepick{margin:12px 0 8px}
+  body.archmode #docbody .seg{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+  body.archmode #docbody .seg a{display:inline-flex;flex-direction:column;justify-content:center;
+    background:var(--pb-panel);border:1px solid var(--pb-line);color:var(--pb-ink);
+    text-decoration:none;border-radius:8px;padding:8px 14px;font-size:13px;
+    cursor:pointer;min-height:46px;min-width:120px;line-height:1.25;transition:all .15s ease}
+  body.archmode #docbody .seg a span{display:block;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--pb-muted);margin-bottom:2px}
+  body.archmode #docbody .seg a:hover{border-color:var(--pb-accent);background:var(--pb-panel2)}
+  body.archmode #docbody[data-state="have"] .seg a[href$="/have"],
+  body.archmode #docbody[data-state="gap"]  .seg a[href$="/gap"],
+  body.archmode #docbody[data-state="aim"]  .seg a[href$="/aim"],
+  body.archmode #docbody[data-state="silo"] .seg a[href$="/silo"],
+  body.archmode #docbody[data-state="now"]  .seg a[href$="/now"],
+  body.archmode #docbody[data-state="next"] .seg a[href$="/next"]{
+    background:var(--pb-accent-soft);color:var(--pb-ink);border-color:var(--pb-accent);
+    font-weight:600;box-shadow:0 0 0 1px var(--pb-accent)}
+  body.archmode #docbody[data-state="have"] .seg a[href$="/have"] span,
+  body.archmode #docbody[data-state="gap"]  .seg a[href$="/gap"] span,
+  body.archmode #docbody[data-state="aim"]  .seg a[href$="/aim"] span,
+  body.archmode #docbody[data-state="silo"] .seg a[href$="/silo"] span,
+  body.archmode #docbody[data-state="now"]  .seg a[href$="/now"] span,
+  body.archmode #docbody[data-state="next"] .seg a[href$="/next"] span{
+    color:var(--pb-accent);opacity:1;font-weight:600}
+
+  body.archmode #docbody .tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--pb-line);
+    border-radius:10px;background:var(--pb-panel)}
+  body.archmode #docbody .doc-tbl, body.archmode #docbody .tblwrap table{
+    width:100%;border-collapse:collapse;margin:0;font-size:13px;font-variant-numeric:tabular-nums}
+  body.archmode #docbody .doc-tbl th, body.archmode #docbody .tblwrap table th{
+    text-align:left;font-weight:600;color:var(--pb-muted);font-size:11px;text-transform:uppercase;
+    letter-spacing:.07em;padding:10px 12px;border-bottom:1px solid var(--pb-line);
+    white-space:nowrap;background:var(--pb-panel2)}
+  body.archmode #docbody .doc-tbl td, body.archmode #docbody .tblwrap table td{
+    padding:9px 12px;border-bottom:1px solid var(--pb-line);vertical-align:top;color:var(--pb-ink)}
+  body.archmode #docbody .doc-tbl tr:last-child td,
+  body.archmode #docbody .tblwrap table tr:last-child td{border-bottom:0}
+  body.archmode #docbody .doc-tbl tr:hover td,
+  body.archmode #docbody .tblwrap table tr:hover td{background:var(--pb-panel2)}
+
+  body.archmode #docbody .pill{display:inline-block;font-size:11px;font-weight:600;
+    letter-spacing:.05em;padding:2px 8px;border-radius:999px;white-space:nowrap;
+    color:var(--pb-muted);background:var(--pb-panel2)}
+  body.archmode #docbody .p-keep, body.archmode #docbody .p-live, body.archmode #docbody .p-good{
+    color:var(--pb-fixed);background:var(--pb-fixed-bg)}
+  body.archmode #docbody .p-move, body.archmode #docbody .p-warn{
+    color:var(--pb-wip);background:var(--pb-wip-bg)}
+  body.archmode #docbody .p-drop, body.archmode #docbody .p-dead, body.archmode #docbody .p-bad{
+    color:var(--pb-open);background:var(--pb-open-bg)}
+  body.archmode #docbody .p-new, body.archmode #docbody .p-info{
+    color:var(--pb-built);background:var(--pb-built-bg)}
+  body.archmode #docbody .p-free, body.archmode #docbody .p-none{
+    color:var(--pb-muted);background:var(--pb-panel2)}
+
+  body.archmode #docbody .step{display:flex;gap:14px;margin:12px 0;align-items:flex-start;
+    background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:10px;padding:14px 16px}
+  body.archmode #docbody .step .num{flex:0 0 30px;height:30px;border-radius:50%;
+    background:var(--pb-accent-soft);border:1px solid var(--pb-accent);display:flex;
+    align-items:center;justify-content:center;font-weight:700;font-size:13px;
+    color:var(--pb-accent);font-family:"IBM Plex Mono",monospace}
+  body.archmode #docbody .step .body{flex:1}
+  body.archmode #docbody .step .body b{display:block;margin-bottom:3px;font-size:13.5px;
+    color:var(--pb-ink);font-weight:600}
+  body.archmode #docbody .step .body span{color:var(--pb-muted);font-size:13px;line-height:1.5}
+
+  body.archmode #docbody .callout{background:var(--pb-panel);border:1px solid var(--pb-line);
+    border-left:4px solid var(--pb-wip);border-radius:10px;padding:14px 16px;margin:14px 0;
+    font-size:13.5px;line-height:1.5;color:var(--pb-ink)}
+  body.archmode #docbody .callout.bad{border-left-color:var(--pb-open)}
+  body.archmode #docbody .callout.good{border-left-color:var(--pb-fixed)}
+  body.archmode #docbody .callout.fix{border-left-color:var(--pb-built)}
+
+  body.archmode #docbody details{border:1px solid var(--pb-line);border-radius:8px;
+    background:var(--pb-panel);margin:8px 0}
+  body.archmode #docbody details > summary{cursor:pointer;padding:10px 14px;font-size:13px;
+    color:var(--pb-ink);list-style:none;min-height:38px;display:flex;gap:9px;align-items:center}
+  body.archmode #docbody details > summary::-webkit-details-marker{display:none}
+  body.archmode #docbody details > summary::before{content:"+";color:var(--pb-accent);
+    font-weight:700;font-size:14px;line-height:1;width:10px}
+  body.archmode #docbody details[open] > summary::before{content:"\2013"}
+  body.archmode #docbody details > summary:hover{background:var(--pb-panel2)}
+  body.archmode #docbody details > summary:focus-visible{outline:2px solid var(--pb-accent);outline-offset:1px}
+  body.archmode #docbody .dbody{padding:12px 16px;border-top:1px solid var(--pb-line);
+    font-size:13px;color:var(--pb-muted);background:var(--pb-panel2)}
+  body.archmode #docbody .dbody > :first-child{margin-top:0}
+
+  body.archmode #docbody figure{margin:14px 0 6px}
+  body.archmode #docbody .fig{width:100%;height:auto;display:block;background:var(--pb-panel);
+    border:1px solid var(--pb-line);border-radius:10px}
+  body.archmode #docbody figcaption{color:var(--pb-muted);font-size:12.5px;margin-top:6px}
+  body.archmode #docbody .keys{display:flex;flex-wrap:wrap;gap:16px;margin:10px 0 0;
+    color:var(--pb-muted);font-size:12px}
+  body.archmode #docbody .keys i{display:inline-block;width:20px;height:0;border-top:3px solid var(--pb-line);
+    vertical-align:middle;margin-right:6px;font-style:normal}
+  body.archmode #docbody .keys .k-ok i{border-top-color:var(--pb-fixed)}
+  body.archmode #docbody .keys .k-warn i{border-top-color:var(--pb-wip)}
+  body.archmode #docbody .keys .k-bad i{border-top-color:var(--pb-open)}
+  body.archmode #docbody .keys .k-aim i{border-top-color:var(--pb-accent)}
+  body.archmode #docbody .keys .k-dead i{border-top-color:var(--pb-muted);border-top-style:dashed}
+
+  body.archmode #docbody svg text{fill:var(--pb-muted);font-size:12px;
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+  body.archmode #docbody svg .hd{fill:var(--pb-ink);font-size:13px;font-weight:600}
+  body.archmode #docbody svg .hdmute{fill:var(--pb-muted);font-size:13px;font-weight:600}
+  body.archmode #docbody svg .sm{font-size:11px}
+  body.archmode #docbody svg .xs{font-size:10px}
+  body.archmode #docbody svg .cap{font-size:10.5px;letter-spacing:.08em;fill:var(--pb-muted);font-weight:600}
+  body.archmode #docbody svg .big{font-size:28px;font-weight:700;fill:var(--pb-open);font-family:"IBM Plex Sans",sans-serif}
+  body.archmode #docbody svg .big2{font-size:24px;font-weight:700;fill:var(--pb-ink);font-family:"IBM Plex Sans",sans-serif}
+  body.archmode #docbody svg .num{font-variant-numeric:tabular-nums;font-weight:700;fill:var(--pb-ink);font-family:"IBM Plex Sans",sans-serif}
+  body.archmode #docbody svg .lbl-bad{fill:var(--pb-open);font-size:11px;font-weight:700;letter-spacing:.05em}
+  body.archmode #docbody svg .lbl-ok{fill:var(--pb-fixed);font-size:11px;font-weight:700;letter-spacing:.05em}
+  body.archmode #docbody svg .lbl-warn{fill:var(--pb-wip);font-size:11px;font-weight:700;letter-spacing:.05em}
+  body.archmode #docbody svg .lbl-aim{fill:var(--pb-accent);font-size:11px;font-weight:700;letter-spacing:.05em}
+  body.archmode #docbody svg .lbl-info{fill:var(--pb-built);font-size:11px;font-weight:700;letter-spacing:.05em}
+  body.archmode #docbody svg .r{fill:var(--pb-panel2);stroke:var(--pb-line);stroke-width:1}
+  body.archmode #docbody svg .r-ok{fill:var(--pb-fixed-bg);stroke:var(--pb-fixed);stroke-width:1.2}
+  body.archmode #docbody svg .r-warn{fill:var(--pb-wip-bg);stroke:var(--pb-wip);stroke-width:1.2}
+  body.archmode #docbody svg .r-bad{fill:var(--pb-open-bg);stroke:var(--pb-open);stroke-width:1.2}
+  body.archmode #docbody svg .r-aim{fill:var(--pb-accent-soft);stroke:var(--pb-accent);stroke-width:1.4}
+  body.archmode #docbody svg .r-info{fill:var(--pb-built-bg);stroke:var(--pb-built);stroke-width:1.2}
+  body.archmode #docbody svg .r-ghost{fill:none;stroke:var(--pb-muted);stroke-width:1;stroke-dasharray:5 4}
+  body.archmode #docbody svg .chip{fill:var(--pb-panel);stroke:var(--pb-line);stroke-width:1}
+  body.archmode #docbody svg .e{stroke:var(--pb-line);stroke-width:1.6;fill:none}
+  body.archmode #docbody svg .e-ok{stroke:var(--pb-fixed);stroke-width:1.8;fill:none}
+  body.archmode #docbody svg .e-warn{stroke:var(--pb-wip);stroke-width:1.8;fill:none}
+  body.archmode #docbody svg .e-bad{stroke:var(--pb-open);stroke-width:1.8;fill:none;stroke-dasharray:6 5}
+  body.archmode #docbody svg .e-aim{stroke:var(--pb-accent);stroke-width:1.8;fill:none}
+  body.archmode #docbody svg .e-info{stroke:var(--pb-built);stroke-width:1.8;fill:none}
+  body.archmode #docbody svg .e-ghost{stroke:var(--pb-muted);stroke-width:1.3;fill:none;stroke-dasharray:5 5}
+  body.archmode #docbody svg .mh{fill:var(--pb-line)}
+  body.archmode #docbody svg .mh-ok{fill:var(--pb-fixed)}
+  body.archmode #docbody svg .mh-warn{fill:var(--pb-wip)}
+  body.archmode #docbody svg .mh-bad{fill:var(--pb-open)}
+  body.archmode #docbody svg .mh-aim{fill:var(--pb-accent)}
+  body.archmode #docbody svg .mh-info{fill:var(--pb-built)}
+  body.archmode #docbody svg .mh-ghost{fill:var(--pb-muted)}
+
+  body.archmode #docbody .verdict{border:1px solid var(--pb-line);border-left:4px solid var(--pb-accent);
+    background:var(--pb-panel);border-radius:10px;padding:14px 18px;margin:14px 0}
+  body.archmode #docbody .verdict.risk{border-left-color:var(--pb-open)}
+  body.archmode #docbody .verdict.warn{border-left-color:var(--pb-wip)}
+  body.archmode #docbody .verdict h3{margin-top:0}
+  body.archmode #docbody .pending{border:2px dashed var(--pb-wip);background:var(--pb-panel);
+    border-radius:10px;padding:16px 18px;margin:14px 0}
+  body.archmode #docbody .pending h3{margin-top:0;color:var(--pb-ink)}
+  body.archmode #docbody .pending table td{color:var(--pb-muted)}
+  body.archmode #docbody .pending .await{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--pb-wip);font-weight:700}
+  body.archmode #docbody .gcloud{border:1px solid var(--pb-line);border-left:4px solid var(--pb-built);
+    background:var(--pb-panel);border-radius:10px;padding:14px 18px;margin:14px 0}
+  body.archmode #docbody .gcloud blockquote{margin:10px 0 4px;padding:0 0 0 14px;
+    border-left:2px solid var(--pb-line);font-size:14px;line-height:1.55;color:var(--pb-ink)}
+  body.archmode #docbody .wc{color:var(--pb-muted);font-size:12px}
+
+  /* ════════════════════════════════════════════════════════════════════════
+     WEBSITE STATUS BOARD DESIGN SYSTEM (matching the Platform theme)
+     ════════════════════════════════════════════════════════════════════════ */
+  body.webmode #pbhead, body.webmode #pbtop, body.webmode #pbitems, body.webmode #pbfoot{display:none}
+  body.webmode .boardnav{margin:0;padding:0 0 10px;display:flex;flex-direction:column;gap:14px}
+
+  body.webmode #boardheading{margin:0;font-size:26px;line-height:1.35;font-weight:700;
+    letter-spacing:-.01em;color:var(--pb-ink)}
+  body.webmode #boardheading span{color:var(--pb-accent)}
+  body.webmode #boardsub{color:var(--pb-muted);margin:2px 0 0;font-size:14px;line-height:1.5;max-width:960px}
+
+  body.webmode #updated{background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:10px;
+    padding:12px 16px;margin:0;font-size:13.5px;color:var(--pb-muted);line-height:1.5}
+  body.webmode #updated b{font-weight:600}
+
+  body.webmode .warn{border:1px solid var(--pb-open);border-left:4px solid var(--pb-open);
+    background:var(--pb-open-bg);border-radius:10px;padding:12px 16px;margin:0;
+    font-size:13.5px;color:var(--pb-ink);line-height:1.5}
+  body.webmode .warn b{color:var(--pb-open);font-weight:600}
+  body.webmode .warn.notice{border-color:var(--pb-wip);border-left-color:var(--pb-wip);
+    background:var(--pb-wip-bg);color:var(--pb-ink)}
+  body.webmode .warn.notice b{color:var(--pb-wip)}
+
+  body.webmode #stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0}
+  body.webmode #stats .stat{padding:12px 14px;border-radius:8px;background:var(--pb-panel);
+    border:1px solid var(--pb-line);display:flex;flex-direction:column;gap:2px;min-width:0}
+  body.webmode #stats .stat b{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;
+    line-height:1.15;color:var(--pb-ink)}
+  body.webmode #stats .stat span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--pb-muted);margin:0;line-height:1.3;font-weight:500}
+
+  body.webmode #movement{background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:8px;
+    padding:10px 14px;margin:0;font-size:13px;color:var(--pb-muted);line-height:1.5}
+  body.webmode #movement b{color:var(--pb-ink)}
+
+  body.webmode #srcnote{color:var(--pb-muted);font-size:12px;line-height:1.5;margin:0}
+
+  body.webmode .deploy{background:var(--pb-panel);border:1px solid var(--pb-line);
+    border-left:4px solid var(--pb-accent);border-radius:10px;padding:16px 18px;margin:0}
+  body.webmode .deploy h2{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--pb-muted);font-weight:600}
+  body.webmode .deploy .head{margin:0 0 12px;font-size:13.5px;color:var(--pb-ink);line-height:1.5}
+  body.webmode .deploy .tiles{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+  body.webmode .deploy .t{border:1px solid var(--pb-line);background:var(--pb-panel2);border-radius:8px;
+    padding:10px 14px;min-width:92px}
+  body.webmode .deploy .t b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;
+    line-height:1.2;color:var(--pb-ink)}
+  body.webmode .deploy .t span{color:var(--pb-muted);font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;font-weight:500}
+  body.webmode .deploy.spent{border-left-color:var(--pb-open)}
+  body.webmode .deploy table{width:100%;border-collapse:collapse;margin:0;font-variant-numeric:tabular-nums}
+  body.webmode .deploy th{padding:7px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--pb-muted);font-weight:600;border-bottom:1px solid var(--pb-line);text-align:left}
+  body.webmode .deploy td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--pb-line);color:var(--pb-ink)}
+  body.webmode .deploy .foot{color:var(--pb-muted);font-size:12.5px;margin:12px 0 0;line-height:1.5}
+  body.webmode .deploy .foot b{color:var(--pb-ink)}
+  body.webmode .deploy code{font-family:"IBM Plex Mono",monospace;font-size:12px;
+    background:var(--pb-panel2);border:1px solid var(--pb-line);padding:1px 5px;border-radius:4px;color:var(--pb-ink)}
+
+  body.webmode #filters{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  body.webmode #filters button{border:1px solid var(--pb-line);background:var(--pb-panel);color:var(--pb-ink);
+    border-radius:999px;padding:5px 13px;font:inherit;font-size:13px;cursor:pointer;
+    min-height:30px;font-weight:400;transition:all .15s ease}
+  body.webmode #filters button:hover{border-color:var(--pb-muted)}
+  body.webmode #filters button[aria-pressed="true"]{background:var(--pb-accent-soft);border-color:var(--pb-accent);
+    color:var(--pb-ink);font-weight:600}
+
+  body.webmode #issuetable{width:100%;border-collapse:separate;border-spacing:0;
+    border:1px solid var(--pb-line);border-radius:10px;background:var(--pb-panel);
+    overflow:hidden;margin:0}
+  body.webmode #issuetable thead{background:var(--pb-panel2)}
+  body.webmode #issuetable th{padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--pb-muted);border-bottom:1px solid var(--pb-line);white-space:nowrap}
+  body.webmode #issuetable td{padding:12px 14px;border-bottom:1px solid var(--pb-line);vertical-align:top;
+    color:var(--pb-ink);font-size:13.5px;line-height:1.5}
+  body.webmode #issuetable tbody tr:last-child td{border-bottom:0}
+  body.webmode #issuetable tbody tr:hover td{background:var(--pb-panel2)}
+  body.webmode #issuetable .id{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    font-size:12px;font-weight:500;color:var(--pb-muted)}
+  body.webmode #issuetable .sev{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    font-size:12px;font-weight:700}
+  body.webmode #issuetable .pill{display:inline-block;padding:2px 8px;border-radius:999px;
+    font-size:11px;font-weight:600;letter-spacing:.05em;white-space:nowrap}
+  body.webmode #issuetable td strong{font-size:14px;font-weight:600;color:var(--pb-ink);
+    line-height:1.45;display:block}
+  body.webmode #issuetable .note{color:var(--pb-muted);font-size:12.5px;line-height:1.55;margin-top:4px}
+  body.webmode #issuetable .note code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+    background:var(--pb-panel2);border:1px solid var(--pb-line);padding:1px 5px;border-radius:4px;color:var(--pb-ink)}
+  body.webmode #issuetable .id .note{font-family:"IBM Plex Sans",system-ui,sans-serif;
+    font-size:11.5px;color:var(--pb-muted);white-space:normal}
+  body.webmode #issuetable td[colspan="4"]{background:var(--pb-panel2);padding:14px 14px 10px;
+    border-top:1px solid var(--pb-line);border-bottom:2px solid var(--pb-line)}
+  body.webmode #issuetable tr:first-child td[colspan="4"]{border-top:0}
+  body.webmode #issuetable td[colspan="4"] strong{font-size:12.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--pb-ink);font-weight:700}
+  body.webmode #issuetable td[colspan="4"] .note{font-size:12px;color:var(--pb-muted);margin-top:2px}
+  body.webmode #issuetable tbody tr:hover td[colspan="4"]{background:var(--pb-panel2)}
+
+  body.webmode #legendbox{margin-top:4px;padding:20px;background:var(--pb-panel);border:1px solid var(--pb-line);
+    border-radius:10px;color:var(--pb-muted);font-size:13px;line-height:1.55}
+  body.webmode #legendbox h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--pb-muted);
+    margin:0 0 12px;font-weight:600}
+  body.webmode #legendbox ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+  body.webmode #legendbox li b{color:var(--pb-ink)}
+  body.webmode #legendbox p b{color:var(--pb-ink)}
+  body.webmode #directives{margin-top:16px;padding-top:14px;border-top:1px solid var(--pb-line)}
+  body.webmode #directives b{color:var(--pb-ink)}
+
+  @media (max-width:760px){
+    body.webmode #issuetable tr{padding:12px 14px}
+    body.webmode #issuetable td{padding:2px 0}
+  }
+
+  .pb{display:none}
+  body.pbmode #pbhead{display:flex;flex-wrap:wrap;align-items:flex-end;
+    justify-content:space-between;gap:12px}
+  body.pbmode #pbtop, body.pbmode #pbitems{display:flex;flex-direction:column;gap:22px}
+  body.pbmode #pbitems{gap:10px}
+  body.pbmode #pbfoot{display:block}
+  .pb-mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  .pb-h1{margin:0;font-size:26px;line-height:1.5;font-weight:700;letter-spacing:-.01em;
+    text-wrap:balance}
+  .pb-h1 span{color:var(--pb-accent)}
+  .pb-sub{color:var(--pb-muted);margin:4px 0 0}
+  .pb-stamp{font-size:12px;color:var(--pb-muted);text-align:right}
+  .pb-stamp strong{color:var(--pb-ink)}
+  .pb-age{display:block;margin-top:2px}
+  .pb-age.stale{color:var(--pb-wip);font-weight:600}
+  .pb-h2{margin:0 0 10px;font-size:13px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--pb-muted)}
+  .pb-panel{background:var(--pb-panel);border:1px solid var(--pb-line);border-radius:10px;
+    padding:16px}
+  .pb-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .pb-tile{padding:12px 14px;border-radius:8px;background:var(--pb-panel2);display:flex;
+    flex-direction:column;gap:2px}
+  .pb-tile b{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+  .pb-tile small{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--pb-muted)}
+  .pb-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;
+    background:var(--pb-panel2);margin-top:14px}
+  .pb-bar i{display:block;height:100%}
+  .pb-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;
+    color:var(--pb-muted)}
+  .pb-legend span::before{content:"";display:inline-block;width:9px;height:9px;
+    border-radius:2px;margin-right:6px;background:var(--pb-c)}
+  /* minmax(0,1fr) and not the artifact's bare 1fr. A bare 1fr track has an auto
+     minimum, so the severity table's own width stretched the column past a
+     390px screen and the whole page scrolled sideways, measured at 512px wide
+     in both the artifact and this page. With a zero minimum the table scrolls
+     inside its panel instead. */
+  .pb-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+  @media (max-width:760px){.pb-two{grid-template-columns:minmax(0,1fr)}}
+  ul.pb-plain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  ul.pb-plain li{display:flex;gap:10px;align-items:flex-start;overflow-wrap:anywhere}
+  .pb-id{font-size:12px;color:var(--pb-muted)}
+  .pb-dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;
+    background:var(--pb-accent)}
+  .pb-dot.run{animation:pbpulse 1.6s ease-in-out infinite}
+  .pb-dot.block{background:var(--pb-decision)}
+  @keyframes pbpulse{50%{opacity:.35}}
+  @media (prefers-reduced-motion:reduce){.pb-dot.run{animation:none}}
+  .pb-scroll{overflow-x:auto}
+  .pb-matrix{width:100%;border-collapse:collapse;margin:0;font-variant-numeric:tabular-nums}
+  .pb-matrix th,.pb-matrix td{padding:6px 8px;text-align:right;vertical-align:middle;
+    border-bottom:1px solid var(--pb-line);font-size:13px}
+  .pb-matrix th:first-child,.pb-matrix td:first-child{text-align:left}
+  .pb-matrix th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--pb-muted);font-weight:600}
+  .pb-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .pb-chip{border:1px solid var(--pb-line);background:var(--pb-panel);color:var(--pb-ink);
+    border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;
+    min-height:0;font-weight:400}
+  .pb-chip[aria-pressed="true"]{background:var(--pb-accent-soft);border-color:var(--pb-accent);
+    color:var(--pb-ink);font-weight:400}
+  .pb-chip:focus-visible,.pb select:focus-visible,.pb input:focus-visible,
+  .pb summary:focus-visible,body.pbmode .tabs button:focus-visible{
+    outline:2px solid var(--pb-accent);outline-offset:2px}
+  .pb select,.pb input[type=search]{font:inherit;font-size:13px;padding:6px 10px;
+    border:1px solid var(--pb-line);border-radius:8px;background:var(--pb-panel);
+    color:var(--pb-ink)}
+  .pb input[type=search]{flex:1 1 220px;min-width:0}
+  .pb-lbl{color:var(--pb-muted);margin:0}
+  .pb-count{color:var(--pb-muted);font-size:12px;margin-left:auto}
+  .pb-list{display:flex;flex-direction:column;gap:6px}
+  details.pb-row{background:var(--pb-panel);border:1px solid var(--pb-line);
+    border-left:4px solid var(--pb-sevc);border-radius:8px}
+  details.pb-row summary{list-style:none;cursor:pointer;padding:10px 12px;display:grid;
+    grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center}
+  details.pb-row summary::-webkit-details-marker{display:none}
+  .pb-rid{font-size:11.5px;color:var(--pb-muted);grid-column:1/3;overflow-wrap:anywhere}
+  .pb-rtitle{grid-column:1/3;font-weight:500;overflow-wrap:anywhere}
+  .pb-meta{grid-column:3;grid-row:1/3;display:flex;flex-direction:column;
+    align-items:flex-end;gap:4px}
+  .pb-pill{font-size:11px;font-weight:600;letter-spacing:.05em;padding:2px 8px;
+    border-radius:999px;background:var(--pb-pbg);color:var(--pb-pc);white-space:nowrap}
+  .pb-sev{font-size:11px;font-weight:600;color:var(--pb-sevc)}
+  .pb-date{font-size:11px;color:var(--pb-muted);font-variant-numeric:tabular-nums}
+  .pb-note{padding:0 12px 12px;color:var(--pb-muted);font-size:13px;overflow-wrap:anywhere}
+  .pb-empty{padding:20px;text-align:center;color:var(--pb-muted)}
+  .pb-foot{font-size:12px;color:var(--pb-muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <!-- [R283-BOARD-PLATFORM-ARTIFACT-01] The Platform tab header, drawn like the
+       owner's published board. It sits ABOVE the navigation for the same reason
+       the heading below does, and it is invisible on every other tab. -->
+  <header class="pb" id="pbhead">
+    <div>
+      <h1 class="pb-h1">CrowAgent <span id="pbrel">Release</span></h1>
+      <p class="pb-sub" id="pbsub"></p>
+    </div>
+    <div class="pb-stamp">Last updated<br><strong class="pb-mono" id="pbstamp"></strong><span class="pb-age" id="pbage"></span></div>
+  </header>
   <h1 id="boardheading">Website transformation status</h1>
   <!-- [R28-BOARD-NAV-01] The standfirst FOLLOWS THE SELECTION, like the heading
        above it. It read "Every issue the owner reported, plus everything the audit
@@ -593,6 +1191,38 @@
        directly under the navigation, above the tiles. -->
   <p class="updated" id="updated"></p>
   <div class="warn" id="warn" hidden></div>
+  <!-- [R283-BOARD-PLATFORM-ARTIFACT-01] Summary and activity panels for the
+       Platform tab. Placed after the disagreement banner, which stays an alarm at
+       the top, and before the generator notices and the deploy panel, which keep
+       their place above the item filters. -->
+  <div class="pb" id="pbtop">
+    <section class="pb-panel" aria-labelledby="pbh-sum">
+      <h2 class="pb-h2" id="pbh-sum">Where the release stands</h2>
+      <div class="pb-tiles" id="pbtiles"></div>
+      <div class="pb-bar" id="pbbar" role="img"></div>
+      <div class="pb-legend" id="pblegend"></div>
+    </section>
+    <div class="pb-two">
+      <section class="pb-panel" aria-labelledby="pbh-now">
+        <h2 class="pb-h2" id="pbh-now">Running now</h2>
+        <ul class="pb-plain" id="pbrunning"></ul>
+      </section>
+      <section class="pb-panel" aria-labelledby="pbh-you">
+        <h2 class="pb-h2" id="pbh-you">Waiting on you</h2>
+        <ul class="pb-plain" id="pbblocked"></ul>
+      </section>
+    </div>
+    <div class="pb-two">
+      <section class="pb-panel" aria-labelledby="pbh-mx">
+        <h2 class="pb-h2" id="pbh-mx">Severity by status</h2>
+        <div class="pb-scroll"><table class="pb-matrix" id="pbmatrix"></table></div>
+      </section>
+      <section class="pb-panel" aria-labelledby="pbh-log">
+        <h2 class="pb-h2" id="pbh-log">Latest changes</h2>
+        <ul class="pb-plain" id="pblog"></ul>
+      </section>
+    </div>
+  </div>
   <!-- Things the GENERATOR could not read, plus the write-back queue: board
        items corrected against the artefact that the release documents do not
        yet know about. It was written into platform.json from the start and
@@ -614,6 +1244,21 @@
   <!-- [R27-ARCH-01] Where a document board renders. Empty and hidden for the two
        issue boards, so nothing shifts for them. -->
   <section id="docbody" hidden></section>
+
+  <!-- [R283-BOARD-PLATFORM-ARTIFACT-01] The Platform tab item list. The legacy
+       #issuetable below still renders, hidden, so nothing that reads it breaks. -->
+  <section class="pb" id="pbitems" aria-labelledby="pbh-items">
+    <h2 class="pb-h2" id="pbh-items" style="margin:0">All items</h2>
+    <div class="pb-controls" id="pbchips" role="group" aria-label="Filter by status"></div>
+    <div class="pb-controls">
+      <label for="pbsev" class="pb-lbl">Severity</label>
+      <select id="pbsev"><option value="">All</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select>
+      <label for="pbq" class="pb-lbl">Search</label>
+      <input type="search" id="pbq" placeholder="ID, title or note">
+      <span class="pb-count" id="pbcount"></span>
+    </div>
+    <div class="pb-list" id="pblist"></div>
+  </section>
 
   <!-- [R28-BOARD-DOCTABLE-LEAK-01] `id` is LOAD BEARING, not decoration. This
        table used to be reached as `document.querySelector('table')`, which is
@@ -644,6 +1289,7 @@
     <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
     <p id="directives"></p>
   </div>
+  <footer class="pb pb-foot" id="pbfoot">Statuses: FIXED is implemented and verified. BUILT is implemented, certification pending. WIP is in progress. OPEN is not started. DECISION is waiting on an owner decision. CLEARED is not applicable, the premise was false or the item is counted against another row. Open a row to read its latest evidence.</footer>
 </div>
 
 <script>
@@ -671,8 +1317,8 @@
 const COLOUR={FIXED:'--fixed',BUILT:'--built',WIP:'--wip',OPEN:'--open',
               DECISION:'--decision',HOLD:'--hold','ON HOLD':'--hold',NOREPRO:'--norepro',
               CORRECTED:'--corrected',DECIDED:'--decided',CLEARED:'--cleared',
-              STANDING:'--standing'};
-const SEVC={P0:'--p0',P1:'--p1',P2:'--p2'};
+              STANDING:'--standing',REFUTED:'--cleared'};
+const SEVC={P0:'--p0',P1:'--p1',P2:'--p2',P3:'--p3'};
 
 /* Every status that should be offered, in legend order, followed by anything
    the data carries that the legend does not declare. Never filtered by whether
@@ -1118,7 +1764,291 @@ function render(){
     (stale ? ' &middot; the generator has not run since, so newer commits are NOT on this board' : '') +
     '. This page re-reads ' + BOARDS[board].file + ' every 20 seconds.';
   upEl.title = 'Source timestamp, UTC: ' + raw;
+
+  /* [R283-BOARD-PLATFORM-ARTIFACT-01] Everything above still runs on the
+     Platform tab, so the notices, the deploy panel and the hidden legacy table
+     stay exactly as they were. The artifact layout is drawn on top of it. */
+  if (board === 'platform') renderPb(ageMs, mins);
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   [R283-BOARD-PLATFORM-ARTIFACT-01] THE PLATFORM TAB, drawn like the owner's
+   published R2.8.3 board artifact.
+
+   THE DATA IS platform.json AND NOTHING ELSE. The artifact carried three blocks
+   this generator does not write, a running list, a waiting list and a session
+   log, plus an AI spend figure. They are DERIVED here from the rows rather
+   than invented. Running now is the most recently changed WIP rows. Waiting on
+   you is every DECISION row. Latest changes is the ten most recently changed
+   rows by their git time. There is no spend tile, because there is no spend
+   data, and a tile with a made up number is worse than no tile.
+
+   NO STATUS IS DROPPED. The artifact built its tiles, chips and matrix from a
+   fixed list of seven statuses, so a row in any other status would have been
+   counted nowhere. The fixed list only sets the ORDER here, and any other
+   status the data carries is appended after it in legend order, painted in the
+   muted pair. Same lesson as the note above COLOUR.
+
+   A POLL MUST NOT UNDO THE READER. The page re-reads platform.json every 10
+   seconds and the artifact rebuilt its list on every render, which would close
+   every row the reader had opened and throw away the chip focus. Open rows are
+   remembered by id and reopened, and the chips are rebuilt only when the set of
+   statuses changes. The search box and the severity select are static markup
+   and are never rebuilt. */
+const PB_ORDER = ['FIXED','BUILT','WIP','OPEN','DECISION','BLOCKED','CLEARED'];
+const PB_COL = {FIXED:['--pb-fixed','--pb-fixed-bg'], BUILT:['--pb-built','--pb-built-bg'],
+                WIP:['--pb-wip','--pb-wip-bg'], OPEN:['--pb-open','--pb-open-bg'],
+                DECISION:['--pb-decision','--pb-decision-bg'], BLOCKED:['--pb-decision','--pb-decision-bg'],
+                CLEARED:['--pb-muted','--pb-panel2']};
+const PB_OTHER = ['--pb-muted','--pb-panel2'];
+const PB_SEVC = {P0:'--pb-p0',P1:'--pb-p1',P2:'--pb-p2',P3:'--pb-p3'};
+const PB_RANK = {OPEN:0,WIP:1,DECISION:2,BLOCKED:2,BUILT:3,FIXED:4,CLEARED:5};
+const PB_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pbCol = (v) => PB_COL[v] || PB_OTHER;
+let pbState = {v:'', s:'', q:''};
+let pbStorage = true;
+try {
+  const saved = JSON.parse(localStorage.getItem('pb-filter') || 'null');
+  if (saved && typeof saved === 'object') pbState = Object.assign(pbState, saved);
+} catch (e) {
+  /* A private window or blocked storage. The filters still work, they are just
+     not remembered, and no further write is attempted. */
+  pbStorage = false;
+}
+const pbOpen = new Set();
+let pbRows = [], pbChipKey = null;
+
+const pbEl = (t, cls, txt) => {
+  const e = document.createElement(t);
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+};
+const pbPad = (n) => String(n).padStart(2, '0');
+/* The stamp is written in UTC and says so, as the artifact does. */
+const pbStampText = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso || '');
+  return d.getUTCDate() + ' ' + PB_MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear() +
+    ', ' + pbPad(d.getUTCHours()) + ':' + pbPad(d.getUTCMinutes()) + ' UTC';
+};
+const pbShortTime = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.getUTCDate() + ' ' + PB_MONTHS[d.getUTCMonth()] + ' ' +
+    pbPad(d.getUTCHours()) + ':' + pbPad(d.getUTCMinutes()) + 'Z';
+};
+const pbShort = (t, n) => (t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t);
+
+/* Titles carry the tracker's markers, for example "[SEV:P1][LANE:AI] ". The
+   markers are stripped for display and the lane is read out of them, because
+   the lane field in the data only says PRODUCT or CI while the marker names
+   the workstream the artifact shows. */
+function pbRow(i) {
+  const raw = String(i.title || '');
+  const m = raw.match(/^((?:\[[A-Z]+:[^\]]*\])+)\s*/);
+  const lane = m ? ((m[1].match(/\[LANE:([^\]]+)\]/) || [])[1] || '') : '';
+  return {
+    id: String(i.id || ''), title: m ? raw.slice(m[0].length) : raw,
+    sev: i.sev || '', lane: lane || i.lane || '', verdict: i.status || '',
+    date: i.changed || (i.changedAt ? String(i.changedAt).slice(0, 10) : ''),
+    at: i.changedAt || '', latest: i.note || '',
+  };
+}
+
+function pbFillList(id, items, cls, empty) {
+  const ul = document.getElementById(id);
+  ul.textContent = '';
+  if (!items.length) { ul.append(pbEl('li', 'pb-lbl', empty)); return; }
+  for (const it of items) {
+    const li = pbEl('li');
+    const body = pbEl('span');
+    /* The artifact's log leads with the time, so a log entry does here too. */
+    if (it.when) body.append(document.createTextNode(it.when + '  '));
+    body.append(pbEl('span', 'pb-id pb-mono', it.id), document.createTextNode('  '));
+    if (it.status) {
+      const st = pbEl('span', 'pb-sev', it.status);
+      st.style.setProperty('--pb-sevc', 'var(' + pbCol(it.status)[0] + ')');
+      body.append(st, document.createTextNode('  '));
+    }
+    if (it.text) body.append(document.createTextNode(it.text));
+    li.append(pbEl('span', 'pb-dot' + (cls ? ' ' + cls : '')), body);
+    ul.append(li);
+  }
+}
+
+function renderPb(ageMs, mins) {
+  const rows = (DATA.issues || []).map(pbRow);
+  pbRows = rows;
+  const rel = DATA.release || '';
+  document.getElementById('pbrel').textContent = 'Release ' + rel;
+  const srcs = (DATA.sources || []).map(s => String(s).split('/').pop())
+    .filter(n => /^RELEASE-.*\.md$/.test(n));
+  document.getElementById('pbsub').textContent =
+    'Every issue, defect and work item on the platform and portal, read from ' +
+    (srcs.length ? srcs.join(' and ') : 'RELEASE-' + rel + '-TRACKER.md') + '.';
+  document.getElementById('pbstamp').textContent = pbStampText(DATA.updated);
+  /* The age survives from the older freshness line. The owner asked "is this
+     updated?" while a correct absolute time was on screen, so the board says
+     how old its data is and turns amber after ten minutes. */
+  const ageEl = document.getElementById('pbage');
+  let age = 'just now';
+  if (isFinite(ageMs) && ageMs >= 0) {
+    if (mins < 1) age = 'seconds ago';
+    else if (mins < 60) age = mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+    else age = Math.floor(mins / 60) + ' h ' + (mins % 60) + ' min ago';
+  }
+  const stale = isFinite(ageMs) && mins >= 10;
+  ageEl.textContent = 'Data written ' + age + (stale ? ', generator not run since' : '');
+  ageEl.classList.toggle('stale', stale);
+  ageEl.title = 'Re-read every 20 seconds. Source timestamp, UTC: ' + DATA.updated;
+
+  const by = {};
+  rows.forEach(r => { by[r.verdict] = (by[r.verdict] || 0) + 1; });
+  const legendOrder = Object.keys(DATA.legend || {});
+  const extra = Object.keys(by).filter(v => !PB_ORDER.includes(v))
+    .sort((a, b) => {
+      const ia = legendOrder.indexOf(a), ib = legendOrder.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+    });
+  const present = PB_ORDER.filter(v => by[v]).concat(extra);
+
+  const tiles = document.getElementById('pbtiles');
+  tiles.textContent = '';
+  const tot = pbEl('div', 'pb-tile');
+  tot.append(pbEl('b', '', String(rows.length)), pbEl('small', '', 'Total'));
+  tiles.append(tot);
+  present.forEach(v => {
+    const t = pbEl('div', 'pb-tile');
+    const b = pbEl('b', '', String(by[v]));
+    b.style.color = 'var(' + pbCol(v)[0] + ')';
+    t.append(b, pbEl('small', '', v));
+    tiles.append(t);
+  });
+  const bar = document.getElementById('pbbar'), legend = document.getElementById('pblegend');
+  bar.textContent = ''; legend.textContent = '';
+  bar.setAttribute('aria-label', present.map(v => by[v] + ' ' + v).join(', '));
+  present.forEach(v => {
+    const i = pbEl('i');
+    i.style.width = (rows.length ? 100 * by[v] / rows.length : 0) + '%';
+    i.style.background = 'var(' + pbCol(v)[0] + ')';
+    bar.append(i);
+    const sp = pbEl('span', '', v + ' ' + (rows.length ? Math.round(100 * by[v] / rows.length) : 0) + '%');
+    sp.style.setProperty('--pb-c', 'var(' + pbCol(v)[0] + ')');
+    legend.append(sp);
+  });
+
+  const byTime = rows.slice().sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  pbFillList('pbrunning',
+    byTime.filter(r => r.verdict === 'WIP').slice(0, 6).map(r => ({id: r.id, text: pbShort(r.title, 110)})),
+    'run', 'Nothing running.');
+  pbFillList('pbblocked',
+    byTime.filter(r => r.verdict === 'DECISION').map(r => ({id: r.id, text: r.title})),
+    'block', 'Nothing waiting on you.');
+  pbFillList('pblog',
+    byTime.slice(0, 10).map(r => ({when: pbShortTime(r.at) || r.date, id: r.id, status: r.verdict, text: ''})),
+    '', 'No changes yet.');
+
+  const mx = document.getElementById('pbmatrix');
+  mx.textContent = '';
+  const thead = pbEl('thead'), hr = pbEl('tr');
+  hr.append(pbEl('th', '', 'Severity'));
+  present.forEach(v => hr.append(pbEl('th', '', v)));
+  hr.append(pbEl('th', '', 'Total'));
+  thead.append(hr);
+  const tb = pbEl('tbody');
+  ['P0','P1','P2','P3'].forEach(sv => {
+    const tr = pbEl('tr');
+    const th = pbEl('td', '', sv);
+    th.style.color = 'var(' + PB_SEVC[sv] + ')';
+    th.style.fontWeight = '600';
+    tr.append(th);
+    let n = 0;
+    present.forEach(v => {
+      const c = rows.filter(r => r.sev === sv && r.verdict === v).length;
+      n += c;
+      tr.append(pbEl('td', '', c ? String(c) : ''));
+    });
+    tr.append(pbEl('td', '', String(n)));
+    tb.append(tr);
+  });
+  mx.append(thead, tb);
+
+  const key = present.join('|');
+  if (key !== pbChipKey) {
+    pbChipKey = key;
+    const chips = document.getElementById('pbchips');
+    chips.textContent = '';
+    ['', ...present].forEach(v => {
+      const b = pbEl('button', 'pb-chip', v || 'All');
+      b.type = 'button';
+      b.dataset.v = v;
+      chips.append(b);
+    });
+  }
+  document.getElementById('pbsev').value = pbState.s;
+  const qEl = document.getElementById('pbq');
+  if (document.activeElement !== qEl) qEl.value = pbState.q;
+  pbRenderList();
+}
+
+function pbRenderList() {
+  if (pbStorage) {
+    try { localStorage.setItem('pb-filter', JSON.stringify(pbState)); }
+    catch (e) { pbStorage = false; /* storage refused, stop trying and keep filtering */ }
+  }
+  const rows = pbRows;
+  document.querySelectorAll('#pbchips .pb-chip').forEach(c =>
+    c.setAttribute('aria-pressed', String(c.dataset.v === pbState.v)));
+  const qq = String(pbState.q || '').trim().toLowerCase();
+  const list = rows.filter(r => (!pbState.v || r.verdict === pbState.v) &&
+      (!pbState.s || r.sev === pbState.s) &&
+      (!qq || (r.id + ' ' + r.title + ' ' + r.latest).toLowerCase().includes(qq)))
+    .sort((a, b) => ((PB_RANK[a.verdict] ?? 6) - (PB_RANK[b.verdict] ?? 6)) ||
+      a.sev.localeCompare(b.sev) || b.date.localeCompare(a.date));
+  const box = document.getElementById('pblist');
+  box.textContent = '';
+  document.getElementById('pbcount').textContent = list.length + ' of ' + rows.length + ' shown';
+  if (!list.length) { box.append(pbEl('div', 'pb-empty', 'No items match these filters.')); return; }
+  const frag = document.createDocumentFragment();
+  list.forEach(r => {
+    const d = pbEl('details', 'pb-row');
+    d.dataset.id = r.id;
+    d.style.setProperty('--pb-sevc', 'var(' + (PB_SEVC[r.sev] || '--pb-p3') + ')');
+    if (pbOpen.has(r.id)) d.open = true;
+    const s = pbEl('summary');
+    s.append(pbEl('span', 'pb-rid pb-mono', r.id + (r.lane ? '  ·  ' + r.lane : '')),
+             pbEl('span', 'pb-rtitle', r.title));
+    const m = pbEl('span', 'pb-meta');
+    const p = pbEl('span', 'pb-pill', r.verdict);
+    p.style.setProperty('--pb-pc', 'var(' + pbCol(r.verdict)[0] + ')');
+    p.style.setProperty('--pb-pbg', 'var(' + pbCol(r.verdict)[1] + ')');
+    const dt = pbEl('span', 'pb-date', r.date);
+    if (r.at) dt.title = 'Last changed ' + r.at + ' UTC';
+    m.append(p, pbEl('span', 'pb-sev', r.sev), dt);
+    s.append(m);
+    d.append(s, pbEl('div', 'pb-note', r.latest || 'No note yet.'));
+    frag.append(d);
+  });
+  box.append(frag);
+}
+
+document.getElementById('pbchips').addEventListener('click', e => {
+  const b = e.target.closest('.pb-chip'); if (!b) return;
+  pbState.v = b.dataset.v; pbRenderList();
+});
+document.getElementById('pbsev').addEventListener('change', e => {
+  pbState.s = e.target.value; pbRenderList();
+});
+document.getElementById('pbq').addEventListener('input', e => {
+  pbState.q = e.target.value; pbRenderList();
+});
+/* toggle does not bubble, so it is caught on the way down. */
+document.getElementById('pblist').addEventListener('toggle', e => {
+  const d = e.target;
+  if (!d || !d.dataset || !d.dataset.id) return;
+  if (d.open) pbOpen.add(d.dataset.id); else pbOpen.delete(d.dataset.id);
+}, true);
 
 document.getElementById('filters').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
@@ -1271,7 +2201,17 @@ function renderTabs(){
     ? 'Release ' + DATA.release + ' status: platform and portal'
     : (BOARDS[board].heading || BOARDS[board].label);
   const el = document.getElementById('boardheading');
-  if (el) el.textContent = h;
+  if (el) {
+    if (board === 'architecture' && h.includes(': ')) {
+      const parts = h.split(': ');
+      el.innerHTML = esc(parts[0]) + ': <span>' + esc(parts[1]) + '</span>';
+    } else if (board === 'website' && h.includes('status')) {
+      const idx = h.lastIndexOf('status');
+      el.innerHTML = esc(h.slice(0, idx)).trim() + ': <span>status</span>';
+    } else {
+      el.textContent = h;
+    }
+  }
   document.title = 'CrowAgent: ' + h;
   /* [R28-BOARD-NAV-01] The standfirst follows the selection too. See the comment
      on #boardsub in the markup: it described the website board on every board. */
@@ -1415,6 +2355,12 @@ async function load(){
      the deploy panel are all meaningless for a document, and leaving them on
      screen would offer controls that do nothing. */
   const spec = BOARDS[board];
+  /* [R283-BOARD-PLATFORM-ARTIFACT-01] The Platform tab layout switch. Set on
+     every load, so leaving the tab by click, by hash or by the back button
+     always clears it. */
+  document.body.classList.toggle('pbmode', board === 'platform');
+  document.body.classList.toggle('archmode', board === 'architecture');
+  document.body.classList.toggle('webmode', board === 'website');
   if (spec.views) {
     renderTabs();
     /* [R28-BOARD-NAV-01] `stats` AND `legendbox` WERE MISSING FROM THIS LIST, and
@@ -1474,6 +2420,14 @@ async function load(){
     document.getElementById('rows').innerHTML =
       '<tr><td colspan="4">Could not load '+esc(file)+': '+esc(err.message)+
       (board==='platform' ? '. Run: node status/build-platform-board.js' : '')+'</td></tr>';
+    /* The legacy table is hidden on the Platform tab, so the failure is written
+       where that tab's reader is looking as well. */
+    if (board === 'platform') {
+      const box = document.getElementById('pblist');
+      box.textContent = '';
+      box.append(pbEl('div', 'pb-empty', 'Could not load ' + file + ': ' + err.message +
+        '. Run: node status/build-platform-board.js'));
+    }
   }
 }
 
@@ -1581,11 +2535,11 @@ if (_initialBoard.misread) {
 }
 
 /* [R27-ARCH-06] The poll refreshes platform.json for ISSUE boards. On a DOCUMENT
-   board there is nothing to refresh, and re-injecting the fragment every 20
+   board there is nothing to refresh, and re-injecting the fragment every 10
    seconds WIPED the reader's chosen diagram state and closed every evidence
    block they had opened. Measured, not theorised: a selection reverted between
    two reads 20 seconds apart. So the poll now skips document boards. */
-setInterval(() => { if (!BOARDS[board].views) load(); }, 20000);
+setInterval(() => { if (!BOARDS[board].views) load(); }, 10000);
 </script>
 </body>
 </html>
