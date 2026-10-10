@@ -1196,6 +1196,7 @@
        the top, and before the generator notices and the deploy panel, which keep
        their place above the item filters. -->
   <div class="pb" id="pbtop">
+    <section class="pb-panel" aria-label="Progress per owner prompt" id="prompt-progress"></section>
     <section class="pb-panel" aria-labelledby="pbh-sum">
       <h2 class="pb-h2" id="pbh-sum">Where the release stands</h2>
       <div class="pb-tiles" id="pbtiles"></div>
@@ -1359,6 +1360,44 @@ function render(){
       ? `<div class="stat" title="CI lane is tracked but does not gate the release. Reported as cost, never as progress."><b style="color:var(--unknown)">${ciItems.length}</b><span>CI lane (${ciOpen} outstanding)</span></div>`
       : '');
 
+  /* [R285-BOARD-PROMPT-PROGRESS-01, owner instruction 2026-10-10 and 2026-10-11] PROGRESS PER
+     OWNER PROMPT, AT THE TOP OF THE TAB. It first rendered inside the deploy block lower down the
+     page, and the owner could not find it. Rows come from the tracker's `## Prompt <n>: ...`
+     sections (each item's src). FIXED and DONE are finished. BUILT is code finished locally that
+     still needs its staging check, so it is never counted as done. */
+  {
+    const prompts = {};
+    for (const it of allItems) {
+      if (!/^Prompt \d+/.test(it.src || '')) continue;
+      const p = prompts[it.src] || (prompts[it.src] = { total: 0, done: 0, built: 0, wip: 0, open: 0, other: 0 });
+      p.total++;
+      const s = String(it.status || '').toUpperCase();
+      if (s === 'FIXED' || s === 'DONE') p.done++;
+      else if (s === 'BUILT') p.built++;
+      else if (s === 'WIP') p.wip++;
+      else if (s === 'OPEN' || s === 'TODO') p.open++;
+      else p.other++;
+    }
+    const names = Object.keys(prompts).sort();
+    const host = document.getElementById('prompt-progress');
+    host.innerHTML = names.length
+      ? '<h2 class="pb-h2">Progress per owner prompt</h2>' +
+        '<div class="scroll"><table><thead><tr><th>Prompt</th><th>Rows</th><th>Done</th>' +
+        '<th>Built, staging check pending</th><th>In progress</th><th>Not started</th><th>Other</th>' +
+        '</tr></thead><tbody>' +
+        names.map((n) => {
+          const p = prompts[n];
+          const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+          return '<tr><td><strong>' + esc(n) + '</strong></td><td>' + esc(p.total) + '</td>' +
+            '<td><b style="color:var(--fixed)">' + esc(p.done) + '</b> (' + pct + '%)</td>' +
+            '<td>' + esc(p.built) + '</td><td>' + esc(p.wip) + '</td>' +
+            '<td><b style="color:var(--open)">' + esc(p.open) + '</b></td><td>' + esc(p.other) + '</td></tr>';
+        }).join('') +
+        '</tbody></table></div>'
+      : '';
+    host.hidden = names.length === 0;
+  }
+
   /* The tiles must account for every item. If they ever do not, the arithmetic
      says so on the page rather than leaving a reader to add them up. */
   const tallied=present.reduce((n,k)=>n+counts[k],0);
@@ -1472,38 +1511,6 @@ function render(){
          A board that publishes two numbers a reader is invited to subtract, and
          gets a wrong answer, has a reporting defect. This panel does the split
          explicitly so nobody has to infer it. */
-      /* [R285-BOARD-PROMPT-PROGRESS-01, owner instruction 2026-10-10] Progress per owner prompt.
-         Rows come from the tracker's `## Prompt <n>: …` sections (the item's src). FIXED and DONE
-         are finished. BUILT is code finished locally that still needs its staging check, so it is
-         shown on its own and never counted as done. */
-      const prompts = {};
-      for (const it of allItems) {
-        if (!/^Prompt \d+/.test(it.src || '')) continue;
-        const p = prompts[it.src] || (prompts[it.src] = { total: 0, done: 0, built: 0, wip: 0, open: 0, other: 0 });
-        p.total++;
-        const s = String(it.status || '').toUpperCase();
-        if (s === 'FIXED' || s === 'DONE') p.done++;
-        else if (s === 'BUILT') p.built++;
-        else if (s === 'WIP') p.wip++;
-        else if (s === 'OPEN' || s === 'TODO') p.open++;
-        else p.other++;
-      }
-      const promptNames = Object.keys(prompts).sort();
-      if (promptNames.length) {
-        html += '<h3 style="margin-top:18px">Progress per owner prompt</h3>' +
-          '<div class="scroll"><table><thead><tr><th>Prompt</th><th>Rows</th><th>Done</th>' +
-          '<th>Built, staging check pending</th><th>In progress</th><th>Not started</th><th>Other</th>' +
-          '</tr></thead><tbody>' +
-          promptNames.map((n) => {
-            const p = prompts[n];
-            const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
-            return '<tr><td><strong>' + esc(n) + '</strong></td><td>' + esc(p.total) + '</td>' +
-              '<td><b style="color:var(--fixed)">' + esc(p.done) + '</b> (' + pct + '%)</td>' +
-              '<td>' + esc(p.built) + '</td><td>' + esc(p.wip) + '</td>' +
-              '<td><b style="color:var(--open)">' + esc(p.open) + '</b></td><td>' + esc(p.other) + '</td></tr>';
-          }).join('') +
-          '</tbody></table></div>';
-      }
       const pb = DATA.phaseBreakdown && typeof DATA.phaseBreakdown === 'object' ? DATA.phaseBreakdown : null;
       /* `stale: true` means the breakdown was derived from a DIFFERENT issue set
          than this board. Say so and show nothing — the owner was once shown a
