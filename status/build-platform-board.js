@@ -570,8 +570,12 @@ if (fs.existsSync(TRACKER)) {
     const line = lines[li];
     if (/^##\s/.test(line)) inOwnerActions = /^##\s+Owner actions/i.test(line);
     if (inOwnerActions) continue;
-    const h = /^##\s+(WS-\d+[^\n]*)/.exec(line);
+    /* [R285-BOARD-PROMPT-PROGRESS-01, owner instruction 2026-10-10] A `## Prompt <n>: …` section
+       names the owner prompt its rows answer, so the page can show progress per prompt. Any other
+       `## ` heading ends the section, so a row below it is never credited to the prompt above. */
+    const h = /^##\s+((?:WS-\d+|Prompt \d+)[^\n]*)/.exec(line);
     if (h) { section = plain(h[1]); continue; }
+    if (/^##\s/.test(line)) { section = ''; continue; }
     if (!line.startsWith('|')) continue;
 
     /* [2026-08-08 staleness sweep] A TABLE HEADER IS NEVER AN ISSUE.
