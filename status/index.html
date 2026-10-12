@@ -1366,9 +1366,14 @@ function render(){
      sections (each item's src). FIXED and DONE are finished. BUILT is code finished locally that
      still needs its staging check, so it is never counted as done. */
   {
+    /* [R285-BOARD-PHASE-2-TRACK-01, owner instruction 2026-10-13] "i can see prompt 1 and 2
+       still showing despite phase 1 completed, now you must keep phase 2 track". The tracker's
+       `## Phase <n>: ...` section holds every pending row, so it is listed first. A prompt with
+       nothing left is a closed phase 1 record, so it shrinks to one line under the table instead
+       of a row that reads like current work. A prompt that still has work keeps its row. */
     const prompts = {};
     for (const it of allItems) {
-      if (!/^Prompt \d+/.test(it.src || '')) continue;
+      if (!/^(Prompt|Phase) \d+/.test(it.src || '')) continue;
       const p = prompts[it.src] || (prompts[it.src] = { total: 0, done: 0, built: 0, wip: 0, open: 0, other: 0 });
       p.total++;
       const s = String(it.status || '').toUpperCase();
@@ -1378,11 +1383,15 @@ function render(){
       else if (s === 'OPEN' || s === 'TODO') p.open++;
       else p.other++;
     }
-    const names = Object.keys(prompts).sort();
+    const finished = (n) => prompts[n].done === prompts[n].total;
+    const all = Object.keys(prompts).sort((a, b) =>
+      (/^Phase/.test(b) - /^Phase/.test(a)) || a.localeCompare(b));
+    const names = all.filter((n) => /^Phase/.test(n) || !finished(n));
+    const closed = all.filter((n) => !/^Phase/.test(n) && finished(n));
     const host = document.getElementById('prompt-progress');
     host.innerHTML = names.length
-      ? '<h2 class="pb-h2">Progress per owner prompt</h2>' +
-        '<div class="scroll"><table><thead><tr><th>Prompt</th><th>Rows</th><th>Done</th>' +
+      ? '<h2 class="pb-h2">Progress of the current phase</h2>' +
+        '<div class="scroll"><table><thead><tr><th>Phase or prompt</th><th>Rows</th><th>Done</th>' +
         '<th>Built, staging check pending</th><th>In progress</th><th>Not started</th><th>Other</th>' +
         '</tr></thead><tbody>' +
         names.map((n) => {
@@ -1393,7 +1402,11 @@ function render(){
             '<td>' + esc(p.built) + '</td><td>' + esc(p.wip) + '</td>' +
             '<td><b style="color:var(--open)">' + esc(p.open) + '</b></td><td>' + esc(p.other) + '</td></tr>';
         }).join('') +
-        '</tbody></table></div>'
+        '</tbody></table></div>' +
+        (closed.length
+          ? '<p class="muted">Closed with phase 1, every row finished: ' +
+            closed.map((n) => esc(n) + ' (' + esc(prompts[n].total) + ' rows)').join(', ') + '.</p>'
+          : '')
       : '';
     host.hidden = names.length === 0;
   }

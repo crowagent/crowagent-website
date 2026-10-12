@@ -572,8 +572,10 @@ if (fs.existsSync(TRACKER)) {
     if (inOwnerActions) continue;
     /* [R285-BOARD-PROMPT-PROGRESS-01, owner instruction 2026-10-10] A `## Prompt <n>: …` section
        names the owner prompt its rows answer, so the page can show progress per prompt. Any other
-       `## ` heading ends the section, so a row below it is never credited to the prompt above. */
-    const h = /^##\s+((?:WS-\d+|Prompt \d+)[^\n]*)/.exec(line);
+       `## ` heading ends the section, so a row below it is never credited to the prompt above.
+       [R285-BOARD-PHASE-2-TRACK-01, owner instruction 2026-10-13] A `## Phase <n>: …` section
+       counts the same way, so the phase 2 section, which holds every pending row, has a line too. */
+    const h = /^##\s+((?:WS-\d+|Prompt \d+|Phase \d+)[^\n]*)/.exec(line);
     if (h) { section = plain(h[1]); continue; }
     if (/^##\s/.test(line)) { section = ''; continue; }
     if (!line.startsWith('|')) continue;
