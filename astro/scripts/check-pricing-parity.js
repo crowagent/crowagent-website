@@ -83,6 +83,17 @@ const LOCK = {
        archiving the price. Publishing either is a P0. */
     { name: 'Portfolio', monthly: null, seats: 10, credits: 3000 },
   ],
+  /* [R285-P2-DROP-01] CROWMARK BUYER, OWNER DECISION D195 (2026-10-09), recorded in
+     crowagent-platform/docs/decisions/D195-r285-self-service-tier-model.md. That entry
+     supersedes the archived Buyer ladder and is the dated entry this gate's rule asks
+     for. Figures are the platform catalogue's (packages/pricing/catalogue.ts,
+     BUYER_PRODUCT_CATALOGUE): Buyer Pro 29900 pence a month, 5 seats, 750 credits, 10
+     guest evaluators. Buyer Portfolio is quote only, 10 seats, 3000 credits, 25 guest
+     evaluators, and publishes no amount, like Portfolio. */
+  buyerPlans: [
+    { name: 'Buyer Pro', monthly: 299, seats: 5, credits: 750, guestEvaluators: 10 },
+    { name: 'Buyer Portfolio', monthly: null, seats: 10, credits: 3000, guestEvaluators: 25 },
+  ],
   /** Annual is COMPUTED, never written as a literal. Lock section 1. */
   annual: (monthly) => Math.floor(monthly * 12 * 0.9),
   /** £10/100 · £50/500 · £100/1,000, one-time. Lock section 1, PUBLIC. */
@@ -155,11 +166,47 @@ const ALLOWED_POUNDS = [];
  * a list of human-readable violations; empty means the catalogue agrees with
  * the lock.
  *
- * @param {{PLANS: any[], CREDIT_TOPUPS: any[], OVERAGE_PENCE_PER_CREDIT: number}} cat
+ * @param {{PLANS: any[], BUYER_PLANS: any[], CREDIT_TOPUPS: any[], OVERAGE_PENCE_PER_CREDIT: number}} cat
  */
 function checkCatalogue(cat) {
   const bad = [];
-  const { PLANS, CREDIT_TOPUPS, OVERAGE_PENCE_PER_CREDIT } = cat;
+  const { PLANS, BUYER_PLANS, CREDIT_TOPUPS, OVERAGE_PENCE_PER_CREDIT } = cat;
+
+  /* [R285-P2-DROP-01] The Buyer offerings, held against D195 the same way. */
+  if (!Array.isArray(BUYER_PLANS) || BUYER_PLANS.length !== LOCK.buyerPlans.length) {
+    bad.push(
+      `BUYER_PLANS has ${Array.isArray(BUYER_PLANS) ? BUYER_PLANS.length : 'no'} entries, D195 has ${LOCK.buyerPlans.length}`,
+    );
+  } else {
+    for (const locked of LOCK.buyerPlans) {
+      const plan = BUYER_PLANS.find((p) => p.name === locked.name);
+      if (!plan) {
+        bad.push(`no published Buyer plan named "${locked.name}"`);
+        continue;
+      }
+      if (plan.monthly !== locked.monthly) {
+        bad.push(`${locked.name} monthly is ${fmt(plan.monthly)}, D195 says ${fmt(locked.monthly)}`);
+      }
+      if (plan.seats !== locked.seats) {
+        bad.push(`${locked.name} seats is ${plan.seats}, D195 says ${locked.seats}`);
+      }
+      if (plan.credits !== locked.credits) {
+        bad.push(`${locked.name} credits is ${plan.credits}, D195 says ${locked.credits}`);
+      }
+      if (plan.guestEvaluators !== locked.guestEvaluators) {
+        bad.push(`${locked.name} guest evaluators is ${plan.guestEvaluators}, D195 says ${locked.guestEvaluators}`);
+      }
+      if (locked.monthly === null) {
+        if (plan.annual !== null) {
+          bad.push(`${locked.name} publishes an annual price (${fmt(plan.annual)}); it is quote-only`);
+        }
+      } else if (plan.annual !== LOCK.annual(locked.monthly)) {
+        bad.push(
+          `${locked.name} annual is ${fmt(plan.annual)}, but floor(${locked.monthly} x 12 x 0.9) = ${LOCK.annual(locked.monthly)}`,
+        );
+      }
+    }
+  }
 
   if (!Array.isArray(PLANS) || PLANS.length !== LOCK.plans.length) {
     bad.push(`PLANS has ${Array.isArray(PLANS) ? PLANS.length : 'no'} entries, lock has ${LOCK.plans.length}`);
@@ -352,6 +399,10 @@ function runControls() {
       { credits: 500, price: 50 },
       { credits: 1000, price: 100 },
     ],
+    BUYER_PLANS: [
+      { name: 'Buyer Pro', monthly: 299, annual: 3300, seats: 10, credits: 750, guestEvaluators: 10 },
+      { name: 'Buyer Portfolio', monthly: 999, annual: 9999, seats: 10, credits: 3000, guestEvaluators: 25 },
+    ],
     OVERAGE_PENCE_PER_CREDIT: 15,
   };
   const caught = checkCatalogue(corrupt);
@@ -414,6 +465,10 @@ function runControls() {
       ...p,
       annual: p.monthly === null ? null : LOCK.annual(p.monthly),
     })),
+    BUYER_PLANS: LOCK.buyerPlans.map((p) => ({
+      ...p,
+      annual: p.monthly === null ? null : LOCK.annual(p.monthly),
+    })),
     CREDIT_TOPUPS: LOCK.topups,
     OVERAGE_PENCE_PER_CREDIT: LOCK.overagePencePerCredit,
   };
@@ -434,7 +489,7 @@ function runControls() {
 
 const violations = [];
 
-console.log('pricing parity: lock = PRICING-LOCK-2026-08.md (owner decision, 2026-08-09)');
+console.log('pricing parity: lock = PRICING-LOCK-2026-08.md (owner decision, 2026-08-09) plus D195 for CrowMark Buyer (2026-10-09)');
 
 // ── Controls first.
 const brokenControls = runControls();
@@ -453,7 +508,7 @@ for (const f of catalogueFaults) {
   violations.push({ where: 'src/data/pricing.ts', what: f });
 }
 console.log(
-  `  source: ${LOCK.plans.length} plans, ${LOCK.topups.length} top-up packs and the overage rate ` +
+  `  source: ${LOCK.plans.length} plans, ${LOCK.buyerPlans.length} Buyer plans, ${LOCK.topups.length} top-up packs and the overage rate ` +
     `checked against the lock`,
 );
 
@@ -494,6 +549,8 @@ for (const file of pages) {
       const allowedValues = new Set([
         ...LOCK.plans.filter((p) => p.monthly !== null).map((p) => p.monthly),
         ...LOCK.plans.filter((p) => p.monthly !== null).map((p) => LOCK.annual(p.monthly)),
+        ...LOCK.buyerPlans.filter((p) => p.monthly !== null).map((p) => p.monthly),
+        ...LOCK.buyerPlans.filter((p) => p.monthly !== null).map((p) => LOCK.annual(p.monthly)),
         ...LOCK.topups.map((t) => t.price),
         LOCK.overagePencePerCredit / 100,
       ]);
@@ -516,6 +573,15 @@ for (const file of pages) {
        that publishes the wrong one. */
     const mustContain = [
       ...LOCK.plans.filter((p) => p.monthly !== null).map((p) => ({ label: `£${p.monthly}`, re: new RegExp(`£\\s?${p.monthly}\\b`) })),
+      ...LOCK.buyerPlans
+        .filter((p) => p.monthly !== null)
+        .flatMap((p) => [
+          { label: `£${p.monthly} (${p.name})`, re: new RegExp(`£\\s?${p.monthly}\\b`) },
+          {
+            label: `£${LOCK.annual(p.monthly).toLocaleString('en-GB')} (${p.name} annual)`,
+            re: new RegExp(`£\\s?${LOCK.annual(p.monthly).toLocaleString('en-GB').replace(',', ',?')}\\b`),
+          },
+        ]),
       ...LOCK.topups.map((t) => ({
         label: `£${t.price} top-up`,
         re: new RegExp(`£\\s?${t.price}\\b`),

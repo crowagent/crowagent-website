@@ -159,6 +159,75 @@ export const PLANS: Plan[] = [
 ];
 
 /*
+ * ── R285-P2-DROP-01 · CROWMARK BUYER, THE D195 MODEL ─────────────────────────
+ *
+ * Owner decision D195, 2026-10-09 (crowagent-platform/docs/decisions/
+ * D195-r285-self-service-tier-model.md): CrowMark Buyer has TWO offerings, Buyer Pro
+ * (listed, self serve) and Buyer Portfolio (contact us, never priced). This
+ * supersedes the old site line that buyer pricing is "Contact sales" for everyone,
+ * and the platform archived the Small, Standard and Large ladder with it.
+ *
+ * THE FIGURES ARE NOT AUTHORED HERE. They are the platform catalogue's, in
+ * crowagent-platform/packages/pricing/catalogue.ts (BUYER_PRODUCT_CATALOGUE):
+ *
+ *   buyer_pro        29900 pence a month, 5 seats, 750 credits, 10 guest evaluators
+ *   buyer_portfolio  quote only, 10 seats, 3000 credits, 25 guest evaluators
+ *
+ * D195-Q1 gives £299 a month and £3,229 a year, the annual by the locked formula
+ * floor(299 x 12 x 0.9) = 3,229 and never a literal in the platform. It is typed
+ * here as a number so scripts/check-pricing-parity.js can hold it against that
+ * arithmetic. Buyer Portfolio publishes no amount, exactly as CrowMark Portfolio
+ * does (D195 invariant 2). Access on the live site is still by request, so the
+ * buttons say Request access, as the supplier plans do (D195-Q6: production signup
+ * stays invitation only until the beta ends).
+ */
+export interface BuyerPlan {
+  name: string;
+  who: string;
+  /** Monthly price in £, or null where the offering is contact us only. */
+  monthly: number | null;
+  /** Annual price in £. Null wherever `monthly` is. */
+  annual: number | null;
+  seats: number;
+  /** Included AI credits per calendar month. */
+  credits: number;
+  /** Guest evaluators a panel can invite. */
+  guestEvaluators: number;
+  body: string;
+  cta: string;
+  href: string;
+}
+
+export const BUYER_PLANS: BuyerPlan[] = [
+  {
+    name: 'Buyer Pro',
+    who: 'Contracting authorities and private sector procurement teams',
+    monthly: 299,
+    annual: 3229,
+    seats: 5,
+    credits: 750,
+    guestEvaluators: 10,
+    body:
+      '5 users, 750 AI credits a month and 10 guest evaluators. Build and publish requirements with a deterministic social value rubric, locate the evidence for each one in every response, run the evaluation, and monitor delivery after award.',
+    cta: 'Request access',
+    href: '/contact/?product=buyer-side#contact-form',
+  },
+  {
+    name: 'Buyer Portfolio',
+    who: 'Large authorities, groups and multi entity buyers',
+    monthly: null,
+    annual: null,
+    seats: 10,
+    credits: 3000,
+    guestEvaluators: 25,
+    body:
+      '10 users included, more by arrangement, 3,000 AI credits a month and 25 guest evaluators, with a named account contact. Scoped to your organisation and quoted rather than listed.',
+    cta: 'Contact sales',
+    href: '/contact/?product=buyer-side&tier=portfolio#contact-form',
+  },
+];
+
+/*
  * ── R262-WEB-08 · THE TWO CHARGES A CUSTOMER COULD INCUR AND COULD NOT SEE ───
  *
  * Owner decision, PRICING-LOCK-2026-08.md section 1, verbatim:
@@ -459,16 +528,21 @@ export const PRICING_FAQS: Faq[] = [
       'Yes. Portfolio is scoped to your organisation and quoted rather than listed, built around the seats and volume you need. Contact sales for licensing across large supplier networks or multi-entity corporate groups. Single sign-on via SAML 2.0, with SCIM user provisioning, is configured per organisation, so tell us your identity provider and we will confirm the setup.',
   },
   {
-    question: 'Why is there no price for the buyer side?',
+    question: 'How is CrowMark Buyer priced?',
+    /* WAS "Why is there no price for the buyer side?", answered with "a single
+       self-serve number would be misleading". D195 (2026-10-09) replaced that
+       position: Buyer Pro is a listed price. The question is rewritten rather
+       than kept, because a question that names the old position keeps it alive in
+       search results and in the FAQPage JSON-LD this array feeds. */
     answer:
-      'A buyer engagement is scoped to the organisation rather than sold by seat, so a single self-serve number would be misleading. It is billed by invoice or purchase order on annual terms, and AI usage is fair use scoped in the contract rather than a published monthly credit allowance. Supplier pricing is published because that side can be published honestly. Where it cannot, we say so rather than guess.',
+      'CrowMark Buyer has two offerings. Buyer Pro is £299 a month, or £3,229 a year, which is 10% off twelve months. It includes 5 users, 750 AI credits a month and 10 guest evaluators. Buyer Portfolio is for larger authorities and groups, with 10 users included, 3,000 AI credits a month and 25 guest evaluators, and it is quoted for your organisation rather than listed. Contact sales for Buyer Portfolio, and for invoice or purchase order billing on annual terms.',
   },
   {
     question: 'How are AI credits counted?',
     /* The included allowances were never published anywhere on the legacy page.
        They are the first sentence now. */
     answer:
-      'Each plan includes a monthly allowance: 200 credits on Starter, 750 on Pro and 3,000 on Portfolio. One credit is one AI generation. Reading a tender document and extracting its requirements costs 3 credits per 10 pages, rounded up, so a 10-page ITT costs 3 credits. A page is one PDF page, one PowerPoint slide, or a whole Word or text document. A spreadsheet is counted by rows rather than by sheets: 50 rows count as one page, so a 5,000-row pricing schedule on a single sheet counts as 100 pages, or 30 credits. Everything we calculate rather than generate is never charged and never capped, and a generation that fails is not charged.',
+      'Each plan includes a monthly allowance: 200 credits on Starter, 750 on Pro and 3,000 on Portfolio, and CrowMark Buyer carries 750 on Buyer Pro and 3,000 on Buyer Portfolio. One credit is one AI generation. Reading a tender document and extracting its requirements costs 3 credits per 10 pages, rounded up, so a 10-page ITT costs 3 credits. A page is one PDF page, one PowerPoint slide, or a whole Word or text document. A spreadsheet is counted by rows rather than by sheets: 50 rows count as one page, so a 5,000-row pricing schedule on a single sheet counts as 100 pages, or 30 credits. Everything we calculate rather than generate is never charged and never capped, and a generation that fails is not charged.',
   },
   /*
    * ── R262-WEB-08 · THE ANSWER TO THE QUESTION THE CREDIT MODEL RAISES ───────

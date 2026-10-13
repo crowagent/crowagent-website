@@ -11,7 +11,7 @@
  *
  * The two pages are one product sold to two sides of the same table, so they
  * take the same surfaces, the same rhythm and the same three cited figures. The
- * plane stack carries s.52, s.71 and PPN 002 on both, because those are the
+ * plane stack carries s.52, s.71 and PPN 026 on both, because those are the
  * duties the supplier prices against and the authority publishes against: the
  * same three instruments read from opposite ends.
  *
@@ -53,7 +53,7 @@
  * THE SPECIMEN IS AN ILLUSTRATION, NOT A SCREENSHOT, and says so three times:
  * in the standfirst, in the figure's accessible name, and in the visible
  * caption. That is the pattern the rest of the site should follow. This page
- * got it right where /crowmark's PPN 002 figure got it wrong.
+ * got it right where /crowmark's earlier social value figure got it wrong.
  *
  * There is no product screenshot on this page and that is deliberate: the
  * capture harness cannot authenticate against these surfaces, so every attempt
@@ -76,6 +76,7 @@ import Carousel from '../components/ui/Carousel.astro';
 import DutyCard from '../components/sections/DutyCard.astro';
 import { S52, S71, PPN026 } from '../data/duty';
 import { BUYER_SCREENS } from '../data/crowmark-screens';
+import { BUYER_PLANS } from '../data/pricing';
 import { faqPage, breadcrumbs } from '../lib/schema';
 import { SITE } from '../data/site';
 
@@ -175,7 +176,7 @@ const KEY_FACTS = [
   {
     term: 'Price',
     detail:
-      'Quoted, not listed. A buyer engagement is scoped to your organisation and billed by invoice or purchase order on annual terms. Supplier pricing is published in full, because a seat price is a number we can stand behind.',
+      'Buyer Pro is £299 a month, or £3,229 a year. Buyer Portfolio is for larger authorities and groups, and is quoted rather than listed. Supplier pricing is published in full on the pricing page.',
   },
   {
     term: 'The differentiator',
@@ -284,13 +285,20 @@ const DOES_NOT = [
   "Form or publish a view on a supplier's wider standing",
 ];
 
+/* [R285-P2-DROP-01] The fifth line ("Invoice or PO billing, SSO and SAML, DPA and security
+   review") described a scoped engagement. It left this list when Buyer Pro became a listed
+   self serve price (D195), and it stays in QUALIFY below, where it is a reason to talk to us. */
 const INCLUDED = [
   'Requirement builder with a deterministic social value rubric',
   'Evidence located per published criterion, quoted verbatim',
   'Evaluation workspace across directorates',
   'Delivery monitoring against what was promised',
-  'Invoice or PO billing, SSO and SAML, DPA and security review',
 ];
+
+/* [R285-P2-DROP-01] D195. The two Buyer offerings and their published figures come from
+   data/pricing.ts, which holds them for /pricing too, so the two pages cannot disagree. */
+const [BUYER_PRO, BUYER_PORTFOLIO] = BUYER_PLANS;
+const proAnnual = BUYER_PRO.annual!.toLocaleString('en-GB');
 
 const QUALIFY = [
   'You run competitions and evaluate responses',
@@ -327,7 +335,7 @@ const FAQS = [
   {
     question: 'What does it cost?',
     answer:
-      'There is no published buyer price. A buyer engagement is scoped to the organisation rather than sold by seat, and is billed by invoice or purchase order on annual terms, so a single self-serve number would mislead rather than inform. Supplier pricing is published because that side can be published honestly. Where it cannot, we say so instead of guessing.',
+      'Buyer Pro is £299 a month, or £3,229 a year, which is 10% off twelve months. It includes 5 users, 750 AI credits a month and 10 guest evaluators. Buyer Portfolio is for larger authorities and groups, with 10 users included, 3,000 AI credits a month and 25 guest evaluators, and it is quoted for your organisation rather than listed. Contact sales for Buyer Portfolio, and for invoice or purchase order billing on annual terms.',
   },
   {
     question: 'Can it produce our Procurement Act transparency return?',
@@ -562,7 +570,7 @@ const UPDATED = new Date('2026-08-05');
 
     <p class="note">
       Responding to tenders rather than running them?{' '}
-      <a href="/crowmark/">CrowMark for Suppliers is a different product with published pricing</a>.
+      <a href="/crowmark/">CrowMark for Suppliers is a different product with its own published pricing</a>.
     </p>
   </Section>
 
@@ -663,32 +671,41 @@ const UPDATED = new Date('2026-08-05');
 
   <Section
     eyebrow="Access"
-    title="Scoped to your organisation."
-    standfirst="A buyer engagement is not a seat count, so there is no self-serve price to publish. We publish supplier pricing precisely because that side can be published honestly."
+    title="Two ways to buy."
+    standfirst="Buyer Pro is a listed price. Buyer Portfolio is scoped to your organisation. Access is by request on both."
     id="access"
   >
     <div class="access">
       <div class="card surface">
-        <p class="eyebrow kicker">Contracting authorities and private sector procurement teams</p>
-        <h3 class="card-h card__h">Buyer side</h3>
-        <p class="access__price">Contact sales<span>Scoped to your organisation</span></p>
-        <p class="card__body">
-          Billed by invoice or purchase order on annual terms. Tiers scale with organisation
-          size. If you need to buy through a framework, tell us which one and we will confirm
-          what is possible rather than guess.
+        <p class="eyebrow kicker">{BUYER_PRO.who}</p>
+        <h3 class="card-h card__h">{BUYER_PRO.name}</h3>
+        <p class="access__price">
+          £{BUYER_PRO.monthly} a month<span>or £{proAnnual} a year, which is 10% off</span>
         </p>
-        <p class="eyebrow kicker kicker--tight">Included in every engagement</p>
+        <p class="card__body">
+          {BUYER_PRO.seats} users, {BUYER_PRO.credits.toLocaleString('en-GB')} AI credits a month
+          and {BUYER_PRO.guestEvaluators} guest evaluators.
+        </p>
+        <p class="eyebrow kicker kicker--tight">Included</p>
         <ul class="ticks">{INCLUDED.map((i) => <li>{i}</li>)}</ul>
         <div class="btn-row">
-          <Button href={DEMO}>Request a demo</Button>
+          <Button href={BUYER_PRO.href}>Request access</Button>
           <Button href="#faq" variant="secondary">Read the FAQ</Button>
         </div>
       </div>
 
       <div class="card surface">
-        <h3 class="card-h card__h">Talk to us if</h3>
+        <h3 class="card-h card__h">{BUYER_PORTFOLIO.name}</h3>
+        <p class="access__price">Contact sales<span>Scoped to your organisation</span></p>
+        <p class="card__body">
+          {BUYER_PORTFOLIO.seats} users included, more by arrangement,{' '}
+          {BUYER_PORTFOLIO.credits.toLocaleString('en-GB')} AI credits a month and{' '}
+          {BUYER_PORTFOLIO.guestEvaluators} guest evaluators. If you need to buy through a
+          framework, tell us which one and we will confirm what is possible rather than guess.
+        </p>
+        <p class="eyebrow kicker kicker--tight">Talk to us if</p>
         <ul class="ticks">{QUALIFY.map((q) => <li>{q}</li>)}</ul>
-        <p class="card__cta"><a href={DEMO}>Contact sales</a></p>
+        <p class="card__cta"><a href={BUYER_PORTFOLIO.href}>Contact sales</a></p>
       </div>
     </div>
   </Section>
@@ -1331,15 +1348,14 @@ const UPDATED = new Date('2026-08-05');
   /* ── Access ───────────────────────────────────────────────────────────── */
   .access {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(20px, 3vw, 36px);
     align-items: start;
   }
-  /* NO `.card--wide` RULE AND NO `card--wide` CLASS, 2026-08-31. It set a 3px
-     teal rule on the buyer-side card's inline start edge and nothing else, and
-     the owner asked for that treatment to leave the site. The card is the wide
-     one because `.access` gives it the 2fr track, not because of anything this
-     class was doing, so the class went with the rule. */
+  /* R285-P2-DROP-01: two equal tracks. The first card used to take a 2fr track
+     because it was the one wide engagement card. Buyer Pro and Buyer Portfolio are
+     peers, so neither is wider. There is still no `.card--wide` rule or class
+     (removed 2026-08-31 with the teal rule it drew). */
   .access__price {
     margin: 0 0 var(--stack-1);
     font-family: var(--font-display);

@@ -260,6 +260,14 @@ const ALLOWED_LOSSES = new Map([
   ['/glossary/  heading: ppn 002',
    'The PPN 002 term card was removed from the glossary index on 2026-08-30 by owner instruction that the site must carry no outdated regulatory detail. The card immediately above it is PPN 026, which links to the full entry for the edition that applies to central government procurements commenced on or after 1 January 2027. Removing our card is an editorial decision about this site: GOV.UK has not withdrawn, replaced or superseded PPN 002.'],
 
+  /* R285-P2-DROP-01, D195 (2026-10-09). The buyer side of /pricing said there was no price
+     and explained why. Buyer Pro is now a listed price and Buyer Portfolio is contact us, so
+     the "Buyer side" card and its FAQ question described a position the owner replaced. The
+     question is rewritten as "How is CrowMark Buyer priced?", which answers it with the price. */
+  ['/pricing/  heading: buyer side',
+   'Replaced by the Buyer Pro and Buyer Portfolio cards. The single "Contact sales" buyer card described the position D195 superseded, and the reader now sees both offerings and the Buyer Pro price.'],
+  ['/pricing/  heading: why is there no price for the buyer side?',
+   'Rewritten as "How is CrowMark Buyer priced?" under D195, because Buyer Pro is a listed price. The old question named a position that no longer holds and would have kept it alive in search results.'],
   /* /sources printed the previous edition's five missions from one shared
      definition, and a record for the previous edition itself. Both came off in
      the same pass. The heading and the two gov.uk links go with them. */

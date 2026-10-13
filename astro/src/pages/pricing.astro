@@ -53,10 +53,11 @@
  *
  * ── OTHER CORRECTIONS, EACH WITH ITS SOURCE ─────────────────────────────────
  *
- *   PPN 002 dates      "Feb 2025" was a bare month on a page that argues for
- *                      precision. Published 13 February 2025, mandatory from
- *                      1 October 2025. Never 24 February, which is the
- *                      Procurement Act commencement date. Matches /sources.
+ *   Social value dates "Feb 2025" was a bare month on a page that argues for
+ *                      precision. The page now cites PPN 026 only (owner lock,
+ *                      2026-08-30), with its own published and applying dates.
+ *                      Never 24 February, which is the Procurement Act
+ *                      commencement date. Matches /sources.
  *   s.52 vs s.71       The legacy page merged them into one "s.52 / s.71 KPI
  *                      check" row. They are two duties (OA-26): s.52 SETS and
  *                      PUBLISHES the indicators before the contract is entered;
@@ -65,7 +66,7 @@
  *   Market scope       The hero and the FAQ lead scoped the product to "UK
  *                      suppliers" and "UK public sector suppliers". Owner
  *                      decision, 2026-08-02: market-neutral, with UK public as
- *                      the proof point. The PPN 002 / Procurement Act capsules
+ *                      the proof point. The PPN 026 / Procurement Act capsules
  *                      stay, because they ARE the proof point.
  *   One product        "the Pro tier of your chosen product" implied a product
  *                      switcher that no longer exists. The regulatory strip
@@ -158,6 +159,7 @@ import { SITE } from '../data/site';
 import {
   PRICING_FAQS,
   PLANS,
+  BUYER_PLANS,
   COMPARE_LEAD,
   COMPARE_MORE,
   CREDIT_PAGES,
@@ -167,7 +169,7 @@ import {
 
 const title = 'CrowMark pricing | Plans from £49 a month | CrowAgent';
 const description =
-  'CrowMark pricing: Starter £49 a month, Pro £149, Portfolio quoted. Annual billing saves 10%, and every plan publishes its seats and AI credits.';
+  'CrowMark pricing: Starter £49 a month, Pro £149, Buyer Pro £299, Portfolio quoted. Annual billing saves 10%, and every plan publishes its seats and AI credits.';
 
 /* WIRE VALUES read by /contact to preselect a subject. Not copy; do not tidy.
    The plan CTAs carry their own, from data/pricing.ts, so only these two are
@@ -194,6 +196,16 @@ const offers = PLANS.filter((p) => p.monthly !== null).map((p) => ({
   url: `${SITE.origin}/pricing`,
 }));
 
+/* [R285-P2-DROP-01] Buyer Pro is a listed price (D195), so it gets an Offer. Buyer Portfolio,
+   like Portfolio, has no published price and so no Offer. */
+const buyerOffers = BUYER_PLANS.filter((p) => p.monthly !== null).map((p) => ({
+  '@type': 'Offer',
+  name: p.name,
+  price: String(p.monthly),
+  priceCurrency: 'GBP',
+  url: `${SITE.origin}/pricing`,
+}));
+
 const schema = [
   breadcrumbs([
     { name: 'Home', path: '/' },
@@ -213,6 +225,19 @@ const schema = [
           url: `${SITE.origin}/crowmark`,
           publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
           offers,
+        },
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        item: {
+          '@type': 'SoftwareApplication',
+          name: 'CrowMark Buyer',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Web',
+          url: `${SITE.origin}/crowmark-buyers`,
+          publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
+          offers: buyerOffers,
         },
       },
     ],
@@ -281,7 +306,7 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
     as="h1"
     eyebrow="Published pricing · No quote required"
     title="See the price first. Sized for SMEs."
-    standfirst="Three plans from £49 a month. The seats each plan includes, the AI credits it is metered on, and what extra credits cost if you need them, are printed here rather than discovered after you pay."
+    standfirst="Supplier plans from £49 a month and CrowMark Buyer Pro at £299. The seats each plan includes, the AI credits it is metered on, and what extra credits cost if you need them, are printed here rather than discovered after you pay."
     id="hero"
     atmosphere
   >
@@ -304,22 +329,16 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
       and the other half stays keyboard-reachable. The contract is
       scripts/tabs.ts's; the reason the behaviour exists is recorded there.
 
-      Only the supplier plans have two prices. Buyer pricing is "Contact sales"
-      with a scoped annual contract behind it, so monthly against annual is not
-      a choice a buyer has, and a switch that moves nothing invites a reader to
-      press it and conclude the page is broken.
-
-      THE SWITCH IS HIDDEN, NOT RESET. A reader who chose annual, looked at the
-      buyer side and came back finds it where they left it: `hidden` does not
-      clear `:checked`, so the two rules above still resolve and the annual
-      prices are still the ones showing when the supplier panel returns.
-      Measured on the round trip rather than assumed.
+      R285-P2-DROP-01, D195: CrowMark Buyer Pro is a listed price with a monthly and
+      an annual figure, so the switch now moves prices on BOTH panels and is no
+      longer marked as belonging to one. Buyer Portfolio and Portfolio have no
+      price and are unaffected. O-57 hid the switch on the buyer tab because it
+      moved nothing there. It moves something there now.
     */}
     <input
       type="checkbox"
       id="billing-toggle"
       class="billing__input"
-      data-tab-for="suppliers"
       aria-label="Show annual prices, which are 10% lower"
     />
 
@@ -362,7 +381,7 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
         ]}
       />
 
-      <div class="billing" data-tab-for="suppliers">
+      <div class="billing">
         <span class="billing__label billing__label--m">Monthly</span>
         <label for="billing-toggle" class="billing__hit">
           <span class="billing__track"><span class="billing__knob"></span></span>
@@ -481,86 +500,68 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
       <p class="viewlink"><a href="/crowmark-buyers/">View product</a></p>
 
       {/*
-        CORRECTED. This read "Everything else on this page, including the AI
-        credit model, works the same way." It does not: credit-allowances.ts maps
-        every council_* tier to null, which that file defines as fair use with
-        deliberately no published number on any tier. The supplier credit table
-        below does not describe the buyer side.
+        R285-P2-DROP-01 · D195 (2026-10-09). This block said buyer engagements are
+        "scoped to the organisation rather than sold by seat, so there is no
+        self-serve price", and carried a "Why no published price?" card. Both
+        described a position the owner replaced: Buyer Pro is a listed price and
+        Buyer Portfolio is contact us. The old Buyer Small, Standard and Large
+        ladder is archived on the platform and was never published here.
+        The AI credit allowance is published for both, the same figures the
+        catalogue holds (750 and 3,000), counted the way the credits section below
+        describes.
       */}
       <p class="note">
-        Buyer engagements are scoped to the organisation rather than sold by seat, so there is
-        no self-serve price. AI usage is fair use, scoped in the contract, rather than the
-        published monthly credit allowance the supplier plans carry.
+        Buyer Pro is a listed price with the seats and AI credits it includes. Buyer
+        Portfolio is scoped to your organisation and quoted, in the same way as Portfolio
+        for suppliers. Access is by request on both.
       </p>
 
-      <p class="eyebrow kicker">Buyer pricing</p>
+      <p class="eyebrow kicker">Buyer plans</p>
 
-      <ul class="grid grid--buyer" role="list">
-        <li class="card surface plan plan--wide">
-          <h3 class="card-h card__h">Buyer side</h3>
-          <p class="meta plan__who">Contracting authorities and private sector procurement teams</p>
-          <p class="plan__price">
-            Contact sales<span class="plan__per">Scoped to your organisation</span>
-          </p>
-          <p class="card__body">
-            Billed by invoice or purchase order on annual terms. Tiers scale with organisation
-            size. If you need to buy through a framework, tell us which one and we will confirm
-            what is possible.
-          </p>
-          <p class="eyebrow kicker kicker--tight">What it covers</p>
-          <ul class="ticks" role="list">
-            <li>Requirement builder with a deterministic social value rubric</li>
-            <li>Evidence located per published requirement, quoted verbatim</li>
-            <li>Evaluation workspace across directorates</li>
-            <li>Delivery monitoring against what was promised</li>
-            <li>Invoice or PO billing, SAML 2.0 single sign-on, DPA and security review</li>
-          </ul>
-          {/* `btn-row`, not a hand-rolled flex row. This was the FIFTEENTH private
-              two-button container on the site (styles/button-row.css retired
-              fourteen of them), and it behaved exactly as that file predicts: at
-              390 it wrapped and left both buttons pinned to the card's left
-              gutter under centred copy, which is what scripts/check-render.js
-              caught. The shared row equalises the two widths, centres itself and
-              goes full width on a phone. */}
-          <p class="card__cta btn-row">
-            {/* ── "REQUEST A DEMO", A-117, 2026-09-01 ──
-                CONTACT_BUYER is a FORM. "Book a demo" is the label the site uses
-                for the Calendly 30 minute booking on /crowmark, /sectors, /tools
-                and layouts/Sector.astro, so this button promised a booking and
-                delivered a form. That is the identical defect A-117 removed from
-                the homepage, recorded verbatim in pages/index.astro. The href is
-                unchanged on purpose: repointing it at Calendly would also make
-                the label true and would change a conversion path, which is what
-                the owner deferred this row for. The word is the cheap half.
-                The card below reaches this SAME destination as "Contact sales",
-                so the two now agree about where the reader is being sent. */}
-            <Button href={CONTACT_BUYER}>Request a demo</Button>
-            <Button href="#faq" variant="secondary">Read the FAQ</Button>
-          </p>
-        </li>
+      <ul class="grid grid--2 card-sync" role="list">
+        {
+          BUYER_PLANS.map((p) => (
+            <li class="card surface plan">
+              <h3 class="card-h card__h">{p.name}</h3>
+              <p class="meta plan__who">{p.who}</p>
 
-        <li class="card surface plan">
-          <h3 class="card-h card__h">Why no published price?</h3>
-          <p class="card__body">
-            A buyer engagement is not a seat count. It is scoped to the organisation, procured
-            under your own rules and billed the way your finance team can actually pay, so a
-            single self-serve number would be misleading rather than transparent.
-          </p>
-          <p class="card__body">
-            We publish supplier pricing precisely because that side can be published honestly.
-            Where it cannot, we say so instead of guessing.
-          </p>
-          <p class="eyebrow kicker kicker--tight">Talk to us if</p>
-          <ul class="ticks ticks--plain" role="list">
-            <li>You run competitions and evaluate responses</li>
-            <li>You need multi-entity or group consolidation</li>
-            <li>You need invoice or PO billing, single sign-on or a DPA</li>
-          </ul>
-          <p class="card__cta">
-            <Button href={CONTACT_BUYER} variant="secondary">Contact sales</Button>
-          </p>
-        </li>
+              {p.monthly === null ? (
+                <p class="plan__price">Contact sales</p>
+              ) : (
+                <>
+                  <p class="plan__price plan__price--m">
+                    £{p.monthly}
+                    <span class="plan__per">/mo</span>
+                  </p>
+                  <p class="plan__price plan__price--a">
+                    £{p.annual!.toLocaleString('en-GB')}
+                    <span class="plan__per">/yr · 10% off</span>
+                  </p>
+                </>
+              )}
+
+              <p class="card__body">{p.body}</p>
+              <p class="card__cta">
+                <Button href={p.href} variant={p.monthly === null ? 'secondary' : 'primary'}>
+                  {p.cta}<span class="visually-hidden"> for the {p.name} plan</span>
+                </Button>
+              </p>
+            </li>
+          ))
+        }
       </ul>
+
+      <p class="eyebrow kicker">What every Buyer plan covers</p>
+      <ul class="ticks" role="list">
+        <li>Requirement builder with a deterministic social value rubric</li>
+        <li>Evidence located per published requirement, quoted verbatim</li>
+        <li>Evaluation workspace across directorates</li>
+        <li>Delivery monitoring against what was promised</li>
+      </ul>
+      <p class="plans__trial">
+        Need invoice or purchase order billing, single sign-on or a DPA, or want to buy
+        through a framework? <a href={CONTACT_BUYER}>Contact sales</a>.
+      </p>
     </Section>
 
     <Section
@@ -920,10 +921,10 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
   </Section>
 
   {/*
-    CORRECTED. Legacy read "Mark: PPN 002 (Feb 2025), PPN 017, Procurement Act
-    2023 s.52 & s.71". The "Mark:" label is residue from the multi-product strip;
-    "Feb 2025" is a bare month on a page whose whole argument is precision. Dates
-    match src/pages/sources.astro, which is the site's source of record.
+    CORRECTED. The legacy strip carried a "Mark:" label and a bare month. The
+    label is residue from the multi-product strip and the bare month is wrong on a
+    page whose whole argument is precision. Dates match src/pages/sources.astro,
+    which is the site's source of record, and the social value framework is PPN 026.
   */}
   <section class="sources" aria-label="Regulatory sources">
     <p>
@@ -1132,13 +1133,13 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
   /* ── Cards. Geometry only: the treatment lives in styles/surfaces.css. ─── */
   .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
   .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .grid--buyer { grid-template-columns: 2fr 1fr; align-items: start; }
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   /* How many parts each `card-sync` row's cards are built from. A fact about
      the markup, not a spacing decision; see styles/card-row.css. Keyed to the
      section because the same `.grid--3` recipe carries a six-part plan card
      under #suppliers and a two-part answer card under #faq. */
-  #suppliers .grid { --card-parts: 6; }
+  #suppliers .grid, #buyers .grid { --card-parts: 6; }
   #faq .grid { --card-parts: 2; }
 
   /* `minmax(0, 1fr)`, never a bare `1fr`. A grid item's default `min-width` is
@@ -1226,8 +1227,6 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
   .plan__price { grid-row: 4; }
   .plan .card__body { grid-row: 5; }
   .plan .card__cta { grid-row: 6; }
-
-  .plan--wide { grid-column: auto; }
 
   /* THE TRIAL LINE UNDER THE PLAN GRID (A-117, owner 2026-08-05).
      Geometry only. It states no colour of its own and no link decoration: the
@@ -1492,7 +1491,7 @@ const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTE
 
   @media (max-width: 1023px) {
     .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid--buyer, .po { grid-template-columns: minmax(0, 1fr); }
+    .grid--2, .po { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 767px) {
