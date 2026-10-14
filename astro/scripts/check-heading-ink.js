@@ -383,11 +383,37 @@ async function measure(page, route, vp, inject) {
   const B = await scanlines(page, flat, mask);
   if (A.length !== B.length) return { found, broken: 'the heading resized between frames' };
 
-  /* RULE 1, over rows the control says are fully covered. */
+  /* RULE 1, over rows the control says are fully covered.
+   *
+   * ── R285-P2-SWEEP-03-01: "FULLY COVERED" IS READ FROM THE CONTROL, NOT NAMED
+   *    AS AN UNREACHABLE 250 ─────────────────────────────────────────────────
+   *
+   * It was `B[i].peak < 250`, a flat luminance picked when the heading was
+   * painted in near pure white. The white ink token has since moved to
+   * `--c-text` = #f8f9fb, whose Rec.709 luminance is 248.9, so the brightest
+   * scanline of flat white now tops out BELOW 250 and not one row ever counted
+   * as covered. `covered` came back 0 on every heading, `worst.ratio` kept its
+   * initial 1.0, RULE 1 measured nothing on the whole site, and the self-test
+   * (which re-applies the old dim ramp and REQUIRES RULE 1 to fire) correctly
+   * read the rule as dead and failed the gate as a broken instrument. Nothing on
+   * the site was wrong; the gate's own threshold had drifted off the palette.
+   * This is exactly the "1440-shaped constant" this file warns against: an
+   * absolute number left behind when the thing it measured moved.
+   *
+   * The repair reads the floor off the control itself: a fully covered row is
+   * one at the control's OWN peak white, less a small antialiasing margin, so it
+   * tracks whatever `--c-text` resolves to now and after the next palette move.
+   * This is the same move the rest of this gate already makes, deriving its
+   * ground, its ink threshold and its control from the measured frame rather
+   * than naming a colour. */
+  const COVER_MARGIN = 6;
+  let controlPeak = 0;
+  for (let i = 0; i < B.length; i++) if (B[i].peak > controlPeak) controlPeak = B[i].peak;
+  const coverFloor = controlPeak - COVER_MARGIN;
   let worst = { ratio: 1, row: -1 };
   let covered = 0;
   for (let i = 0; i < A.length; i++) {
-    if (B[i].peak < 250) continue;
+    if (B[i].peak < coverFloor) continue;
     covered++;
     const ratio = A[i].peak / B[i].peak;
     if (ratio < worst.ratio) worst = { ratio, row: i, lit: A[i].peak, flat: B[i].peak };
